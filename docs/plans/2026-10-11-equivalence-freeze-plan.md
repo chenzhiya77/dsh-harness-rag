@@ -59,12 +59,12 @@
 
 ## Task 2 — DeerFlow 跟进笔二：chunks 可选 `chunk_id`＋窗口（spec §2 D2 / §3 落点）
 
-- [ ] **RED**：窗语义测试——中心窗（围绕 `chunk_id`）、边界夹取（窗贴边时向另一端延伸：`start=max(1, min(position-(window-1)//2, total-window+1))`，**非回卷**）、超长块 `truncated` 标志，口径对照 harness `read_knowledge_document`。此刻无实现 ⇒ 红。（`backend/tests/` 新增窗语义测试）
-- [ ] **GREEN**：**先从 `_read_document_impl`（:118-147）抽出开窗纯函数**落 `deerflow.knowledge/`（工具与路由两边同用，单一口径，不复制第二份）；路由/service 加可选 `chunk_id`＋窗口参数（`knowledge_bases.py::list_document_chunks` + `knowledge_service.py::list_document_chunks`，工具侧 `knowledge_documents_tool.py` 改调纯函数）；缺省（不带 `chunk_id`）＝现状 offset/limit 分页逐字不变。
-- [ ] **neuter**：把窗口直接摊成 offset/limit 计算（不走纯函数口径）⇒ 窗语义断言红（revert proof）。
-- [ ] **门禁**：`cd backend && make test`（相关套件）+ `make lint` 净 → commit（英文 Conventional）。
+- [x] **RED**：窗语义测试——中心窗（围绕 `chunk_id`）、边界夹取（窗贴边时向另一端延伸：`start=max(1, min(position-(window-1)//2, total-window+1))`，**非回卷**）、超长块 `truncated` 标志，口径对照 harness `read_knowledge_document`。此刻无实现 ⇒ 红。（`backend/tests/` 新增窗语义测试）
+- [x] **GREEN**：**先从 `_read_document_impl`（:118-147）抽出开窗纯函数**落 `deerflow.knowledge/`（工具与路由两边同用，单一口径，不复制第二份）；路由/service 加可选 `chunk_id`＋窗口参数（`knowledge_bases.py::list_document_chunks` + `knowledge_service.py::list_document_chunks`，工具侧 `knowledge_documents_tool.py` 改调纯函数）；缺省（不带 `chunk_id`）＝现状 offset/limit 分页逐字不变。
+- [x] **neuter**：把窗口直接摊成 offset/limit 计算（不走纯函数口径）⇒ 窗语义断言红（revert proof）。
+- [x] **门禁**：`cd backend && make test`（相关套件）+ `make lint` 净 → commit（英文 Conventional）。
 
-**实测**（Task 2，执行后回填）：
+**实测**（Task 2，2026-10-12 执行）：RED 1 例（`test_chunks_endpoint_centers_window_on_chunk_id`：中心/夹取/宽于总数/缺省不变/错误输入 404 五段；先恰红——旧路由无 `chunk_id` 语义）→ GREEN＝**纯函数 `deerflow/knowledge/chunk_window.py::window_bounds`**（开窗三行原样搬出）＋工具改调它（行为逐字不变）＋service 开窗分支（`get_chunk`→`count_chunks`→`chunk_positions`→窗；`offset=start-1`/`has_more`/消息与工具逐字对齐）＋路由加 `chunk_id` Query＋归属守卫（非本文档 ⇒ 404，不静默回错窗）。**neuter**＝拍平纯函数夹取下界 ⇒ **两侧同红**（路由窗用例＋工具 `test_read_items_centered_window`——「单一口径」的实证），还原后全绿。**门禁**＝测试 **150 passed / 24 skipped**（62 面含新 9 例）＋ruff check/format 全净；基线清单补跑 `test_citation_numbering.py`＝3 passed / 3 skipped。**提交**＝`b650e2496`（7 文件：两路由面＋纯函数＋工具＋两测试＋`backend/AGENTS.md` 路由描述句；顺带补记 Task 1 的 `path` 一句已报备）。
 
 ---
 
@@ -114,3 +114,12 @@
 - [ ] **补充**（插件侧无单测的替代证明，见 Global Constraints）：本次真栈四工具（三检索＋续读）各至少一次真调用记录在案（模型工具集/轨迹取证法同 T1 复验）；加一次编译探针输出归档（不入库）。
 
 **实测**（Task 7，执行后回填）：
+
+---
+
+## 提交链（滚动记实）
+
+- [x] 插件仓首两笔（2026-10-12）：`7c6ee3a` 骨架（T1 门面六件，11 文件）＋`ee76307` 文档三件（步骤记录＋spec＋plan 成对）。**未推**（仓暂无 remote）。
+- [x] DeerFlow 跟进笔一（2026-10-12）：`8f118c64d`（`feat(rag): add an optional path to the recall test`，3 文件：路由/服务/新用例）。
+- [x] DeerFlow 跟进笔二（2026-10-12）：`b650e2496`（`feat(rag): add a chunk_id-centered window to the chunks route`，7 文件：两路由面＋纯函数 `chunk_window.py`＋工具改调＋两测试＋AGENTS.md）。
+- [ ] 插件侧 Task 3–5 笔、Task 6 README 笔：待执行后回填。
