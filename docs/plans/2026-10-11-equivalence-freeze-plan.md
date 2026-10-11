@@ -99,11 +99,16 @@
 
 ## Task 5 — 隔离＋kb_id 三级解析（spec §6 隔离口径、§2 D3 丙 / D4）
 
-- [ ] **解析次序**：kb_id 解析次序＝工具参数 ＞ 会话上下文 ＞ `defaultKbId`（会话上下文级=现面 per-thread binding 对应物）。
-- [ ] **隔离丙之甲**：Agent 预设工具集圈定（知识预设才带 `hrag_*`）。
-- [ ] **隔离丙之乙**：scoped 工具层（防同名遮蔽，属命名空间四防；宿主 API 细节先 `gh api` 取证，吃力再拉 DSH 源码）。
+- [x] **解析次序**：kb_id 解析次序＝工具参数 ＞ 会话上下文 ＞ `defaultKbId`（会话上下文级=现面 per-thread binding 对应物）。
+- [x] **隔离丙之甲**：Agent 预设工具集圈定（知识预设才带 `hrag_*`）。
+- [x] **隔离丙之乙**：scoped 工具层（防同名遮蔽，属命名空间四防；宿主 API 细节先 `gh api` 取证，吃力再拉 DSH 源码）。
 
-**实测**（Task 5，执行后回填）：
+**实测**（Task 5，2026-10-12 执行；宿主 API 取证走**安装态源码直读**＝本地、比 `gh api` 更权威）：
+- **宿主隔离机制全貌（实读 `dsh-agent-preset`/`-registry`、`dsh-tools`、`dsh-web-app/presets`）**：Agent 预设＝一条 `@deepseek-ai/dsh-agent-preset` 声明行，`config.plugins` 是**挂进该预设独立 scope 的子插件树**（官方 `standard/minimal/ptc` 三份样板在 `dsh-web-app/presets/`）；工具按**视图（scope）**解析——`get(name, scope)`/`schemas(scope)`/`resolveExecution(name, scope)`，不加 scope＝全局视图（这正是 T1 起工具全局可见的原因）；官方源码明示 per-agent 变体走 `agent.ctx` 注册。
+- **kb_id 解析次序**：`tools.ts` 的 `kb(args, exec)` 固定「参数 ＞ **会话/agent 上下文（预留读取点，已挂 `exec.agent`）** ＞ `defaultKbId`」；会话级的值源属知识预设/面板（T3）——本阶段该级缺席，链条按原序降级（参数或默认），README 已写明。
+- **隔离落地件（丙之甲）**：新增 `presets/knowledge.patch.yml`——一条 `harness-rag-knowledge` 预设（`order:20`，挂本插件工具包＋`defaultKbId` 配置位）；选中该预设的会话工具随 scope 授予、随预设回收。**属本地组合选择**（同官方三份预设的用法：用户把 insert 行并入 profile 补丁；插件自身不静默注入预设行）。js-yaml 实测解析通过。
+- **丙之乙（scoped 层）**：`hrag_` 命名空间维持主防线；宿主侧按 scope 解析的遮蔽面已实读（`resolveExecution` 对某 agent 不可见即不可调用）——**真遮蔽/回收行为并入 Task 7 真栈验**（届时做「知识预设内外工具可见性对照」一条）。
+- **探针**：复跑 PROBE PASS（tools.ts 无回归）。
 
 ---
 
