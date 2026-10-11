@@ -70,12 +70,17 @@
 
 ## Task 3 — 插件侧映射（spec §3 落点、对照 §5；清 `src/tools.ts` TODO(T2)）
 
-- [ ] **映射**：三检索 → 带 `path` 的 `POST /{kb_id}/recall-test`（响应保持三段形、只填本路，随 D1 乙）；`hrag_read_document` → 带 `chunk_id` 窗口的 chunks 路由（随 Task 2）；参数载体改 GET Query（现发 GET body＝机械偏差）。
-- [ ] **边界**：`top_k` 直接落 schema min/max（界 1–20）——模型可见、DSL 显式声明，运行时 clamp 仅兜底；`doc_id` 单文档限定进 `hrag_hybrid_search` 参数（spec §2 D6）。
-- [ ] **待核项**：以真响应核 graph `trace` 存否（spec §5.1 待核）——recall-test 的 graph 段是否随带 trace；缺则进待裁。
-- [ ] **核响应形**：`hrag_list_documents` → `GET /{kb_id}/documents`（本就通，核响应形）。
+- [x] **映射**：三检索 → 带 `path` 的 `POST /{kb_id}/recall-test`（响应保持三段形、只填本路，随 D1 乙）；`hrag_read_document` → 带 `chunk_id` 窗口的 chunks 路由（随 Task 2）；参数载体改 GET Query（现发 GET body＝机械偏差）。
+- [x] **边界**：`top_k` 直接落 schema min/max（界 1–20）——模型可见、DSL 显式声明，运行时 clamp 仅兜底；`doc_id` 单文档限定进 `hrag_hybrid_search` 参数（spec §2 D6）。
+- [x] **待核项**：以真响应核 graph `trace` 存否（spec §5.1 待核）——recall-test 的 graph 段是否随带 trace；缺则进待裁。
+- [x] **核响应形**：`hrag_list_documents` → `GET /{kb_id}/documents`（本就通，核响应形）。
 
-**实测**（Task 3，执行后回填）：
+**实测**（Task 3，2026-10-12 执行）：
+- **映射全落**：`src/tools.ts` 重写——三检索共一个 `recallTest()` 缝（带 `path`）；`hrag_read_document` 改 GET Query（`src/http.ts` 扩出 `query` 载体支持，`URL.searchParams` 序列化、空值跳过）；清 `TODO(T2)`；三检索描述标注「对应 recall-test 的 vector/graph/wiki 路」。**响应形决定**：整封三段响应原样透传（不抽单段）——与后端响应对齐、模型可见 elapsed_ms、天然落进 D5 甲方（载荷原样透传）。
+- **边界落地（一处受宿主约束的调整）**：`top_k` **schema min/max 无法落**——实测 DSH value-schema DSL 白名单：数字/字符串只支持 `enum`/`const`，`minimum/maximum/exclusiveMinimum/ge/le/min/max` 全部报 authorError；改为**描述写明 (1–20, default 5)＋运行时 clamp 兜底**（`clampTopK`），并如实记于此。`doc_id` 已进三检索参数（body 随发，后端 D6 落地后生效；当前被静默忽略＝无副作用）。
+- **trace 待核项（代码级结论）**：`graph_search_tool.py` 的 `trace` 由**工具包装层**构造（`_build_trace`＋`_emit_trace_event`，:351-361），`_graph_search_impl` 本体**不返回 trace**（返回 entities/relations/evidence/message/score_source——与 recall-test 的 graph 段同源）。⇒ 代码级判：**recall-test 响应不带 trace**；真响应实核并入 Task 7 真栈（留一条确认项），确认后进待裁（预判建议：不加后端——trace 是 DeerFlow 前端图谱高亮契约，模型面未见使用；待真机结论）。
+- **核响应形**：`hrag_list_documents` `GET /{kb_id}/documents` 本就通、参数面未动；chunks 路由 GET Query 与后端 Query 参数声明对齐（Task 2 已核）。
+- **编译探针（一次性、不入库；`scratch/probe-t3.mjs`）**：宿主运行时直跑——**五工具 defineTool 全过**（params/output 均 object-root）、参数校验面行为实核（缺 `query`/`doc_id` 拒收；未知字段容忍＝宿主设计，与后端 Pydantic 同款）；另：**未知字段被静默忽略**的特性同批证实（spec §5.1 所写现状）。
 
 ---
 
