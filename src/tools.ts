@@ -142,14 +142,16 @@ export function registerTools(ctx: Context, config: Config) {
 
   ctx.tools.register(defineTool({
     name: 'hrag_list_documents',
-    description: 'List documents in a knowledge base with honest per-status counts.',
+    description: 'List documents in a knowledge base as an array of document entries (id/name/status/chunk_count/progress_percent/path_status), straight from the knowledge service.',
     parameters: {
       kb_id: { type: 'string' as const, description: 'Knowledge base id; falls back to the configured default' },
     },
-    output: output({
-      documents: { type: 'json' },
-      message: { type: 'string' },
-    }),
+    // The knowledge service returns a raw array here (no wrapper object);
+    // declaring an object would fail the host's output validation.
+    output: {
+      schema: { type: 'array' as const },
+      render: jsonRender,
+    },
     async execute(args, exec) {
       return api(config, `/api/knowledge-bases/${kb(args)}/documents`, { signal: exec.signal })
     },
