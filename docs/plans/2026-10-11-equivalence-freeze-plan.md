@@ -86,10 +86,14 @@
 
 ## Task 4 — output schema 半开收窄（spec §2 D5 甲）
 
-- [ ] **收窄**：撤 `additionalProperties: true` 透传壳——顶层键稳定声明＋明细开放；五工具逐一对真实载荷（hits/scores/elapsed_ms、`source_type`/`source_chunk_ids`、media 引用、`embedding_mismatch`、`truncated`）。
-- [ ] **编译探针**：本地编译探针复验 defineTool schema 全过（防 authorError 复发；一次性，不入库）。
+- [x] **收窄**：撤 `additionalProperties: true` 透传壳——顶层键稳定声明＋明细开放；五工具逐一对真实载荷（hits/scores/elapsed_ms、`source_type`/`source_chunk_ids`、media 引用、`embedding_mismatch`、`truncated`）。
+- [x] **编译探针**：本地编译探针复验 defineTool schema 全过（防 authorError 复发；一次性，不入库）。
 
-**实测**（Task 4，执行后回填）：
+**实测**（Task 4，2026-10-12 执行）：
+- **收窄设计**（一处 Task 3 遗留的语义修正顺带落定）：信封不再原样透传，三检索各**只回自己的段＋公共元数据**——hybrid＝`{query, results, message, score_type, elapsed_ms}`（results←vector 段 hits）、graph＝`{query, entities, relations, evidence, message, score_type, elapsed_ms}`、wiki＝`{query, entries, message, score_type, elapsed_ms}`（entries←wiki 段 hits）；`list_documents`＝`{documents, message}`；`read_document`＝`{items, total, offset, limit, has_more, message}`。**顶层键全稳定声明、明细（json 节点→additionalProperties:true）全开放**＝D5 甲。
+- **口径细节**：`embedding_mismatch` 仅在信封顶层且属**跨路警告**——单路工具不带（现面 `hybrid_search` 工具也不带）；`trace` 不在本批（Task 7 真响应核后裁）；细节键（score/rank/source_type/source_chunk_ids/media/truncated/温度码四件）**不作声明**＝开放透传（这正是明细分录）。
+- **一处自查修复**：`envelopeMeta` 首版把消息固定取 vector 段——graph/wiki 会错拿；已改按路径取（三调用点各自传 path），探针加六条调用点字串核对防回归。
+- **编译探针**（扩展同 `scratch/probe-t3.mjs`）：五工具输出模式全过 defineTool；逐一断言「顶层键==声明清单 且 顶层/对象节点开放性显式」；源码字串比对（九个模式片段＋六处调用点）——**PROBE PASS**。
 
 ---
 
