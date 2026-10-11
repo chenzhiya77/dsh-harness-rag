@@ -40,6 +40,21 @@ dsh plugin --profile <name> add link:<本仓绝对路径>
 | `apiToken` | 可选 Bearer token；空=不带鉴权头 |
 | `defaultKbId` | 默认知识库 id；空=每次调用必须传 `kb_id` |
 
+## 后端最小形态（部署）
+
+本插件只需要 **Harness RAG knowledge 服务**＝DeerFlow 后端的单进程 Gateway：**不启 nginx、前端、IM 通道**即最小形态（零改动路线；`/api/knowledge-bases/*` 路由就在这个进程里）。
+
+```sh
+# 最小形态：只起 Gateway（端口 8001）
+cd <deer-flow>/backend && make gateway
+# 它跑的就是（backend/Makefile）：uvicorn app.gateway.app:app --host 0.0.0.0 --port 8001
+
+# 要完整工作台时才用：make dev（Gateway+前端+nginx 全家桶）
+```
+
+- **精简启动入口＝不做**（spec §3 裁定「可裁不加」）：`make gateway` 已是既有命令、比给 serve 脚本加一个 gateway-only 档更省；本仓不改 DeerFlow 的启动面。
+- 部署姿势不变：知识库数据在 DeerFlow 侧本地（Qdrant/存储）；插件只是它的一个客户端。远程部署时把 `backendUrl` 指过去即可（鉴权走 `apiToken`）。
+
 ## 模型可见工具（`hrag_` 命名空间）
 
 | 工具 | 说明 |
