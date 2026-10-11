@@ -2,7 +2,13 @@
 
 **Harness RAG for DeepSeek Harness (DSH)** — 三路检索（混合/图谱/wiki）+ 文档续读 + 知识库管理面板，后端为 Harness RAG knowledge 服务（最小 Python 服务）。
 
-> Status: **skeleton (T1)** — 双半包壳与工具面骨架已就位；端点映射（T2）、管理面板实装（T3）、摄取通道（T4）未实装。工具当前会向计划端点发真实请求，未配后端时返回结构化错误。
+> Status: **tool surface live (T2, Tasks 0–5)** — 三检索与文档两件套已按等价口径接通（单路 recall-test / 中心窗续读 / 半开输出）；隔离提供「知识预设」可选件。管理面板实装（T3）、摄取通道（T4）未实装。未配后端时返回结构化错误。
+
+## 隔离与 kb_id 解析
+
+- **隔离（可选，推荐）**：`presets/knowledge.patch.yml` 定义了一个 DSH Agent 预设 `harness-rag-knowledge`——挂载本插件的工具包，**选中该预设的会话才有 `hrag_*`**（未用时工具在全局视图中仍可见，等于当前测试态）。用法：把该文件的 `insert` 行并入 profile 的 `cordis.patch.yml`，在该行 `config.plugins` 里写本包 **`link:` 安装路径**（官方 preset 行的同款写法），并按需加 `defaultKbId` 配置。
+- **kb_id 解析次序**：工具参数 ＞ 会话上下文 ＞ `defaultKbId`。会话级（现面 per-thread 绑库的对应物）由知识预设/面板（T3）持有，本阶段该级缺席、链条按原序降级（参数或默认）。
+- **防同名遮蔽**：工具名统一 `hrag_` 命名空间；宿主按「视图（scope）」解析工具（`get(name, scope)`），agent 视角存在遮蔽面——命名空间是现状下的主防线。
 
 ## 形态
 

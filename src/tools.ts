@@ -55,7 +55,14 @@ function segmentOf(envelope: Record<string, unknown>, path: 'vector' | 'graph' |
 }
 
 export function registerTools(ctx: Context, config: Config) {
-  const kb = (args: { kb_id?: string }) => {
+  /** kb_id resolution order (spec 2026-10-11 D4): tool argument > session
+   * context > the configured default. The session-context tier corresponds to
+   * the DeerFlow surface's per-thread KB binding; the reading point is wired
+   * for T3 (the knowledge preset/panel owns per-session binding), so at this
+   * stage the tier is absent and the chain degrades to argument-or-default
+   * without changing the order. */
+  const kb = (args: { kb_id?: string }, exec?: { agent?: { ctx?: unknown } }) => {
+    void exec
     const id = args.kb_id?.trim() || config.defaultKbId.trim()
     if (!id) {
       throw new HarnessRagError({ kind: 'not_configured', detail: 'kb_id not given and no defaultKbId configured.' })

@@ -1,0 +1,26 @@
+# dsh-harness-rag knowledge agent preset (T2 Task 5, optional).
+#
+# Declares one `@deepseek-ai/dsh-agent-preset` row: sessions that select
+# `harness-rag-knowledge` mount this plugin's tool pack inside the preset's own
+# scope, so the hrag_* tools are granted per session rather than globally. The
+# preset is a local composition choice (same as the shipped standard/minimal
+# presets), not something a plugin installs by itself.
+#
+# To use: merge the `insert` row below into your profile's `cordis.patch.yml`
+# (~/.dsh/profiles/<name>/cordis.patch.yml) and set `config.plugins[0].name`
+# to the install location of this package (its `link:` path, per how the
+# skeleton is installed — see the repo README).
+
+- insert:
+    - id: preset-harness-rag-knowledge
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: harness-rag-knowledge
+        order: 20
+        plugins:
+          - id: harness-rag-tools
+            name: 'dsh-harness-rag'
+            config:
+              backendUrl: 'http://127.0.0.1:8001'
+              apiToken: ''
+              defaultKbId: ''
