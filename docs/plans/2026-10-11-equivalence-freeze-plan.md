@@ -127,7 +127,10 @@
 - [ ] **收官门禁**：后端全量 `make test` + `make lint` 净；`git diff` 只含本件该动的文件；全勾后回写步骤记录 T2 行＝收官。
 - [ ] **补充**（插件侧无单测的替代证明，见 Global Constraints）：本次真栈四工具（三检索＋续读）各至少一次真调用记录在案（模型工具集/轨迹取证法同 T1 复验）；加一次编译探针输出归档（不入库）。
 
-**实测**（Task 7，执行后回填）：
+**实测**（Task 7，2026-10-12 分两半执行）：
+- **REST 半（已过）**：私有实例（`DEER_FLOW_AUTH_DISABLED=1`、t6 环境配置、端口 8099）＋本轮专用 KB `t7-harness-rag-acceptance`（seed＝装备清单 1 片＋高原手册 13 片；`t7_rest_probe.py`＋`t7-evidence.json` 在 acceptance-t6 目录）。逐项：①缺省＝三路全填（vector5/graph4/wiki5，score_type 三标签齐、elapsed_ms 703/1485/485）②`path=vector` 只填本路、三路形保留（graph/wiki 空＋「未请求该路」注），**同题单路 hits 与缺省 run 逐条相同（零区别直接证据）**③中心窗 [4..8]（offset 4、has_more true、消息「第 7/共 13 片…第 5-9 片」）、头夹取 [0..4]、尾夹取 [8..12]、缺省分页逐字不变 ④文档清单响应形态 ✓。
+- **trace 待核项·真机定论**：`path=graph` 真响应段键＝`['entities','evidence','message','relations']`——**不带 trace**（与代码级判一致）。**裁**：不加后端——trace 是 DeerFlow 前端图谱高亮的专属契约，插件/模型面不需要（预判落实，spec §5.1 待核项关闭）。
+- **DSH 会话半（待他跑）**：桌面端整重启＋知识预设选择＋真提问；随带确认项＝预设内外工具可见性对照、四工具真调用留档。**跑完此格后再全勾收官**。
 
 ---
 
