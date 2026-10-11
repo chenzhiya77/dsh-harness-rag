@@ -122,7 +122,7 @@
 
 ## Task 7 — 真栈验收＋收官（spec §4 验收；原甲档价值验证并入）
 
-- [ ] **真栈**：DSH 会话里知识提问——三检索真召回＋chunk_id 续读（**整重启桌面端后测**）。
+- [x] **真栈**：DSH 会话里知识提问——三检索真召回＋chunk_id 续读（**整重启桌面端后测**）。
 - [ ] **对照**：对照 spec §5 表逐项勾（检索证据与 DeerFlow 侧同题对照＝零区别）。
 - [ ] **收官门禁**：后端全量 `make test` + `make lint` 净；`git diff` 只含本件该动的文件；全勾后回写步骤记录 T2 行＝收官。
 - [ ] **补充**（插件侧无单测的替代证明，见 Global Constraints）：本次真栈四工具（三检索＋续读）各至少一次真调用记录在案（模型工具集/轨迹取证法同 T1 复验）；加一次编译探针输出归档（不入库）。
@@ -130,7 +130,7 @@
 **实测**（Task 7，2026-10-12 分两半执行）：
 - **REST 半（已过）**：私有实例（`DEER_FLOW_AUTH_DISABLED=1`、t6 环境配置、端口 8099）＋本轮专用 KB `t7-harness-rag-acceptance`（seed＝装备清单 1 片＋高原手册 13 片；`t7_rest_probe.py`＋`t7-evidence.json` 在 acceptance-t6 目录）。逐项：①缺省＝三路全填（vector5/graph4/wiki5，score_type 三标签齐、elapsed_ms 703/1485/485）②`path=vector` 只填本路、三路形保留（graph/wiki 空＋「未请求该路」注），**同题单路 hits 与缺省 run 逐条相同（零区别直接证据）**③中心窗 [4..8]（offset 4、has_more true、消息「第 7/共 13 片…第 5-9 片」）、头夹取 [0..4]、尾夹取 [8..12]、缺省分页逐字不变 ④文档清单响应形态 ✓。
 - **trace 待核项·真机定论**：`path=graph` 真响应段键＝`['entities','evidence','message','relations']`——**不带 trace**（与代码级判一致）。**裁**：不加后端——trace 是 DeerFlow 前端图谱高亮的专属契约，插件/模型面不需要（预判落实，spec §5.1 待核项关闭）。
-- **DSH 会话半（待他跑）**：桌面端整重启＋知识预设选择＋真提问；随带确认项＝预设内外工具可见性对照、四工具真调用留档。**跑完此格后再全勾收官**。
+- **DSH 会话半（2026-10-12 他实跑，轨迹截图在案）**：真召回链走通——`hrag_hybrid_search`（`defaultKbId` 生效）→ `hrag_wiki_search` → `hrag_read_document`（真 doc_id/chunk_id 续读）→ `hrag_graph_search`，四工具真调用留档 ✓；模型侧结论正确（引用窗内容、如实报「第K/共N片」语义）。**真栈咬出缺陷一个（已修）**：`hrag_list_documents` 报 `INVALID_TOOL_OUTPUT`——该端点真实响应是**裸数组**（`[{id,name,status,chunk_count,…}]`），Task 4 却按想象声明成 `{documents,message}` 对象；修＝输出声明改 `{type:'array'}`（诚实即阵列，DESC 同步）＋探针升级「对真实服务响应逐工具验 declared 输出」（原探针只验声明编译，未验载荷形状——**这就是漏网的根因**）。修后探针（含 LIVE 层）PROBE PASS。**复验所需**：桌面端整重启（模块代铁律）后复问一轮（见「提交链」后记）；另外样章已换成手写真内容（合成填充版被模型如实吐槽「模板句」——样本质量问题非产品缺陷，已换 `t7-window2.md`）。
 
 ---
 
