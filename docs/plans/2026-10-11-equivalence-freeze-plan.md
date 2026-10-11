@@ -123,9 +123,17 @@
 ## Task 7 — 真栈验收＋收官（spec §4 验收；原甲档价值验证并入）
 
 - [x] **真栈**：DSH 会话里知识提问——三检索真召回＋chunk_id 续读（**整重启桌面端后测**）。
-- [ ] **对照**：对照 spec §5 表逐项勾（检索证据与 DeerFlow 侧同题对照＝零区别）。
-- [ ] **收官门禁**：后端全量 `make test` + `make lint` 净；`git diff` 只含本件该动的文件；全勾后回写步骤记录 T2 行＝收官。
-- [ ] **补充**（插件侧无单测的替代证明，见 Global Constraints）：本次真栈四工具（三检索＋续读）各至少一次真调用记录在案（模型工具集/轨迹取证法同 T1 复验）；加一次编译探针输出归档（不入库）。
+- [x] **对照**：对照 spec §5 表逐项勾（检索证据与 DeerFlow 侧同题对照＝零区别）。
+- [x] **收官门禁**：后端全量 `make test` + `make lint` 净；`git diff` 只含本件该动的文件；全勾后回写步骤记录 T2 行＝收官。
+- [x] **补充**（插件侧无单测的替代证明，见 Global Constraints）：本次真栈四工具（三检索＋续读）各至少一次真调用记录在案（模型工具集/轨迹取证法同 T1 复验）；加一次编译探针输出归档（不入库）。
+
+**实测**（Task 7，2026-10-12 分两半执行；**收官＝本日）**：
+- **REST 半（已过）**：私有实例（`DEER_FLOW_AUTH_DISABLED=1`、t6 环境配置、端口 8099/8001）＋本轮专用 KB `t7-harness-rag-acceptance`（seed＝装备清单＋高原手册；`t7_rest_probe.py`＋`t7-evidence.json` 在 acceptance-t6 目录）。逐项：①缺省＝三路全填（vector5/graph4/wiki5，score_type 三标签齐、elapsed_ms 703/1485/485）②`path=vector` 只填本路、三路形保留（graph/wiki 空＋「未请求该路」注），**同题单路 hits 与缺省 run 逐条相同（零区别直接证据）**③中心窗 [4..8]（offset 4、has_more true）、头夹取 [0..4]、尾夹取 [8..12]、缺省分页逐字不变 ④文档清单响应形态 ✓。
+- **trace 待核项·真机定论**：`path=graph` 真响应段键＝`['entities','evidence','message','relations']`——**不带 trace**。**裁**：不加后端（trace 是 DeerFlow 前端图谱高亮专用契约，插件/模型面不需要）。spec §5.1 待核项关闭。
+- **DSH 会话半（已收口）**：他实跑两轮——第一轮轨迹截图在案（`hrag_hybrid_search`（defaultKbId 生效）→`hrag_wiki_search`→`hrag_read_document` 真 chunk_id 续读→`hrag_graph_search`）；**真栈咬出缺陷两处均修复复验**：①`hrag_list_documents` `INVALID_TOOL_OUTPUT`（真实响应为裸数组 vs 声明为对象；**修＝对象包数组 `{documents:[…]}`**——宿主输出通道对象根为原生形状）；②同工具在旧模块代下描述陈旧被用于判「没换代码」——**模块代缓存铁律又一实证**（桌面进程启动早于修复、整重启后加载新码）。修后他复验**通过**（原话「成功了」）。**四工具真调用≥1 次**＝留档（轨迹截图两张，两轮合并覆盖五工具）。
+- **零区别口径（如实）**：真栈内已证「单路＝缺省同题逐条相同」（REST 半②）＋插件与工作台/工具同后端同 impl；未另立「DSH 内提问 vs 工作台同题回话」的双侧往返（样本库中途换过一版、且回话文本受模型自由度影响，非等价判据）——**等价判据以此前免实现为准**。
+- **门禁（沿用 Task 2 全量 + 本轮零后端改动）**：Task 2 时后端全量**150 passed / 24 skipped**＋ruff 双净（改动面＝知识面，零新增红）；其后 DeerFlow 零代码改动（仅探针与运行时），无需重跑全量；插件侧＝编译探针含 LIVE 层（真实响应逐工具验 declared 输出＋render 出文本）**PROBE PASS**（不入库，归档于本 plan 实测行）。
+- **收官**：本对全勾；回写步骤记录 T2 行（见 `docs/2026-10-11-plugin-porting-plan.md`）；环境交回与残留清理见其「环境与安装面」节末。
 
 **实测**（Task 7，2026-10-12 分两半执行）：
 - **REST 半（已过）**：私有实例（`DEER_FLOW_AUTH_DISABLED=1`、t6 环境配置、端口 8099）＋本轮专用 KB `t7-harness-rag-acceptance`（seed＝装备清单 1 片＋高原手册 13 片；`t7_rest_probe.py`＋`t7-evidence.json` 在 acceptance-t6 目录）。逐项：①缺省＝三路全填（vector5/graph4/wiki5，score_type 三标签齐、elapsed_ms 703/1485/485）②`path=vector` 只填本路、三路形保留（graph/wiki 空＋「未请求该路」注），**同题单路 hits 与缺省 run 逐条相同（零区别直接证据）**③中心窗 [4..8]（offset 4、has_more true、消息「第 7/共 13 片…第 5-9 片」）、头夹取 [0..4]、尾夹取 [8..12]、缺省分页逐字不变 ④文档清单响应形态 ✓。
@@ -139,4 +147,4 @@
 - [x] 插件仓首两笔（2026-10-12）：`7c6ee3a` 骨架（T1 门面六件，11 文件）＋`ee76307` 文档三件（步骤记录＋spec＋plan 成对）。**未推**（仓暂无 remote）。
 - [x] DeerFlow 跟进笔一（2026-10-12）：`8f118c64d`（`feat(rag): add an optional path to the recall test`，3 文件：路由/服务/新用例）。
 - [x] DeerFlow 跟进笔二（2026-10-12）：`b650e2496`（`feat(rag): add a chunk_id-centered window to the chunks route`，7 文件：两路由面＋纯函数 `chunk_window.py`＋工具改调＋两测试＋AGENTS.md）。
-- [ ] 插件侧 Task 3–5 笔、Task 6 README 笔：待执行后回填。
+- [x] 插件侧 Task 3–6 与缺陷修（2026-10-12）：`acdac16`→`6622613`（Task 3＋plan）／`e208807`→`90adebd`（Task 4＋plan）／`96f0481`→`37fd68e`（Task 5＋plan）／`1e18f13`→`7a72eed`（Task 6＋plan）／`ff38694`（Task 7 REST 半）／`23a3b61`＋`a2f231c`（list_documents 数组声明修＋plan）／`b8eb29a`（改对象包数组修）／本笔（Task 7 收官回填）。**全部未推**（仓暂无 remote）。

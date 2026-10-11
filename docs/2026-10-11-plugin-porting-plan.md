@@ -1,6 +1,6 @@
 # Harness RAG → DSH 插件线（dsh-harness-rag）· 步骤记录
 
-- Status: T1 ✅ 收官（冒烟复验三条 10-11 实测全过）· T2 冻结已拍、执行见配对 plan · 未提交
+- Status: T1 ✅ 收官（冒烟复验三条 10-11 实测全过）· T2 ✅ 收官（2026-10-12 真栈两半全过）· 未提交
 - Date: 2026-10-11
 - 形态（10-11 他拍）：**spec↔plan 一一配对**——`docs/specs/*-spec.md` 与 `docs/plans/*-plan.md` 同名成对（T2 对=`2026-10-11-equivalence-freeze-{spec,plan}.md`）；本档=全线路**步骤记录**（落 `docs/` 根），只记进度与决策，执行步骤进各配对 plan、不重复。
 - 每步一个复选框；Status 随交付更新。
@@ -19,7 +19,7 @@
 | Task | 内容 | 状态 |
 | --- | --- | --- |
 | T1 | 插件骨架（门面六件+安装冒烟） | ✅ 收官（三修+复验三条 10-11 全过） |
-| T2 | 工具面等价移植（端点对齐+召回测试缝） | 冻结已拍，执行见配对 plan |
+| T2 | 工具面等价移植（端点对齐+召回测试缝） | ✅ 收官（2026-10-12；两笔后端跟进笔＋Task 3–6＋真栈两半；含真栈咬出的 list_documents 形状修复） |
 | T3 | 管理面板（右栏轻管理） | 未开工 |
 | T4 | 摄取通道（`ctx.jobs`） | 未开工 |
 | T5 | 丙′ 子槽契约化+命名空间四防 | 未开工 |
@@ -53,9 +53,11 @@
 - [x] 冒烟三修（schemastery 导入 / 跨世界注入 / additionalProperties）
 - [x] **冒烟复验三条**（10-11 桌面端实测全过）：①Plugins 页已安装区单卡「知识库」、无 pending/问题标记、显示元数据正常；②轨迹→事件详情→工具出现 `hrag_*` 五工具；③右栏「开始」引导页「知识库」胶囊→点开渲染占位面板
 
-## 3. T2 工具面等价移植（冻结已拍，执行未开工）
+## 3. T2 工具面等价移植（✅ 收官 2026-10-12）
 
-配对件：spec=`docs/specs/2026-10-11-equivalence-freeze-spec.md`（10-11 整批冻结：D1乙/D2乙/D3丙/D4三级序/D5甲/D6进）＋ plan=`docs/plans/2026-10-11-equivalence-freeze-plan.md`（Task 1–7 任务格全在那边）。本档只记 T2 状态行，收官时勾下表。
+配对件：spec=`docs/specs/2026-10-11-equivalence-freeze-spec.md`（10-11 整批冻结：D1乙/D2乙/D3丙/D4三级序/D5甲/D6进）＋ plan=`docs/plans/2026-10-11-equivalence-freeze-plan.md`（Task 0–7 全勾）。
+
+收官纪要：两笔 DeerFlow「只加不改」跟进笔（`8f118c64d` `b650e2496`）＋插件侧 Task 3–6（`acdac16` `e208807` `96f0481` 与 plan 各笔）；真栈验收两半全过（REST 逐项＋DSH 会话他实跑两轮），**真栈咬出并修复** `hrag_list_documents` 输出形状缺陷（`23a3b61` `b8eb29a`）；trace 待核项真机定论＝不带、不加后端。零区别判据见 plan Task 7 实测（单路＝缺省同题逐条相同＋同后端同 impl）。
 
 ## 4. T3 管理面板（未开工）
 
@@ -82,6 +84,7 @@
 - 验收面=官方 **DeepSeek Harness Desktop 0.2.0-rc.2** @ `E:\appdevelop\deepseek`；本地路径安装已通（桌面按 `link:` 装进 `~/.dsh/profiles/desktop`，改码即生效但需整重启换模块代）。
 - **安装两通道语义（2026-10-12 实测，踩坑记）**：`link:`＝链接，源目录改码在整重启后即生效（现用通道）；**`file:`＝拷贝**到 profile 的 `node_modules`——改源不随动，须 `dsh plugin --profile desktop remove <名>` 后再 `add` 刷新副本，否则装载器照旧件执行（症状：改完仍报旧文件错）。
 - **插件装载触发**：host 半**不在 app 启动时装载**，由**启用开关/激活**触发；开关态持久化在 profile 层补丁（`disabled:false`）；apply 执行后可用 `process.execPath` 定位 DSH 安装目录、spawn 自带 Python（实测 3.12.14 可调）。
+- **模块代体检法（10-12 二实证：T1 一次、T2 收官一次）**：报错/行为像旧码时，**先比对「进程 CreationDate vs 源码 mtime」＋报错里的工具描述文案 vs 现在源码**——对不上＝旧模块代在跑，整重启桌面端即可，别改代码。桌面端进程可用 `wmic process get CreationDate` 一对就明。
 - profile `~/.dsh/profiles/desktop/pnpm-workspace.yaml` 已配 `allowBuilds`+fetch 旋钮（备份 `.bak-1011`；两闸=pnpm 并发下载中断+构建脚本许可）。
 - 源码取证通道=`gh api`（DSH 默认分支 **master**；raw 直连不稳）。
 - 本地 `pnpm install` 装不通 @deepseek-ai 依赖图是设计使然（`dsh-type-meta` 未公开、仅随 DSH 发行）；typecheck/冒烟须在 DSH profile 语境。
