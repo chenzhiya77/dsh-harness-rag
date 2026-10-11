@@ -1,0 +1,15 @@
+# dsh-harness-rag bundle patch (declared by the `dsh.bundle.patch` manifest
+# field): inserts the harness-rag row into any profile that lists
+# dsh-harness-rag in its `dsh.profile.bundles`. The row loads the plugin by
+# package name from the profile's node_modules.
+
+- insert:
+    - id: harness-rag
+      name: dsh-harness-rag
+      config:
+        # Harness RAG knowledge service endpoint (the minimal Python service).
+        backendUrl: 'http://127.0.0.1:8001'
+        # Optional API token sent as Bearer; empty = no auth header.
+        apiToken: ''
+        # Default knowledge-base id; empty = the tool call must pass kb_id.
+        defaultKbId: ''

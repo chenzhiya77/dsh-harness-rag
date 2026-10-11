@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "知识库",
+    "description": "Harness RAG：三路检索（混合/图谱/wiki）、文档续读与知识库管理，后端为 Harness RAG knowledge 服务。"
+  }
+}

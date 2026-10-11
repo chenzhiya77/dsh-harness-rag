@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Knowledge Base",
+    "description": "Harness RAG: three-path retrieval (hybrid/graph/wiki), document continuation reading, and knowledge-base management over the Harness RAG knowledge service."
+  }
+}
