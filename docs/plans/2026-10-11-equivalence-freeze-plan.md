@@ -114,9 +114,9 @@
 
 ## Task 6 — 后端最小服务形态（spec §3 落点 部署面）
 
-- [ ] **README 部署节**：裁定落法（零改动路线＝现有 Gateway 当对端、不启 nginx/前端/IM 即最小形态；精简启动入口＝可裁「不加」）写进插件仓 `README.md` 部署节。
+- [x] **README 部署节**：裁定落法（零改动路线＝现有 Gateway 当对端、不启 nginx/前端/IM 即最小形态；精简启动入口＝可裁「不加」）写进插件仓 `README.md` 部署节。
 
-**实测**（Task 6，执行后回填）：
+**实测**（Task 6，2026-10-12 执行）：README 新增「后端最小形态（部署）」节——最小形态＝`cd <deer-flow>/backend && make gateway`（**实核**：backend/Makefile 既有目标，`uvicorn app.gateway.app:app --host 0.0.0.0 --port 8001`；serve.sh 无 gateway-only 档、全栈才要 `make dev`）；「精简启动入口＝不做」如实写明（比给 serve 脚本加档更省，不改 DeerFlow 启动面）；远程部署指 `backendUrl`＋`apiToken`。零代码改动（纯 README）。
 
 ---
 
