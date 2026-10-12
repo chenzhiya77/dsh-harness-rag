@@ -8,7 +8,7 @@
 ## 0. 定位与边界（已拍，不重开）
 
 - 形态=**乙+丙′**：原生 dsh 插件（乙）+ 子槽契约化（丙′）。甲=MCP 桥不做；丙=TS 全重写不做（跨语言重写+评测全废，RAGAS/UMAP/torch 视频腿搬不动）。
-- 拓扑=**最小 Python 服务**（现有 harness RAG 后端单进程，不带 nginx/前端/IM 全家桶）+ 独立新仓 TS 插件；**一个后端、两个前端**（DeerFlow 工作台原样保留，DSH 侧走 slot API 新写）。
+- 拓扑=**最小 Python 服务**（现有 harness RAG 后端单进程，不带 nginx/前端/IM 全家桶）+ 独立新仓 TS 插件；**一个后端、两个前端**（DeerFlow 工作台原样保留，DSH 侧走 slot API 新写）（10-13 更新：引擎载体＝主体二 `harness-rag`，实况见 §8）。
 - 首期=**现有能力等价移植**：三检索+续读骨架+管理面板+摄取+子槽声明+命名空间四防御，行为口径不动。**优化另案不进首期**（证据窗四细节 / 零配置降级链 / 中英桥）——基线先行才能归因。
 - 两分账：移植基线=T2 开工日点名冻结清单；功能新增走跟进账增量移植。
 - 定名 `dsh-harness-rag`（一名三用=包名/仓名/插件 id；npm 404 已核）。仓=`E:\app\python\agent\dsh-harness-rag`（独立 git，未提交）。
@@ -94,6 +94,7 @@
 - profile `~/.dsh/profiles/desktop/pnpm-workspace.yaml` 已配 `allowBuilds`+fetch 旋钮（备份 `.bak-1011`；两闸=pnpm 并发下载中断+构建脚本许可）。
 - 源码取证通道=`gh api`（DSH 默认分支 **master**；raw 直连不稳）。
 - 本地 `pnpm install` 装不通 @deepseek-ai 依赖图是设计使然（`dsh-type-meta` 未公开、仅随 DSH 发行）；typecheck/冒烟须在 DSH profile 语境。
+- **主体二（插件引擎仓，2026-10-13 已立）**：`E:\app\python\agent\harness-rag`＝主体一（deer-flow）完整复制——HEAD `b650e2496`／分支 `feat/rag-knowledge-base`；排除＝`node_modules`／`.venv`／`.deer-flow`／`.next`／`__pycache__`／`.pytest_cache`／`.ruff_cache`／`.hypothesis`／`.mypy_cache`（`pr-build` 系在册跟踪产物，照带）；GitHub 三 remote（DeepDuck／chenzhiya77-deer-flow／bytedance）全剥，**`upstream`→本地主体一**（挑拣同步＝`git fetch upstream && cherry-pick`）；复制后与主体一 `git status` 逐行一致（`M README.md`＋10 `??` docs）。**裁剪、引擎指向切换＝后置**；副本未装依赖，跑服务时再装（过渡期插件仍可连主体一，同 REST）。
 
 ## 9. 明确不做 / 另案
 
