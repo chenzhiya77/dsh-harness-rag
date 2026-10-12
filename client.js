@@ -23,7 +23,20 @@ window.__ModuleLoader__.load({
       'shell.emptyHint': '先在 DeerFlow 工作台创建知识库，再点「刷新」。',
       'shell.refresh': '刷新',
       'shell.upload': '上传',
-      'shell.uploadPending': '上传入口暂未接线',
+      'upload.uploading': '上传中…',
+      'upload.submittedUnit': '个文件已提交',
+      'upload.failedUnit': '个文件失败',
+      'reindex.button': '重建索引',
+      'reindex.confirmTitle': '确认重建索引？',
+      'reindex.confirmDescription': '将重新嵌入该知识库的全部向量（切片、实体、百科条目、人工卡片；不重解析源文件），期间检索结果可能不稳。',
+      'reindex.confirmAction': '开始重建',
+      'reindex.enqueued': '已开始重建索引',
+      'reindex.alreadyRunning': '已有重建正在进行',
+      'reindex.running': '重建中',
+      'reindex.chunksWritten': '已写入向量',
+      'reindex.lastSucceeded': '上次重建已完成。',
+      'reindex.lastFailed': '上次重建失败，详见服务端日志。',
+      'reindex.failed': '重建失败',
       'shell.kbLabel': '知识库',
       'shell.tab.docs': '文档',
       'shell.tab.recall': '召回',
@@ -87,7 +100,20 @@ window.__ModuleLoader__.load({
       'shell.emptyHint': 'Create one in the DeerFlow workbench, then hit Refresh.',
       'shell.refresh': 'Refresh',
       'shell.upload': 'Upload',
-      'shell.uploadPending': 'Upload is not wired yet',
+      'upload.uploading': 'Uploading…',
+      'upload.submittedUnit': 'file(s) submitted',
+      'upload.failedUnit': 'file(s) failed',
+      'reindex.button': 'Rebuild index',
+      'reindex.confirmTitle': 'Rebuild the index?',
+      'reindex.confirmDescription': 'Every vector in this library will be re-embedded (chunks, entities, wiki entries and manual cards; source files are not re-parsed), and retrieval may be unstable while it runs.',
+      'reindex.confirmAction': 'Start rebuild',
+      'reindex.enqueued': 'Rebuild started',
+      'reindex.alreadyRunning': 'A rebuild is already running',
+      'reindex.running': 'Rebuilding',
+      'reindex.chunksWritten': 'vectors written',
+      'reindex.lastSucceeded': 'Last rebuild finished.',
+      'reindex.lastFailed': 'Last rebuild failed — see the server logs.',
+      'reindex.failed': 'Rebuild failed',
       'shell.kbLabel': 'Knowledge base',
       'shell.tab.docs': 'Documents',
       'shell.tab.recall': 'Recall',
@@ -169,6 +195,33 @@ window.__ModuleLoader__.load({
       return payload
     }
 
+    /** Multipart upload: the file posts raw to the host route (the JSON op
+     * envelope does not fit file payloads); the host streams the body through. */
+    async function callUpload(kbId, file) {
+      const form = new FormData()
+      form.append('file', file, file.name)
+      let response
+      try {
+        response = await fetch(PROXY_ROUTE + '/uploadDocument?kb_id=' + encodeURIComponent(kbId), {
+          method: 'POST',
+          body: form,
+        })
+      } catch (cause) {
+        const error = new Error(String(cause))
+        error.info = { kind: 'bridge', detail: String(cause) }
+        throw error
+      }
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) {
+        const info =
+          (payload && payload.error) || { kind: 'http', status: response.status, detail: 'HTTP ' + response.status }
+        const error = new Error(info.detail || 'HTTP ' + response.status)
+        error.info = info
+        throw error
+      }
+      return payload
+    }
+
     const SECTIONS = [
       { id: 'docs', label: 'shell.tab.docs' },
       { id: 'recall', label: 'shell.tab.recall' },
@@ -215,6 +268,7 @@ window.__ModuleLoader__.load({
           '.hrag-docrow-status-failed { color: var(--dsw-alias-label-error); }',
           '.hrag-notice { padding: 6px 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; word-break: break-word; }',
           '.hrag-notice-error { color: var(--dsw-alias-label-error); }',
+          '.hrag-reindex-status { padding: 0 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
           '.hrag-overlay { position: absolute; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--dsw-alias-bg-mask-1); }',
           '.hrag-dialog { width: min(340px, 100%); display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-lg); background: var(--dsw-alias-bg-layer-1); box-shadow: var(--dsw-elevation-panel); }',
           '.hrag-dialog-wide { width: min(480px, 100%); }',
@@ -297,7 +351,7 @@ window.__ModuleLoader__.load({
     /** Hand-built confirm dialog (the plugin styling contract forbids Harness
      * Client imports): Escape closes, cancel holds the initial focus, and the
      * caller passes the cascade copy. */
-    function ConfirmDialog({ t, title, description, error, busy, onCancel, onConfirm }) {
+    function ConfirmDialog({ t, title, description, error, busy, onCancel, onConfirm, cancelKey, confirmKey }) {
       React.useEffect(() => {
         const onKey = (event) => {
           if (event.key === 'Escape' && !busy) onCancel()
@@ -325,12 +379,12 @@ window.__ModuleLoader__.load({
             h(
               'button',
               { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: busy, autoFocus: true, onClick: onCancel },
-              t('doc.cancel'),
+              t(cancelKey || 'doc.cancel'),
             ),
             h(
               'button',
               { type: 'button', className: 'hrag-btn hrag-btn-danger', disabled: busy, onClick: onConfirm },
-              t('doc.confirmDelete'),
+              t(confirmKey || 'doc.confirmDelete'),
             ),
           ),
         ),
@@ -416,6 +470,14 @@ window.__ModuleLoader__.load({
 
     const CHUNK_PAGE_SIZE = 20
     const CHUNK_FULL_LOAD_CAP = 300
+    /** Poll cadence for the documents list and the reindex status — the
+     * workbench's library pipelines share this 3s cadence. */
+    const PIPELINE_POLL_MS = 3000
+    /** Bar-notice auto-dismiss (toast semantics in the workbench: brief
+     * acknowledgment; the durable truth lives in the list and status line).
+     * Errors get a longer read. */
+    const NOTICE_DISMISS_MS = 4000
+    const NOTICE_DISMISS_ERROR_MS = 8000
 
     /** mm:ss timecode for video shot chunks (workbench chip convention). */
     function chunkTimecode(chunk) {
@@ -903,6 +965,28 @@ window.__ModuleLoader__.load({
         load()
       }, [load, refreshToken])
 
+      // 在飞自刷（照工作台 documentsRefetchInterval 谓词）：任一篇非终态，
+      // 或任一篇的 wiki 腿仍 generating（库级镜像，索引结束后还会动），
+      // 每 3s 静默重取；静默＝不翻 phase、失败保当前视图（下一拍重试）。
+      const poll = React.useCallback(() => {
+        callOp('listDocuments', { kb_id: kbId })
+          .then((rows) => {
+            const list = Array.isArray(rows) ? rows : []
+            setDocs(list)
+            setPhase(list.length === 0 ? 'empty' : 'ready')
+          })
+          .catch(() => {})
+      }, [kbId])
+
+      React.useEffect(() => {
+        const moving =
+          docs.some((doc) => doc.status !== 'ready' && doc.status !== 'failed') ||
+          docs.some((doc) => doc.path_status && doc.path_status.wiki === 'generating')
+        if (!moving) return
+        const timer = window.setInterval(poll, PIPELINE_POLL_MS)
+        return () => window.clearInterval(timer)
+      }, [docs, poll])
+
       const retry = (doc) => {
         setNotice(null)
         setBusy(true)
@@ -1064,6 +1148,19 @@ window.__ModuleLoader__.load({
       const [section, setSection] = React.useState('docs')
       const [refreshToken, setRefreshToken] = React.useState(0)
       const [drawer, setDrawer] = React.useState(null)
+      const [uploading, setUploading] = React.useState(false)
+      const [barNotice, setBarNotice] = React.useState(null)
+      const [acceptedSuffixes, setAcceptedSuffixes] = React.useState(null)
+      const [reindexOpen, setReindexOpen] = React.useState(false)
+      const [reindexBusy, setReindexBusy] = React.useState(false)
+      const [reindexError, setReindexError] = React.useState(null)
+      // 重建状态（照工作台 useReindexStatus＋isReindexRunning）：在飞由端点
+      // 派生（reindexBusy＝点击→首次轮询的缝隙），空闲示上次结果行。
+      const [reindexState, setReindexState] = React.useState(null)
+      const [reindexKick, setReindexKick] = React.useState(0)
+      const reindexRunning =
+        reindexBusy || (reindexState !== null && reindexState.in_progress === true)
+      const fileInputRef = React.useRef(null)
 
       const load = React.useCallback(() => {
         setPhase('loading')
@@ -1084,6 +1181,147 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         load()
       }, [load])
+
+      // Upload accept list — the service's allowlist is the source of truth.
+      React.useEffect(() => {
+        if (phase !== 'ready' || acceptedSuffixes !== null) return
+        callOp('supportedFormats')
+          .then((data) => {
+            const list = data && Array.isArray(data.suffixes) ? data.suffixes : []
+            setAcceptedSuffixes(
+              list.map((suffix) => (String(suffix).startsWith('.') ? String(suffix) : '.' + String(suffix))),
+            )
+          })
+          .catch(() => setAcceptedSuffixes([]))
+      }, [phase, acceptedSuffixes])
+
+      // 切库清残留：旧库的提示行与重建状态不得跨库留存。
+      React.useEffect(() => {
+        setBarNotice(null)
+        setReindexState(null)
+      }, [kbId])
+
+      // 提示行自动消退（工作台 toast 语义：短确认；持久真值在列表与状态行）。
+      React.useEffect(() => {
+        if (!barNotice) return
+        const timer = window.setTimeout(
+          () => setBarNotice(null),
+          barNotice.isError ? NOTICE_DISMISS_ERROR_MS : NOTICE_DISMISS_MS,
+        )
+        return () => window.clearTimeout(timer)
+      }, [barNotice])
+
+      // 重建状态取样（照工作台 useReindexStatus：in_progress 时 3s 轮询，
+      // 空闲停拍；reindexKick 复刻「202 后立即＋1s 二次失效」的点击缝隙补拍）。
+      React.useEffect(() => {
+        if (phase !== 'ready' || !kbId) return
+        let cancelled = false
+        let timer = null
+        const tick = () => {
+          callOp('reindexStatus', { kb_id: kbId })
+            .then((data) => {
+              if (cancelled) return
+              const state = data && typeof data === 'object' ? data : null
+              setReindexState(state)
+              if (state && state.in_progress === true) timer = window.setTimeout(tick, PIPELINE_POLL_MS)
+            })
+            .catch(() => {
+              if (!cancelled) setReindexState(null)
+            })
+        }
+        tick()
+        return () => {
+          cancelled = true
+          if (timer !== null) window.clearTimeout(timer)
+        }
+      }, [phase, kbId, reindexBusy, reindexRunning, reindexKick])
+
+      const handleUpload = (fileList) => {
+        if (!kbId || uploading) return
+        const files = Array.from(fileList || [])
+        if (files.length === 0) return
+        setUploading(true)
+        setBarNotice(null)
+        const results = []
+        const runNext = (index) => {
+          if (index >= files.length) {
+            const ok = results.filter((entry) => entry.ok).length
+            const failed = results.length - ok
+            setUploading(false)
+            if (failed === 0) {
+              setBarNotice({ text: String(ok) + ' ' + t('upload.submittedUnit') })
+            } else {
+              const firstFailure = results.find((entry) => !entry.ok)
+              setBarNotice({
+                text:
+                  String(ok) +
+                  ' ' +
+                  t('upload.submittedUnit') +
+                  ' · ' +
+                  String(failed) +
+                  ' ' +
+                  t('upload.failedUnit') +
+                  '：' +
+                  firstFailure.detail,
+                isError: true,
+              })
+            }
+            setRefreshToken((value) => value + 1)
+            return
+          }
+          callUpload(kbId, files[index])
+            .then(() => {
+              results.push({ ok: true })
+              runNext(index + 1)
+            })
+            .catch((error) => {
+              results.push({ ok: false, detail: errorDetail(error) })
+              runNext(index + 1)
+            })
+        }
+        runNext(0)
+      }
+
+      const confirmReindex = () => {
+        setReindexBusy(true)
+        setReindexError(null)
+        callOp('reindex', { kb_id: kbId })
+          .then((data) => {
+            setReindexBusy(false)
+            setReindexOpen(false)
+            const status = data && data.status
+            setBarNotice({ text: status === 'already_running' ? t('reindex.alreadyRunning') : t('reindex.enqueued') })
+            // 202 先于后台标志翻位返回：立即＋1s 二次取样（照工作台双重失效）。
+            setReindexKick((value) => value + 1)
+            window.setTimeout(() => setReindexKick((value) => value + 1), 1000)
+          })
+          .catch((error) => {
+            setReindexBusy(false)
+            setReindexError(errorDetail(error))
+          })
+      }
+
+      // 重建状态行（照工作台 functional-models-view 的三态文本）。
+      let reindexLine = null
+      if (reindexRunning) {
+        const progress = reindexState && reindexState.progress
+        reindexLine = progress
+          ? t('reindex.running') +
+            ' ' + String(progress.documents_done) + '/' + String(progress.documents_total) +
+            ' · ' + t('reindex.chunksWritten') +
+            ' ' +
+            String(
+              (progress.chunks_indexed || 0) +
+                (progress.entities_indexed || 0) +
+                (progress.wiki_entries_indexed || 0) +
+                (progress.cards_indexed || 0),
+            )
+          : t('reindex.running')
+      } else if (reindexState && reindexState.last_run === 'succeeded') {
+        reindexLine = t('reindex.lastSucceeded')
+      } else if (reindexState && reindexState.last_run === 'failed') {
+        reindexLine = t('reindex.lastFailed')
+      }
 
       let content
       if (phase === 'loading') {
@@ -1136,10 +1374,50 @@ window.__ModuleLoader__.load({
             ),
             h(
               'button',
-              { type: 'button', className: 'hrag-btn', disabled: true, title: t('shell.uploadPending') },
-              t('shell.upload'),
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-outline',
+                disabled: uploading,
+                title: t('shell.upload'),
+                onClick: () => {
+                  const input = fileInputRef.current
+                  if (input) input.click()
+                },
+              },
+              uploading ? t('upload.uploading') : t('shell.upload'),
+            ),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-outline',
+                disabled: reindexBusy || reindexRunning,
+                title: t('reindex.button'),
+                onClick: () => {
+                  setReindexError(null)
+                  setReindexOpen(true)
+                },
+              },
+              t('reindex.button'),
             ),
           ),
+          reindexLine
+            ? h('div', { className: 'hrag-reindex-status' }, reindexLine)
+            : null,
+          h('input', {
+            type: 'file',
+            multiple: true,
+            ref: fileInputRef,
+            style: { display: 'none' },
+            accept: acceptedSuffixes && acceptedSuffixes.length > 0 ? acceptedSuffixes.join(',') : undefined,
+            onChange: (event) => {
+              handleUpload(event.target.files)
+              event.target.value = ''
+            },
+          }),
+          barNotice
+            ? h('div', { className: barNotice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, barNotice.text)
+            : null,
           h(
             'div',
             { className: 'hrag-tabs', style: { '--hrag-tabs': String(SECTIONS.length) }, role: 'tablist' },
@@ -1194,6 +1472,19 @@ window.__ModuleLoader__.load({
                 focusChunkId: drawer.focus,
                 refreshToken,
                 onClose: () => setDrawer(null),
+              })
+            : null,
+          reindexOpen
+            ? h(ConfirmDialog, {
+                t,
+                title: t('reindex.confirmTitle'),
+                description: t('reindex.confirmDescription'),
+                error: reindexError,
+                busy: reindexBusy,
+                cancelKey: 'doc.cancel',
+                confirmKey: 'reindex.confirmAction',
+                onCancel: () => setReindexOpen(false),
+                onConfirm: confirmReindex,
               })
             : null,
         ),
