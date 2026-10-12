@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-12-t3-panel-spec.md](../specs/2026-10-12-t3-panel-spec.md)（问题＋D1–D6 决定＋接口契约＋验收）
-**Status:** 执行中 · 已提交未推（D1–D6 已拍 2026-10-12：D1 全做 / D2 甲 / D3 甲 / D4 乙 / D5 全保留 / D6 延后；**Task 0–4 已收官**——逐格实测见本文件；Task 5–11 未开始）；编码起于 Task 1（Task 0 为只读核实）。
+**Status:** 执行中 · 已提交未推（D1–D6 已拍 2026-10-12：D1 全做 / D2 甲 / D3 甲 / D4 乙 / D5 全保留 / D6 延后；**Task 0–5 已收官**——逐格实测见本文件；Task 6–11 未开始）；编码起于 Task 1（Task 0 为只读核实）。
 **Parent:** [2026-10-11-equivalence-freeze-plan.md](2026-10-11-equivalence-freeze-plan.md)（T2 冻结对——本对复用其数据缝口径、验收惯例与「有意不做插件侧单测」声明）· 步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（全线索进度与决策；全勾后回写 T3 行）。
 
 **Architecture:** 三件事 —— **① 面板本体**（`client.js` 占位串 → 真壳；单文件内分区承载各视图：库·文档｜切片｜召回｜投影｜图谱｜评测）；**② host 半薄代理**（`kb_proxy` 组：面板动作一函数一个、透传既有 `api()` ＋错误规范化；面板侧不持 base URL/凭证——D3 甲）；**③ locale 词条**（面板面全部进 `locale/{zh,en}.json`）。**deer-flow 零改动**——工作台只作功能与形态对照、代码不搬；可视化（投影/图谱/评测）在 DSH 内新写（D5）。
@@ -172,12 +172,18 @@
 > 动到的文件：`client.js`（上传/重建入口段）＋ host 代理新面（上传/重建）。
 > **验收对应**：spec §4.3（重建确认闸——四闸之四）＋ §2 D2 甲（长任务缺口留位）。
 
-- [ ] **上传**：选择文件（多文件）→ 提交；提交结果三态；**进度位留白**（T4 `ctx.jobs` 接线处，本 Task 不做轮询）；页面刷新后列表可见上传的文档；
-- [ ] **重建索引（reindex）**：全库入口（确认级）→ 提交 → 进度位留白（T4 接轮询）；`already_running` 语义如实；
-- [ ] 两者失败态（403/409/网络）如实呈现；
-- [ ] **真跑**：上传一份真实文件 → 列表可见；重建提交 → `already_running` 如实。
+- [x] **上传**：选择文件（多文件）→ 提交；提交结果三态；**进度位留白**（T4 `ctx.jobs` 接线处；10-13 收紧：列表在飞自刷拉回本期，见实测补修）；页面刷新后列表可见上传的文档；
+- [x] **重建索引（reindex）**：全库入口（确认级）→ 提交 → **状态行**（在飞 3s 轮询＋空闲示上次结果；10-13 收紧，原「进度位留白·归 T4」作废）；`already_running` 语义如实；
+- [x] 两者失败态（403/409/网络）如实呈现；
+- [x] **真跑**：上传一份真实文件 → 列表可见；重建提交 → `already_running` 如实（首轮直言＋10-13 复跑见实测）。
 
-**实测**（Task 5，执行后回填）：
+**实测**（Task 5，2026-10-13；编码＋探针＋复跑全过）：
+
+- **落码两件**：host 半 `kb_proxy.ts`——新增 **raw 透传通道**（`uploadDocument?kb_id=`：multipart 原体流式转上游、保留 boundary／token、上游状态与体原样回传；缺 kb→400、未配置→503、不可达→502）＋ op 表＋2（`supportedFormats`、`reindex`）；client 半——「上传」钮接线（隐藏 `<input type=file multiple>`、`accept`＝服务端白名单现取）、逐文件顺序提交＋聚合提示行（「N 个文件已提交」／含失败「· M 个文件失败：<首个详情>」）；「重建索引」钮＝**确认级闸**（复用 ConfirmDialog：标题「确认重建索引？」＋描述照工作台逐字＋「开始重建」）→ 提交 → 提示行「已开始重建索引」／`already_running` →「已有重建正在进行」；失败如实（对话框内红字／提示行红字）。词条去掉 `uploadPending` 占位键（照「占位一动手就让位」）。
+- **探针**（仓外一次性 `probe-t5.mjs`）：**6/6 PASS**——multipart 原体透传（boundary＋内容＋Bearer）＋202 原样回传／后端 400「unsafe filename」透传／缺 kb→400 不触后端／supportedFormats 透传／reindex 两态透传／死后端→502 network。
+- **10-13 验收补修**（他实跑两条点名：「需要刷新才变就绪」＋「正在进行」陈迹；按「照工作台」拉回本期，spec D2／§3.3 已同步）：①**文档列表在飞自刷**——静默重取＋条件轮询 3s（非终态或 wiki 腿 generating，照工作台 `documentsRefetchInterval` 谓词）；②**重建状态行**——host 半 op＋1（`reindexStatus`）；面板在飞态＝`reindexBusy`｜端点 `in_progress`（照 `isReindexRunning` 的 pending 缝合），在飞 3s 轮询、空闲停拍；状态行三态（「重建中 x/y · 已写入向量 N」／「上次重建已完成。」／「上次重建失败，详见服务端日志。」）；在飞按钮禁用（照工作台）；提交后立即＋1s 双补拍（照工作台双重失效）。③**提示行自动消退**（成功 4s／失败 8s——toast 语义；持久真值在列表与状态行）。探针 `probe-t6.mjs` **5/5 PASS**（idle 透传＋Bearer／in-progress 带 progress 透传／缺 kb→400 不触后端／上游 404 透传／死后端→502 network）。
+- **真跑（10-13 复跑，全过·他手点＋UIA 实读）**：末次整重启（进程 02:54 > 改码 02:10 ✓）——「上传」与「重建索引」两步复跑（他复「测试过了」；上传复跑后库内仍 5 篇、无残留中间态）；**UIA 实读面板**：重建状态行「上次重建已完成。」在渲染（提示行无陈迹——首轮「正在进行」陈迹已清）、文档列表 5 行全「就绪」（1/2/1/1/1 切片、计数行「就绪 5」）；后端 `GET …/reindex/status`＝`in_progress:false, last_run:"succeeded"` 一致。工作台对照＝同端点数据＋文案逐字（nginx 未起、页面级对照不可用，已登记）。
+- 本 Task 提交三笔（见提交链）：host 半 kb 代理（上传 raw 透传＋op 表补三）／client 半（上传/重建接线＋在飞自刷与状态行＋提示自动消退）／docs（T3 spec／plan 回填＋步骤记录待排登记）。仓外探针（t5／t6）不入库。
 
 ---
 
@@ -263,3 +269,4 @@
 ## 提交链（滚动记实）
 
 - [x] 插件仓三笔（2026-10-13）：`f0c5960` host 半 kb 代理面＋接线（`kb_proxy.ts`／`http.ts`／`index.ts`）／`b495edf` `client.js` 面板重写（壳＋文档＋切片抽屉＋召回 四面）／本笔 docs（T3 spec＋plan＋步骤记录 T3 行）。**全部未推**（仓暂无 remote）。
+- [x] T5 三笔（2026-10-13）：`b6ee832` host 半——上传 raw 透传＋`supportedFormats`／`reindex`／`reindexStatus` op／`e589c78` client 半——上传/重建接线＋列表在飞自刷＋重建状态行＋提示自动消退／本笔 docs（T3 spec／plan 回填＋步骤记录待排登记「模型面归属与分项目治理」）。**全部未推**（仓暂无 remote）。
