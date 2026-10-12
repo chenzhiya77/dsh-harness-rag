@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { Readable } from 'node:stream'
 import type { Context } from 'cordis'
 import { api, HarnessRagError } from './http.ts'
 import type { ApiError } from './http.ts'
@@ -17,7 +18,8 @@ export const KB_PROXY_ROUTE = '/dsh-harness-rag/api'
  * REST surface. The table grows task by task — T3 Task 1 registered the shell
  * op (the knowledge-base selector's list); Task 2 the documents pane
  * (list / delete / retry); Task 3 the chunks pane (list / delete preview /
- * delete).
+ * delete); Task 5 the ingest actions (supported formats / reindex / reindex
+ * status; the multipart upload rides its own raw pass-through below).
  */
 function buildOps(config: Config): Record<string, (args: unknown) => Promise<unknown>> {
   const needString = (args: unknown, key: string): string => {
@@ -62,6 +64,9 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
       const topK = typeof raw === 'number' && Number.isFinite(raw) ? Math.min(20, Math.max(1, Math.trunc(raw))) : 5
       return api(config, `${kbPath(args)}/recall-test`, { body: { query, top_k: topK } })
     },
+    supportedFormats: () => api(config, '/api/knowledge-bases/supported-formats'),
+    reindex: (args) => api(config, `${kbPath(args)}/reindex`, { method: 'POST' }),
+    reindexStatus: (args) => api(config, `${kbPath(args)}/reindex/status`),
   }
 }
 
@@ -123,6 +128,47 @@ const errorStatus = (info: ApiError): number => {
   return info.kind === 'network' ? 502 : 503
 }
 
+/** Raw upload pass-through: the browser posts multipart here and the body
+ * streams to the backend unchanged (the JSON ops' envelope does not fit
+ * file payloads). The original content-type boundary, the token header and
+ * the upstream status all pass through. */
+const forwardUpload = async (req: IncomingMessage, res: ServerResponse, config: Config): Promise<void> => {
+  const url = new URL(req.url ?? '/', 'http://webServer')
+  const kbId = (url.searchParams.get('kb_id') ?? '').trim()
+  if (!kbId) {
+    sendJson(res, 400, { error: { kind: 'http', status: 400, detail: 'panel op requires "kb_id"' } })
+    return
+  }
+  const base = config.backendUrl?.trim()
+  if (!base) {
+    sendJson(res, 503, { error: { kind: 'not_configured', detail: 'backendUrl is not configured (settings → harness-rag).' } })
+    return
+  }
+  const headers: Record<string, string> = {}
+  const contentType = req.headers['content-type']
+  if (typeof contentType === 'string' && contentType) headers['content-type'] = contentType
+  if (config.apiToken) headers.authorization = `Bearer ${config.apiToken}`
+  let upstream: Response
+  try {
+    upstream = await fetch(new URL(`/api/knowledge-bases/${encodeURIComponent(kbId)}/documents`, base), {
+      method: 'POST',
+      headers,
+      body: Readable.toWeb(req) as unknown as ReadableStream,
+      duplex: 'half',
+    } as RequestInit & { duplex: 'half' })
+  } catch (cause) {
+    sendJson(res, 502, { error: { kind: 'network', detail: `knowledge service unreachable: ${String(cause)}` } })
+    return
+  }
+  const text = await upstream.text()
+  res.writeHead(upstream.status, {
+    'content-type': 'application/json; charset=utf-8',
+    'content-length': Buffer.byteLength(text),
+    'cache-control': 'no-store',
+  })
+  res.end(text)
+}
+
 export function registerKbProxy(ctx: Context, config: Config): void {
   const ops = buildOps(config)
 
@@ -134,6 +180,10 @@ export function registerKbProxy(ctx: Context, config: Config): void {
       }
       const pathname = new URL(req.url ?? '/', 'http://webServer').pathname
       const opName = decodeURIComponent(pathname.slice(KB_PROXY_ROUTE.length + 1))
+      if (opName === 'uploadDocument') {
+        await forwardUpload(req, res, config)
+        return
+      }
       const op = ops[opName]
       if (!op) {
         sendJson(res, 404, { error: { kind: 'op', detail: `unknown panel op: ${opName}` } })
