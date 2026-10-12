@@ -61,5 +61,8 @@ export async function api<T>(
       detail: `${response.status} ${detail.slice(0, 200)}`,
     })
   }
-  return (await response.json()) as T
+  // 204 / empty bodies (e.g. DELETE document) are a legitimate "no payload".
+  if (response.status === 204) return null as T
+  const text = await response.text()
+  return (text ? JSON.parse(text) : null) as T
 }
