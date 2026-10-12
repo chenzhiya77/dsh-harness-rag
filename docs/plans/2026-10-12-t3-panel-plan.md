@@ -1,0 +1,265 @@
+# Harness RAG → DSH 插件 T3 知识库管理面板 —— 实施计划
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Spec:** [2026-10-12-t3-panel-spec.md](../specs/2026-10-12-t3-panel-spec.md)（问题＋D1–D6 决定＋接口契约＋验收）
+**Status:** 执行中 · 已提交未推（D1–D6 已拍 2026-10-12：D1 全做 / D2 甲 / D3 甲 / D4 乙 / D5 全保留 / D6 延后；**Task 0–4 已收官**——逐格实测见本文件；Task 5–11 未开始）；编码起于 Task 1（Task 0 为只读核实）。
+**Parent:** [2026-10-11-equivalence-freeze-plan.md](2026-10-11-equivalence-freeze-plan.md)（T2 冻结对——本对复用其数据缝口径、验收惯例与「有意不做插件侧单测」声明）· 步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（全线索进度与决策；全勾后回写 T3 行）。
+
+**Architecture:** 三件事 —— **① 面板本体**（`client.js` 占位串 → 真壳；单文件内分区承载各视图：库·文档｜切片｜召回｜投影｜图谱｜评测）；**② host 半薄代理**（`kb_proxy` 组：面板动作一函数一个、透传既有 `api()` ＋错误规范化；面板侧不持 base URL/凭证——D3 甲）；**③ locale 词条**（面板面全部进 `locale/{zh,en}.json`）。**deer-flow 零改动**——工作台只作功能与形态对照、代码不搬；可视化（投影/图谱/评测）在 DSH 内新写（D5）。
+
+**硬约束（spec 已裁，实现时不许自行放松）**：
+- **基调（10-12 他拍）**：首期与现状保持一致；**形态层面的改进一律另案**（spec §6 登记表），等基线全落地后再统一修改——续读＝照形态（列表＋跳转＋高亮），中心窗直达不做；召回＝三段展示（单路选择不做）。
+- **前端归属**：新代码全部在插件仓；deer-flow 前端零改动、只读出对照；DeerFlow 面板代码不搬；可视化在 DSH 内重建。
+- **数据缝（D3 甲）**：面板不直连后端；凭证只留在 host 半；proxy 面全部走既有 REST；**若发现缺路由 ⇒ 停下进待裁**（不得顺手改后端）。
+- **管理动作带闸（四闸照工作台）**：删除文档＝确认对话框（**级联影响如实展示**：切片/向量/图谱/wiki 一并删除）；切片删除＝**删除预览**（先看后删）；重试＝门控（只对 failed/降级文档出现；409 语义照后端）；重建索引＝确认级。
+- **长任务呈现归 T4**：上传与重建索引只做"入口＋提交＋进度位"，轮询/失败呈现不在这批。
+- **i18n**：面板词条全走 locale 服务（`ctx.locale.register` 内联字典——官方三方模式；`locale/{zh,en}.json` 仅承载显示元数据），UI 无裸串。
+- **桌面端铁律**：改 `client.js` = 浏览器半，验收须**整重启**桌面端（模块代体检法见步骤记录 §8——比对进程 CreationDate vs 源码 mtime，报错文案 vs 现源码）。
+- **构建方式（已拍 10-12，Task 0 ⑥）**：`client.js` **单文件手写**（内部分区组织；不引打包、不建 `panel/` 目录）——取证：宿主一包一自包含 `client.js`、官方三方路径＝纯 JS 模板、本仓无本地安装底座。
+
+**Global Constraints:**
+- 分支：插件仓独立 git（dsh-harness-rag）；每 Task 落地后随手提交（英文 Conventional；deer-flow 仓零代码改动、`git diff` 仅文档——spec §4.5 验收面）。
+- **执行纪律（D5 全保留下）**：每层真栈验证后再上下一层；**轻面（1–5）全部完成后**才开重型视图（6–8）。
+- **插件侧验证（有意不做单测——T2 已立此声明、本对同口径）**：面板是浏览器半手写工厂，无测试基座、发布态要求薄；验证＝host 半编译探针（一次性，不入库）＋桌面端整重启真跑（各 Task 的「真跑」项）。
+- **每个 Task 的 `**实测**` 行必须回填**（探针输出/真跑结论/提交哈希）——未回写的 plan 不算交付。
+- **scope fence（明确不做）**：中心窗直达续读 · 单路召回选择 · 面板内置对话 · 批量删除/重试 · 拖宽/全屏/浮动细体验（D6 延后）· 不改后端路由 · 不动 T2 工具面。
+- 全勾 = T3 收官，回写步骤记录 T3 行。
+
+**依赖顺序**：Task 0（落点核实）→ Task 1（骨架＋数据缝）→ Task 2（库/文档＋删除/重试）→ Task 3（切片＋续读＋切片删除）→ Task 4（召回）→ Task 5（上传＋重建）→ Task 6（向量投影）→ Task 7（图谱画布）→ Task 8（评测视图）→ Task 9（形态适配）→ Task 10（真栈验收）→ Task 11（收官回填）。轻面先行（1–5）、重型后上（6–8）。
+
+---
+
+## Task 0 — 落点核实（只读 + spec/plan 回填）
+
+> 动到的文件：只读核实 ＋ spec/plan 回填（本对文档）；一次性探针跑完即删、仓里无残留。
+> **验收对应**：无（只读）——为 §4.4（数据缝）/§4.7（门禁）供料 ＋ 硬约束「构建方式」拍板。
+
+- [x] ① **面板入口复核**：`client.js` 既有注册（tab/引导/`openTab`）与挂载点行号；
+- [x] ② **数据缝盘点**：面板所需端点逐条实名（库 CRUD / 文档列表与删除 / 重试 / chunks 分页 / 召回 / 上传 / 重建索引 / 投影 / 图谱 / 评测 CRUD）——含查询参数与响应形；标注哪些 T2 工具层已用、哪些是面板新消费者；**缺路由记入待裁清单**（不顺手改后端）；
+- [x] ③ `ctx.settings` 表单能力面取证（schemastery 依赖路线——T1 冒烟三修已留线）；
+- [x] ④ 官方 decor 样例读面板写法：slot props、样式手段、组件词汇；
+- [x] ⑤ **视图表逐行落到「读哪个端点的哪个字段」**（spec §3.2 视图份额）；可视化三项（投影/图谱/评测）标出数据来源与交互精简口径；
+- [x] ⑥ **构建方式取证与拍板**（写回硬约束末条）；
+- [x] ⑦ D1–D6 已裁值与本文件/spec 核对（回填偏差）。
+
+**实测**（Task 0，2026-10-12 执行；只读取证＝两仓＋宿主安装态）：
+
+- **① 面板入口（`client.js` 共 63 行）**：三处注册 T1 原样有效——tab 类型 `sidebarRightTabs.register` :32-48（id=`dsh-harness-rag`／kind=`harness-rag`／guide 胶囊 `open` order 200）；tab 体 `ctx.slots.register({name:'sidebar.right.pane.tab', key:id, locale:NS})` :49-58；占位组件 `KnowledgePanel({t})` :23-25；字典 zh/en :12-21。Task 1 拆卸面＝:23-25 组件体。
+- **② 数据缝盘点（前缀 `/api/knowledge-bases`；全在 `knowledge_bases.py`）**：
+  - **库**：GET "" :188／POST "" :194（{name,description}→201）／GET :216／PATCH :222／DELETE :228（级联）。
+  - **上传门**：GET /supported-formats :205（{suffixes}——accept 与前置拦截）。
+  - **文档**：GET /{kb}/documents :235（**T2 已用**；行含 path_status／视频库时长镜头数）／POST /{kb}/documents :242（**multipart `file`**→202）／DELETE :258（204／404 级联）／POST …/retry :267（202；409＝非 failed 且非 degraded）。
+  - **切片**：GET …/chunks :277（offset≥0／limit 1–200／`chunk_id` 窗；404 归属守卫；**T2 已用**）／POST /{kb}/chunk-positions :703（{chunk_ids≤1000}→位次，「#K」数据源）。
+  - **召回**：POST /{kb}/recall-test :686（{query,top_k,path?}；**T2 已用**）。
+  - **管理动作**：POST /{kb}/chunks/delete-preview :440（{chunk_ids}→孤儿/受影响/关系删——干跑）／DELETE /{kb}/chunks/{id} :454（409 处理中）／POST /{kb}/reindex :516（202，enqueued|already_running）／GET /{kb}/reindex/status :531。
+  - **可视化**：GET /{kb}/graph :714（实体/关系/社区）／GET /{kb}/vector-projection :724（collections／algo pca|umap／dims 2-3／sample_size 100-10000／refresh；UMAP 缺→400）／POST …/query :749（overlay；未算→409，不触发计算）。
+  - **评测**：questions GET/POST/PATCH/DELETE :774/:784/:810/:826；synthesize :858-891（POST→202｜GET 状态｜accept 201｜忽略 204）；runs POST :901（body 可选 {layers,question_ids}；空题库 409）／cancel :915（非在飞 409）／GET /eval-runs :925（limit／include_ci；含 `in_flight`——轮询源）／DELETE :933（{run_ids}→{deleted}）／latest :943（双层最近 completed）／trend :952／{run_id} :969。
+  - **媒体**（视频库切片/续读）：files/{path} :323／source :341／shots/{i}/frame :358／video/stream :375。
+  - **不进面板（冻结面外留档）**：wiki CRUD :537-568＋generate/regenerate :488/:504、chunks PATCH :419、re-extract :470、manual-knowledge :622-677、chunks-by-ids :297、video recaption :393。
+  - **缺路由＝零**：面板所需端点全部既存，无待裁项。T2 已用三件（recall-test／documents／chunks 窗），其余全部为面板新消费者。
+- **③ settings 表单能力面**：宿主机制＝`plugins.row.config` 槽（keyed `<pkg>#<row>`；本插件＝`dsh-harness-rag#harness-rag`）——页面收 `form.state`／`form.mutate(operations,expectedRevision)`，前提＝该 entry 暴露可编辑 Config 字段（需 schemastery schema 导出；T1 有意砍掉并留注释「经 composition-provided path（dsh-knowledge 先例）」）；纯 JS 插件禁 import ui-primitives（`ConfigField` 只能照抄控件）。**范围注**：D1–D6 冻结面不含 settings 表单（T1 注释与步骤记录 §4 挂着它）——待裁。
+- **④ 面板写法（安装态实读：官方 decor 模板＋cordis-plugin-development 技能＋sidebar-right 全套）**：模板＝单文件工厂 `window.__ModuleLoader__.load({id,factory(require)})`（React 由模块表供给）；tab 体经框架注入的 `useTabInfo()` 读 `{sidebar,panel,tab{record,visible,navigation,signal,actions}}`；UI 规则（practices.md §UI）＝主题 token（`--dsw-alias-*`）是唯一共享样式依赖／禁 import 任何 Harness Client 包／**管理清单参照面＝Plugin Manager 页**／控件从宿主 lib 源码照抄（改名＋只留 token）／文案走 locale／样式随组件卸载回收；sidebar-right 另备标题座（`pane.tab.title`）与 guide 卡座（`tab.guide.entry`）。
+- **⑤ 视图表（逐行＝端点→字段；逐键以工作台 `core/knowledge/types.ts` 为对照随各 Task 落）**：
+
+| 视图 | 端点 | 关键字段 |
+|---|---|---|
+| 库·文档 | GET ""＋GET /{kb}/documents | 名/状态/进度/切片数/path_status/时长镜头数 |
+| 切片 | GET …/chunks | chunk_index/heading_path/page/media 时间码/truncated |
+| 续读 | 同 chunks（窗＋扩 limit）＋chunk-positions | 命中片位次＋整篇列表 |
+| 召回 | POST recall-test | hits/score_type/chunk_position/elapsed_ms（trace 不在——T2 真机定论） |
+| 投影 | GET vector-projection（＋POST query） | x/y/z 坐标/集合归属/overlay 命中 |
+| 图谱 | GET graph | 实体/关系/社区/度数（检索高亮数据源 Task 7 对照工作台核） |
+| 评测 | eval-runs＋questions family | latest 双层/trend 点列/run 详情/题库行/in_flight+progress |
+
+  工作台对照源已实名：`frontend/src/components/workspace/knowledge/`（panels-shell／middle-tabs／kb-list-panel／document-panel／chunk-drawer／recall-test-panel／vector-tab／graph-tab／eval-tab／delete-preview-dialog…）＋ `core/knowledge/{api,types,hooks}.ts`。
+- **⑥ 构建方式拍板＝单文件手写**（写回硬约束）：三条取证——(i) 宿主装载＝**一包一个 `client.js`** 自包含 artifact（client-modules README：相对同步 require 会 throw；分块仅编译器产物 `require.async`）；(ii) 官方三方路径＝纯 JS 模板（compiled 源码的「部署方构建工具」不对外）；(iii) 本仓无本地 node_modules/lockfile（@deepseek-ai 依赖图本机装不通＝设计使然）⇒ 引打包器＝新构建底座＋「改了没生效」新变种。⇒ **不引打包、不建 `panel/` 目录**；视图在 `client.js` 内分区组织（本 plan 与 spec 相关行已同步改写）。
+- **⑦ D1–D6 核对回填**：拍值无误；修三处——(a) spec §3.2 悬空引用「§4 归属表」→「§2 D5」；(b) 「panel/ 目录」表述与 ⑥ 冲突 → 同步改「`client.js` 单文件内分区」；(c) 评测面核对：工作台侧另有**出题（synthesize 四端点）／运行删除／CI 行开关**，且 trend 契约 route 注 v4（run 级点、客户端视窗）vs AGENTS.md v5（10 聚合＋7 火花）**记一处待真栈核**——随 Task 8 范围核对裁定。
+- **门禁**：只读 Task ⇒ 不跑测试；取证物落仓外 `E:\appdevelop\dsh-src-extract\`（skill／decoration 模板／sidebar-right／client-modules／plugin-manager README＋lib 摘件）＋一次性 asar 读件脚本 `dsh-asar.js`（不入两仓）。**未提交**（照纪律）。
+
+---
+
+## Task 1 — 面板骨架重搭（占位→真壳）
+
+> 动到的文件：`client.js`（单文件重写）＋ host 半（`src/kb_proxy.ts` 新＋`src/index.ts` 接线）。
+> **验收对应**：spec §3.1（数据缝）/§3.2（壳结构）→ §4.4（面板请求全经 host 代理）＋ §4.7（整重启真跑）。
+
+- [x] **壳**：占位串换成面板壳——顶部（库选择/刷新/上传入口位）＋视图区（分区标签；重型视图标签 Task 6 起扩展）＋空/加载/错三态；
+- [x] **i18n**：面板词条全走 locale 服务（`ctx.locale.register` 内联字典——官方三方模式；`locale/{zh,en}.json` 仅承载显示元数据），UI 无裸串；
+- [x] **host 半薄代理**：`kb_proxy` 一组（透传既有 `api()` ＋错误规范化），编译探针复验；
+- [x] **真跑**：桌面端**整重启**——面板壳渲染、三态可触发（后端关/开各一遍）。
+
+**实测**（Task 1，2026-10-12；编码＋探针＋真跑全过）：
+
+- **落码三件**：`src/kb_proxy.ts`（新）——前缀路由 `KB_PROXY_ROUTE=/dsh-harness-rag/api`；op 表＝每动作一薄函数（本期 `listKbs`，随 Task 2 起扩展）；错误规范＝服务失败透传状态、不可达 502、未配置 503、未知 op／非 POST／坏 JSON 各自成文；JSON 体上限 1 MB；`ctx.inject(['webServer'])` 可选注入（headless 无 webServer 时工具照常活）。`src/index.ts`——`merged` 一处合并、接线 `registerKbProxy`。`client.js` 重写——壳（顶栏＝库选择/刷新/上传占位钮＋分区标签×3）＋空/加载/错三态＋`callOp` 全走代理；样式全 token（`--dsw-alias-*`／`--dsw-radius-*`／`--dsw-focus-ring-*`，取自 primitives 模块 CSS 的真名清单），控件量度照抄 Button/Input/SegmentedTabs，类名 `hrag-` 前缀；kb 行读 `id/name`（已对 `KnowledgeBase` 类型核实）。
+- **③ 口径核改（登记）**：i18n 原写「词条落 `locale/{zh,en}.json`」——实况纠正：官方三方模式＝`ctx.locale.register(ns,{zh,en})` 内联字典（旗舰包 sidebar-right 同款；client-locale README 明文），`locale/*.json` 只承载显示元数据（宿主未激活即读）⇒ spec §3.2／plan 硬约束与本勾项措辞已同步改「全走 locale 服务」。
+- **编译探针**（仓外一次性 `E:\appdevelop\hrag-probe\probe-t1.mjs`，不入两仓）：**7/7 PASS**——listKbs 透传＋Bearer 由 host 侧注入（mock 端核到 `Authorization: Bearer probe-token`）／后端 500→kind http＋状态与 detail 均透传／未知 op→404 op 信封／GET→405／坏 JSON→400／后端断→502 network／backendUrl 空→503 not_configured。`client.js` 经 `node --check` 净。
+- **真跑（2026-10-12 晚）**：
+  - **服务换装（他令「你来把 8001 换成不带鉴权的服务」）**：原 :8001＝serve.sh 起的 `uv+uvicorn --reload` 树——先试「`backend/.env` 加行＋touch 触发 reload」，日志出了 `WatchFiles detected changes … Reloading...` 但旧 worker 照跑、新 worker 未起（卡死）；改显式 pid 子树停掉（taskkill /F /T，5 进程），起替身：`.venv/Scripts/python.exe -m uvicorn app.gateway.app:app --host 0.0.0.0 --port 8001`（cwd=backend、`PYTHONPATH=.`、`DEER_FLOW_AUTH_DISABLED=1`、`DEER_FLOW_HOME=backend/.deer-flow`；日志 `logs/gateway-t3.log`；**后台进程在我名下，T3 收尾交接**）。`backend/.env` 已加临时行（注释标 `[T3-panel-acceptance 2026-10-12]`，收官删）。
+  - **桌面侧（整重启后，进程 23:25 > 改码 22:31 ✓）**：面板首屏＝**错态**（「知识库面板加载失败」＋401 详情＋重试——UIA 树实锤）→ 点「重试」一跳**就绪态**（组合框「知识库」值 `t3-panel-acceptance`、刷新钮、上传灰钮、分区标签、「此分区实装中」占位——UIA 树实锤）。**空态未现场触发**（同一状态机分支；删库＋刷新可随时看——试过一次因窗口漂移点击未落、未复跑）。
+  - **验收库**：`t3-panel-acceptance`（owner=`default`）建于 23:53；为试空态删过一次、23:56 重建（id `9141e58dee8a4a08a32c5758395d720a`）——留给 Task 2 起当测试数据，T3 收官删。⚠️ **Qdrant 当前没起**（:6333 未监听，替身实例如实报 leg 降级）——列表/面板不依赖它，**进 Task 3/4（切片读/召回）前需起 Qdrant**。
+  - **B 线（他早上那条·顺带核）**：t7 库（`4903a3a1…`，含 t7-window 两篇）在这台机器上**已不存在**——主库无该行、全盘无该 id 与 t7-window 文件、t6 scratch 早删净；本仓工作区/提交也没有今早的知识面代码改动 ⇒ 该「修复」应是数据层面、样本未留存。复验路线＝用验收库重建同构样本（Task 2/3 的上传＋读取会天然重走这条路径）。
+- 本 Task 三文件改动**未提交**（照纪律；探针/替身/`.env` 行均为仓外或 gitignore 面）。
+
+---
+
+## Task 2 — 库视图＋文档视图＋文档删除/重试
+
+> 动到的文件：`client.js`（库·文档视图段）＋ host 代理既有面（库 CRUD/文档列表/删除/重试）。
+> **验收对应**：spec §4.3（删除确认闸＋重试门控——四闸之一/之三）＋ §4.2（库/文档读数对照工作台）。
+
+- [x] 库列表（名/文档数/状态）＋切换；文档列表（名/状态/进度/切片数）；
+- [x] **删除文档**：行内动作 → 确认对话框（**级联影响如实展示**：切片/向量/图谱/wiki 一并删除）→ 执行 → 列表刷新；
+- [x] **重试文档**：门控出现（**只对 failed/降级文档**；409 语义照后端）→ 触发 → 列表刷新；
+- [x] 空态（无库/无文档）、后端不可达态；删除/重试失败（403/404/409）如实呈现；
+- [x] **真跑**：列表数据与工作台对照一致；删除确认流、重试门控对照工作台。
+
+**实测**（Task 2，2026-10-13；编码＋探针＋数据就绪，**真跑复验待整重启**）：
+
+- **落码三件**：host 半——`kb_proxy.ts` op 表＋3（`listDocuments`／`deleteDocument`／`retryDocument`；kb/doc 参缺失 → 400 拒、不触后端），`http.ts` 补 204/空体 → `null`（删除文档成功无载荷，原实现会在空体上炸）；client 半——`DocsView`（列＝名／状态（indexing 带百分比）／切片数（`chunk_count` null 显 `—`）＋状态计数汇总行；行内动作＝重试（**仅 failed 或 ready+任一腿 degraded**，判据照后端 `has_degraded_leg`）＋删除；确认对话框＝手写（无客户端包引用：Escape 关、取消持初始焦点、遮罩点击关），级联句照抄工作台（「将级联清理该文档的切片、向量与图谱贡献，且不可恢复。」zh 逐字；en 同步）；重试提交后提示行「已提交重试」、失败如实行内红字；壳刷新钮联动 docs 重载。
+- **探针**（仓外一次性 `probe-t2.mjs`）：**6/6 PASS**——listDocuments 透传＋Bearer／delete 204→null（空体修复）／retry 透传（成功面统一 200＋原载荷，与 Task 1 契约一致）／delete 404 规范化／retry 409 门控语义透传／缺 kb_id→400 不触后端。
+- **数据就绪（真跑铺垫）**：验收库入 4 篇 md——`t3-doc-a/b`（**趁 Qdrant 关闭时入料 → 如实 failed**，重试门控样本）／`t3-doc-c/d`（Qdrant 起后入料 → ready、各 1 切片）；主 qdrant 容器已拉起（:6333，config 同址）。
+- **真跑（2026-10-13 00:2x，全过·他手点）**：整重启后（进程 00:18 > 改码 00:13 ✓）——面板实渲染文档列表 4 行（名／「就绪 1 切片」）＋计数行「就绪 4」（UIA 树实锤）。**重试流**：A、B 两行在 failed 态显示「重试」（门控正向，他在场）；他手点各自「重试」→ 后端日志坐实 `POST …/retry 202` ＋紧随的自动 `GET …/documents`（面板 load 刷新）→ 两文档 failed→ready；**门控负向**：ready 行只有「删除」无「重试」（UIA 实锤）。**删除流**：他手点「删除」→ 级联确认框（照工作台文案）→「确认删除」→ 日志坐实 `DELETE … 204` → 列表刷成 3 行。⚠️ 空态与删除/重试失败（404/409）的呈现＝探针级（probe-t2 第 4/5 条）＋同状态机分支，**未现场触发**（诚实登记）；后端不可达态 Task 1 已现场验。
+- ⚠️ **工具限制（登记，供后续 Task 参考）**：computer-use 对本窗口 element 点击的坐标折算坏（UIA rect→屏幕中心出负值、点击落空）；浏览器直连 `127.0.0.1:<dsh-web-port>` 被 `dsh web` 鉴权挡（「reopen the URL printed by dsh web」）⇒ 真跑点击段采用「他手点＋我用 UIA 快照＋后端日志收证」的协作式。
+- 本 Task 三文件改动（`client.js`／`src/kb_proxy.ts`／`src/http.ts`）＋仓外探针**未提交**。
+
+---
+
+## Task 3 — 切片预览＋续读＋切片删除（带删除预览）
+
+> 动到的文件：`client.js`（切片视图＋续读段）。
+> **验收对应**：spec §4.3（删除预览闸——四闸之二）＋ §4.2（同片读出一致）。
+
+- [x] 切片列表（最小列集：chunk_index/heading_path/page/时间码——视频库才显）；正文全文直显（照工作台：不截断、不可点；本面无 `truncated` 标志）；
+- [x] **续读＝照形态**：从召回/切片行点开 → 整篇列表（分页接口取数）＋跳到命中片＋高亮；目标片不在首批时按工作台同款「扩 limit 再取」；
+- [x] **切片删除**：删除前调**删除预览**（孤儿实体/受影响关系/受牵连条目——先看后删）→ 确认 → 执行；**不做**中心窗直达（spec §6 另案）；
+- [x] **真跑**：对照工作台抽屉同片结果一致（文案/字段/坐标照抄口径）。
+
+**实测**（Task 3，2026-10-13；编码＋探针＋数据就绪，**真跑复验待整重启**）：
+
+- **落码两件（client ⇄ host）**：host 半 `kb_proxy.ts` op 表＋3（`listChunks`——offset/limit 全走 query；`previewChunkDeletion`——chunk_ids 数组校验；`deleteChunk`）；client 半——`ChunksView`：整篇列表（`#N`＋heading_path（` / ` 拼）＋「页码 N」芯片＋视频库时间码芯片（mm:ss–mm:ss，标题「时间码」）＋删除钮；正文全文直显（照工作台不截断、行不可点——**首版曾自做「两行截断＋点击展开」，真跑前被他点名「切片就是全文呀／切片本来就点不了」即改**，登记纠正）；**取数机制照工作台抽屉**：首屏 20 片、`total ≤ 300` 自动全量、超 cap「加载更多」逐页扩；**跳片＝按 chunk_id 找位——不在已载区则逐页扩 limit 直到命中，命中后 flash 高亮（1.2s）＋scrollIntoView**（spec §6「中心窗直达」不做——照形态扩 limit）；**删除＝删除预览闸**：预览对话框三段（将失格删除的实体＝红徽章／将受影响的实体＝黄徽章／将删除的关系数＝N；空段自动省略）、警示句「删除不可恢复」、取消/确认删除（busy 禁用）；确认后 DELETE →「切片已删除」提示＋列表刷新；409 如实进对话框（文案同工作台 `deleteProcessing`）。文档列表行的「文档名」变入口按钮（点击 → 切「切片」分区并载该文）。
+- **探针**（仓外一次性 `probe-t3.mjs`）：**5/5 PASS**——listChunks query 透传＋Bearer／删除预览 body 与响应透传／delete 204→null／**409「文档正在处理中」透传**／缺参 400 不触后端。
+- **数据就绪**：验收库＋文档 E `t3-doc-e.md`（12 节手册 → 3 片，实体 1/12/39）；**删除预览干跑期望值已录**（E#0002：孤儿实体 39／受影响 0／关系删 31）——真跑对表用。
+- **口径注记（两处）**：① 计划原写「行内展开切文（`truncated` 标志如实）」——**本面不存在该标志**（chunks 面不带 truncated、T2 窗未落），无标记可显示；展开即全文，如实登记。② 切片正文首期按**纯文本 pre-wrap** 渲染（工作台是 markdown 渲染器＋图片改写；插件无渲染库——markdown/图片渲染登记为后续观感项）。
+- **真跑（2026-10-13 00:5x，全过·他手点）**：整重启（进程 00:46 > 改码 00:45 ✓）——文档页点 `t3-doc-e.md` 名 → 切片分区 3 片**全文直显**；对片 #2（chunk_index 1）点「删除」→ **删除预览弹框**（他过目）→「确认删除」→ 日志坐实 `POST …/chunks/delete-preview 200`（预览；可见两次＝他开合过对话框）＋ `DELETE …/chunks/6f959253…#0001 204` → 列表刷成 2 片（`#0000`/`#0002` 存留，位次不重排）。续读的「扩 limit＋闪环」机制随本批落码、真触发留待 Task 4 召回行接线后同批验（focusChunkId 通路已备）。工作台对照＝同端点数据＋文案逐字（nginx 未起、页面级对照不可用，已登记）。
+- 本 Task 两文件改动（`client.js`／`src/kb_proxy.ts`）＋仓外探针**未提交**。
+
+---
+
+## Task 4 — 召回测试（照现状：三段展示）
+
+> 动到的文件：`client.js`（召回视图段）。
+> **验收对应**：spec §4.2（召回同题对照）＋ §2 D4 乙（三段、无单路选择）。
+
+- [x] 输入 query/top_k（1–20 clamp 同工具口径——T2 Task 3 既有口径）；结果三段展示；
+- [x] 分数标签：**服务端每次请求现算、前端只显示字符串**（三路标签规则见 deer-flow `docs/superpowers/specs/2026-09-24-rag-retrieval-followups-design.md` §4.2「召回标签随配置」）；「未请求该路」态**不出现**（面板三路全跑）；
+- [x] 命中行可点 → 进 Task 3 续读流；
+- [x] **真跑**：与工作台召回面板同题对照（零区别）。**单路选择不做**（spec §6 另案）。
+
+**实测**（Task 4，2026-10-13；编码＋探针＋对表值就绪，**真跑复验待整重启**）：
+
+- **落码两件**：host 半 `kb_proxy.ts` op＋1（`recallTest`——query 必填；top_k clamp **1–20 同工具口径**（缺省 5、0→1，注意与工作台 UI 的 0→5 不同——按计划「同工具口径」取工具侧）；body 只发 `{query, top_k}`，不传 `path`＝三路全跑）；client 半——`RecallView`：顶部（query 输入（Enter 触发）＋「每通道条数」数字输入＋「开始检索」钮（空/在飞禁用、「检索中…」态））；结果＝**三段并列卡片**（节头：路名（向量/图谱/百科通道）＋**score_type 徽章**（服务端每次请求现算、前端只显示字符串）＋耗时 ms 芯片＋计数芯片；节体：命中行＝`#rank`＋文档名（≤45% 截断）＋首非空行摘要（截断淡化）＋`p.N`＋分数 mono（null→「—」）；零命中/失败路＝该路 message 居中）；**命中行可点 → 续读流（右侧抽屉）**：vector 命中与 graph 证据行点击 → 开**右侧抽屉**＋**focusChunkId 定位闪环**（chunk_id 前缀反推 doc_id、doc_name 先行显示）；wiki 行**不可点**（条目抽屉面不在本面板分区表内——登记）；`embedding_mismatch` 如实出提示行。**单路选择不做**（spec §6 另案，面板三路全跑）。
+- **形态纠正（他点名 2026-10-13，两轮）**：切片查看首版做成**分区跳转**——他：「当前项目中的逻辑是右侧的弹窗不是跳转」⇒ 改为**右侧抽屉**（ChunkDrawer；文档行改**整行可点**开抽屉（行内按钮 stopPropagation）；**撤销「切片」分区标签**——工作台无此 tab；删除预览对话框 z 序抬到抽屉之上）。二轮——他：「现在点不了遮罩，因为这右侧弹窗是完全覆盖住 rag 空间」+ 不得越出栏外 ⇒ 抽屉**限位在「知识库」栏内**（`position: absolute` 于面板根，遮罩/对话框同限）+ 宽 `min(576px, calc(100%−48px))` **左侧留 48px 可点遮罩条**（照工作台 Sheet）+ 滑入/淡入动效（含 reduced-motion 豁免）+ 关闭改右上小 ✕。spec §3.2 分区表同步修（文档｜召回｜投影｜图谱｜评测；切片＝右侧抽屉）。
+- **探针**（仓外一次性 `probe-t4.mjs`）：**3/3 PASS**——envelope 透传＋body 形状逐键＋Bearer／clamp on the wire（99→20、0→1、缺→5）／守卫（空 query／缺 kb_id → 400 不触后端）。
+- **对表值已录（真跑用）**：真栈同库干跑 `星野摄影 银河 曝光 / top_k 3`——counts v/g/w＝**3/2/3**、score_type＝{vector: `qwen3.7-text-rerank relevance`, graph/wiki: `embedding cosine`}、首命中＝`t3-doc-e.md` score≈0.978 rank 1 pos 2（elapsed 易变不做判据）。⚠️ 趣记：中文 query 经 git-bash 的 curl `-d` 会被本地编码搞坏（后端吐「error parsing the body」）——`--data-binary @file` 即通（探针惯例）。
+- **真跑（2026-10-13 01:3x，全过·他手点＋两轮形态纠正后收口）**：末次整重启（进程 01:32 > 改码 01:31 ✓）——「召回」同题（`星野摄影 银河 曝光` / 3）→ 三段卡片对表命中：**counts 3/2/3**、标签 `qwen3.7-text-rerank relevance`＋双 `embedding cosine`；点向量第一条命中（`t3-doc-e.md`）→ **栏内右侧抽屉滑入＋闪环定位「#3」**（e#0002）✓；日志坐实面板侧多次 `POST …/recall-test 200`＋`GET …/chunks`（抽屉取数）。切片查看形态**两轮纠正**（跳转→抽屉；满栏越界→栏内限位＋左 48px 可点遮罩条＋宽 min(576px,100%−48px)＋滑入动效/淡入＋右上小 ✕）——末轮他复「**无误**」。工作台对照＝同端点同题数据＋文案逐字（nginx 未起、页面级对照不可用，已登记）。
+- 本 Task 两文件改动（`client.js`／`src/kb_proxy.ts`）＋仓外探针**未提交**。
+
+---
+
+## Task 5 — 上传入口＋重建索引（进度位预留）
+
+> 动到的文件：`client.js`（上传/重建入口段）＋ host 代理新面（上传/重建）。
+> **验收对应**：spec §4.3（重建确认闸——四闸之四）＋ §2 D2 甲（长任务缺口留位）。
+
+- [ ] **上传**：选择文件（多文件）→ 提交；提交结果三态；**进度位留白**（T4 `ctx.jobs` 接线处，本 Task 不做轮询）；页面刷新后列表可见上传的文档；
+- [ ] **重建索引（reindex）**：全库入口（确认级）→ 提交 → 进度位留白（T4 接轮询）；`already_running` 语义如实；
+- [ ] 两者失败态（403/409/网络）如实呈现；
+- [ ] **真跑**：上传一份真实文件 → 列表可见；重建提交 → `already_running` 如实。
+
+**实测**（Task 5，执行后回填）：
+
+---
+
+## Task 6 — 向量投影视图（新写）
+
+> 动到的文件：`client.js`（可视化段·投影）。
+> **验收对应**：spec §4.2（投影同库对照）＋ §2 D5（功能不缩、交互可精简）。
+
+- [ ] **数据面**：投影接口（PCA/UMAP 二选一；UMAP 不可用时按后端 400 语义提示）＋检索覆盖（overlay）查询；
+- [ ] **交互精简口径**：散点渲染（canvas）＋悬停拾取＋点击命中行联动切片；参数面板与工作台对齐可精简（采样/算法/集合选择保留）；
+- [ ] **真跑**：与工作台同库对照——点位与覆盖层数据一致（坐标来自同一接口）。
+
+**实测**（Task 6，执行后回填）：
+
+---
+
+## Task 7 — 图谱画布（新写）
+
+> 动到的文件：`client.js`（可视化段·图谱）。
+> **验收对应**：spec §4.2（图谱同库对照）＋ §2 D5。
+
+- [ ] **数据面**：图谱数据接口（实体/关系/社区）＋检索路径高亮覆盖；
+- [ ] **交互精简口径**：力导向渲染＋缩放拖动＋点击实体看详情（抽屉/浮层）；保留社区着色与高亮语汇；
+- [ ] **真跑**：与工作台同库对照——节点/边数量与高亮命中一致。
+
+**实测**（Task 7，执行后回填）：
+
+---
+
+## Task 8 — 评测视图（新写，范围＝工作台对应功能的全部）
+
+> 动到的文件：`client.js`（评测段）。
+> **验收对应**：spec §4.1（一条龙含评测视图）＋ §2 D5（功能不缩）。
+
+- [ ] **范围核对与实现**：评测 tab 的既有面（最新/趋势/历史/题库 CRUD/运行触发/取消/进度）逐项过（Task 0 已实名端点）；实现可比工作台精简，**功能不缩**；
+- [ ] 长任务（评测运行）进度呈现按 T4 口径留位或走现有轮询接口（Task 0 拍）；
+- [ ] **真跑**：与工作台对照——同一 KB 的评测数据读出一致。
+
+**实测**（Task 8，执行后回填）：
+
+---
+
+## Task 9 — 形态适配（D6 延后·首期最小）
+
+> 动到的文件：`client.js`（样式与布局，随各视图收口）。
+> **验收对应**：spec §2 D6（延后裁定）＋ §4.7（真跑）。
+
+- [ ] 首期只保证：默认宽可用＋"可伸展"（内容列不写死像素、长文本截断/换行策略）；拖宽/全屏/浮动细体验**记录为清单待后调**（不阻塞收官）；
+- [ ] 面板全屏（`pane.fullscreen.toggle`）下各视图不出崩坏（抽查 Task 2/4 两个视图）。
+
+**实测**（Task 9，执行后回填）：
+
+---
+
+## Task 10 — 真栈验收（spec §4 全文）
+
+> 动到的文件：无代码（真栈实测＋取证归档）。
+> **验收对应**：spec §4.1–§4.7 逐项。
+
+- [ ] **一条龙**（§4.1）：开面板→建库（或选库）→上传→查切片→续读→删除切片（预览流）→召回测试→删除文档→重建索引→投影→图谱→评测视图；截图取证；
+- [ ] **对照工作台**（§4.2）：召回/切片/投影/图谱各抽一题同库对照；
+- [ ] **四闸**（§4.3）：删除确认/删除预览/重试门控/重建确认逐项过；
+- [ ] **数据缝**（§4.4）：devtools 抽查面板请求全经 host 代理（页面无 base URL/凭证）；
+- [ ] **deer-flow 零改动**（§4.5）：`git diff` 仅文档；
+- [ ] **i18n**（§4.6）：面板词条全走 locale（扫描无硬编码串）。
+
+**实测**（Task 10，执行后回填）：
+
+---
+
+## Task 11 — 收官回填
+
+> 动到的文件：本 plan＋spec 回填＋步骤记录 T3 行。
+> **验收对应**：spec §4.7（全部实测行回填）。
+
+- [ ] 全勾后回写步骤记录 T3 行；提交链滚动记实（英文 conventional）；
+- [ ] 残留与另案核对：spec §6 优化另案表（续读中心窗/单路选择/跳转花样）＋ D6 形态细化清单归档。
+
+**实测**（Task 11，执行后回填）：
+
+---
+
+## 提交链（滚动记实）
+
+- [x] 插件仓三笔（2026-10-13）：`f0c5960` host 半 kb 代理面＋接线（`kb_proxy.ts`／`http.ts`／`index.ts`）／`b495edf` `client.js` 面板重写（壳＋文档＋切片抽屉＋召回 四面）／本笔 docs（T3 spec＋plan＋步骤记录 T3 行）。**全部未推**（仓暂无 remote）。
