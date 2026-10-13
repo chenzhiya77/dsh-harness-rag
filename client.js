@@ -306,6 +306,8 @@ window.__ModuleLoader__.load({
       'ev.syn.reviewCount': '{0} 条待审',
       'ev.syn.droppedChip': '丢弃 {0} 条',
       'ev.syn.reviewMetaTip': '来自 {0} · 生成于 {1}',
+      'ev.syn.docsSep': '、',
+      'ev.syn.docsMore': '{0} 等 {1} 篇',
       'ev.syn.empty': '暂无待审核的候选题',
       'ev.syn.triggerFailed': '合成触发失败',
       'ev.syn.acceptFailed': '候选题采纳失败',
@@ -717,6 +719,8 @@ window.__ModuleLoader__.load({
       'ev.syn.reviewCount': '{0} pending review',
       'ev.syn.droppedChip': '{0} dropped',
       'ev.syn.reviewMetaTip': 'From {0} · generated {1}',
+      'ev.syn.docsSep': ', ',
+      'ev.syn.docsMore': '{0} and {1} total',
       'ev.syn.empty': 'No candidates awaiting review',
       'ev.syn.triggerFailed': 'Failed to trigger synthesis',
       'ev.syn.acceptFailed': 'Failed to accept candidate',
@@ -7241,8 +7245,8 @@ window.__ModuleLoader__.load({
       const docIds = data && Array.isArray(data.doc_ids) ? data.doc_ids : []
       const docsLine =
         docIds.length <= 2
-          ? docIds.map(docTitle).join('、')
-          : docIds.slice(0, 2).map(docTitle).join('、') + ' 等 ' + String(docIds.length) + ' 篇'
+          ? docIds.map(docTitle).join(tk('ev.syn.docsSep'))
+          : tk('ev.syn.docsMore', docIds.slice(0, 2).map(docTitle).join(tk('ev.syn.docsSep')), docIds.length)
       const metaTip =
         data && data.generated_at != null ? tk('ev.syn.reviewMetaTip', docsLine, evFmtRunTime(data.generated_at)) : null
       const busy = busyId !== null
