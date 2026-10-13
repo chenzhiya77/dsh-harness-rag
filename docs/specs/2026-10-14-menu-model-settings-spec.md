@@ -1,0 +1,99 @@
+# 面板 ⋯ 菜单与功能模型设置 —— spec
+
+**Status:** 🟢 已裁（2026-10-14 四拍：①结构照拟稿、「刷新」改「刷新界面」、每项带图标／②皮肤＝DSH 真值 Menu／③设置面＝照工作台全量（拆批）／④立新对）；**未开工**，编码起于 plan Task 0（只读核实）。
+**来源:** 10-13 他令——「选择库的右侧加上 deepseekharness 中同款的三点菜单：工作台库级菜单项落脚＋功能模型设置并入；行内『刷新/上传文档/重建索引』移入菜单（重建索引落入功能模型设置界面中）」。承接：T3 plan「RAG 前端全域覆盖审计」A 组裁定行＋步骤记录「模型面归属与分项目治理」条（待排→转正）。
+**配套 plan:** [../plans/2026-10-14-menu-model-settings-plan.md](../plans/2026-10-14-menu-model-settings-plan.md)（同批成对）。
+
+## 1. 范围
+
+两件事，一个形态来源：
+
+1. **顶栏 ⋯ 菜单（IA 重构）**：面板顶栏由 `[库 select] [刷新] [上传] [重建索引]` 收敛为 `[库 select] [⋯]`；菜单条目与分段（照拟稿拍定）：
+
+   ```
+   上传文档                     ← 在飞时禁用＋「上传中…」（工作台同款）
+   刷新界面
+   ────────────
+   更新百科                     ← 在飞时 spinner＋禁用
+   重建百科                     ← 走共享确认弹窗
+   ────────────
+   重命名知识库                  ← 单字段弹层（照工作台）
+   删除知识库                    ← 确认框（级联文案照工作台键）
+   ────────────
+   功能模型设置                  ← 打开设置面（重建索引入口落于其内）
+   ```
+
+2. **功能模型设置面（面板内）**：照工作台 `settings/functional-models-view`（1998 行）**全量**移植、拆批落地——功能模型（嵌入/稀疏/重排/抽取/裁判/多模态/解析/ASR）的查看与编辑、各探测（连通/维度/嵌入/ASR/稀疏）、重建索引入口、迁移状态。**重建索引不落菜单、落此面**（工作台同构）。
+
+**形态来源（硬引用）**：菜单皮肤＝宿主真值（`Menu.module.css` 全参，见 §2 M2）；菜单图标＝宿主真值优先（web bundle `index-5SrrfWpU.js` 内含全图标库，Regular/Medium 两号；Task 0 提取原路径）。
+
+## 2. 决定表（M1–M6）
+
+### M1 —— 菜单结构与条目（**已拍：照拟稿**）
+条目/分段见 §1.1。**「刷新」文案改「刷新界面」**；**每个按钮前都要有图标**。行内三钮退役：上传/刷新→菜单；重建索引→设置面（非菜单项）。
+
+### M2 —— 菜单皮肤（**已拍：DSH 真值 ⓑ**）
+按宿主 `Menu.module.css` 真值（Task 8 已取证一次）：面板 padding 4 / min-width 144 / radius-lg / 半透明面 `--dsw-menu-surface-fill`＋`--dsw-menu-backdrop-filter` / `--dsw-elevation-prominent` 阴影 / **无边框**；行 min-height 34px / 13px 字・行高 20 / radius-md / 6px 8px 内边距 / gap 6；危险行 `--dsw-alias-state-error-primary`＋hover `--dsw-alias-interactive-bg-hover-danger`；分隔线 0.5px `--dsw-alias-border-l2`、margin 3px 2px；触发器＝ ⋯ 图标钮（`IconEllipsisOutlineRegular` **原路径**）。
+**评测域现行两枚菜单维持现状**（Task 8 终态＝描边紧凑形，经他复看定稿；本次未点名统一——如需统一另议，见 §6 登记）。
+
+### M3 —— 菜单图标（**已拍：宿主原生 ≻ 相同语言 ≻ 相关合适**）
+缺件沿用工作台同款（lucide 线条款，Task 7 边箭头「DSH 无件⇒沿用工作台」先例）。拟表（Task 0 提取原路径后终核）：
+
+| 条目 | 图标 | 来源 |
+| --- | --- | --- |
+| ⋯ 触发器 | `IconEllipsisOutlineRegular` | 宿主原生命中 |
+| 上传文档 | lucide `Upload` | 宿主无上传件→工作台同款 |
+| 刷新界面 | `IconRefreshOutlineRegular` | 宿主原生命中 |
+| 更新百科 | lucide `BookOpen` | 宿主无书形件→工作台同款 |
+| 重建百科 | lucide `RefreshCw` | 工作台同款（⚠️ 小裁点：与「刷新界面」同形异族——Task 1 复看时二选一） |
+| 重命名知识库 | `IconEditOutlineRegular` | 宿主原生命中（工作台＝Pencil 同义） |
+| 删除知识库 | `IconTrashOutlineRegular` | 宿主原生命中 |
+| 功能模型设置 | `IconSettingsOutlineRegular` | 宿主原生命中 |
+
+### M4 —— 设置面范围与批次（**已拍：乙·全量拆批**）
+| 批 | 内容 |
+| --- | --- |
+| 批 1（随 Task 1） | 设置面骨架（面板内 Sheet，宽上限照既有抽屉定式）＋**读取展示**（`GET /api/rag/config` 全景）＋**重建索引入口**（含在飞态/状态行，复用既有 `reindex`/`reindexStatus` op）＋**迁移状态**（`GET …/migration`） |
+| 批 2 | 嵌入段：provider/稀疏来源/维度表单＋保存（`PUT …/config`）＋守卫（维度变更、稀疏未配/不支持档）＋探测（`probe-embedding`/`probe-dimensions`/`probe-connectivity`/`probe-sparse`） |
+| 批 3 | 多模态段：caption＋ASR（引擎/模型/provider/`probe-asr`） |
+| 批 4 | 解析段（MinerU 档/版本/provider/语言）＋裁判/抽取模型段＋收口 |
+
+每批以工作台同段为逐句对照底本；文案键取工作台 `core/rag`＋设置视图现文案。
+
+### M5 —— 数据缝（不变式）
+面板仍不直连后端：新增 host op（薄透传）：`createKb`／`renameKb`／`deleteKb`／`ragConfigGet`／`ragConfigPut`／`ragMigration`／`probeEmbedding`／`probeDimensions`／`probeConnectivity`／`probeAsr`／`probeSparse`（＋模型目录读取，按工作台 `useModels` 实际端点定名——Task 0 核）。凭证/基址仍只留 host 半。**deer-flow 零代码改动**。
+
+### M6 —— 管理动作带闸
+重命名＝单字段弹层；删除知识库＝确认框（**级联影响如实展示**，文案照工作台 `deleteKbConfirmTitle/Description`）；重建百科沿用既有共享确认弹窗——五闸口径不因移位而变。
+
+## 3. 落点
+
+- `client.js`：顶栏段（按钮退役＋⋯ 菜单件）＋设置面（新段）：四批分段落 `hrag-set-*` 命名族；菜单件按 M2 参数实现（可抽 `DshMenu` 通用件供后续复用）。
+- `src/kb_proxy.ts`：新 op 表（M5 清单；每 op 一函数、守卫造句照既有惯例）。
+- **无后端改动**——全部走既有 REST/BFF 面。
+
+## 4. 验收
+
+1. **菜单逐项**（真栈他手点）：上传（在飞禁用+文案）／刷新界面／更新百科（spinner+禁用）／重建百科（确认弹窗）／重命名（弹层+顶栏/store 名同步）／删除库（确认框→列表移除、选中回退）／功能模型设置（开面）；图标与皮肤与宿主真值核对（Task 0 提取的路径/参数逐条对）。
+2. **设置面批 1**：读取展示与工作台同库同值对照；重建索引入口行为（在飞态 3s/状态行/提交双补拍）与原顶栏钮逐项一致；迁移状态文案对照。
+3. **探针**：`probe-menu`（仓外）——新 op 的 method/path/body/守卫（create/rename/delete/ragConfig/probes）逐项；桥契约照实断言。
+4. **门禁**：`node --check`＋冒烟回归＋桌面端整重启真跑（模块代体检法）。
+
+## 5. 影响面
+
+- 顶栏形态变化＝面板首行控件重排（`[select][⋯]`）；上传/刷新/重建索引的入口位移＝**本对验收面**。
+- 评测域菜单皮肤维持现状（M2 注）；若他日要统一，登记 §6。
+- 与 T3「覆盖审计」其余未落候选（建库入口/重复上传/下载/邮件出题等）**互不并入**——那些仍待逐条裁（审计节）。
+
+## 6. 缺口登记（优化另案）
+
+| 项 | 说明 | 出口 |
+| --- | --- | --- |
+| 评测域菜单皮肤统一 | 本对新菜单＝DSH 真值；评测域两枚＝描边紧凑（Task 8 定稿） | 若要求统一，另议 |
+| 「重建百科 vs 刷新界面」图标撞形 | 两枚 refresh 系图标并存 | Task 1 复看二选一（表现层微裁） |
+
+## 7. 非目标
+
+- **对话主模型**不在此面（各自宿主治理：DSH 对话用 DSH 配置）。
+- 模型目录的**增删编辑**（若目录端点只读则维持只读；编辑归模型配置既有面）。
+- 菜单条目次序的进一步微调、设置面批 2–4 的段内细节——前者 Task 1 复看，后者归各批。

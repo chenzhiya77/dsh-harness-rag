@@ -324,6 +324,40 @@
 
 ---
 
+## RAG 前端全域覆盖审计（10-13 令；只读比对）
+
+> **目的**：核销 T3「功能面＝工作台知识库页全部」主张——把工作台 RAG 前端**逐件**与插件现状对照（样式＋逻辑，逐句走）。
+> **范围三源（10-13 清点）**：① `frontend/src/components/workspace/knowledge/` **53 件**（UI 组件；前缀族 eval-*/wiki-*/kb-*/citation-*/document-*/duplicate-* 天然分块）；② `frontend/src/core/knowledge/` **22 件**（逻辑/数据）；③ 域外触及点 **8 处**＋设置侧 `core/rag/` 5 件。**结论：有分块、但内容不全在分块内**——域外散件单列 K 组。
+> **只读纪律**：本轮不改码；发现即记录（附文件＋行号锚）。每块产出三条：**已落**（对照插件哪段）／**变形**（差在哪、是否 D 裁定有意）／**未落候选**（带归属建议）。
+> **裁定出口（逐条过；每裁一条 → spec 落一行）**：① 微小真 gap → 补 T3 收尾或并入既有对；② 成面 → spec §6 登记＋立新对／进待排；③ 不适用 → 销项留档。**spec 只在裁定时动**（「到位再立对」）。
+
+- [x] **A 页面壳与库列表**：A1 页面宿主与三栏壳（`app/workspace/knowledge/page.tsx`＋`panels-shell.tsx`）／A2 库列表与分段条（`kb-list-panel/kb-tab-strip`）／A3 库级 ⋯ 菜单（上传·更新百科·重建百科·重命名库·删除库）／A4 toast 体系（`kb-toast`）／A5 B′ 锚定件（`anchor-block-notice`＋`use-anchor-confirm`）／A6 局部件七枚（`run-after-menu-close`·`scrollable-textarea`·`file-type-badge`·`chunk-tick-rail`·`drawer-editor`·`drawer-icon`·`duplicate-upload-dialog`）——初判：A4/A5 已落、A2 变形、**A3 重命名/删除库＝未落候选**、A6 逐个待核。
+- [ ] **B 文档面**：B1 文档表（`document-panel`）／B2 失败详情面板（`doc-failure-panel`）／B3 core 四件（`document-stats/view`·`use-doc-table-prefs`·`doc-errors`·`path-status`）／B4 查重与白名单（`duplicate-*`＋`supported-formats`）——初判：B1 已落（含自刷）、白名单已落；**B2/B4 未落候选**、B3 待核。
+- [ ] **C 切片面**：C1 切片抽屉／C2 富切片卡（渲染/原始·实体展开·编辑·重抽·删除）／C3 删除预览——初判：C1/C3 已落；C2 只读+删除已落、编辑/重抽＝既定不进面板（待确认口径）。
+- [ ] **D 召回面**：D1 测试面板（三路·勾选锚定·存为考题·复现）／D2 **图谱通道迷你图**（`recall-graph-mini`）——初判：D1 已落；**D2 未落候选**（插件该段现为行列表）。
+- [ ] **E 百科面**：E1 百科组四件（tab/panel/entry-drawer/rebuild-dialog）／E2 卡片两件＋**抽屉体系**（`manual-card-*`·`core/card-drawers`）／E3 条目编辑弹层（`wiki-edit-dialog`）——初判：E1 已落；E2 卡片只读已落、抽屉体系＝未落候选；E3＝已登记另案。
+- [ ] **F 图谱面**：`graph-tab/canvas/graph-utils`——核销式抽查（十六轮账）。
+- [ ] **G 投影面**：`vector-tab/vector-canvas`——核销式抽查（十六轮账）。
+- [ ] **H 评测面**：`eval-*` 14 件＋`eval-run-status/trend.utils`——核销式抽查（Task 8 账）。
+- [ ] **I 对话侧**：`chat-panel`（库内对话：输入/模型/历史/附件）＋引用四件（`kb-assistant-content`·`kb-citation-sources`·`citation-mark`·`citations/*`·`rehype-citation-marks`）＋会话-库关联（`kb-threads`·`core/threads/*`）＋导入子菜单（`knowledge-base-import-submenu`）——口径复核（面板内置对话＝D 裁不做；其余按宿主面归类）。
+- [ ] **J 设置面**：`settings/functional-models-view`＋`core/rag/*`——待排登记复核（「模型面归属」）。
+- [ ] **K 域外散件**：8 触及点（对话页/导出菜单/两处会话列表/运行状态附注/core threads×2/duplicate-flow）——逐点定归属（多为不适用销项）。
+
+**审计结果**（逐块回填：已落对照／变形清单／未落候选＋归属建议）：
+
+**A 组（10-13，逐件走完）**：
+
+- **A1 页面壳**（`page.tsx` 665 行＋`panels-shell.tsx` 377 行）：宿主壳（三栏/折叠/拖宽/窄口横滚/中栏 scoped toast）→ **不适用销项**（DSH 右栏宿主替代；弹层/滚动条等价物已于 Task 3 形态纠正对齐）。页级逻辑**已落对照**：tab＋抽屉状态架构／wikiRunActive（off-tab 轮询）／regeneratingIds＋drain 边真话 toast／generate+regenerate 的 ack 分流（already_running 回退整库语义）／召回→投影叠加通道／空态提示。**变形（有意）**：followChat「跟随对话」开关（面板无 chat，已登记不做）＋深链 `?kb&thread` 不适用。**未落候选**：①库排序拖拽＋上次打开记忆（`kb-order`）②重复上传拦截 ③文档下载（`onDownload`）④文档右键快捷出题（`onGenerateQuestion`→count=1 合成）⑤`docErrors` 错误分类文案。脚注：工作台自身瑕疵——`page.tsx` 654/657 硬编码中文 toast（非我方问题，记档）。
+- **A2 库列表＋分段条**（`kb-list-panel` 281＋`tab-strip` 149＋`utils` 22）：插件＝顶栏 select 轻量版（**变形有意**——面板空间）；**未落候选**：⑥**建库入口**（名称+描述弹层；spec §4.1 一条龙含「建库（或选库）」现只选）⑦**tab 行溢出降级**（放不下进遮罩下拉＋激活滚入有效可见区＋尾垫；工作台含 2026-09-28 专门 spec；插件 6 tab＝等分网格窄档无降级）；共享库分组＝演示件销项。
+- **A3 库级 ⋯ 菜单**（`middle-tabs`）：上传✓（形态＝顶栏钮）／更新百科✓（**位置差**：工作台库级头部任意 tab 可见，插件在百科 tab 内 ⋯——变形待裁）／重建百科✓（共享弹窗同款）／**⑧重命名库＝未落**／**⑨删除库＝未落**（含确认框文案键）／**⑩上传白名单前置分区拦截**（`partitionFilesBySuffix`→被拒提示）＝未落候选（小）；库名+「个人知识库」Badge 行＝变形（库名进 select，有意）；`runAfterMenuClose`＝架构不适用销项（自研菜单无 Radix 双弹层指针卡死）。
+- **A4 toast**（`kb-toast`）：工作台＝中栏右下 scoped toast（防盖会话输入框）→ 插件＝行内提示行＋自动消退（**变形有意**；功能等价已落——真话文案＋4s/8s 消退）。观感差记：插件提示在行内顶部、工作台在右下浮层。
+- **A5 B′ 锚定件**（`anchor-block-notice`＋`use-anchor-confirm`）：**已落✓逐项对齐**（红块：missing 不可覆盖／miss_terms／建议锚／hits 形／琥珀确认钮同款色档；`missing_chunk` 仍 422 红块保留）。差异：错误识别＝class（工作台）vs 结构化 detail 判定（插件——桥 envelope 无 class，有意等价）。
+- **A6 局部件七枚**：`run-after-menu-close`＝不适用销项；`scrollable-textarea`（自动长高＋overlay 滚动条）→ 插件 textarea 原生滚动，**观感后调候选（小）**；`file-type-badge`（9 类 Ardot 56-grid 图标体系＋MIME 判型＋拖拽探测）→ **⑪未落候选**（插件文档行无类型图标；权威映射在 Ardot 库外）；`chunk-tick-rail`（切片刻度轨：门槛≥5/间距 26/悬停标签层/点击跳片）→ **⑫未落候选**；`drawer-editor`＋`drawer-icon`（抽屉建/编弹层＋12 图标映射）→ **伴随项（随 E2 卡片抽屉体系裁定）**；`duplicate-upload-dialog`（identical 两选／conflict 三选：另存 `name (2).ext`／替换＝先删后传）→ **未落候选（并入②）**。
+- **A 组小结**：已落 5 组；变形有意 5 处；**未落候选 12 条**（①建库入口②重复上传拦截〔含 dialog〕③文档下载④文档右键出题⑤docErrors 文案⑧重命名库⑨删除库⑩白名单前置拦截⑦tabs 溢出降级⑪文件类型图标⑫切片刻度轨，另：库排序+记忆）＋伴随项 2（抽屉编辑器/图标）＋观感后调 1（scrollable-textarea）＋变形待裁 1（更新百科位置差）。**待裁**（归属建议）：微小补丁档＝①③⑩⑧⑨；另案/后调档＝②④⑤⑦⑪⑫＋库排序记忆＋刻度轨；变形待裁＝更新百科是否加库级入口。
+- **A 组裁定（10-13 他令）**：变形待裁＋⑧⑨＋J 组一并落成**顶栏 ⋯ 菜单重构批**——选择库右侧加 DSH 同款 ⋯ 菜单：工作台库级菜单项落脚（上传/更新/重建百科、重命名/删除库）＋**功能模型设置并入**＋顶栏「刷新/上传/重建索引」三钮移入菜单（**重建索引落入功能模型设置界面**，工作台同构）；「模型面归属」随之从待排转正。**10-14 四拍定案、已立对**：[`2026-10-14-menu-model-settings-spec`](../specs/2026-10-14-menu-model-settings-spec.md)＋[`plan`](2026-10-14-menu-model-settings-plan.md)（Task 0 只读核实起）。
+
+---
+
 ## 提交链（滚动记实）
 
 - [x] 插件仓三笔（2026-10-13）：`f0c5960` host 半 kb 代理面＋接线（`kb_proxy.ts`／`http.ts`／`index.ts`）／`b495edf` `client.js` 面板重写（壳＋文档＋切片抽屉＋召回 四面）／本笔 docs（T3 spec＋plan＋步骤记录 T3 行）。**全部未推**（仓暂无 remote）。
