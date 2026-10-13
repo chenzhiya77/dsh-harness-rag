@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-12-t3-panel-spec.md](../specs/2026-10-12-t3-panel-spec.md)（问题＋D1–D6 决定＋接口契约＋验收）
-**Status:** 执行中 · 已提交未推（D1–D6 已拍 2026-10-12：D1 全做 / D2 甲 / D3 甲 / D4 乙 / D5 全保留（**10-13 复查补记：百科原枚举漏格，已补入**）/ D6 延后；**Task 0–9 已落地**——逐格实测见本文件（Task 7/8 真跑待补验；Task 9 真跑 10-13 全过）；Task 10–12 未开始）；编码起于 Task 1（Task 0 为只读核实）。
+**Status:** 执行中 · 已提交未推（D1–D6 已拍 2026-10-12：D1 全做 / D2 甲 / D3 甲 / D4 乙 / D5 全保留（**10-13 复查补记：百科原枚举漏格，已补入**）/ D6 延后；**Task 0–10 已落地**——逐格实测见本文件（Task 7/8 真跑待补验；Task 9/10 真跑 10-13 全过）；Task 11–12 未开始）；编码起于 Task 1（Task 0 为只读核实）。
 **Parent:** [2026-10-11-equivalence-freeze-plan.md](2026-10-11-equivalence-freeze-plan.md)（T2 冻结对——本对复用其数据缝口径、验收惯例与「有意不做插件侧单测」声明）· 步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（全线索进度与决策；全勾后回写 T3 行）。
 
 **Architecture:** 三件事 —— **① 面板本体**（`client.js` 占位串 → 真壳；单文件内分区承载各视图：库·文档｜切片｜百科｜召回｜投影｜图谱｜评测）；**② host 半薄代理**（`kb_proxy` 组：面板动作一函数一个、透传既有 `api()` ＋错误规范化；面板侧不持 base URL/凭证——D3 甲）；**③ locale 词条**（面板面全部进 `locale/{zh,en}.json`）。**deer-flow 零改动**——工作台只作功能与形态对照、代码不搬；可视化（投影/图谱/评测）在 DSH 内新写（D5）。
@@ -280,10 +280,19 @@
 > 动到的文件：`client.js`（样式与布局，随各视图收口）。
 > **验收对应**：spec §2 D6（延后裁定）＋ §4.7（真跑）。
 
-- [ ] 首期只保证：默认宽可用＋"可伸展"（内容列不写死像素、长文本截断/换行策略）；拖宽/全屏/浮动细体验**记录为清单待后调**（不阻塞收官）；
-- [ ] 面板全屏（`pane.fullscreen.toggle`）下各视图不出崩坏（抽查 Task 2/4 两个视图）。
+- [x] 首期只保证：默认宽可用＋"可伸展"（内容列不写死像素、长文本截断/换行策略）；拖宽/全屏/浮动细体验**记录为清单待后调**（不阻塞收官）；
+- [x] 面板全屏（`pane.fullscreen.toggle`）下各视图不出崩坏（抽查 Task 2/4 两个视图）。
 
-**实测**（Task 10，执行后回填）：
+**实测**（Task 10，2026-10-13）：
+
+- **可伸展审计（编码侧，全量扫）**：写死像素仅剩原子件（按钮/芯片/圆点；抽屉 576 与对话框 340·480 上限＝有意策略）；无内容列锁宽；全部 `text-overflow: ellipsis` 规则均带 `overflow: hidden`（flex/grid 自动最小尺寸归零⇒真能缩）；三画布（投影/图谱/趋势图）ResizeObserver＋每帧 `clientWidth/Height`×DPR（拖宽/全屏自动重绘）；无 vw/vh 硬假设；弹层 fixed 测位。**修**：三处长文容器补 `word-break: break-word`（合成候选答案/锚片预览/运行日志 pre——长 token 溢出）。
+- **全屏抽查（他手点，10-13 全过）**：面板全屏下「文档」「召回」两视图＋拖宽均不崩；随批落三处缺陷修（见下）。
+- **待后调清单（拖宽/全屏/浮动三档细体验，D6 延后）**：① 宽栏利用——题库题面列固定 190px 上限、评测瓦片恒 2 列（可考虑随宽扩列）；② 图谱/投影 resize 不重拟合（保用户视角、加宽只增留白）——窗口大幅变化是否重全览待定；③ EvalMenu 打开期间拖宽不跟随重定位（低风险）；④ 抽屉 576px 上限超宽屏不满栏（照工作台 max-w-xl 口径维持）；⑤ 浮动窗形态未实测（自由尺寸）。
+- **随批缺陷修（10-13 验收轮实报；均存量缺陷，根因＋防护全落）**：
+  - **图谱首帧闪烁**（他报「进入一瞬全图、随后变缩略」）：帧迹实证＝首帧预拟合（0.576）本正常，但力场收敛早期**重力坍缩**令瞬时包围盒缩小、autoFit 的 `rawFit≥1` 分支把视口放回 **zoom 1** 持续约 50–100ms（三次进入逐次复现：f2/f4 起跳、f12/f15 回落）；修＝**本代视口上限＝预拟合值**（只减不增），拟合抽成纯函数 `graphFitViewport` 与步进共用。取证法＝渲染层 localStorage 面包屑 → leveldb 磁盘读回（仓外，不入库）。
+  - **召回结果渲染白屏**（他报「全屏＋召回 → 白屏」）：**宿主机理**——`dsh-client-locale` 的 `translate` 以 `name in params` 取插值（params 须对象），我方三处直传裸值（勾选框 `selectLabel` 的 aria/title＋保存条 `selectedCount`）⇒ `Cannot use 'in' operator to search for '0' in 't3-doc-b.md'`；**先落崩溃隔离护栏**（六个分区＋三个抽屉＋整壳各套错误边界：就地显示错误栈＋重试，不再整屏白）抓栈定案；修＝三处改 `{ 0: … }` 对象参数；**冒烟 `t` 桩改宿主同语义契约**（修前逐字复现、修后全绿——同类从此被冒烟拦）。
+  - **召回节头版式**（他报「格式都是乱的」）：score_type/耗时/计数被塞进 26px 方形图标芯片（长文本居中溢出压住节名）；修＝新自动宽胶囊 `.hrag-textchip`，同类顺带＝切片抽屉「时间码」「页码 N」两处同改；命中行勾选框改正**悬停才现**（工作台同款；勾中/聚焦/有勾选常显）。
+- **门禁**：`node --check` 过；`client-load-check.mjs`（仓外冒烟）**19 项**全绿——含宿主语义 t 桩、HragBoundary 回退面渲染、`graphFitViewport` 数值自检（0.576/1/0.3 夹取与居中公式逐数对旧口径）、召回全形状/弹层/红块渲染；本批 client.js 单文件、host 半零改。
 
 ---
 
