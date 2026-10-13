@@ -20,7 +20,9 @@ export const KB_PROXY_ROUTE = '/dsh-harness-rag/api'
  * (list / delete / retry); Task 3 the chunks pane (list / delete preview /
  * delete); Task 5 the ingest actions (supported formats / reindex / reindex
  * status; the multipart upload rides its own raw pass-through below);
- * Task 6 the vector projection (coordinates + the query overlay transform).
+ * Task 6 the vector projection (coordinates + the query overlay transform);
+ * Task 7 the knowledge graph (nodes / edges / communities) and the chunk
+ * positions behind the "slice #K" labels.
  */
 /** Shared projection query mirror for both projection ops: collections join
  * into the comma form the route declares (absent array = route default),
@@ -82,6 +84,14 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
       return api(config, `${kbPath(args)}/recall-test`, { body: { query, top_k: topK } })
     },
     supportedFormats: () => api(config, '/api/knowledge-bases/supported-formats'),
+    knowledgeGraph: (args) => api(config, `${kbPath(args)}/graph`),
+    chunkPositions: (args) => {
+      const ids = (args as Record<string, unknown> | null | undefined)?.chunk_ids
+      if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === 'string' && id.trim())) {
+        throw new HarnessRagError({ kind: 'http', status: 400, detail: 'panel op requires "chunk_ids"' })
+      }
+      return api(config, `${kbPath(args)}/chunk-positions`, { body: { chunk_ids: ids } })
+    },
     reindex: (args) => api(config, `${kbPath(args)}/reindex`, { method: 'POST' }),
     reindexStatus: (args) => api(config, `${kbPath(args)}/reindex/status`),
     vectorProjection: (args) => {
