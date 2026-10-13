@@ -340,7 +340,7 @@
 - [ ] **G 投影面**：`vector-tab/vector-canvas`——核销式抽查（十六轮账）。
 - [ ] **H 评测面**：`eval-*` 14 件＋`eval-run-status/trend.utils`——核销式抽查（Task 8 账）。
 - [ ] **I 对话侧**：`chat-panel`（库内对话：输入/模型/历史/附件）＋引用四件（`kb-assistant-content`·`kb-citation-sources`·`citation-mark`·`citations/*`·`rehype-citation-marks`）＋会话-库关联（`kb-threads`·`core/threads/*`）＋导入子菜单（`knowledge-base-import-submenu`）——口径复核（面板内置对话＝D 裁不做；其余按宿主面归类）。
-- [ ] **J 设置面**：`settings/functional-models-view`＋`core/rag/*`——待排登记复核（「模型面归属」）。
+- [x] **J 设置面**：`settings/functional-models-view`＋`core/rag/*`——**10-14 裁定：并入「顶栏 ⋯ 菜单」批**（拍点 3 定乙·照工作台全量拆四批；「模型面归属」待排条随之转正）→ 执行为新对 [`2026-10-14-menu-model-settings`](../specs/2026-10-14-menu-model-settings-spec.md)（Task 1＝菜单重构＋设置面批 1 已编码待验收；批 2–4 未开）；批 2–4 的逐段清单落在该对 plan 的 Task 内，本审计节不再跟账；对话主模型治理＝该对 §7 非目标（宿主各自治理）。
 - [ ] **K 域外散件**：8 触及点（对话页/导出菜单/两处会话列表/运行状态附注/core threads×2/duplicate-flow）——逐点定归属（多为不适用销项）。
 
 **审计结果**（逐块回填：已落对照／变形清单／未落候选＋归属建议）：
@@ -353,7 +353,8 @@
 - **A4 toast**（`kb-toast`）：工作台＝中栏右下 scoped toast（防盖会话输入框）→ 插件＝行内提示行＋自动消退（**变形有意**；功能等价已落——真话文案＋4s/8s 消退）。观感差记：插件提示在行内顶部、工作台在右下浮层。
 - **A5 B′ 锚定件**（`anchor-block-notice`＋`use-anchor-confirm`）：**已落✓逐项对齐**（红块：missing 不可覆盖／miss_terms／建议锚／hits 形／琥珀确认钮同款色档；`missing_chunk` 仍 422 红块保留）。差异：错误识别＝class（工作台）vs 结构化 detail 判定（插件——桥 envelope 无 class，有意等价）。
 - **A6 局部件七枚**：`run-after-menu-close`＝不适用销项；`scrollable-textarea`（自动长高＋overlay 滚动条）→ 插件 textarea 原生滚动，**观感后调候选（小）**；`file-type-badge`（9 类 Ardot 56-grid 图标体系＋MIME 判型＋拖拽探测）→ **⑪未落候选**（插件文档行无类型图标；权威映射在 Ardot 库外）；`chunk-tick-rail`（切片刻度轨：门槛≥5/间距 26/悬停标签层/点击跳片）→ **⑫未落候选**；`drawer-editor`＋`drawer-icon`（抽屉建/编弹层＋12 图标映射）→ **伴随项（随 E2 卡片抽屉体系裁定）**；`duplicate-upload-dialog`（identical 两选／conflict 三选：另存 `name (2).ext`／替换＝先删后传）→ **未落候选（并入②）**。
-- **A 组小结**：已落 5 组；变形有意 5 处；**未落候选 12 条**（①建库入口②重复上传拦截〔含 dialog〕③文档下载④文档右键出题⑤docErrors 文案⑧重命名库⑨删除库⑩白名单前置拦截⑦tabs 溢出降级⑪文件类型图标⑫切片刻度轨，另：库排序+记忆）＋伴随项 2（抽屉编辑器/图标）＋观感后调 1（scrollable-textarea）＋变形待裁 1（更新百科位置差）。**待裁**（归属建议）：微小补丁档＝①③⑩⑧⑨；另案/后调档＝②④⑤⑦⑪⑫＋库排序记忆＋刻度轨；变形待裁＝更新百科是否加库级入口。
+- **A 组小结**（走查账，明细见上）：已落 5 组；变形有意 5 处；未落候选 12 条＋伴随项 2（抽屉编辑器/图标）＋观感后调 1（scrollable-textarea）＋变形待裁 1（更新百科位置差）。
+- **A 组终裁（10-14 他拍）**：**甲档并入**——①建库入口／③文档下载／⑩白名单前置拦截＋「上次打开库记忆」→ 新对 [`Task 5`](2026-10-14-menu-model-settings-plan.md)（与菜单同面）；**乙档照建议登记**——②重复上传/④右键出题/⑪类型图标/⑫刻度轨＝另案、⑤docErrors/⑦tab 溢出/库排序拖拽＝后调（落新对 spec §6 缺口表，不执行）；⑧⑨ 与「更新百科位置」变形已随新对 Task 1 执行。**A 组至此收完**（走查→裁定→归档闭环）；B–K 组待续。
 - **A 组裁定（10-13 他令）**：变形待裁＋⑧⑨＋J 组一并落成**顶栏 ⋯ 菜单重构批**——选择库右侧加 DSH 同款 ⋯ 菜单：工作台库级菜单项落脚（上传/更新/重建百科、重命名/删除库）＋**功能模型设置并入**＋顶栏「刷新/上传/重建索引」三钮移入菜单（**重建索引落入功能模型设置界面**，工作台同构）；「模型面归属」随之从待排转正。**10-14 四拍定案、已立对**：[`2026-10-14-menu-model-settings-spec`](../specs/2026-10-14-menu-model-settings-spec.md)＋[`plan`](2026-10-14-menu-model-settings-plan.md)（Task 0 只读核实起）。
 
 ---

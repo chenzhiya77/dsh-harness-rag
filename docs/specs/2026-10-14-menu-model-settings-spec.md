@@ -53,10 +53,10 @@
 ### M4 —— 设置面范围与批次（**已拍：乙·全量拆批**）
 | 批 | 内容 |
 | --- | --- |
-| 批 1（随 Task 1） | 设置面骨架（面板内 Sheet，宽上限照既有抽屉定式）＋**读取展示**（`GET /api/rag/config` 全景）＋**重建索引入口**（含在飞态/状态行，复用既有 `reindex`/`reindexStatus` op）＋**迁移状态**（`GET …/migration`） |
-| 批 2 | 嵌入段：provider/稀疏来源/维度表单＋保存（`PUT …/config`）＋守卫（维度变更、稀疏未配/不支持档）＋探测（`probe-embedding`/`probe-dimensions`/`probe-connectivity`/`probe-sparse`） |
-| 批 3 | 多模态段：caption＋ASR（引擎/模型/provider/`probe-asr`） |
-| 批 4 | 解析段（MinerU 档/版本/provider/语言）＋裁判/抽取模型段＋收口 |
+| 批 1（随 Task 1） | 设置面骨架（面板内 Sheet，宽上限照既有抽屉定式）＋**读取展示**（`GET /api/rag/config` 全景＋模型目录解析名）＋**重建索引入口**（含在飞态/状态行，复用既有 `reindex`/`reindexStatus` op）＋**迁移状态**（`GET …/migration`） |
+| 批 2 | 默认模型组＋检索组：嵌入四问（env 徽章/覆盖警示/端点占位）＋维度（守卫＋探测点＋档位下拉）＋稀疏（源三选/外置四问/三守卫）＋重排＋高级区六项＋保存（`PUT …/config`）＋探测四枚（embedding/dimensions/connectivity/sparse）＋维度迁移弹层（`dimension-migration-dialog`） |
+| 批 3 | 多模态组：caption（`isCaptionCapable` 口径）＋ASR（provider/本地引擎/模型菜单/探针阻塞保存/`probe-asr`） |
+| 批 4 | 抽取组＋评测组（judge）＋服务组（parse：MinerU provider/tier/version/language/base_url＋`qdrant_url`）＋收口 |
 
 每批以工作台同段为逐句对照底本；文案键取工作台 `core/rag`＋设置视图现文案。
 
@@ -65,6 +65,9 @@
 
 ### M6 —— 管理动作带闸
 重命名＝单字段弹层；删除知识库＝确认框（**级联影响如实展示**，文案照工作台 `deleteKbConfirmTitle/Description`）；重建百科沿用既有共享确认弹窗——五闸口径不因移位而变。
+
+### M7 —— 甲档小件并入（**10-14 裁：并入本对**）
+承 A 组审计终裁——**甲档**（①建库入口／③文档下载／⑩上传白名单前置拦截＋上次打开库记忆）并入本对（Task 5，与菜单同面）；**乙档**照建议登记（§6，不执行）。建库入口拟定落库下拉底部「＋ 新建知识库」；**文档下载需 host 补 raw GET 透传**（照上传的 raw 通道）。
 
 ## 3. 落点
 
@@ -91,6 +94,13 @@
 | --- | --- | --- |
 | 评测域菜单皮肤统一 | 本对新菜单＝DSH 真值；评测域两枚＝描边紧凑（Task 8 定稿） | 若要求统一，另议 |
 | 「重建百科 vs 刷新界面」图标撞形 | 两枚 refresh 系图标并存 | Task 1 复看二选一（表现层微裁） |
+| 重复上传拦截（A②） | hash 判同＋两选/三选弹层（替换＝先删后传） | 另案（10-14 A 组终裁） |
+| 文档右键快捷出题（A④） | 文档行 → 合成 count=1 | 另案（同上） |
+| 文件类型图标体系（A⑪） | Ardot 9 类 56-grid 重导（权威在库外） | 另案（同上） |
+| 切片刻度轨（A⑫） | Kimi 式导航（门槛≥5/间距 26 参数现成） | 另案/后调（同上） |
+| docErrors 错误分类文案（A⑤） | 分类映射表移植 | 后调（同上） |
+| tab 行溢出降级（A⑦） | 遮罩下拉；现状＝窄档换行缓解 | 后调（归 D6 窄档清单） |
+| 库列表排序拖拽 | 拖拽重排（上次打开记忆已并入 Task 5） | 后调（同上） |
 
 ## 7. 非目标
 
