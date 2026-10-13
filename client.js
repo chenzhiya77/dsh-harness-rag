@@ -411,6 +411,9 @@ window.__ModuleLoader__.load({
       'wk.cardType': '我的卡片',
       'wk.openCard': '打开详情',
       'wk.cardNotFound': '卡片不存在或已删除',
+      'crash.title': '视图渲染出错（{0}）',
+      'crash.hint': '该视图已隔离，其他分区可继续使用；点「重试」重新挂载。',
+      'crash.retry': '重试',
     }
     const en = {
       'tab.title': 'Knowledge Base',
@@ -824,6 +827,9 @@ window.__ModuleLoader__.load({
       'wk.cardType': 'My Card',
       'wk.openCard': 'Open details',
       'wk.cardNotFound': 'Card missing or deleted',
+      'crash.title': 'View render failed ({0})',
+      'crash.hint': 'The view is isolated; other sections keep working. Retry remounts it.',
+      'crash.retry': 'Retry',
     }
 
     /** Panel data seam: every panel request is a POST of JSON parameters to
@@ -1023,6 +1029,10 @@ window.__ModuleLoader__.load({
           '.hrag-wk-linchev { flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-wk-lintext { padding: 6px 8px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }',
           '.hrag-wk-tags { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-crash { display: flex; flex-direction: column; gap: 6px; margin: 8px 2px; padding: 10px 12px; border: 0.5px solid color-mix(in srgb, var(--dsw-alias-state-error-primary) 55%, transparent); border-radius: var(--dsw-radius-md); background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 6%, transparent); }',
+          '.hrag-crash-title { margin: 0; color: var(--dsw-alias-label-error); font-size: 13px; font-weight: 600; }',
+          '.hrag-crash-hint { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 1.6; }',
+          '.hrag-crash-pre { margin: 0; max-height: 220px; overflow: auto; padding: 8px; border-radius: 6px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-secondary); font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }',
           '.hrag-graph-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
           '.hrag-gchips { display: flex; flex-wrap: wrap; gap: 6px; }',
           '.hrag-gchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 11px; }',
@@ -2572,9 +2582,9 @@ window.__ModuleLoader__.load({
                   {
                     type: 'button',
                     className: 'hrag-hitselect' + (selectedChunks.has(select.chunkId) ? ' hrag-hitselect-on' : ''),
-                    'aria-label': t('recall.saveAs.selectLabel', entry.docName),
+                    'aria-label': t('recall.saveAs.selectLabel', { 0: entry.docName }),
                     'aria-pressed': selectedChunks.has(select.chunkId),
-                    title: t('recall.saveAs.selectLabel', entry.docName),
+                    title: t('recall.saveAs.selectLabel', { 0: entry.docName }),
                     onClick: () => toggleSelected(select.chunkId, select.path),
                   },
                   selectedChunks.has(select.chunkId) ? '✓' : '',
@@ -2692,7 +2702,7 @@ window.__ModuleLoader__.load({
               h(
                 'span',
                 { className: 'hrag-recall-savecount hrag-ev-tabnums' },
-                t('recall.saveAs.selectedCount', selectedList.length),
+                t('recall.saveAs.selectedCount', { 0: selectedList.length }),
               ),
               h(
                 'button',
@@ -9006,6 +9016,47 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 崩溃隔离（Task 10 护栏，2026-10-13 白屏实证——全屏 + 召回测试后整流白）：
+        视图级错误边界。某视图渲染/effect 抛错不再带崩整面板——就地显示错误摘要
+        与栈（桌面端读不到 console，栈直接上界面留证）+「重试」重挂子树。React
+        错误边界仅类组件可实现（componentDidCatch），无 hooks。 */
+    class HragBoundary extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = { error: null, stack: '' }
+      }
+      static getDerivedStateFromError(error) {
+        return { error }
+      }
+      componentDidCatch(error, info) {
+        this.setState({ stack: (info && info.componentStack) || '' })
+      }
+      retry() {
+        this.setState({ error: null, stack: '' })
+      }
+      render() {
+        if (this.state.error) {
+          const t = this.props.t
+          const detail =
+            String((this.state.error && this.state.error.stack) || this.state.error || '') +
+            (this.state.stack ? '\n--- component stack ---' + this.state.stack : '')
+          return h(
+            'div',
+            { className: 'hrag-crash' },
+            h('p', { className: 'hrag-crash-title' }, evText(t('crash.title'), [this.props.name || ''])),
+            h('p', { className: 'hrag-crash-hint' }, t('crash.hint')),
+            h('pre', { className: 'hrag-crash-pre' }, detail),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => this.retry() },
+              t('crash.retry'),
+            ),
+          )
+        }
+        return this.props.children
+      }
+    }
+
     function KnowledgePanel({ t }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -9315,15 +9366,22 @@ window.__ModuleLoader__.load({
             ),
           ),
           section === 'docs'
-            ? h(DocsView, {
-                t,
-                kbId,
-                refreshToken,
-                onOpenChunks: (doc) => setDrawer({ doc, focus: null }),
-              })
+            ? h(
+                HragBoundary,
+                { t, name: t('shell.tab.docs') },
+                h(DocsView, {
+                  t,
+                  kbId,
+                  refreshToken,
+                  onOpenChunks: (doc) => setDrawer({ doc, focus: null }),
+                }),
+              )
             : null,
           section === 'recall'
-            ? h(RecallView, {
+            ? h(
+                HragBoundary,
+                { t, name: t('shell.tab.recall') },
+                h(RecallView, {
                 t,
                 kbId,
                 prefill: recallPrefill,
@@ -9341,27 +9399,28 @@ window.__ModuleLoader__.load({
                   setGraphOverlayRequest(Object.assign({}, request, { nonce: Date.now() }))
                   setSection('graph')
                 },
-              })
+              }),
+              )
             : null,
           // 百科视图 keep-alive（同口径）：搜索/折叠/选择切走不丢；抽屉壳在面板级
           //（召回命中同样开它），本槽只承载双卡列表。
           h(
             'div',
             { className: 'hrag-wk-slot', style: { display: section === 'wiki' ? 'flex' : 'none' } },
-            h(WikiView, {
+            h(HragBoundary, { t, name: t('shell.tab.wiki') }, h(WikiView, {
               t,
               kbId,
               enabled: section === 'wiki',
               onOpenEntry: (entryId) => setWikiDrawer({ kind: 'entry', id: entryId }),
               onOpenCard: (cardId) => setWikiDrawer({ kind: 'card', id: cardId }),
-            }),
+            })),
           ),
           // 投影视图 keep-alive（照工作台 forceMount 语义）：切走不丢配置与叠加；
           // enabled 门控首次取数——没打开过投影就不发请求。
           h(
             'div',
             { className: 'hrag-vec-slot', style: { display: section === 'vectors' ? 'flex' : 'none' } },
-            h(VectorView, {
+            h(HragBoundary, { t, name: t('shell.tab.vectors') }, h(VectorView, {
               t,
               kbId,
               enabled: section === 'vectors',
@@ -9369,13 +9428,13 @@ window.__ModuleLoader__.load({
               onOpenChunk: (docId, chunkId, docName) => {
                 setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
               },
-            }),
+            })),
           ),
           // 图谱视图 keep-alive（同投影口径）：切走不丢视口与叠加。
           h(
             'div',
             { className: 'hrag-graph-slot', style: { display: section === 'graph' ? 'flex' : 'none' } },
-            h(GraphView, {
+            h(HragBoundary, { t, name: t('shell.tab.graph') }, h(GraphView, {
               t,
               kbId,
               enabled: section === 'graph',
@@ -9383,13 +9442,13 @@ window.__ModuleLoader__.load({
               onOpenChunk: (docId, chunkId, docName) => {
                 setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
               },
-            }),
+            })),
           ),
           // 评测视图 keep-alive（同口径）；「复现」通道：题库/详情 ↗ → 召回预填。
           h(
             'div',
             { className: 'hrag-ev-slot', style: { display: section === 'eval' ? 'flex' : 'none' } },
-            h(EvalView, {
+            h(HragBoundary, { t, name: t('shell.tab.eval') }, h(EvalView, {
               t,
               kbId,
               enabled: section === 'eval',
@@ -9397,7 +9456,7 @@ window.__ModuleLoader__.load({
                 setRecallPrefill({ query, nonce: Date.now() })
                 setSection('recall')
               },
-            }),
+            })),
           ),
         )
       }
@@ -9409,20 +9468,27 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'hrag-root' },
-          content,
+          h(HragBoundary, { t, name: t('tab.title') }, content),
           drawer
-            ? h(ChunkDrawer, {
+            ? h(
+                HragBoundary,
+                { t, name: t('chunk.drawerTitle') },
+                h(ChunkDrawer, {
                 t,
                 kbId,
                 doc: drawer.doc,
                 focusChunkId: drawer.focus,
                 refreshToken,
                 onClose: () => setDrawer(null),
-              })
+              }),
+              )
             : null,
           wikiDrawer
             ? wikiDrawer.kind === 'entry'
-              ? h(WikiEntryDrawer, {
+              ? h(
+                  HragBoundary,
+                  { t, name: t('wk.entries') },
+                  h(WikiEntryDrawer, {
                   t,
                   kbId,
                   entryId: wikiDrawer.id,
@@ -9431,13 +9497,18 @@ window.__ModuleLoader__.load({
                     const docId = String(chunkId).split('#')[0]
                     setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
                   },
-                })
-              : h(ManualCardDrawer, {
+                }),
+                )
+              : h(
+                  HragBoundary,
+                  { t, name: t('wk.cards') },
+                  h(ManualCardDrawer, {
                   t,
                   kbId,
                   cardId: wikiDrawer.id,
                   onClose: () => setWikiDrawer(null),
-                })
+                }),
+                )
             : null,
           reindexOpen
             ? h(ConfirmDialog, {
