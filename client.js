@@ -139,6 +139,235 @@ window.__ModuleLoader__.load({
       'graph.neighborhoodTitle': '局部图',
       'graph.hop1': '1 跳',
       'graph.hop2': '2 跳',
+      'sort.asc': '升序',
+      'sort.desc': '降序',
+      // ── 评测（Task 8）：词汇照工作台 tk.eval / recallTest.saveAsQuestion ──
+      'shell.tab.eval': '评测',
+      'ev.viewsLabel': '评测视图切换',
+      'ev.view.overview': '总览',
+      'ev.view.questions': '题库',
+      'ev.view.history': '历史',
+      'ev.tierQuick': '快速评测',
+      'ev.tierFull': '完整评测',
+      'ev.tierMenuAria': '评测档位',
+      'ev.runPhase': '{0} {1}/{2}',
+      'ev.phaseLayer1': '检索评测',
+      'ev.phaseQuestions': '答题评测',
+      'ev.phaseRagas': '质量评估',
+      'ev.failedCount': '失败 {0}',
+      'ev.etaEstimating': '估算中…',
+      'ev.etaMinutes': '预计剩余 ~{0} 分钟',
+      'ev.etaSeconds': '预计剩余 ~{0}s',
+      'ev.logWaiting': '评测已启动，等待首个进度事件…',
+      'ev.logPhase': '进入{0}',
+      'ev.logItem': '{0} {1}/{2}',
+      'ev.logFail': '{0} {1}/{2}，累计失败 {3}',
+      'ev.bannerAria': '{0}，整体完成 {1}%',
+      'ev.loading': '加载中…',
+      'ev.loadFailed': '评测数据加载失败',
+      'ev.moreOptions': '更多选项',
+      'ev.neverRan': '尚未评测',
+      'ev.slotSummary': '{0} · 耗时 {1}',
+      'ev.slotSummaryFailed': '评测失败',
+      'ev.slotSummaryCancelled': '评测已终止',
+      'ev.slotViewHistory': '查看历史',
+      'ev.durSeconds': '{0}s',
+      'ev.durMinutes': '{0}m',
+      'ev.durMinutesSeconds': '{0}m {1}s',
+      'ev.runStartedToast': '评测已开始',
+      'ev.alreadyRunningToast': '已有评测正在运行',
+      'ev.runFailedToast': '评测触发失败',
+      'ev.cancelRun': '终止评测',
+      'ev.cancelConfirm': '确认终止?',
+      'ev.cancelToast': '评测已终止',
+      'ev.cancelFailedToast': '终止评测失败',
+      'ev.fullRun.dialogTitle': '运行完整评测',
+      'ev.fullRun.dialogBody':
+        '完整评测会先跑检索质量指标，再让 Agent 实跑每道题并由独立 Judge 打分（含 RAGAS 指标）。耗时与 token 成本远高于快速评测，运行期间不可重复触发。',
+      'ev.fullRun.scopeAll': '运行范围：全库所有考题。',
+      'ev.fullRun.scopeSelected': '运行范围：所选 {0} 题。',
+      'ev.fullRun.confirm': '开始完整评测',
+      'ev.fullRun.cancel': '取消',
+      'ev.layer1Title': '检索质量',
+      'ev.layer2Title': '生成质量',
+      'ev.layer1Note':
+        '检索阶段的确定性指标，结果可复现。\n命中率：正确内容进入检索结果的问题占比\n召回率@k：前 k 条结果覆盖正确内容的比例\nMRR：首条正确结果越靠前得分越高\n路径准确率：图谱检索路径选择正确的占比',
+      'ev.layer2Note': '生成阶段指标；RAGAS 为概率性指标（judge 方差），仅供参考',
+      'ev.regressionBadge': '检测到回退',
+      'ev.ragasMissingBadge': 'ragas 未安装',
+      'ev.ragasErrorBadge': 'ragas 运行异常',
+      'ev.emptyLayer1': '尚无检索质量数据',
+      'ev.emptyLayer2': '尚无生成质量数据',
+      'ev.viewTrace': '查看 trace →',
+      'ev.tableCategory': '分类',
+      'ev.tableHitRate': '命中率',
+      'ev.tableRecallAtK': '召回率@k',
+      'ev.tableRecallAtKv': '召回率@{0}',
+      'ev.tableMrr': 'MRR',
+      'ev.tablePathAccuracy': '路径准确率',
+      'ev.category.fact': '事实',
+      'ev.category.relation': '关系',
+      'ev.category.concept': '概念',
+      'ev.category.global': '全局',
+      'ev.category.summary': '汇总',
+      'ev.noGraphQuestions': '本批次无 graph 类题目',
+      'ev.ragasGroupLabel': 'RAGAS 概率性指标',
+      'ev.archGroupLabel': '引用与图谱指标',
+      'ev.ragasCard.faithfulness': '忠实度',
+      'ev.ragasCard.answerRelevancy': '相关性',
+      'ev.ragasCard.contextPrecision': '精确率',
+      'ev.ragasCard.contextRecall': '召回率',
+      'ev.cardNote.faithfulness': '忠实度（Faithfulness）：答案是否有检索内容支撑、有无编造，0–1 越高越好',
+      'ev.cardNote.answerRelevancy': '答案相关性（Answer Relevancy）：答案与问题的相关程度，0–1 越高越好',
+      'ev.cardNote.contextPrecision': '上下文精确率（Context Precision）：检索结果中相关内容排在前列的比例，0–1 越高越好',
+      'ev.cardNote.contextRecall': '上下文召回率（Context Recall）：检索内容覆盖答案所需信息的程度，0–1 越高越好',
+      'ev.citationPrecision': '引用准确率',
+      'ev.citationRecall': '引用召回率',
+      'ev.seedHitRate': '实体命中率',
+      'ev.routingHitRate': '路由命中率',
+      'ev.cardNote.citationPrecision': '引用准确率（Citation Precision）：被引用的切片中真正支撑答案的比例',
+      'ev.cardNote.citationRecall': '引用召回率（Citation Recall）：答案中应当引用的内容被实际引用的比例',
+      'ev.cardNote.seedHitRate': '实体命中率（Seed Entity Hit Rate）：命中预设种子实体的图谱类问题占比',
+      'ev.cardNote.routingHitRate':
+        '路由命中率（Routing Hit Rate）：真实对话链路中 agent 实际调用的检索工具命中题目预期路径的问题占比；与检索质量的路径准确率（离线检索选路）口径不同',
+      'ev.trendTitle': '指标趋势',
+      'ev.granularityLabel': '时间窗口',
+      'ev.granularity.day': '日',
+      'ev.granularity.week': '周',
+      'ev.granularity.month': '月',
+      'ev.emptyTrend': '暂无评测趋势数据',
+      'ev.trend.thresholdLabel': '回退阈值 -{0}%',
+      'ev.trend.baselineUpdate': '基线更新',
+      'ev.trend.clickForDetail': '点击查看详情',
+      'ev.trend.regressionPrefix': '回退题型',
+      'ev.trend.notRunInTier': '该档未跑',
+      'ev.trend.pickerTrigger': '指标',
+      'ev.trend.pickerAria': '选择趋势指标',
+      'ev.trend.fullTierOnly': '仅完整档',
+      'ev.selection.selectAllAria': '全选',
+      'ev.selection.rowSelectAria': '选择「{0}」',
+      'ev.selection.selected': '已选 {0} 题',
+      'ev.selection.clear': '清除选择',
+      'ev.questions.columnQuery': '问题',
+      'ev.questions.columnCategory': '分类',
+      'ev.questions.columnRefChunks': '参考切片',
+      'ev.questions.columnRecallNote': '该题在最近一次包含它的评测中，参考切片被命中的比例（跨运行合并）；未测题为 —',
+      'ev.questions.sortDefault': '默认顺序',
+      'ev.questions.sortDocsCount': '文档数',
+      'ev.questions.recallTip': '召回 {0} · 实际 {1}',
+      'ev.questions.recallUntested': '未测或上次运行未包含',
+      'ev.questions.unanchored': '未锚定',
+      'ev.questions.danglingBadge': '悬空',
+      'ev.questions.mismatchBadge': '存疑',
+      'ev.questions.addQuestion': '添加考题',
+      'ev.questions.emptyBank': '题库为空——在召回测试面板勾选正确切片可一键存为考题',
+      'ev.questions.emptyBankSynthesis': '或从文档合成候选题，审核后采纳入题库',
+      'ev.questions.searchPlaceholder': '搜索问题…',
+      'ev.questions.searchClear': '清空搜索',
+      'ev.questions.noMatch': '无匹配的题目，换个关键词试试',
+      'ev.questions.rowReproduce': '在召回测试面板复现',
+      'ev.questions.rowDelete': '删除考题',
+      'ev.questions.saveFailed': '考题保存失败',
+      'ev.questions.deleteFailed': '考题删除失败',
+      'ev.questions.addTitle': '添加考题',
+      'ev.questions.queryLabel': '问题',
+      'ev.questions.categoryLabel': '分类',
+      'ev.questions.expectedPathLabel': '预期路径',
+      'ev.questions.referenceAnswerLabel': '参考答案（可选）',
+      'ev.questions.unanchoredNote': '未锚定切片的题只参与路径选择与生成质量评测',
+      'ev.questions.submit': '添加',
+      'ev.questions.cancel': '取消',
+      'ev.questions.deleteConfirmDesc': '删除后不可恢复。确定删除这道考题吗？',
+      'ev.questions.deletedToast': '考题已删除',
+      'ev.questions.drawerTitle': '考题详情',
+      'ev.questions.noReferenceAnswer': '未填写',
+      'ev.questions.answerSection': '参考答案',
+      'ev.questions.entitiesSection': '实体',
+      'ev.questions.drawerChunksCount': '{0} 切片',
+      'ev.questions.anchorEditButton': '编辑锚定',
+      'ev.questions.anchorEditSelected': '已选 {0}/{1}',
+      'ev.questions.loadMore': '加载更多',
+      'ev.questions.save': '保存',
+      'ev.questions.addedToast': '考题已添加',
+      'ev.questions.reproducePrefill': '已带入问题——点「检索」查看',
+      'ev.syn.entryButton': '生成考题',
+      'ev.syn.dialogTitle': '合成考题',
+      'ev.syn.docLabel': '来源文档（可多选）',
+      'ev.syn.docPlaceholder': '勾选要出题的已索引文档，多篇可联合出题',
+      'ev.syn.countLabel': '候选题数量',
+      'ev.syn.generate': '生成',
+      'ev.syn.generating': '生成中…',
+      'ev.syn.reviewTitle': '候选题审核',
+      'ev.syn.accept': '采纳',
+      'ev.syn.reject': '忽略',
+      'ev.syn.acceptAll': '全部采纳',
+      'ev.syn.rejectAll': '全部忽略',
+      'ev.syn.metaLine': '锚定越界或字段违例被丢弃 {0} 条',
+      'ev.syn.reviewCount': '{0} 条待审',
+      'ev.syn.droppedChip': '丢弃 {0} 条',
+      'ev.syn.reviewMetaTip': '来自 {0} · 生成于 {1}',
+      'ev.syn.empty': '暂无待审核的候选题',
+      'ev.syn.triggerFailed': '合成触发失败',
+      'ev.syn.acceptFailed': '候选题采纳失败',
+      'ev.syn.rejectFailed': '候选题忽略失败',
+      'ev.history.envLocal': '本地',
+      'ev.history.envCi': 'CI',
+      'ev.history.envNightly': '定时',
+      'ev.history.statusCompleted': '完成',
+      'ev.history.statusError': '失败',
+      'ev.history.statusSkipped': '跳过',
+      'ev.history.statusCancelled': '已终止',
+      'ev.history.emptyHistory': '尚无评测运行——点右上角运行评测发起首次评测',
+      'ev.history.colTime': '运行时间',
+      'ev.history.colEnv': '环境',
+      'ev.history.colScope': '评测内容',
+      'ev.history.colStatus': '状态',
+      'ev.history.colDuration': '时长',
+      'ev.history.scopeQuick': '快速',
+      'ev.history.scopeFull': '完整',
+      'ev.history.scopeGeneration': '生成',
+      'ev.history.rowSelectAria': '选择 {0} 的运行',
+      'ev.history.rowDelete': '删除此次运行',
+      'ev.history.deleteConfirmTitle': '删除运行历史',
+      'ev.history.deleteConfirmDesc': '将删除 {0} 条运行记录，总览、趋势图与题库召回列会同步收敛，删除后不可恢复',
+      'ev.history.baselineWarn': '所选包含基线运行：删除后后续运行的回退门禁将失去对比参照。',
+      'ev.history.deletedToast': '运行历史已删除',
+      'ev.history.deleteFailed': '运行删除失败',
+      'ev.drawer.title': '评测运行详情',
+      'ev.drawer.statusCompleted': '已完成',
+      'ev.drawer.statusError': '出错',
+      'ev.drawer.statusSkipped': '已跳过',
+      'ev.drawer.statusCancelled': '已终止',
+      'ev.drawer.baselineBadge': '基线',
+      'ev.drawer.runInfoSection': '运行信息',
+      'ev.drawer.runIdLabel': '运行 ID',
+      'ev.drawer.createdAtLabel': '运行时间',
+      'ev.drawer.layer1Section': '检索质量',
+      'ev.drawer.layer2Section': '生成质量',
+      'ev.drawer.contextRecallLabel': '上下文召回率',
+      'ev.drawer.notRun': '本次运行未执行该层',
+      'ev.copied': '已复制',
+      'ev.copyFailed': '复制失败',
+      'ev.anchorBlock.title': '机器核验：答案与锚定切片对不上',
+      'ev.anchorBlock.missing': '锚定切片不存在，需修正锚定后重新保存',
+      'ev.anchorBlock.missTerms': '缺失术语',
+      'ev.anchorBlock.suggest': '建议锚',
+      'ev.anchorBlock.hits': '命中',
+      'ev.anchorBlock.confirmSave': '仍要入库',
+      'ev.anchorBlock.confirmAccept': '仍要接受',
+      'ev.anchorBlock.confirmUpdate': '仍要保存',
+      'recall.saveAs.button': '存为考题',
+      'recall.saveAs.selectedCount': '已选 {0} 项',
+      'recall.saveAs.queryLabel': '问题',
+      'recall.saveAs.categoryLabel': '分类',
+      'recall.saveAs.expectedPathsLabel': '预期路径（可多选）',
+      'recall.saveAs.anchorHint': '勾选的切片与百科词条的源切片将记为本题锚定',
+      'recall.saveAs.referenceAnswerLabel': '参考答案（可选）',
+      'recall.saveAs.submit': '保存',
+      'recall.saveAs.cancel': '取消',
+      'recall.saveAs.savedToast': '已存为考题',
+      'recall.saveAs.saveFailed': '存为考题失败',
+      'recall.saveAs.selectLabel': '存为考题：{0}',
     }
     const en = {
       'tab.title': 'Knowledge Base',
@@ -266,6 +495,247 @@ window.__ModuleLoader__.load({
       'graph.neighborhoodTitle': 'Neighborhood',
       'graph.hop1': '1 hop',
       'graph.hop2': '2 hops',
+      'sort.asc': 'Ascending',
+      'sort.desc': 'Descending',
+      // ── Eval (Task 8): copy mirrors the workbench tk.eval / recallTest.saveAsQuestion ──
+      'shell.tab.eval': 'Evaluation',
+      'ev.viewsLabel': 'Switch eval view',
+      'ev.view.overview': 'Overview',
+      'ev.view.questions': 'Questions',
+      'ev.view.history': 'History',
+      'ev.tierQuick': 'Quick evaluation',
+      'ev.tierFull': 'Full evaluation',
+      'ev.tierMenuAria': 'Evaluation tier',
+      'ev.runPhase': '{0} {1}/{2}',
+      'ev.phaseLayer1': 'Retrieval',
+      'ev.phaseQuestions': 'Answering',
+      'ev.phaseRagas': 'RAGAS',
+      'ev.failedCount': '{0} failed',
+      'ev.etaEstimating': 'Estimating…',
+      'ev.etaMinutes': '~{0} min left',
+      'ev.etaSeconds': '~{0} s left',
+      'ev.logWaiting': 'Run started, waiting for the first progress event…',
+      'ev.logPhase': 'Starting {0}',
+      'ev.logItem': '{0} {1}/{2}',
+      'ev.logFail': '{0} {1}/{2}, {3} failed so far',
+      'ev.bannerAria': '{0}, {1}% complete overall',
+      'ev.loading': 'Loading…',
+      'ev.loadFailed': 'Failed to load evaluation data',
+      'ev.moreOptions': 'More options',
+      'ev.neverRan': 'Not yet evaluated',
+      'ev.slotSummary': '{0} · took {1}',
+      'ev.slotSummaryFailed': 'Eval failed',
+      'ev.slotSummaryCancelled': 'Eval cancelled',
+      'ev.slotViewHistory': 'View history',
+      'ev.durSeconds': '{0}s',
+      'ev.durMinutes': '{0}m',
+      'ev.durMinutesSeconds': '{0}m {1}s',
+      'ev.runStartedToast': 'Evaluation started',
+      'ev.alreadyRunningToast': 'An evaluation is already running',
+      'ev.runFailedToast': 'Failed to start the evaluation',
+      'ev.cancelRun': 'Cancel run',
+      'ev.cancelConfirm': 'Confirm cancel?',
+      'ev.cancelToast': 'Eval run cancelled',
+      'ev.cancelFailedToast': 'Failed to cancel the run',
+      'ev.fullRun.dialogTitle': 'Run full evaluation',
+      'ev.fullRun.dialogBody':
+        'A full evaluation first runs the retrieval-quality metrics, then lets the agent answer every question with an independent judge scoring it (including RAGAS metrics). It takes much longer and costs far more tokens than the quick tier, and cannot be triggered again while running.',
+      'ev.fullRun.scopeAll': 'Scope: every question in the bank.',
+      'ev.fullRun.scopeSelected': 'Scope: the {0} selected question(s).',
+      'ev.fullRun.confirm': 'Start full evaluation',
+      'ev.fullRun.cancel': 'Cancel',
+      'ev.layer1Title': 'Retrieval Quality',
+      'ev.layer2Title': 'Generation Quality',
+      'ev.layer1Note':
+        'Deterministic retrieval-stage metrics, reproducible.\nHit Rate: share of questions where correct content appears in retrieved results\nRecall@k: share of correct content covered by the top-k results\nMRR: higher when the first correct result ranks earlier\nPath Accuracy: share of graph retrieval paths chosen correctly',
+      'ev.layer2Note':
+        'Generation-stage metrics; RAGAS scores are probabilistic (judge variance) — reference only',
+      'ev.regressionBadge': 'Regression detected',
+      'ev.ragasMissingBadge': 'ragas not installed',
+      'ev.ragasErrorBadge': 'ragas error',
+      'ev.emptyLayer1': 'No retrieval-quality data yet',
+      'ev.emptyLayer2': 'No generation-quality data yet',
+      'ev.viewTrace': 'View trace →',
+      'ev.tableCategory': 'Category',
+      'ev.tableHitRate': 'Hit Rate',
+      'ev.tableRecallAtK': 'Recall@k',
+      'ev.tableRecallAtKv': 'Recall@{0}',
+      'ev.tableMrr': 'MRR',
+      'ev.tablePathAccuracy': 'Path Accuracy',
+      'ev.category.fact': 'Fact',
+      'ev.category.relation': 'Relation',
+      'ev.category.concept': 'Concept',
+      'ev.category.global': 'Global',
+      'ev.category.summary': 'Summary',
+      'ev.noGraphQuestions': 'No questions of this category in the batch',
+      'ev.ragasGroupLabel': 'RAGAS probabilistic metrics',
+      'ev.archGroupLabel': 'Citation & graph metrics',
+      'ev.ragasCard.faithfulness': 'Faithfulness',
+      'ev.ragasCard.answerRelevancy': 'Answer Relevancy',
+      'ev.ragasCard.contextPrecision': 'Context Precision',
+      'ev.ragasCard.contextRecall': 'Context Recall',
+      'ev.cardNote.faithfulness':
+        'Faithfulness: whether the answer is grounded in retrieved context, without fabrication (0–1, higher is better)',
+      'ev.cardNote.answerRelevancy':
+        'Answer Relevancy: how relevant the answer is to the question (0–1, higher is better)',
+      'ev.cardNote.contextPrecision':
+        'Context Precision: share of relevant chunks ranked near the top of retrieval results (0–1, higher is better)',
+      'ev.cardNote.contextRecall':
+        'Context Recall: how much of the information needed by the answer is covered by retrieved context (0–1, higher is better)',
+      'ev.citationPrecision': 'Citation Precision',
+      'ev.citationRecall': 'Citation Recall',
+      'ev.seedHitRate': 'Seed Entity Hit Rate',
+      'ev.routingHitRate': 'Routing Hit Rate',
+      'ev.cardNote.citationPrecision': 'Citation Precision: share of cited chunks that actually support the answer',
+      'ev.cardNote.citationRecall': 'Citation Recall: share of content that should have been cited that actually was',
+      'ev.cardNote.seedHitRate': 'Seed Entity Hit Rate: share of graph questions that hit the preset seed entities',
+      'ev.cardNote.routingHitRate':
+        'Routing Hit Rate: share of questions whose expected paths were hit by the retrieval tools the agent actually called in the live conversation chain; different semantics from the retrieval-quality path accuracy (offline retrieval routing)',
+      'ev.trendTitle': 'Metric Trends',
+      'ev.granularityLabel': 'Time window',
+      'ev.granularity.day': 'Day',
+      'ev.granularity.week': 'Week',
+      'ev.granularity.month': 'Month',
+      'ev.emptyTrend': 'No evaluation trend data yet',
+      'ev.trend.thresholdLabel': 'Regression threshold -{0}%',
+      'ev.trend.baselineUpdate': 'Baseline updated',
+      'ev.trend.clickForDetail': 'Click for details',
+      'ev.trend.regressionPrefix': 'Regressed categories',
+      'ev.trend.notRunInTier': 'Not run in this tier',
+      'ev.trend.pickerTrigger': 'Metrics',
+      'ev.trend.pickerAria': 'Select trend metrics',
+      'ev.trend.fullTierOnly': 'Full tier only',
+      'ev.selection.selectAllAria': 'Select all',
+      'ev.selection.rowSelectAria': 'Select "{0}"',
+      'ev.selection.selected': '{0} selected',
+      'ev.selection.clear': 'Clear selection',
+      'ev.questions.columnQuery': 'Question',
+      'ev.questions.columnCategory': 'Category',
+      'ev.questions.columnRefChunks': 'Ref chunks',
+      'ev.questions.columnRecallNote':
+        'Share of this question\u2019s reference chunks hit in the most recent run that included it (merged across runs); untested questions show —',
+      'ev.questions.sortDefault': 'Default order',
+      'ev.questions.sortDocsCount': 'Docs',
+      'ev.questions.recallTip': 'Recall {0} · actual {1}',
+      'ev.questions.recallUntested': 'Not tested or not in the latest run',
+      'ev.questions.unanchored': 'Unanchored',
+      'ev.questions.danglingBadge': 'Dangling',
+      'ev.questions.mismatchBadge': 'Suspect',
+      'ev.questions.addQuestion': 'Add question',
+      'ev.questions.emptyBank':
+        'No questions yet — tick the right chunks in the recall test panel to save one in a click',
+      'ev.questions.emptyBankSynthesis':
+        'Or synthesize candidates from a document and accept them after review',
+      'ev.questions.searchPlaceholder': 'Search questions…',
+      'ev.questions.searchClear': 'Clear search',
+      'ev.questions.noMatch': 'No matching questions — try another keyword',
+      'ev.questions.rowReproduce': 'Reproduce in recall test panel',
+      'ev.questions.rowDelete': 'Delete question',
+      'ev.questions.saveFailed': 'Failed to save the question',
+      'ev.questions.deleteFailed': 'Failed to delete the question',
+      'ev.questions.addTitle': 'Add question',
+      'ev.questions.queryLabel': 'Question',
+      'ev.questions.categoryLabel': 'Category',
+      'ev.questions.expectedPathLabel': 'Expected path',
+      'ev.questions.referenceAnswerLabel': 'Reference answer (optional)',
+      'ev.questions.unanchoredNote':
+        'Questions without chunk anchors only contribute path selection and generation quality',
+      'ev.questions.submit': 'Add',
+      'ev.questions.cancel': 'Cancel',
+      'ev.questions.deleteConfirmDesc': 'This cannot be undone. Delete this question?',
+      'ev.questions.deletedToast': 'Question deleted',
+      'ev.questions.drawerTitle': 'Question details',
+      'ev.questions.noReferenceAnswer': 'Not provided',
+      'ev.questions.answerSection': 'Reference answer',
+      'ev.questions.entitiesSection': 'Entities',
+      'ev.questions.drawerChunksCount': '{0} chunks',
+      'ev.questions.anchorEditButton': 'Edit anchors',
+      'ev.questions.anchorEditSelected': 'Selected {0}/{1}',
+      'ev.questions.loadMore': 'Load more',
+      'ev.questions.save': 'Save',
+      'ev.questions.addedToast': 'Question added',
+      'ev.questions.reproducePrefill': 'Question prefilled — hit Search to run it',
+      'ev.syn.entryButton': 'Generate questions',
+      'ev.syn.dialogTitle': 'Synthesize questions',
+      'ev.syn.docLabel': 'Source documents (multi-select)',
+      'ev.syn.docPlaceholder': 'Pick indexed documents to draw from — several can be combined',
+      'ev.syn.countLabel': 'Number of candidates',
+      'ev.syn.generate': 'Generate',
+      'ev.syn.generating': 'Generating…',
+      'ev.syn.reviewTitle': 'Candidate review',
+      'ev.syn.accept': 'Accept',
+      'ev.syn.reject': 'Ignore',
+      'ev.syn.acceptAll': 'Accept all',
+      'ev.syn.rejectAll': 'Ignore all',
+      'ev.syn.metaLine': '{0} candidate(s) dropped for invalid anchors or fields',
+      'ev.syn.reviewCount': '{0} pending review',
+      'ev.syn.droppedChip': '{0} dropped',
+      'ev.syn.reviewMetaTip': 'From {0} · generated {1}',
+      'ev.syn.empty': 'No candidates awaiting review',
+      'ev.syn.triggerFailed': 'Failed to trigger synthesis',
+      'ev.syn.acceptFailed': 'Failed to accept candidate',
+      'ev.syn.rejectFailed': 'Failed to ignore candidate',
+      'ev.history.envLocal': 'Local',
+      'ev.history.envCi': 'CI',
+      'ev.history.envNightly': 'Nightly',
+      'ev.history.statusCompleted': 'Completed',
+      'ev.history.statusError': 'Failed',
+      'ev.history.statusSkipped': 'Skipped',
+      'ev.history.statusCancelled': 'Cancelled',
+      'ev.history.emptyHistory': 'No runs yet — click Run evaluation to start the first one',
+      'ev.history.colTime': 'Run time',
+      'ev.history.colEnv': 'Environment',
+      'ev.history.colScope': 'Eval content',
+      'ev.history.colStatus': 'Status',
+      'ev.history.colDuration': 'Duration',
+      'ev.history.scopeQuick': 'Quick',
+      'ev.history.scopeFull': 'Full',
+      'ev.history.scopeGeneration': 'Generation',
+      'ev.history.rowSelectAria': 'Select run {0}',
+      'ev.history.rowDelete': 'Delete this run',
+      'ev.history.deleteConfirmTitle': 'Delete run history',
+      'ev.history.deleteConfirmDesc':
+        'This deletes {0} run record(s). Overview, trends and the bank recall column converge accordingly; this cannot be undone',
+      'ev.history.baselineWarn':
+        'Selection includes baseline runs: after deletion, later runs lose the regression-gate reference.',
+      'ev.history.deletedToast': 'Run history deleted',
+      'ev.history.deleteFailed': 'Failed to delete runs',
+      'ev.drawer.title': 'Eval Run Details',
+      'ev.drawer.statusCompleted': 'Completed',
+      'ev.drawer.statusError': 'Failed',
+      'ev.drawer.statusSkipped': 'Skipped',
+      'ev.drawer.statusCancelled': 'Cancelled',
+      'ev.drawer.baselineBadge': 'Baseline',
+      'ev.drawer.runInfoSection': 'Run info',
+      'ev.drawer.runIdLabel': 'Run ID',
+      'ev.drawer.createdAtLabel': 'Run time',
+      'ev.drawer.layer1Section': 'Retrieval Quality',
+      'ev.drawer.layer2Section': 'Generation Quality',
+      'ev.drawer.contextRecallLabel': 'Context Recall',
+      'ev.drawer.notRun': 'This layer was not executed in this run',
+      'ev.copied': 'Copied',
+      'ev.copyFailed': 'Copy failed',
+      'ev.anchorBlock.title': "Machine check: reference answer doesn't match the anchored chunk",
+      'ev.anchorBlock.missing': "Anchored chunk doesn't exist — fix the anchor and save again",
+      'ev.anchorBlock.missTerms': 'Missing terms',
+      'ev.anchorBlock.suggest': 'Suggested anchor',
+      'ev.anchorBlock.hits': 'hits',
+      'ev.anchorBlock.confirmSave': 'Save anyway',
+      'ev.anchorBlock.confirmAccept': 'Accept anyway',
+      'ev.anchorBlock.confirmUpdate': 'Save anyway',
+      'recall.saveAs.button': 'Save as question',
+      'recall.saveAs.selectedCount': '{0} selected',
+      'recall.saveAs.queryLabel': 'Question',
+      'recall.saveAs.categoryLabel': 'Category',
+      'recall.saveAs.expectedPathsLabel': 'Expected paths (multi-select)',
+      'recall.saveAs.anchorHint':
+        'Ticked chunks and wiki entry source chunks are recorded as this question\u2019s anchors',
+      'recall.saveAs.referenceAnswerLabel': 'Reference answer (optional)',
+      'recall.saveAs.submit': 'Save',
+      'recall.saveAs.cancel': 'Cancel',
+      'recall.saveAs.savedToast': 'Saved as a question',
+      'recall.saveAs.saveFailed': 'Failed to save as question',
+      'recall.saveAs.selectLabel': 'Save as question: {0}',
     }
 
     /** Panel data seam: every panel request is a POST of JSON parameters to
@@ -327,6 +797,7 @@ window.__ModuleLoader__.load({
       { id: 'recall', label: 'shell.tab.recall' },
       { id: 'vectors', label: 'shell.tab.vectors' },
       { id: 'graph', label: 'shell.tab.graph' },
+      { id: 'eval', label: 'shell.tab.eval' },
     ]
 
     /** Component-owned styles (removed when the component unmounts), built
@@ -489,6 +960,218 @@ window.__ModuleLoader__.load({
           '.hrag-drawer-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; }',
           '.hrag-drawer-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; }',
           '.hrag-drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px; }',
+          // ── 评测域（Task 8）──────────────────────────────────────────────
+          '.hrag-btn-primary { background: var(--dsw-alias-button-primary-fill); color: var(--dsw-alias-label-primary-foreground); }',
+          '.hrag-btn-primary:hover:not(:disabled) { background: var(--dsw-alias-button-primary-hover); }',
+          '.hrag-ev-slot { flex-direction: column; min-height: 0; flex: 1; }',
+          '.hrag-ev { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
+          '.hrag-ev-bar { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; min-width: 0; }',
+          '.hrag-ev-searchwrap { position: relative; flex: 1; min-width: 90px; display: flex; }',
+          '.hrag-ev-search { width: 100%; height: 26px; font-size: 12px; padding-left: 8px; padding-right: 22px; }',
+          '.hrag-ev-searchclear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: none; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; font-size: 11px; padding: 2px; }',
+          '.hrag-ev-runbtns { margin-left: auto; display: inline-flex; align-items: stretch; flex-shrink: 0; }',
+          '.hrag-ev-graybtn { background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }',
+          '.hrag-ev-graybtn:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
+          '.hrag-ev-run { height: 26px; font-size: 12px; padding: 0 10px; border-radius: var(--dsw-radius-sm) 0 0 var(--dsw-radius-sm); white-space: nowrap; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }',
+          '.hrag-ev-run:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
+          '.hrag-ev-chev { height: 26px; padding: 0 6px; font-size: 11px; border-radius: 0 var(--dsw-radius-sm) var(--dsw-radius-sm) 0; border: none; border-left: 0.5px solid color-mix(in srgb, var(--dsw-alias-label-primary) 10%, transparent); white-space: nowrap; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }',
+          '.hrag-ev-chev:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
+          '.hrag-ev-chev-armed { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-spinner { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid currentColor; border-top-color: transparent; display: inline-block; animation: hrag-rotate 800ms linear infinite; }',
+          '.hrag-ev-scroll { display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1; overflow-y: auto; padding-right: 2px; }',
+          '.hrag-ev-card { background: var(--dsw-alias-bg-layer-1); border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; flex-shrink: 0; }',
+          '.hrag-ev-cardhead { display: flex; align-items: center; gap: 6px; padding: 6px 10px; color: var(--dsw-alias-label-secondary); font-size: 12px; min-width: 0; }',
+          '.hrag-ev-cardhead-open { border-bottom: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-ev-cardhead-side { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }',
+          '.hrag-ev-cardtoggle { border: none; background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; padding: 0; }',
+          '.hrag-ev-cardbody { padding: 8px 10px; }',
+          '.hrag-ev-cardnote { padding: 4px 0; }',
+          '.hrag-ev-callout { display: flex; align-items: flex-start; gap: 6px; margin: 8px 0 0; font-size: 11px; line-height: 16px; }',
+          '.hrag-ev-banner { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; }',
+          '.hrag-ev-banner-idle { flex-direction: row; align-items: center; }',
+          '.hrag-ev-slottext { font-size: 13px; color: var(--dsw-alias-label-secondary); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }',
+          '.hrag-ev-slottext-failed { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-banner-side { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }',
+          '.hrag-ev-progrow { display: flex; align-items: center; gap: 10px; }',
+          '.hrag-ev-track { position: relative; flex: 1; min-width: 0; height: 6px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); overflow: hidden; }',
+          '.hrag-ev-track-span { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--dsw-alias-label-primary) 12%, transparent); }',
+          '.hrag-ev-track-fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--dsw-alias-label-primary); opacity: 0.75; }',
+          '.hrag-ev-track-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--dsw-alias-bg-layer-1); opacity: 0.8; }',
+          '.hrag-ev-eta { font-size: 11px; color: var(--dsw-alias-label-tertiary); flex-shrink: 0; }',
+          '.hrag-ev-logrow { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--dsw-alias-label-tertiary); min-width: 0; }',
+          '.hrag-ev-logtext { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; animation: hrag-fade-in 200ms ease; }',
+          '.hrag-ev-failedchip { flex-shrink: 0; background: color-mix(in srgb, var(--dsw-alias-label-error) 12%, transparent); color: var(--dsw-alias-label-error); border-radius: 4px; padding: 0 5px; font-size: 10px; }',
+          '.hrag-ev-muted { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-ev-tabnums { font-variant-numeric: tabular-nums; }',
+          '.hrag-ev-hint { border: 1px dashed var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); padding: 14px 10px; text-align: center; font-size: 12px; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-ev-hint-error { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-badge { display: inline-flex; align-items: center; gap: 4px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; padding: 0 6px; font-size: 10px; line-height: 16px; color: var(--dsw-alias-label-secondary); white-space: nowrap; }',
+          '.hrag-ev-badge-danger { border-color: color-mix(in srgb, var(--dsw-alias-label-error) 40%, transparent); color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-badge-amber { border-color: color-mix(in srgb, #f59e0b 45%, transparent); color: #b45309; }',
+          '.hrag-ev-badge-baseline { border-color: color-mix(in srgb, #f59e0b 45%, transparent); color: #b45309; }',
+          '.hrag-ev-capsule { display: inline-flex; align-items: center; border-radius: 6px; padding: 1px 6px; }',
+          '.hrag-ev-sum-ok { background: color-mix(in srgb, #10b981 12%, transparent); color: #047857; }',
+          '.hrag-ev-sum-warn { background: color-mix(in srgb, #84cc16 14%, transparent); color: #4d7c0f; }',
+          '.hrag-ev-sum-low { background: color-mix(in srgb, #f97316 12%, transparent); color: #c2410c; }',
+          '.hrag-ev-table { width: 100%; border-collapse: collapse; font-size: 12px; }',
+          '.hrag-ev-table th { text-align: left; font-weight: 500; color: var(--dsw-alias-label-tertiary); padding: 4px 6px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); white-space: nowrap; }',
+          '.hrag-ev-table td { padding: 5px 6px; color: var(--dsw-alias-label-primary); vertical-align: middle; }',
+          '.hrag-ev-th-num { text-align: right; }',
+          '.hrag-ev-th-withnote { display: inline-flex; align-items: center; gap: 4px; }',
+          '.hrag-ev-th-check { width: 26px; }',
+          '.hrag-ev-th-sort { width: 30px; text-align: right; }',
+          '.hrag-ev-tr-muted td { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-ev-tr-summary { border-top: 1.5px solid var(--dsw-alias-border-l3); font-weight: 600; }',
+          '.hrag-ev-tr { cursor: pointer; }',
+          '.hrag-ev-tr:hover td { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-ev-tr-on td { background: var(--dsw-alias-interactive-bg-active); }',
+          '.hrag-ev-td-query { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-ev-time { font-family: ui-monospace, monospace; font-size: 11px; font-variant-numeric: tabular-nums; border-radius: 999px; padding: 1px 7px; }',
+          '.hrag-ev-time-regression { background: color-mix(in srgb, #ef4444 10%, transparent); color: #b91c1c; }',
+          '.hrag-ev-time-baseline { background: color-mix(in srgb, #f59e0b 12%, transparent); color: #b45309; }',
+          '.hrag-ev-status { font-size: 12px; }',
+          '.hrag-ev-status-error { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-status-skipped, .hrag-ev-status-cancelled { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-ev-recall { display: inline-flex; align-items: center; gap: 5px; justify-content: flex-end; }',
+          '.hrag-ev-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }',
+          '.hrag-ev-dot-ok { background: #10b981; }',
+          '.hrag-ev-dot-part { background: #84cc16; }',
+          '.hrag-ev-dot-miss { background: #ef4444; }',
+          '.hrag-ev-refchunks { display: inline-flex; align-items: center; gap: 5px; justify-content: flex-end; }',
+          '.hrag-ev-check { accent-color: var(--dsw-alias-button-primary-fill); width: 13px; height: 13px; margin: 0; flex-shrink: 0; }',
+          '.hrag-ev-checkrow { display: inline-flex; align-items: center; gap: 12px; padding-top: 5px; }',
+          '.hrag-ev-checklabel { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }',
+          '.hrag-ev-checklabel-block { display: flex; align-items: flex-start; padding: 2px 0; }',
+          '.hrag-ev-menuwrap { position: relative; display: inline-flex; }',
+          '.hrag-ev-menu-btn { border: 0.5px solid var(--dsw-alias-border-l3); background: transparent; color: var(--dsw-alias-label-secondary); border-radius: var(--dsw-radius-sm); height: 22px; padding: 0 7px; font-size: 11px; cursor: pointer; font-family: inherit; }',
+          '.hrag-ev-segtrack { display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 8px; background: color-mix(in srgb, var(--dsw-alias-label-primary) 7%, transparent); }',
+          '.hrag-ev-segtrack button { border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11px; height: 18px; padding: 0 8px; border-radius: 6px; cursor: pointer; font-family: inherit; }',
+          '.hrag-ev-cardhead-tight { padding: 4px 10px; }',
+          ".hrag-ev-segtrack button[aria-pressed='true'] { background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }",
+          '.hrag-ev-banner-empty { align-items: center; justify-content: center; padding: 6px 10px; }',
+          '.hrag-ev-emptytext { font-size: 12px; }',
+          '.hrag-ev-hint-full { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }',
+          '.hrag-ev-menudrop { display: inline-flex; }',
+          '.hrag-ev-menudrop .hrag-ev-menu-btn { border-radius: 0 var(--dsw-radius-sm) var(--dsw-radius-sm) 0; border: none; border-left: 0.5px solid color-mix(in srgb, var(--dsw-alias-label-primary) 10%, transparent); height: 26px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }',
+          '.hrag-ev-menudrop .hrag-ev-menu-btn:hover { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
+          '.hrag-ev-rowmenu .hrag-ev-menu-btn { border: none; width: 22px; height: 22px; padding: 0; }',
+          '.hrag-ev-rowmenu-wrap { display: inline-flex; justify-content: flex-end; }',
+          '.hrag-ev-menu-backdrop { position: fixed; inset: 0; z-index: 40; }',
+          '.hrag-ev-menu { position: fixed; z-index: 41; min-width: 148px; padding: 4px; border-radius: 8px; background: var(--dsw-alias-bg-layer-1); border: 0.5px solid var(--dsw-alias-border-l3); box-shadow: var(--dsw-elevation-panel); }',
+          '.hrag-ev-menu-item { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; padding: 5px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
+          '.hrag-ev-menu-item:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-ev-menu-item:disabled { opacity: 0.5; cursor: not-allowed; }',
+          '.hrag-ev-menu-item-danger { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-menu-check { margin-left: auto; }',
+          '.hrag-ev-menu-sep { height: 0.5px; background: var(--dsw-alias-border-l2); margin: 4px 2px; }',
+          '.hrag-ev-menu-note { margin-left: auto; color: var(--dsw-alias-label-tertiary); font-size: 10px; padding-left: 8px; }',
+          '.hrag-ev-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }',
+          '.hrag-ev-grid4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }',
+          '.hrag-ev-grouphead { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: var(--dsw-alias-label-tertiary); margin: 6px 0 6px; }',
+          '.hrag-ev-grouphead:first-child { margin-top: 0; }',
+          '.hrag-ev-tile { background: color-mix(in srgb, var(--dsw-alias-bg-module-platform) 55%, transparent); border-radius: var(--dsw-radius-md); padding: 8px 10px; min-width: 0; }',
+          '.hrag-ev-tile-dim { opacity: 0.6; }',
+          '.hrag-ev-tile-title { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--dsw-alias-label-tertiary); min-width: 0; }',
+          '.hrag-ev-tile-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-ev-tile-note { cursor: help; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-ev-tracelink { margin-left: auto; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 10px; cursor: pointer; text-decoration: underline; padding: 0; }',
+          '.hrag-ev-tile-valuerow { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 3px; }',
+          '.hrag-ev-tile-value { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }',
+          '.hrag-ev-spark { color: var(--dsw-alias-label-tertiary); height: 12px; width: 28px; flex-shrink: 0; }',
+          '.hrag-ev-progress { margin-top: 5px; height: 4px; border-radius: 999px; overflow: hidden; background: var(--dsw-alias-bg-module-platform); }',
+          '.hrag-ev-progress-fill { height: 100%; border-radius: 999px; }',
+          '.hrag-ev-bar-ok { background: #10b981; }',
+          '.hrag-ev-bar-warn { background: #f59e0b; }',
+          '.hrag-ev-bar-danger { background: #ef4444; }',
+          '.hrag-ev-bar-muted { background: var(--dsw-alias-border-l3); }',
+          '.hrag-ev-tile-reason { margin-top: 4px; font-size: 10px; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-ev-chartwrap { position: relative; min-width: 0; }',
+          '.hrag-ev-chart { display: block; width: 100%; height: 240px; }',
+          '.hrag-ev-chart-hover { cursor: pointer; }',
+          '.hrag-ev-tip { position: absolute; z-index: 5; max-width: 228px; padding: 6px 8px; border-radius: 8px; background: var(--dsw-alias-bg-layer-1); border: 0.5px solid var(--dsw-alias-border-l3); box-shadow: var(--dsw-elevation-panel); font-size: 11px; line-height: 16px; color: var(--dsw-alias-label-secondary); pointer-events: none; }',
+          '.hrag-ev-tip-head { font-weight: 600; color: var(--dsw-alias-label-primary); margin-bottom: 2px; }',
+          '.hrag-ev-tip-row { display: flex; align-items: center; gap: 4px; }',
+          '.hrag-ev-tip-delta { opacity: 0.6; }',
+          '.hrag-ev-tip-regression { margin-top: 2px; color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-tip-meta { margin-top: 2px; opacity: 0.7; }',
+          '.hrag-ev-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }',
+          '.hrag-ev-legend-item { display: inline-flex; align-items: center; gap: 5px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11px; cursor: pointer; padding: 1px 2px; font-family: inherit; }',
+          '.hrag-ev-legend-off { opacity: 0.45; text-decoration: line-through; }',
+          '.hrag-ev-legend-line { width: 12px; height: 2px; border-radius: 2px; flex-shrink: 0; }',
+          '.hrag-ev-legend-line-dashed { background-image: linear-gradient(90deg, currentColor 60%, transparent 40%); background-size: 5px 2px; }',
+          '.hrag-ev-legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }',
+          '.hrag-ev-bank { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
+          '.hrag-ev-bankscroll { min-height: 0; flex: 1; overflow: auto; }',
+          '.hrag-ev-banktable { min-width: 480px; }',
+          '.hrag-ev-bulkbar { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); flex-shrink: 0; }',
+          '.hrag-ev-review { display: flex; flex-direction: column; flex-shrink: 0; }',
+          '.hrag-ev-review-open { min-height: 0; flex: 1; max-height: 45%; }',
+          '.hrag-ev-review-static { font-weight: 600; color: inherit; }',
+          '.hrag-ev-reviewlist { min-height: 0; flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; }',
+          '.hrag-ev-spin-text { display: inline-flex; align-items: center; gap: 4px; }',
+          '.hrag-ev-linkbtn { border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11px; cursor: pointer; padding: 0 2px; text-decoration: underline; font-family: inherit; }',
+          '.hrag-ev-linkbtn:disabled { opacity: 0.5; cursor: not-allowed; }',
+          '.hrag-ev-cand { display: flex; flex-direction: column; gap: 6px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); padding: 8px 10px; }',
+          '.hrag-ev-cand-query { margin: 0; font-size: 13px; color: var(--dsw-alias-label-primary); }',
+          '.hrag-ev-cand-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }',
+          '.hrag-ev-cand-answer { margin: 0; font-size: 11px; white-space: pre-wrap; }',
+          '.hrag-ev-cand-actions { display: flex; gap: 6px; }',
+          '.hrag-ev-form { display: flex; flex-direction: column; gap: 10px; }',
+          '.hrag-ev-formrow { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }',
+          '.hrag-ev-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }',
+          '.hrag-ev-fieldlabel { font-size: 12px; font-weight: 500; color: var(--dsw-alias-label-primary); }',
+          '.hrag-ev-textarea { min-height: 52px; resize: vertical; padding: 6px 8px; font-size: 12px; font-family: inherit; }',
+          '.hrag-ev-select { height: 28px; font-size: 12px; padding: 0 6px; }',
+          '.hrag-ev-formnote { margin: 0; font-size: 11px; }',
+          '.hrag-ev-anchor { display: flex; flex-direction: column; gap: 6px; border: 0.5px solid color-mix(in srgb, var(--dsw-alias-label-error) 40%, transparent); background: color-mix(in srgb, var(--dsw-alias-label-error) 8%, transparent); color: var(--dsw-alias-label-error); border-radius: 8px; padding: 8px 10px; font-size: 12px; }',
+          '.hrag-ev-anchor p { margin: 0; }',
+          '.hrag-ev-anchor-title { font-weight: 600; }',
+          '.hrag-ev-anchor-btn { align-self: flex-start; border: 0.5px solid color-mix(in srgb, #f59e0b 45%, transparent); background: color-mix(in srgb, #f59e0b 15%, transparent); color: #b45309; border-radius: var(--dsw-radius-sm); padding: 3px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }',
+          '.hrag-ev-anchor-btn:disabled { opacity: 0.5; cursor: not-allowed; }',
+          '.hrag-ev-anchorgroup { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }',
+          '.hrag-ev-anchordoc { font-size: 11px; font-weight: 500; color: var(--dsw-alias-label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-ev-anchorchunk { display: flex; flex-direction: column; gap: 4px; }',
+          '.hrag-ev-anchorchunk-trigger { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; border: none; background: transparent; color: var(--dsw-alias-label-primary); cursor: pointer; padding: 2px 0; text-align: left; width: 100%; font-family: inherit; }',
+          '.hrag-ev-anchorchunk-preview { font-size: 11px; color: var(--dsw-alias-label-tertiary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-left: 16px; }',
+          '.hrag-ev-anchorchunk-body { font-size: 11px; color: var(--dsw-alias-label-secondary); white-space: pre-wrap; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 6px; padding: 6px 8px; max-height: 180px; overflow-y: auto; margin-left: 16px; }',
+          '.hrag-ev-danglingrow { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-caret { display: inline-block; font-size: 10px; color: var(--dsw-alias-label-tertiary); transition: transform 120ms ease; flex-shrink: 0; }',
+          '.hrag-ev-caret-open { transform: rotate(180deg); }',
+          '.hrag-ev-editgroup { border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; }',
+          '.hrag-ev-editgroup-head { display: flex; align-items: center; gap: 6px; width: 100%; border: none; background: transparent; cursor: pointer; padding: 3px 0; font-family: inherit; }',
+          '.hrag-ev-editgroup-name { flex: 1; min-width: 0; font-size: 11px; font-weight: 500; color: var(--dsw-alias-label-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }',
+          '.hrag-ev-editgroup-body { display: flex; flex-direction: column; gap: 2px; padding-left: 16px; padding-bottom: 4px; }',
+          '.hrag-ev-editgroup-preview { font-size: 11px; color: var(--dsw-alias-label-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 0; flex: 1; }',
+          '.hrag-ev-editactions { display: flex; gap: 8px; margin-top: 4px; }',
+          '.hrag-ev-loadmore { align-self: flex-start; margin-top: 2px; }',
+          '.hrag-ev-doclist { max-height: 190px; overflow-y: auto; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-sm); padding: 4px; display: flex; flex-direction: column; gap: 2px; }',
+          '.hrag-ev-doclist-empty { margin: 4px 6px; font-size: 11px; }',
+          '.hrag-ev-docrow { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; cursor: pointer; }',
+          '.hrag-ev-docrow:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-ev-docrow-on { background: var(--dsw-alias-interactive-bg-active); }',
+          '.hrag-ev-docrow-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }',
+          '.hrag-ev-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }',
+          '.hrag-ev-chipwrap { display: flex; flex-wrap: wrap; gap: 5px; }',
+          '.hrag-ev-inforow { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 8px; margin-bottom: 6px; }',
+          '.hrag-ev-inforow:last-child { margin-bottom: 0; }',
+          '.hrag-ev-infolabel { font-size: 11px; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-ev-runidbox { font-family: ui-monospace, monospace; font-size: 11px; background: color-mix(in srgb, var(--dsw-alias-bg-module-platform) 55%, transparent); border-radius: 6px; padding: 3px 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-ev-fulltime { font-family: ui-monospace, monospace; font-size: 11px; }',
+          '.hrag-ev-iconbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; border-radius: 6px; font-size: 12px; padding: 0 4px; }',
+          '.hrag-ev-iconbtn:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-ev-iconbtn-text { font-size: 10px; border: 0.5px solid var(--dsw-alias-border-l3); }',
+          '.hrag-ev-drawer-qtitle { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }',
+          '.hrag-ev-drawerbody { display: flex; flex-direction: column; gap: 10px; }',
+          '.hrag-ev-footer { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; }',
+          '.hrag-ev-danger-text { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-pre { margin: 0; font-size: 12px; white-space: pre-wrap; }',
+          // 召回补面（存为考题）：行勾选与底栏。
+          '.hrag-hitrow-row { display: flex; align-items: stretch; gap: 4px; min-width: 0; }',
+          '.hrag-hitrow-row .hrag-hitrow { flex: 1; min-width: 0; }',
+          '.hrag-hitselect { flex-shrink: 0; width: 22px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 6px; background: transparent; color: var(--dsw-alias-label-primary); font-size: 11px; cursor: pointer; align-self: center; height: 22px; padding: 0; }',
+          '.hrag-hitselect-on { background: var(--dsw-alias-button-primary-fill); color: var(--dsw-alias-label-primary-foreground); border-color: transparent; }',
+          '.hrag-recall-savebar { display: flex; align-items: center; gap: 10px; padding: 6px 4px 2px; flex-shrink: 0; }',
+          '.hrag-recall-savecount { margin-left: auto; font-size: 12px; color: var(--dsw-alias-label-secondary); }',
         ].join('\n'),
       )
     }
@@ -516,7 +1199,7 @@ window.__ModuleLoader__.load({
     /** Hand-built confirm dialog (the plugin styling contract forbids Harness
      * Client imports): Escape closes, cancel holds the initial focus, and the
      * caller passes the cascade copy. */
-    function ConfirmDialog({ t, title, description, error, busy, onCancel, onConfirm, cancelKey, confirmKey }) {
+    function ConfirmDialog({ t, title, description, error, busy, onCancel, onConfirm, cancelKey, confirmKey, danger = true }) {
       React.useEffect(() => {
         const onKey = (event) => {
           if (event.key === 'Escape' && !busy) onCancel()
@@ -548,7 +1231,12 @@ window.__ModuleLoader__.load({
             ),
             h(
               'button',
-              { type: 'button', className: 'hrag-btn hrag-btn-danger', disabled: busy, onClick: onConfirm },
+              {
+                type: 'button',
+                className: danger ? 'hrag-btn hrag-btn-danger' : 'hrag-btn hrag-btn-primary',
+                disabled: busy,
+                onClick: onConfirm,
+              },
               t(confirmKey || 'doc.confirmDelete'),
             ),
           ),
@@ -794,6 +1482,342 @@ window.__ModuleLoader__.load({
           strokeWidth: 1.2,
         }),
         dots.map((cx) => h('circle', { key: String(cx), cx, cy: 8, r: 2.4, fill: 'currentColor' })),
+      )
+    }
+
+    // ── 评测（Task 8）：纯函数层照工作台 eval-run-status / eval-trend-chart.utils
+    // / eval-sparkline / format 逐条移植；参数化文案走 {0} 占位符（宿主 locale
+    // 只收纯串，参数在客户端拼）。 ────────────────────────────────────────────
+
+    /** 占位符插值：{0}/{1}…；缺参保留原占位。 */
+    function evText(text, args) {
+      if (typeof text !== 'string' || !args || args.length === 0) return text
+      return text.replace(/\{(\d+)\}/g, (match, index) => {
+        const value = args[Number(index)]
+        return value === undefined ? match : String(value)
+      })
+    }
+
+    /** 轮询节奏（照 eval-run-status）：在飞 3s，空闲不轮询。 */
+    const EVAL_RUNS_POLL_MS = 3000
+    /** 完整档流水线段数（layer1 → questions → ragas）。 */
+    const EVAL_PHASE_COUNT = 3
+    const EVAL_PHASE_ORDER = ['layer1', 'questions', 'ragas']
+    /** 先验时长占比（冷启动猜测；照 PHASE_WEIGHT_PRIOR）。 */
+    const EVAL_PHASE_PRIOR = {
+      l1_l2: { layer1: 0.1, questions: 0.35, ragas: 0.55 },
+      l1: { layer1: 1 },
+    }
+    const EVAL_MIN_PHASE_SECONDS = 1
+    const EVAL_ETA_WARMUP_SECONDS = 5
+
+    function evPhaseStep(progress) {
+      if (progress && progress.phase === 'questions') return 2
+      if (progress && progress.phase === 'ragas') return 3
+      return 1
+    }
+
+    function evPhasesFor(tier) {
+      return tier === 'l1' ? ['layer1'] : EVAL_PHASE_ORDER
+    }
+
+    function evParseMs(timestamp) {
+      if (!timestamp) return null
+      const ms = Date.parse(timestamp)
+      return Number.isFinite(ms) ? ms : null
+    }
+
+    function evCurrentPhase(progress, phases) {
+      const fallback = phases[0] || 'layer1'
+      return progress && phases.indexOf(progress.phase) >= 0 ? progress.phase : fallback
+    }
+
+    /** 各段跨度时长权重（照 adaptiveWeights：已完成段实测、剩余段先验缩放到
+        已观测速率；当前段超时取期望与已跑的较大者）。 */
+    function evAdaptiveWeights(progress, tier, nowMs) {
+      const phases = evPhasesFor(tier)
+      const prior = tier === 'l1_l2' ? EVAL_PHASE_PRIOR.l1_l2 : EVAL_PHASE_PRIOR.l1
+      const current = evCurrentPhase(progress, phases)
+      const measured = (progress && progress.phase_durations) || {}
+      const currentIndex = phases.indexOf(current)
+      let measuredSum = 0
+      let priorCompletedSum = 0
+      for (const phase of phases.slice(0, currentIndex)) {
+        const observed = measured[phase]
+        if (typeof observed === 'number' && Number.isFinite(observed)) {
+          measuredSum += Math.max(observed, EVAL_MIN_PHASE_SECONDS)
+          priorCompletedSum += prior[phase] || 0
+        }
+      }
+      const scale = priorCompletedSum > 0 && measuredSum > 0 ? measuredSum / priorCompletedSum : 1
+      const calibrated = priorCompletedSum > 0 && measuredSum > 0
+      const startedMs = evParseMs(progress && progress.phase_started_at)
+      const currentElapsed = startedMs === null ? null : Math.max((nowMs - startedMs) / 1000, 0)
+      const durations = {}
+      phases.forEach((phase, index) => {
+        const observed = measured[phase]
+        if (index < currentIndex && typeof observed === 'number' && Number.isFinite(observed)) {
+          durations[phase] = Math.max(observed, EVAL_MIN_PHASE_SECONDS)
+          return
+        }
+        const expected = (prior[phase] || 0) * scale
+        durations[phase] =
+          index === currentIndex && calibrated && currentElapsed !== null
+            ? Math.max(expected, currentElapsed)
+            : expected
+      })
+      const total = phases.reduce((sum, phase) => sum + (durations[phase] || 0), 0)
+      if (total <= 0) {
+        const even = 1 / phases.length
+        const out = {}
+        for (const phase of phases) out[phase] = even
+        return out
+      }
+      const out = {}
+      for (const phase of phases) out[phase] = (durations[phase] || 0) / total
+      return out
+    }
+
+    /** 加权整体完成度 0..1（照 overallFraction）。 */
+    function evOverallFraction(progress, tier, nowMs) {
+      if (!progress) return 0
+      const phases = evPhasesFor(tier)
+      const weights = evAdaptiveWeights(progress, tier, nowMs)
+      const current = evCurrentPhase(progress, phases)
+      let completed = 0
+      for (const phase of phases) {
+        if (phase === current) break
+        completed += weights[phase] || 0
+      }
+      const within = progress.total > 0 ? Math.min(1, Math.max(0, progress.done / progress.total)) : 0
+      return Math.min(1, Math.max(0, completed + (weights[current] || 0) * within))
+    }
+
+    /** 预计剩余秒数（照 etaSeconds：按段速率外推 + warmup 门控；永不负）。 */
+    function evEtaSeconds(progress, tier, nowMs) {
+      if (!progress) return null
+      const phases = evPhasesFor(tier)
+      const current = evCurrentPhase(progress, phases)
+      const within = progress.total > 0 ? Math.min(1, Math.max(0, progress.done / progress.total)) : 0
+      const startedMs = evParseMs(progress && progress.phase_started_at)
+      const elapsed = startedMs === null ? null : Math.max((nowMs - startedMs) / 1000, 0)
+      if (within <= 0 || elapsed === null || elapsed < EVAL_ETA_WARMUP_SECONDS) return null
+      const phaseFull = elapsed / within
+      const prior = tier === 'l1_l2' ? EVAL_PHASE_PRIOR.l1_l2 : EVAL_PHASE_PRIOR.l1
+      const currentPrior = prior[current] || 0
+      let future = 0
+      if (currentPrior > 0) {
+        for (const phase of phases.slice(phases.indexOf(current) + 1)) {
+          future += ((prior[phase] || 0) / currentPrior) * phaseFull
+        }
+      }
+      return Math.max(0, phaseFull * (1 - within) + future)
+    }
+
+    /** 在飞那次运行的档位（照 runningTier）。 */
+    function evRunningTier(progress, triggeredTier, selectedTier) {
+      if (progress && progress.phase !== 'layer1') return 'l1_l2'
+      return triggeredTier || selectedTier
+    }
+
+    /** 历史行档位（照 tierOfRun）：has_layer2 即完整档。 */
+    function evTierOfRun(run) {
+      return run && run.has_layer2 ? 'l1_l2' : 'l1'
+    }
+
+    /** 历史行耗时（秒）；缺戳/倒序 → null。 */
+    function evRunDurationSeconds(run) {
+      if (!run || !run.created_at || !run.completed_at) return null
+      const created = Date.parse(run.created_at)
+      const completed = Date.parse(run.completed_at)
+      if (Number.isNaN(created) || Number.isNaN(completed)) return null
+      const seconds = (completed - created) / 1000
+      return seconds >= 0 ? seconds : null
+    }
+
+    /** 时长结构（照 durationParts）→ 文案（dur* 词表）。 */
+    function evDurationText(t, seconds) {
+      const total = Math.max(0, Math.round(seconds))
+      if (total < 60) return evText(t('ev.durSeconds'), [total])
+      const minutes = Math.floor(total / 60)
+      const rest = total % 60
+      return rest === 0 ? evText(t('ev.durMinutes'), [minutes]) : evText(t('ev.durMinutesSeconds'), [minutes, rest])
+    }
+
+    /** 行内时间 MM-DD HH:mm（照 formatRunTime）；缺失/非法 → '-'。 */
+    function evFmtRunTime(iso) {
+      if (!iso) return '-'
+      const date = new Date(iso)
+      if (Number.isNaN(date.getTime())) return '-'
+      const pad = (value) => String(value).padStart(2, '0')
+      return pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes())
+    }
+
+    /** 完整时间 YYYY-MM-DD HH:mm:ss（tooltip / 详情行用）。 */
+    function evFmtFullTime(iso) {
+      if (!iso) return '-'
+      const date = new Date(iso)
+      if (Number.isNaN(date.getTime())) return '-'
+      const pad = (value) => String(value).padStart(2, '0')
+      return (
+        date.getFullYear() +
+        '-' + pad(date.getMonth() + 1) +
+        '-' + pad(date.getDate()) +
+        ' ' + pad(date.getHours()) +
+        ':' + pad(date.getMinutes()) +
+        ':' + pad(date.getSeconds())
+      )
+    }
+
+    /** 百分数 1 位小数（全评测面统一数值语言）；null → '-'。 */
+    function evPercent(value) {
+      return value == null ? '-' : (value * 100).toFixed(1) + '%'
+    }
+
+    /** 进度条色档（照 getProgressBarColor）：≥0.8 ok／≥0.6 warn／其余 danger。 */
+    function evBarClass(value) {
+      if (value == null) return 'hrag-ev-bar-muted'
+      if (value >= 0.8) return 'hrag-ev-bar-ok'
+      if (value >= 0.6) return 'hrag-ev-bar-warn'
+      return 'hrag-ev-bar-danger'
+    }
+
+    /** 汇总行胶囊色档（照 getSummaryBandClass）：≥0.9／≥0.8／<0.8。 */
+    function evSummaryClass(value) {
+      if (value == null) return ''
+      if (value >= 0.9) return 'hrag-ev-sum-ok'
+      if (value >= 0.8) return 'hrag-ev-sum-warn'
+      return 'hrag-ev-sum-low'
+    }
+
+    /** ragas 跳过原因分档（照 classifyRagasSkipReason）：未安装前缀归 not-installed。 */
+    function evClassifyRagasSkip(reason) {
+      if (!reason || String(reason).indexOf('ragas 未安装') === 0) return 'not-installed'
+      return 'error'
+    }
+
+    /** 去重保序文档 id 集（照 refDocIds：`{doc}#NNNN` 前缀）。 */
+    function evRefDocIds(chunkIds) {
+      const seen = []
+      const set = new Set()
+      for (const chunkId of chunkIds || []) {
+        const docId = String(chunkId).split('#')[0]
+        if (docId && !set.has(docId)) {
+          set.add(docId)
+          seen.push(docId)
+        }
+      }
+      return seen
+    }
+
+    /** B′ 锚定拦截识别（照 parseAnchorBlockDetail）：结构化 detail（对象 +
+        reason 枚举 + miss_terms 数组）→ 详情；其余 null。 */
+    function evAsAnchorBlockDetail(error) {
+      const info = error && error.info
+      const detail = info && info.detail
+      if (!detail || typeof detail !== 'object' || Array.isArray(detail)) return null
+      const reason = detail.reason
+      if (reason !== 'mismatch' && reason !== 'zero_hit' && reason !== 'missing_chunk') return null
+      if (!Array.isArray(detail.miss_terms) || !detail.miss_terms.every((term) => typeof term === 'string')) {
+        return null
+      }
+      return detail
+    }
+
+    // ── 趋势图数学（照 eval-trend-chart.utils，冷链冻结口径）─────────────────
+    /** 6 图例指标（颜色/线型/默认显隐照 spec §4.3.2 冻结表）。 */
+    const EVAL_TREND_METRICS = [
+      { key: 'recall_at_k', labelKey: 'ev.tableRecallAtK', color: '#3B82F6', layer: 1, defaultOn: true },
+      { key: 'hit_rate', labelKey: 'ev.tableHitRate', color: '#10B981', layer: 1, defaultOn: true },
+      { key: 'mrr', labelKey: 'ev.tableMrr', color: '#8B5CF6', layer: 1, defaultOn: false },
+      { key: 'faithfulness', labelKey: 'ev.ragasCard.faithfulness', color: '#F59E0B', layer: 2, defaultOn: false },
+      { key: 'answer_relevancy', labelKey: 'ev.ragasCard.answerRelevancy', color: '#EC4899', layer: 2, defaultOn: false },
+      { key: 'context_precision', labelKey: 'ev.ragasCard.contextPrecision', color: '#06B6D4', layer: 2, defaultOn: false },
+    ]
+    /** picker 5 稀疏候选（不进图例；颜色冻结与六色不撞）。 */
+    const EVAL_PICKER_METRICS = [
+      { key: 'path_accuracy', labelKey: 'ev.tablePathAccuracy', color: '#84CC16', layer: 1 },
+      { key: 'citation_precision', labelKey: 'ev.citationPrecision', color: '#F97316', layer: 2 },
+      { key: 'citation_recall', labelKey: 'ev.citationRecall', color: '#14B8A6', layer: 2 },
+      { key: 'seed_hit_rate', labelKey: 'ev.seedHitRate', color: '#A855F7', layer: 2 },
+      { key: 'routing_hit_rate', labelKey: 'ev.routingHitRate', color: '#64748B', layer: 2 },
+    ]
+    const EVAL_REGRESSION_COLOR = '#EF4444'
+    /** 视窗预设三档（contract v4）：日/周/月 = 客户端视窗 24h/7d/30d。 */
+    const EVAL_SPAN_MS = { day: 24 * 3600000, week: 7 * 24 * 3600000, month: 30 * 24 * 3600000 }
+    /** 分段加权纵轴折点（contract v5 冻结）：真值 → 图高。 */
+    const EVAL_WARP_STOPS = [
+      [0, 0],
+      [0.4, 0.2],
+      [0.8, 0.4],
+      [0.9, 0.6],
+      [0.95, 0.8],
+      [1, 1],
+    ]
+    /** 六等分刻度标签表（不等间距即非线性披露）。 */
+    const EVAL_WARP_TICKS = [
+      [0, '0%'],
+      [0.2, '40%'],
+      [0.4, '80%'],
+      [0.6, '90%'],
+      [0.8, '95%'],
+      [1, '100%'],
+    ]
+
+    function evWarpValue(value) {
+      const v = Math.min(1, Math.max(0, value))
+      for (let i = 1; i < EVAL_WARP_STOPS.length; i += 1) {
+        const [x0, y0] = EVAL_WARP_STOPS[i - 1]
+        const [x1, y1] = EVAL_WARP_STOPS[i]
+        if (v <= x1) return y0 + ((v - x0) / (x1 - x0)) * (y1 - y0)
+      }
+      return 1
+    }
+
+    /** 视窗过滤：ts ≥ 末点 − span 的点（插件版＝时间窗直滤；工作台为索引窗，
+        用户可见行为等价——切换窗口不重新取数）。 */
+    function evSpanPoints(points, preset) {
+      if (!points || points.length === 0) return []
+      const span = EVAL_SPAN_MS[preset] || EVAL_SPAN_MS.month
+      const last = Date.parse(points[points.length - 1].ts)
+      if (!Number.isFinite(last)) return points
+      const cutoff = last - span
+      return points.filter((point) => {
+        const ts = Date.parse(point.ts)
+        return Number.isFinite(ts) && ts >= cutoff
+      })
+    }
+
+    /** 火花线（照 EvalSparkline 28×12）：min-max 归一 + 末点实心圆；<2 值 null。 */
+    function evSparkline(values) {
+      if (!Array.isArray(values) || values.length < 2) return null
+      const width = 28
+      const height = 12
+      const pad = 1.5
+      const min = Math.min(...values)
+      const max = Math.max(...values)
+      const span = max - min
+      const innerW = width - pad * 2
+      const innerH = height - pad * 2
+      const lastIndex = values.length - 1
+      const pts = values.map((value, index) => {
+        const x = pad + (index / lastIndex) * innerW
+        const y = span === 0 ? pad + innerH / 2 : pad + innerH - ((value - min) / span) * innerH
+        return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 }
+      })
+      const end = pts[lastIndex]
+      return h(
+        'svg',
+        { className: 'hrag-ev-spark', viewBox: '0 0 28 12', 'aria-hidden': 'true', fill: 'none' },
+        h('polyline', {
+          points: pts.map((p) => p.x + ',' + p.y).join(' '),
+          stroke: 'currentColor',
+          strokeWidth: 1.5,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          fill: 'none',
+        }),
+        h('circle', { cx: end.x, cy: end.y, r: 1.5, fill: 'currentColor' }),
       )
     }
 
@@ -1224,17 +2248,29 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function RecallView({ t, kbId, onOpenChunk, onViewInVectorSpace, onViewInGraphSpace }) {
+    function RecallView({ t, kbId, onOpenChunk, onViewInVectorSpace, onViewInGraphSpace, prefill }) {
       const [query, setQuery] = React.useState('')
       const [topK, setTopK] = React.useState(5)
       const [pending, setPending] = React.useState(false)
       const [result, setResult] = React.useState(null)
       const [failure, setFailure] = React.useState(null)
+      // 「存为考题」（Task 8 补面，照工作台 §7.1）：命中行勾选 → 底部动作条。
+      const [selectedChunks, setSelectedChunks] = React.useState(() => new Map())
+      const [saveOpen, setSaveOpen] = React.useState(false)
+      const [savedNotice, setSavedNotice] = React.useState(null)
 
       React.useEffect(() => {
         setResult(null)
         setFailure(null)
+        setSelectedChunks(new Map())
+        setSaveOpen(false)
+        setSavedNotice(null)
       }, [kbId])
+
+      // ↗ 复现预填（评测题库/详情 → 召回面板，§7.2）。
+      React.useEffect(() => {
+        if (prefill && typeof prefill.query === 'string' && prefill.query) setQuery(prefill.query)
+      }, [prefill])
 
       const run = () => {
         const trimmed = query.trim()
@@ -1356,20 +2392,45 @@ window.__ModuleLoader__.load({
           graph: (result.paths && result.paths.graph && result.paths.graph.message) || '',
           wiki: (result.paths && result.paths.wiki && result.paths.wiki.message) || '',
         }
-        const hitRow = (key, entry, onOpen) =>
+        const toggleSelected = (chunkId, path) => {
+          setSelectedChunks((current) => {
+            const next = new Map(current)
+            if (next.has(chunkId)) next.delete(chunkId)
+            else next.set(chunkId, { id: chunkId, path })
+            return next
+          })
+        }
+        const hitRow = (key, entry, onOpen, select) =>
           h(
-            'button',
-            {
-              type: 'button',
-              className: onOpen ? 'hrag-hitrow' : 'hrag-hitrow hrag-hitrow-static',
-              key,
-              onClick: onOpen || undefined,
-            },
-            entry.rank != null ? h('span', { className: 'hrag-hitrank' }, '#' + String(entry.rank)) : null,
-            h('span', { className: 'hrag-hitdoc', title: entry.docName }, String(entry.docName || '')),
-            h('span', { className: 'hrag-hitlead' }, entry.lead),
-            entry.page != null ? h('span', { className: 'hrag-hitpage' }, 'p.' + String(entry.page)) : null,
-            h('span', { className: 'hrag-hitscore' }, formatScore(entry.score)),
+            'div',
+            { className: 'hrag-hitrow-row', key },
+            select
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-hitselect' + (selectedChunks.has(select.chunkId) ? ' hrag-hitselect-on' : ''),
+                    'aria-label': t('recall.saveAs.selectLabel', entry.docName),
+                    'aria-pressed': selectedChunks.has(select.chunkId),
+                    title: t('recall.saveAs.selectLabel', entry.docName),
+                    onClick: () => toggleSelected(select.chunkId, select.path),
+                  },
+                  selectedChunks.has(select.chunkId) ? '✓' : '',
+                )
+              : null,
+            h(
+              'button',
+              {
+                type: 'button',
+                className: onOpen ? 'hrag-hitrow' : 'hrag-hitrow hrag-hitrow-static',
+                onClick: onOpen || undefined,
+              },
+              entry.rank != null ? h('span', { className: 'hrag-hitrank' }, '#' + String(entry.rank)) : null,
+              h('span', { className: 'hrag-hitdoc', title: entry.docName }, String(entry.docName || '')),
+              h('span', { className: 'hrag-hitlead' }, entry.lead),
+              entry.page != null ? h('span', { className: 'hrag-hitpage' }, 'p.' + String(entry.page)) : null,
+              h('span', { className: 'hrag-hitscore' }, formatScore(entry.score)),
+            ),
           )
         const rowsFor = (path) => {
           if (path === 'vector') {
@@ -1378,6 +2439,7 @@ window.__ModuleLoader__.load({
                 hit.chunk_id,
                 { rank: hit.rank, docName: hit.doc_name, lead: firstLine(hit.text), page: hit.page, score: hit.score },
                 onOpenChunk ? () => onOpenChunk(hit.chunk_id, hit.doc_name) : null,
+                { chunkId: hit.chunk_id, path: 'vector' },
               ),
             )
           }
@@ -1387,6 +2449,7 @@ window.__ModuleLoader__.load({
                 hit.chunk_id,
                 { rank: index + 1, docName: hit.doc_name, lead: firstLine(hit.text), page: hit.page, score: hit.score },
                 onOpenChunk ? () => onOpenChunk(hit.chunk_id, hit.doc_name) : null,
+                { chunkId: hit.chunk_id, path: 'graph' },
               ),
             )
           }
@@ -1426,12 +2489,51 @@ window.__ModuleLoader__.load({
         )
       }
 
+      const selectedList = [...selectedChunks.values()]
+      const selectionPaths = []
+      for (const item of selectedList) {
+        if (selectionPaths.indexOf(item.path) < 0) selectionPaths.push(item.path)
+      }
+
       return h(
         React.Fragment,
         null,
         bar,
         failure ? h('div', { className: 'hrag-notice hrag-notice-error' }, t('recall.failed') + '：' + errorDetail(failure)) : null,
+        savedNotice ? h('div', { className: 'hrag-notice' }, savedNotice) : null,
         body,
+        // 「存为考题」动作条（照工作台 §7.1 底栏）：勾选才出现；计数＋主钮。
+        selectedList.length > 0
+          ? h(
+              'div',
+              { className: 'hrag-recall-savebar' },
+              h(
+                'span',
+                { className: 'hrag-recall-savecount hrag-ev-tabnums' },
+                t('recall.saveAs.selectedCount', selectedList.length),
+              ),
+              h(
+                'button',
+                { type: 'button', className: 'hrag-btn hrag-btn-primary', onClick: () => setSaveOpen(true) },
+                t('recall.saveAs.button'),
+              ),
+            )
+          : null,
+        h(EvalSaveAsQuestionDialog, {
+          t,
+          kbId,
+          open: saveOpen,
+          onClose: () => setSaveOpen(false),
+          prefillQuery: result ? result.query : query,
+          defaultPaths: selectionPaths,
+          selectedChunkIds: selectedList.map((item) => item.id),
+          selectionCount: selectedList.length,
+          onSaved: () => {
+            setSelectedChunks(new Map())
+            setSavedNotice(t('recall.saveAs.savedToast'))
+            window.setTimeout(() => setSavedNotice(null), NOTICE_DISMISS_MS)
+          },
+        }),
       )
     }
 
@@ -3647,6 +4749,3220 @@ window.__ModuleLoader__.load({
       )
     }
 
+    // ── 评测视图（Task 8）────────────────────────────────────────────────────
+
+    /** 终止评测两步 inline 确认的回退窗口（照工作台 CANCEL_CONFIRM_MS）。 */
+    const EVAL_CANCEL_CONFIRM_MS = 3000
+
+    /** 评测域取数（enabled 门控；pollWhile 判真时 3s 续拍——照工作台
+        refetchInterval 语义；轮询判定经 ref 取最新，避免 identity 漂移重启）。 */
+    function useEvalCall(kbId, enabled, op, params, pollWhile) {
+      const [data, setData] = React.useState(null)
+      const [failure, setFailure] = React.useState(null)
+      const [tick, setTick] = React.useState(0)
+      const refresh = React.useCallback(() => setTick((value) => value + 1), [])
+      const pollRef = React.useRef(pollWhile)
+      pollRef.current = pollWhile
+      const paramsKey = params ? JSON.stringify(params) : ''
+      React.useEffect(() => {
+        if (!enabled) return undefined
+        let cancelled = false
+        let timer = null
+        const load = () => {
+          const args = Object.assign({ kb_id: kbId }, params || {})
+          callOp(op, args)
+            .then((payload) => {
+              if (cancelled) return
+              setData(payload)
+              setFailure(null)
+              if (pollRef.current && pollRef.current(payload)) {
+                timer = window.setTimeout(load, EVAL_RUNS_POLL_MS)
+              }
+            })
+            .catch((error) => {
+              if (cancelled) return
+              setFailure(error)
+            })
+        }
+        load()
+        return () => {
+          cancelled = true
+          if (timer !== null) window.clearTimeout(timer)
+        }
+      }, [enabled, kbId, op, paramsKey, tick])
+      return { data, failure, refresh, setData }
+    }
+
+    /** 运行列表查询（轮询源）：in_flight 为真 3s 续拍；kick() 开 12s 强制轮询窗
+        ——触发→后端标志翻转之间的缝隙靠它接上（工作台乐观置位的等价物；
+        插件无共享查询缓存，以强制窗代替）。 */
+    function useEvalRunsQuery(kbId, enabled) {
+      const [data, setData] = React.useState(null)
+      const [failure, setFailure] = React.useState(null)
+      const [tick, setTick] = React.useState(0)
+      const forceUntilRef = React.useRef(0)
+      const refresh = React.useCallback(() => setTick((value) => value + 1), [])
+      const kick = React.useCallback(() => {
+        forceUntilRef.current = Date.now() + 12000
+        setTick((value) => value + 1)
+      }, [])
+      React.useEffect(() => {
+        if (!enabled) return undefined
+        let cancelled = false
+        let timer = null
+        const load = () => {
+          callOp('listEvalRuns', { kb_id: kbId })
+            .then((payload) => {
+              if (cancelled) return
+              setData(payload)
+              setFailure(null)
+              if ((payload && payload.in_flight) || Date.now() < forceUntilRef.current) {
+                timer = window.setTimeout(load, EVAL_RUNS_POLL_MS)
+              }
+            })
+            .catch((error) => {
+              if (cancelled) return
+              setFailure(error)
+            })
+        }
+        load()
+        return () => {
+          cancelled = true
+          if (timer !== null) window.clearTimeout(timer)
+        }
+      }, [enabled, kbId, tick])
+      return { data, failure, refresh, setData, kick }
+    }
+
+    /** 轻量弹层（评测工具栏档位/行菜单共用）：按钮＋**fixed 定位** popover——
+        逃脱卡/滚动容器的 overflow 裁剪（2026-10-13 报「弹层被容器截断」）；
+        开拍测位：默认朝下、下方空间不足且上方更宽裕时朝上；背板点收；
+        render(close) 返回菜单子节点。传 icon 时触发器为图标钮（title 承载语义）。 */
+    function EvalMenu({ className, label, icon, title, align, render }) {
+      const [open, setOpen] = React.useState(false)
+      const [pos, setPos] = React.useState(null)
+      const btnRef = React.useRef(null)
+      const toggle = () => {
+        if (open) {
+          setOpen(false)
+          return
+        }
+        const el = btnRef.current
+        if (el) {
+          const rect = el.getBoundingClientRect()
+          const spaceBelow = window.innerHeight - rect.bottom
+          const openUp = spaceBelow < 180 && rect.top > spaceBelow
+          setPos({
+            top: openUp ? null : rect.bottom + 4,
+            bottom: openUp ? window.innerHeight - rect.top + 4 : null,
+            left: rect.left,
+            right: window.innerWidth - rect.right,
+          })
+        }
+        setOpen(true)
+      }
+      return h(
+        'div',
+        { className: 'hrag-ev-menuwrap' + (className ? ' ' + className : '') },
+        h(
+          'button',
+          {
+            type: 'button',
+            ref: btnRef,
+            className: icon ? 'hrag-ev-iconbtn' : 'hrag-ev-menu-btn',
+            'aria-label': title || label,
+            title: title || label,
+            'aria-expanded': open,
+            onClick: toggle,
+          },
+          icon || label,
+        ),
+        open
+          ? h(
+              React.Fragment,
+              null,
+              h('div', { className: 'hrag-ev-menu-backdrop', onMouseDown: () => setOpen(false) }),
+              h(
+                'div',
+                {
+                  className: 'hrag-ev-menu',
+                  style: pos
+                    ? {
+                        top: pos.top !== null ? pos.top + 'px' : 'auto',
+                        bottom: pos.bottom !== null ? pos.bottom + 'px' : 'auto',
+                        left: align === 'end' ? 'auto' : pos.left + 'px',
+                        right: align === 'end' ? pos.right + 'px' : 'auto',
+                      }
+                    : undefined,
+                },
+                render(() => setOpen(false)),
+              ),
+            )
+          : null,
+      )
+    }
+
+    /** 弹层菜单项（选中态尾置 ✓；danger 红字）。 */
+    function EvalMenuItem({ danger, disabled, selected, onSelect, children }) {
+      return h(
+        'button',
+        {
+          type: 'button',
+          className:
+            'hrag-ev-menu-item' +
+            (danger ? ' hrag-ev-menu-item-danger' : '') +
+            (selected ? ' hrag-ev-menu-item-on' : ''),
+          disabled,
+          onClick: () => onSelect && onSelect(),
+        },
+        children,
+        selected ? h('span', { className: 'hrag-ev-menu-check' }, '✓') : null,
+      )
+    }
+
+    /** 趋势指标选择图标（滑杆三条＋旋钮，照工作台 SlidersHorizontal 语汇）。 */
+    function evalSlidersIcon() {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 16 16', 'aria-hidden': 'true' },
+        h('line', { x1: 2, y1: 4, x2: 14, y2: 4, stroke: 'currentColor', strokeWidth: 1.4, strokeLinecap: 'round' }),
+        h('line', { x1: 2, y1: 8, x2: 14, y2: 8, stroke: 'currentColor', strokeWidth: 1.4, strokeLinecap: 'round' }),
+        h('line', { x1: 2, y1: 12, x2: 14, y2: 12, stroke: 'currentColor', strokeWidth: 1.4, strokeLinecap: 'round' }),
+        h('circle', { cx: 5.5, cy: 4, r: 1.9, fill: 'currentColor' }),
+        h('circle', { cx: 10.5, cy: 8, r: 1.9, fill: 'currentColor' }),
+        h('circle', { cx: 7, cy: 12, r: 1.9, fill: 'currentColor' }),
+      )
+    }
+
+    /** B′ 锚定拦截红块（照 AnchorBlockNotice）：缺失术语/建议锚/命中计数；
+        missing_chunk 不可覆盖（无确认钮）。 */
+    function EvalAnchorNotice({ tk, detail, confirmLabel, confirming, onConfirm }) {
+      const canConfirm = detail.reason !== 'missing_chunk' && Boolean(onConfirm)
+      const hitsLine = tk('ev.anchorBlock.hits') + ' ' + String(detail.hits) + '/' + String(detail.best_hits)
+      return h(
+        'div',
+        { className: 'hrag-ev-anchor', role: 'alert' },
+        h(
+          'p',
+          { className: 'hrag-ev-anchor-title' },
+          detail.reason === 'missing_chunk' ? tk('ev.anchorBlock.missing') : tk('ev.anchorBlock.title'),
+        ),
+        detail.miss_terms && detail.miss_terms.length > 0
+          ? h('p', null, tk('ev.anchorBlock.missTerms') + ' ' + detail.miss_terms.join(' '))
+          : null,
+        h(
+          'p',
+          null,
+          detail.suggested_chunk
+            ? tk('ev.anchorBlock.suggest') + ' ' + detail.suggested_chunk + ' (' + hitsLine + ')'
+            : hitsLine,
+        ),
+        canConfirm
+          ? h(
+              'div',
+              null,
+              h(
+                'button',
+                { type: 'button', className: 'hrag-ev-anchor-btn', disabled: confirming, onClick: onConfirm },
+                confirmLabel,
+              ),
+            )
+          : null,
+      )
+    }
+
+    /** 评测视图（Task 8）：三视图分段（总览/题库/历史）＋常驻工具栏（运行分体
+        按钮：主键执行勾中档位、次槽空闲＝档位下拉/运行中＝终止两步确认）＋
+        弹层族；keep-alive（照投影/图谱）；数据源＝运行列表（轮询源）＋总览/
+        趋势/题库三查询；drain 边（in_flight 落闸）一次性刷新总览/趋势。 */
+    function EvalView({ t, kbId, enabled, onReproduce }) {
+      const tk = (key, ...args) => evText(t(key), args)
+      const [view, setView] = React.useState('overview')
+      const [tier, setTier] = React.useState('l1')
+      const [runTier, setRunTier] = React.useState(null)
+      const [drawerRunId, setDrawerRunId] = React.useState(null)
+      const [notice, setNotice] = React.useState(null)
+      const [bankAddOpen, setBankAddOpen] = React.useState(false)
+      const [bankSynthOpen, setBankSynthOpen] = React.useState(false)
+      const [bankSearch, setBankSearch] = React.useState('')
+      const [bankSelected, setBankSelected] = React.useState(() => new Set())
+      const [fullRunOpen, setFullRunOpen] = React.useState(false)
+      const [fullRunScope, setFullRunScope] = React.useState(undefined)
+      const [pendingRun, setPendingRun] = React.useState(false)
+      const [cancelArmed, setCancelArmed] = React.useState(false)
+      const cancelTimerRef = React.useRef(null)
+
+      React.useEffect(() => {
+        setView('overview')
+        setRunTier(null)
+        setDrawerRunId(null)
+        setBankAddOpen(false)
+        setBankSynthOpen(false)
+        setBankSearch('')
+        setBankSelected(new Set())
+        setNotice(null)
+      }, [kbId])
+
+      React.useEffect(() => {
+        if (!notice) return undefined
+        const timer = window.setTimeout(
+          () => setNotice(null),
+          notice.isError ? NOTICE_DISMISS_ERROR_MS : NOTICE_DISMISS_MS,
+        )
+        return () => window.clearTimeout(timer)
+      }, [notice])
+
+      const notify = React.useCallback((text, isError) => setNotice({ text, isError: Boolean(isError) }), [])
+
+      const runsQ = useEvalRunsQuery(kbId, enabled)
+      const overviewQ = useEvalCall(kbId, enabled, 'evalRunLatest')
+      const trendQ = useEvalCall(kbId, enabled, 'evalRunTrend')
+      const questionsQ = useEvalCall(kbId, enabled, 'listEvalQuestions')
+
+      const inFlight = Boolean(runsQ.data && runsQ.data.in_flight)
+      const running = pendingRun || inFlight
+      const progress = (runsQ.data && runsQ.data.progress) || null
+      const bannerTier = evRunningTier(progress, runTier, tier)
+      const lastRun =
+        runsQ.data && runsQ.data.runs && runsQ.data.runs.length > 0 ? runsQ.data.runs[0] : null
+      const phaseName =
+        progress && progress.phase === 'questions'
+          ? tk('ev.phaseQuestions')
+          : progress && progress.phase === 'ragas'
+            ? tk('ev.phaseRagas')
+            : tk('ev.phaseLayer1')
+      const runStep = evPhaseStep(progress)
+      const showCounter = bannerTier === 'l1_l2' || runStep > 1
+      const runButtonLabel = running
+        ? showCounter
+          ? tk('ev.runPhase', phaseName, runStep, EVAL_PHASE_COUNT)
+          : phaseName
+        : tier === 'l1_l2'
+          ? tk('ev.tierFull')
+          : tk('ev.tierQuick')
+
+      // drain 边（照工作台）：in_flight true→false 一次性刷新总览/趋势。
+      const prevInFlight = React.useRef(false)
+      React.useEffect(() => {
+        const drained = prevInFlight.current && !inFlight
+        prevInFlight.current = inFlight
+        if (!drained) return
+        overviewQ.refresh()
+        trendQ.refresh()
+      }, [inFlight, overviewQ, trendQ])
+
+      const disarmCancel = React.useCallback(() => {
+        if (cancelTimerRef.current !== null) {
+          window.clearTimeout(cancelTimerRef.current)
+          cancelTimerRef.current = null
+        }
+        setCancelArmed(false)
+      }, [])
+      React.useEffect(() => {
+        if (!running) disarmCancel()
+      }, [running, disarmCancel])
+      React.useEffect(() => disarmCancel, [disarmCancel])
+
+      const handleCancelClick = () => {
+        if (!cancelArmed) {
+          setCancelArmed(true)
+          cancelTimerRef.current = window.setTimeout(() => {
+            cancelTimerRef.current = null
+            setCancelArmed(false)
+          }, EVAL_CANCEL_CONFIRM_MS)
+          return
+        }
+        disarmCancel()
+        callOp('cancelEvalRun', { kb_id: kbId })
+          .then(() => notify(tk('ev.cancelToast')))
+          .catch(() => notify(tk('ev.cancelFailedToast'), true))
+      }
+
+      const handleTrigger = (input) => {
+        setPendingRun(true)
+        callOp('triggerEvalRun', { kb_id: kbId, body: input })
+          .then((response) => {
+            if (response && response.status === 'enqueued') {
+              notify(tk('ev.runStartedToast'))
+              if (input.layers) setRunTier(input.layers)
+              runsQ.kick()
+            } else {
+              notify(tk('ev.alreadyRunningToast'))
+            }
+            if (input.question_ids) setBankSelected(new Set())
+          })
+          .catch(() => notify(tk('ev.runFailedToast'), true))
+          .finally(() => setPendingRun(false))
+      }
+
+      const requestRun = (layers, questionIds) => {
+        const scope =
+          questionIds !== undefined
+            ? questionIds
+            : view === 'questions' && bankSelected.size > 0
+              ? [...bankSelected]
+              : undefined
+        if (layers === 'l1_l2') {
+          setFullRunScope(scope)
+          setFullRunOpen(true)
+          return
+        }
+        handleTrigger(scope ? { layers, question_ids: scope } : { layers })
+      }
+
+      const toolbar = h(
+        'div',
+        { className: 'hrag-ev-bar' },
+        h(
+          'span',
+          { className: 'hrag-seg', role: 'group', 'aria-label': tk('ev.viewsLabel') },
+          ['overview', 'questions', 'history'].map((id) =>
+            h(
+              'button',
+              { key: id, type: 'button', 'aria-pressed': view === id, onClick: () => setView(id) },
+              tk('ev.view.' + id),
+            ),
+          ),
+        ),
+        view === 'questions'
+          ? h(
+              'span',
+              { className: 'hrag-ev-searchwrap' },
+              h('input', {
+                type: 'text',
+                className: 'hrag-input hrag-ev-search',
+                placeholder: tk('ev.questions.searchPlaceholder'),
+                'aria-label': tk('ev.questions.searchPlaceholder'),
+                value: bankSearch,
+                onChange: (event) => setBankSearch(event.target.value),
+              }),
+              bankSearch
+                ? h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'hrag-ev-searchclear',
+                      'aria-label': tk('ev.questions.searchClear'),
+                      onClick: () => setBankSearch(''),
+                    },
+                    '✕',
+                  )
+                : null,
+            )
+          : null,
+        h(
+          'span',
+          { className: 'hrag-ev-runbtns' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'hrag-btn hrag-ev-run',
+              disabled: running,
+              onClick: () => requestRun(tier),
+            },
+            running ? h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }) : null,
+            runButtonLabel,
+          ),
+          running
+            ? h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-btn hrag-btn-outline hrag-ev-chev' + (cancelArmed ? ' hrag-ev-chev-armed' : ''),
+                  title: tk('ev.cancelRun'),
+                  'aria-label': cancelArmed ? undefined : tk('ev.cancelRun'),
+                  onClick: handleCancelClick,
+                },
+                cancelArmed ? tk('ev.cancelConfirm') : '✕',
+              )
+            : h(
+                EvalMenu,
+                {
+                  className: 'hrag-ev-menudrop',
+                  label: '▾',
+                  align: 'end',
+                  render: (close) => [
+                    h(
+                      EvalMenuItem,
+                      { key: 'l1', selected: tier === 'l1', onSelect: () => { setTier('l1'); close() } },
+                      tk('ev.tierQuick'),
+                    ),
+                    h(
+                      EvalMenuItem,
+                      { key: 'full', selected: tier === 'l1_l2', onSelect: () => { setTier('l1_l2'); close() } },
+                      tk('ev.tierFull'),
+                    ),
+                    view === 'questions'
+                      ? h('div', { key: 'sep', className: 'hrag-ev-menu-sep' })
+                      : null,
+                    view === 'questions'
+                      ? h(
+                          EvalMenuItem,
+                          { key: 'add', onSelect: () => { setBankAddOpen(true); close() } },
+                          tk('ev.questions.addQuestion'),
+                        )
+                      : null,
+                    view === 'questions'
+                      ? h(
+                          EvalMenuItem,
+                          { key: 'syn', onSelect: () => { setBankSynthOpen(true); close() } },
+                          tk('ev.syn.entryButton'),
+                        )
+                      : null,
+                  ],
+                },
+              ),
+        ),
+      )
+
+      let body
+      if (view === 'overview') {
+        body = h(EvalOverview, {
+          t,
+          tk,
+          enabled,
+          kbId,
+          overviewQ,
+          trendQ,
+          runsQ,
+          running,
+          progress,
+          bannerTier,
+          lastRun,
+          onOpenRun: setDrawerRunId,
+          onViewHistory: () => setView('history'),
+          notify,
+        })
+      } else if (view === 'questions') {
+        body = h(EvalBank, {
+          t,
+          tk,
+          kbId,
+          enabled,
+          questionsQ,
+          overviewData: overviewQ.data,
+          search: bankSearch,
+          selected: bankSelected,
+          onSelectedChange: setBankSelected,
+          addOpen: bankAddOpen,
+          onAddOpenChange: setBankAddOpen,
+          synthOpen: bankSynthOpen,
+          onSynthOpenChange: setBankSynthOpen,
+          onTrigger: (input) => requestRun(input.layers || 'l1', input.question_ids),
+          onReproduce,
+          notify,
+        })
+      } else {
+        body = h(EvalHistory, {
+          t,
+          tk,
+          kbId,
+          runsQ,
+          onOpenRun: setDrawerRunId,
+          notify,
+        })
+      }
+
+      return h(
+        'div',
+        { className: 'hrag-ev' },
+        toolbar,
+        notice
+          ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
+          : null,
+        body,
+        h(EvalRunDrawer, { t, tk, kbId, runId: drawerRunId, onClose: () => setDrawerRunId(null), notify }),
+        fullRunOpen
+          ? h(ConfirmDialog, {
+              t,
+              title: tk('ev.fullRun.dialogTitle'),
+              description:
+                tk('ev.fullRun.dialogBody') +
+                ' ' +
+                (fullRunScope !== undefined
+                  ? tk('ev.fullRun.scopeSelected', fullRunScope.length)
+                  : tk('ev.fullRun.scopeAll')),
+              busy: false,
+              danger: false,
+              cancelKey: 'ev.fullRun.cancel',
+              confirmKey: 'ev.fullRun.confirm',
+              onCancel: () => setFullRunOpen(false),
+              onConfirm: () => {
+                const scope = fullRunScope
+                setFullRunOpen(false)
+                setFullRunScope(undefined)
+                handleTrigger(scope ? { layers: 'l1_l2', question_ids: scope } : { layers: 'l1_l2' })
+              },
+            })
+          : null,
+      )
+    }
+
+    /** 评估摘要行（总览状态槽，照 EvalRunBanner）：运行中＝单轨加权进度条＋
+        ETA＋单行日志＋失败计；空闲＝上次评测摘要（失败/终止红字）/尚未评测。 */
+    function EvalBanner({ t, tk, running, progress, bannerTier, lastRun, onViewHistory }) {
+      if (!running) {
+        if (lastRun === null) {
+          return h(
+            'div',
+            { className: 'hrag-ev-card hrag-ev-banner hrag-ev-banner-empty' },
+            h('span', { className: 'hrag-ev-muted hrag-ev-emptytext' }, tk('ev.neverRan')),
+          )
+        }
+        const failed = lastRun.status !== 'completed'
+        const secs = evRunDurationSeconds(lastRun)
+        const durationText = secs === null ? null : evDurationText(t, secs)
+        const tierName = evTierOfRun(lastRun) === 'l1_l2' ? tk('ev.tierFull') : tk('ev.tierQuick')
+        return h(
+          'div',
+          { className: 'hrag-ev-card hrag-ev-banner hrag-ev-banner-idle' },
+          h(
+            'span',
+            { className: 'hrag-ev-slottext' + (failed ? ' hrag-ev-slottext-failed' : '') },
+            failed
+              ? lastRun.status === 'cancelled'
+                ? tk('ev.slotSummaryCancelled')
+                : tk('ev.slotSummaryFailed')
+              : durationText
+                ? tk('ev.slotSummary', tierName, durationText)
+                : tierName,
+          ),
+          h(
+            'span',
+            { className: 'hrag-ev-banner-side' },
+            h('span', { className: 'hrag-ev-muted hrag-ev-tabnums' }, evFmtRunTime(lastRun.created_at)),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-ev-iconbtn',
+                title: tk('ev.slotViewHistory'),
+                'aria-label': tk('ev.slotViewHistory'),
+                onClick: onViewHistory,
+              },
+              '⟲',
+            ),
+          ),
+        )
+      }
+      const phases = bannerTier === 'l1' ? ['layer1'] : EVAL_PHASE_ORDER
+      const weights = evAdaptiveWeights(progress, bannerTier)
+      const fraction = evOverallFraction(progress, bannerTier)
+      const etaSecs = evEtaSeconds(progress, bannerTier)
+      const etaText =
+        etaSecs === null
+          ? tk('ev.etaEstimating')
+          : etaSecs < 60
+            ? tk('ev.etaSeconds', Math.max(1, Math.round(etaSecs)))
+            : tk('ev.etaMinutes', Math.max(1, Math.round(etaSecs / 60)))
+      const current = progress && phases.indexOf(progress.phase) >= 0 ? progress.phase : phases[0]
+      const boundaries = []
+      let cursor = 0
+      let spanStart = 0
+      for (let index = 0; index < phases.length; index += 1) {
+        if (phases[index] === current) spanStart = cursor
+        cursor += weights[phases[index]] || 0
+        if (index < phases.length - 1) boundaries.push(cursor)
+      }
+      const tail = (progress && progress.tail) || null
+      const phaseWord = (phase) =>
+        phase === 'layer1' ? tk('ev.phaseLayer1') : phase === 'ragas' ? tk('ev.phaseRagas') : tk('ev.phaseQuestions')
+      const logText = !tail
+        ? tk('ev.logWaiting')
+        : tail.kind === 'phase'
+          ? tk('ev.logPhase', phaseWord(tail.phase))
+          : tail.kind === 'fail'
+            ? tk('ev.logFail', phaseWord(tail.phase), tail.done, tail.total, tail.failed)
+            : tk('ev.logItem', phaseWord(tail.phase), tail.done, tail.total)
+      const logKey = tail ? tail.kind + ':' + tail.phase + ':' + tail.done + ':' + tail.failed : 'waiting'
+      return h(
+        'div',
+        { className: 'hrag-ev-card hrag-ev-banner' },
+        h(
+          'div',
+          { className: 'hrag-ev-progrow' },
+          h(
+            'div',
+            {
+              className: 'hrag-ev-track',
+              role: 'progressbar',
+              'aria-valuemin': 0,
+              'aria-valuemax': 100,
+              'aria-valuenow': Math.round(fraction * 100),
+              'aria-label': tk('ev.bannerAria', phaseWord(current), Math.round(fraction * 100)),
+            },
+            h('div', {
+              className: 'hrag-ev-track-span',
+              style: { left: (spanStart * 100).toFixed(1) + '%', width: ((weights[current] || 0) * 100).toFixed(1) + '%' },
+            }),
+            h('div', { className: 'hrag-ev-track-fill', style: { width: (fraction * 100).toFixed(1) + '%' } }),
+            boundaries.map((boundary) =>
+              h('div', { key: boundary, className: 'hrag-ev-track-tick', style: { left: (boundary * 100).toFixed(1) + '%' } }),
+            ),
+          ),
+          h('span', { className: 'hrag-ev-eta hrag-ev-tabnums' }, etaText),
+        ),
+        h(
+          'div',
+          { className: 'hrag-ev-logrow', 'aria-live': 'polite' },
+          h('span', { key: logKey, className: 'hrag-ev-logtext' }, logText),
+          progress && progress.failed > 0
+            ? h('span', { className: 'hrag-ev-failedchip hrag-ev-tabnums' }, tk('ev.failedCount', progress.failed))
+            : null,
+        ),
+      )
+    }
+
+    /** 指标瓦片（照 MetricTile 词汇）：名称＋ⓘ（title 承载）/大数字/进度条/
+        火花线（28×12 SVG）。trace 链接仅忠实度瓦片（URL 存在时）。 */
+    function EvalMetricTile({ tk, label, note, value, disabled, disabledReason, spark, traceUrl, onTrace }) {
+      const isNull = value == null
+      return h(
+        'div',
+        { className: 'hrag-ev-tile' + (disabled === true || isNull ? ' hrag-ev-tile-dim' : '') },
+        h(
+          'div',
+          { className: 'hrag-ev-tile-title' },
+          h('span', { className: 'hrag-ev-tile-label', title: label }, label),
+          note ? h('span', { className: 'hrag-ev-tile-note', title: note, 'aria-label': note }, 'ⓘ') : null,
+          traceUrl && onTrace
+            ? h(
+                'button',
+                { type: 'button', className: 'hrag-ev-tracelink', onClick: () => onTrace(traceUrl) },
+                tk('ev.viewTrace'),
+              )
+            : null,
+        ),
+        h(
+          'div',
+          { className: 'hrag-ev-tile-valuerow' },
+          h('span', { className: 'hrag-ev-tile-value hrag-ev-tabnums' }, isNull ? '-' : evPercent(value)),
+          evSparkline(spark),
+        ),
+        !isNull
+          ? h(
+              'div',
+              { className: 'hrag-ev-progress hrag-ev-tabnums' },
+              h('div', {
+                className: 'hrag-ev-progress-fill ' + evBarClass(value),
+                style: { width: (Math.min(100, value * 100)).toFixed(1) + '%' },
+              }),
+            )
+          : null,
+        disabled === true && disabledReason
+          ? h('div', { className: 'hrag-ev-tile-reason' }, disabledReason)
+          : null,
+      )
+    }
+
+    /** 总览视图（照工作台）：状态槽＋检索质量表卡＋生成质量瓦片卡＋趋势卡。 */
+    function EvalOverview({ t, tk, enabled, kbId, overviewQ, trendQ, runsQ, running, progress, bannerTier, lastRun, onOpenRun, onViewHistory, notify }) {
+      const [layer1Collapsed, setLayer1Collapsed] = React.useState(false)
+      const [layer2Collapsed, setLayer2Collapsed] = React.useState(false)
+      const overview = overviewQ.data
+      const layer1 = overview ? overview.layer1 : null
+      const layer2 = overview ? overview.layer2 : null
+      const traceUrl = layer2 && layer2.langfuse_trace_url ? layer2.langfuse_trace_url : null
+      const openTrace = (url) => {
+        try {
+          window.open(url, '_blank', 'noopener')
+        } catch (error) {
+          notify(String(error), true)
+        }
+      }
+      const categories = ['fact', 'relation', 'concept', 'global', 'summary']
+      const layer1Table =
+        layer1 === null
+          ? h('div', { className: 'hrag-ev-hint' }, tk('ev.emptyLayer1'))
+          : h(
+              'table',
+              { className: 'hrag-ev-table' },
+              h(
+                'thead',
+                null,
+                h(
+                  'tr',
+                  null,
+                  h('th', null, tk('ev.tableCategory')),
+                  h('th', { className: 'hrag-ev-th-num' }, tk('ev.tableHitRate')),
+                  h(
+                    'th',
+                    { className: 'hrag-ev-th-num' },
+                    layer1.metrics.top_k != null ? tk('ev.tableRecallAtKv', layer1.metrics.top_k) : tk('ev.tableRecallAtK'),
+                  ),
+                  h('th', { className: 'hrag-ev-th-num' }, tk('ev.tableMrr')),
+                  h('th', { className: 'hrag-ev-th-num' }, tk('ev.tablePathAccuracy')),
+                ),
+              ),
+              h(
+                'tbody',
+                null,
+                categories.map((category) => {
+                  const metric = category === 'summary' ? layer1.metrics.summary : layer1.metrics[category] || null
+                  const isSummary = category === 'summary'
+                  if (!metric) {
+                    return h(
+                      'tr',
+                      { key: category, className: 'hrag-ev-tr-muted' },
+                      h('td', { colSpan: 5 }, tk('ev.category.' + category) + ' (n=0)'),
+                    )
+                  }
+                  const cell = (value) =>
+                    isSummary
+                      ? value == null
+                        ? h('span', { className: 'hrag-ev-muted' }, '-')
+                        : h('span', { className: 'hrag-ev-capsule ' + evSummaryClass(value) }, evPercent(value))
+                      : evPercent(value)
+                  return h(
+                    'tr',
+                    { key: category, className: isSummary ? 'hrag-ev-tr-summary' : null },
+                    h(
+                      'td',
+                      null,
+                      tk('ev.category.' + category) + ' ',
+                      h('span', { className: 'hrag-ev-muted' }, '(n=' + String(metric.question_count) + ')'),
+                    ),
+                    h('td', { className: 'hrag-ev-th-num hrag-ev-tabnums' }, cell(metric.hit_rate)),
+                    h('td', { className: 'hrag-ev-th-num hrag-ev-tabnums' }, cell(metric.recall_at_k)),
+                    h('td', { className: 'hrag-ev-th-num hrag-ev-tabnums' }, cell(metric.mrr)),
+                    h('td', { className: 'hrag-ev-th-num hrag-ev-tabnums' }, cell(metric.path_accuracy)),
+                  )
+                }),
+              ),
+            )
+      const ragasTile = (label, noteKey, value, sparkKey, testId) =>
+        h(EvalMetricTile, {
+          key: testId,
+          tk,
+          label,
+          note: tk(noteKey),
+          value,
+          spark: trendQ.data && trendQ.data.sparks ? trendQ.data.sparks[sparkKey] : undefined,
+        })
+      const layer2Body =
+        layer2 === null
+          ? h('div', { className: 'hrag-ev-hint' }, tk('ev.emptyLayer2'))
+          : h(
+              React.Fragment,
+              null,
+              h('div', { className: 'hrag-ev-grouphead' }, tk('ev.ragasGroupLabel')),
+              h(
+                'div',
+                { className: 'hrag-ev-grid4' },
+                ragasTile(tk('ev.ragasCard.faithfulness'), 'ev.cardNote.faithfulness', layer2.ragas.faithfulness, 'faithfulness', 'faithfulness'),
+                ragasTile(tk('ev.ragasCard.answerRelevancy'), 'ev.cardNote.answerRelevancy', layer2.ragas.answer_relevancy, 'answer_relevancy', 'answer_relevancy'),
+                ragasTile(tk('ev.ragasCard.contextPrecision'), 'ev.cardNote.contextPrecision', layer2.ragas.context_precision, 'context_precision', 'context_precision'),
+                ragasTile(tk('ev.ragasCard.contextRecall'), 'ev.cardNote.contextRecall', layer2.ragas.context_recall, 'context_recall', 'context_recall'),
+              ),
+              h('div', { className: 'hrag-ev-grouphead' }, tk('ev.archGroupLabel')),
+              h(
+                'div',
+                { className: 'hrag-ev-grid4' },
+                h(EvalMetricTile, {
+                  key: 'citation_precision',
+                  tk,
+                  label: tk('ev.citationPrecision'),
+                  note: tk('ev.cardNote.citationPrecision'),
+                  value: layer2.arch_specific.citation_precision,
+                  spark: trendQ.data && trendQ.data.sparks ? trendQ.data.sparks.citation_precision : undefined,
+                }),
+                h(EvalMetricTile, {
+                  key: 'citation_recall',
+                  tk,
+                  label: tk('ev.citationRecall'),
+                  note: tk('ev.cardNote.citationRecall'),
+                  value: layer2.arch_specific.citation_recall,
+                  spark: trendQ.data && trendQ.data.sparks ? trendQ.data.sparks.citation_recall : undefined,
+                }),
+                h(EvalMetricTile, {
+                  key: 'seed_hit_rate',
+                  tk,
+                  label: tk('ev.seedHitRate'),
+                  note: tk('ev.cardNote.seedHitRate'),
+                  value: layer2.arch_specific.seed_hit_rate,
+                  disabled: !layer2.has_graph_questions,
+                  disabledReason: tk('ev.noGraphQuestions'),
+                  spark: trendQ.data && trendQ.data.sparks ? trendQ.data.sparks.seed_hit_rate : undefined,
+                }),
+                h(EvalMetricTile, {
+                  key: 'routing_hit_rate',
+                  tk,
+                  label: tk('ev.routingHitRate'),
+                  note: tk('ev.cardNote.routingHitRate'),
+                  value: layer2.routing_hit_rate,
+                  spark: trendQ.data && trendQ.data.sparks ? trendQ.data.sparks.routing_hit_rate : undefined,
+                }),
+              ),
+            )
+      const ragasBadge =
+        layer2 !== null && !layer2.ragas_available
+          ? evClassifyRagasSkip(layer2.ragas_skip_reason) === 'error'
+            ? h('span', { className: 'hrag-ev-badge', title: layer2.ragas_skip_reason || '' }, tk('ev.ragasErrorBadge'))
+            : h('span', { className: 'hrag-ev-badge' }, tk('ev.ragasMissingBadge'))
+          : null
+      return h(
+        'div',
+        { className: 'hrag-ev-scroll' },
+        h(EvalBanner, { t, tk, running, progress, bannerTier, lastRun, onViewHistory }),
+        overviewQ.failure
+          ? h('div', { className: 'hrag-ev-hint hrag-ev-hint-error' }, tk('ev.loadFailed'))
+          : overviewQ.data === null
+            ? h('div', { className: 'hrag-ev-hint' }, tk('ev.loading'))
+            : h(
+                React.Fragment,
+                null,
+                h(
+                  'section',
+                  { className: 'hrag-ev-card' },
+                  h(
+                    'div',
+                    { className: 'hrag-ev-cardhead' + (layer1Collapsed ? '' : ' hrag-ev-cardhead-open') },
+                    h(
+                      'button',
+                      { type: 'button', className: 'hrag-ev-cardtoggle', onClick: () => setLayer1Collapsed((value) => !value) },
+                      tk('ev.layer1Title'),
+                    ),
+                    h('span', { className: 'hrag-ev-tile-note', title: tk('ev.layer1Note'), 'aria-label': tk('ev.layer1Note') }, 'ⓘ'),
+                    layer1 && layer1.baseline_diff && layer1.baseline_diff.regression_detected
+                      ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-danger' }, tk('ev.regressionBadge'))
+                      : null,
+                  ),
+                  layer1Collapsed ? null : h('div', { className: 'hrag-ev-cardbody' }, layer1Table),
+                ),
+                h(
+                  'section',
+                  { className: 'hrag-ev-card' },
+                  h(
+                    'div',
+                    { className: 'hrag-ev-cardhead' + (layer2Collapsed ? '' : ' hrag-ev-cardhead-open') },
+                    h(
+                      'button',
+                      { type: 'button', className: 'hrag-ev-cardtoggle', onClick: () => setLayer2Collapsed((value) => !value) },
+                      tk('ev.layer2Title'),
+                    ),
+                    h('span', { className: 'hrag-ev-tile-note', title: tk('ev.layer2Note'), 'aria-label': tk('ev.layer2Note') }, 'ⓘ'),
+                    ragasBadge,
+                  ),
+                  layer2Collapsed ? null : h('div', { className: 'hrag-ev-cardbody' }, layer2Body),
+                ),
+              ),
+        h(EvalTrendCard, { t, tk, trendQ, onOpenRun }),
+      )
+    }
+
+    /** 趋势卡（照工作台容器化）：头部行＝收起 toggle＋阈值红芯片＋picker 多选
+        （稀疏指标线，不进图例）＋粒度段控；体＝手绘趋势图＋图例开关行。 */
+    function EvalTrendCard({ t, tk, trendQ, onOpenRun }) {
+      const [collapsed, setCollapsed] = React.useState(false)
+      const [span, setSpan] = React.useState('month')
+      const [pickerSelected, setPickerSelected] = React.useState([])
+      const [legendSelected, setLegendSelected] = React.useState({})
+      const data = trendQ.data
+      const baseline = data ? data.baseline : null
+      const head = h(
+        'div',
+        { className: 'hrag-ev-cardhead hrag-ev-cardhead-tight' + (collapsed ? '' : ' hrag-ev-cardhead-open') },
+        h(
+          'button',
+          { type: 'button', className: 'hrag-ev-cardtoggle', onClick: () => setCollapsed((value) => !value) },
+          tk('ev.trendTitle'),
+        ),
+        baseline
+          ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-danger hrag-ev-tabnums' }, tk('ev.trend.thresholdLabel', baseline.threshold_percent))
+          : null,
+        h(
+          'span',
+          { className: 'hrag-ev-cardhead-side' },
+          h(EvalMenu, {
+            icon: evalSlidersIcon(),
+            title: tk('ev.trend.pickerAria'),
+            align: 'end',
+            render: () =>
+              EVAL_PICKER_METRICS.map((metric) =>
+                h(
+                  EvalMenuItem,
+                  {
+                    key: metric.key,
+                    selected: pickerSelected.indexOf(metric.key) >= 0,
+                    onSelect: () =>
+                      setPickerSelected((current) =>
+                        current.indexOf(metric.key) >= 0
+                          ? current.filter((key) => key !== metric.key)
+                          : [...current, metric.key],
+                      ),
+                  },
+                  h('span', { className: 'hrag-ev-legend-dot', style: { backgroundColor: metric.color } }),
+                  tk(metric.labelKey),
+                  metric.layer === 2 ? h('span', { className: 'hrag-ev-menu-note' }, tk('ev.trend.fullTierOnly')) : null,
+                ),
+              ),
+          }),
+          h(
+            'span',
+            { className: 'hrag-ev-segtrack', role: 'group', 'aria-label': tk('ev.granularityLabel') },
+            ['day', 'week', 'month'].map((id) =>
+              h(
+                'button',
+                { key: id, type: 'button', 'aria-pressed': span === id, onClick: () => setSpan(id) },
+                tk('ev.granularity.' + id),
+              ),
+            ),
+          ),
+        ),
+      )
+      let body = null
+      if (!collapsed) {
+        if (trendQ.failure) {
+          body = h('div', { className: 'hrag-ev-hint hrag-ev-hint-error' }, tk('ev.loadFailed'))
+        } else if (data === null) {
+          body = h('div', { className: 'hrag-ev-hint' }, tk('ev.loading'))
+        } else if (!data.has_data) {
+          body = h('div', { className: 'hrag-ev-hint' }, tk('ev.emptyTrend'))
+        } else {
+          const points = evSpanPoints(data.points, span)
+          body =
+            points.length === 0
+              ? h('div', { className: 'hrag-ev-hint' }, tk('ev.emptyTrend'))
+              : h(
+                  React.Fragment,
+                  null,
+                  h(EvalTrendChart, { tk, points, baseline, span, pickerSelected, legendSelected, onOpenRun }),
+                  h(
+                    'div',
+                    { className: 'hrag-ev-legend' },
+                    EVAL_TREND_METRICS.map((metric) => {
+                      const name = tk(metric.labelKey)
+                      const on = legendSelected[name] !== undefined ? legendSelected[name] : metric.defaultOn
+                      return h(
+                        'button',
+                        {
+                          key: metric.key,
+                          type: 'button',
+                          className: 'hrag-ev-legend-item' + (on ? '' : ' hrag-ev-legend-off'),
+                          'aria-pressed': on,
+                          onClick: () =>
+                            setLegendSelected((current) => Object.assign({}, current, { [name]: !on })),
+                        },
+                        h('span', {
+                          className:
+                            'hrag-ev-legend-line' + (metric.layer === 2 ? ' hrag-ev-legend-line-dashed' : ''),
+                          style: { backgroundColor: metric.color },
+                        }),
+                        name,
+                      )
+                    }),
+                  ),
+                )
+        }
+      }
+      return h(
+        'section',
+        { className: 'hrag-ev-card' },
+        head,
+        collapsed ? null : h('div', { className: 'hrag-ev-cardbody' }, body),
+      )
+    }
+
+    /** 手绘趋势图（照工作台合同）：序号轴（每 run 等距槽）＋分段加权纵轴
+        （六等分刻度 0/40/80/90/95/100%）＋阈值红虚线＋基线更新竖线＋按图例/
+        picker 的指标线（L1 实线实心圆、L2 虚线空心圆、回退点红）＋最近点
+        tooltip（环比箭头）＋点击下钻 run。插件版＝时间窗直滤（工作台为
+        dataZoom 索引窗，用户可见行为等价）。 */
+    function EvalTrendChart({ tk, points, baseline, span, pickerSelected, legendSelected, onOpenRun }) {
+      const wrapRef = React.useRef(null)
+      const canvasRef = React.useRef(null)
+      const [hover, setHover] = React.useState(null)
+      const hoverRef = React.useRef(null)
+      hoverRef.current = hover
+      const layoutRef = React.useRef({ xs: [] })
+
+      const visibleSeries = React.useCallback(() => {
+        const list = []
+        for (const metric of EVAL_TREND_METRICS) {
+          const name = tk(metric.labelKey)
+          const on = legendSelected[name] !== undefined ? legendSelected[name] : metric.defaultOn
+          if (on) list.push(metric)
+        }
+        for (const metric of EVAL_PICKER_METRICS) {
+          if (pickerSelected.indexOf(metric.key) >= 0) list.push(metric)
+        }
+        return list
+      }, [tk, legendSelected, pickerSelected])
+
+      const draw = React.useCallback(() => {
+        const wrap = wrapRef.current
+        const canvas = canvasRef.current
+        if (!wrap || !canvas) return
+        const width = wrap.clientWidth
+        const height = wrap.clientHeight
+        if (!width || !height) return
+        const dpr = window.devicePixelRatio || 1
+        if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+          canvas.width = Math.round(width * dpr)
+          canvas.height = Math.round(height * dpr)
+        }
+        const ctx = canvas.getContext('2d')
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        ctx.clearRect(0, 0, width, height)
+        const dark = isDarkTheme()
+        const ink = (alpha) => (dark ? 'rgba(235,238,245,' + alpha + ')' : 'rgba(60,60,60,' + alpha + ')')
+        const padL = 46
+        const padR = 16
+        const padT = 18
+        const padB = 24
+        const plotW = width - padL - padR
+        const plotH = height - padT - padB
+        const count = points.length
+        const xAt = (index) => padL + (count === 1 ? plotW / 2 : (index / (count - 1)) * plotW)
+        const yAt = (value) => padT + (1 - evWarpValue(value)) * plotH
+        const xs = []
+        for (let index = 0; index < count; index += 1) xs.push(xAt(index))
+        layoutRef.current = { xs }
+        ctx.font = '10px sans-serif'
+        for (const entry of EVAL_WARP_TICKS) {
+          const y = padT + (1 - entry[0]) * plotH
+          ctx.strokeStyle = ink(0.08)
+          ctx.setLineDash([3, 3])
+          ctx.beginPath()
+          ctx.moveTo(padL, y)
+          ctx.lineTo(width - padR, y)
+          ctx.stroke()
+          ctx.setLineDash([])
+          ctx.fillStyle = ink(0.55)
+          ctx.textAlign = 'right'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(entry[1], padL - 6, y)
+        }
+        ctx.fillStyle = ink(0.5)
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'top'
+        const step = Math.max(1, Math.ceil(count / Math.max(1, Math.floor(plotW / 48))))
+        const pad2 = (value) => String(value).padStart(2, '0')
+        for (let index = 0; index < count; index += step) {
+          const date = new Date(points[index].ts)
+          if (Number.isNaN(date.getTime())) continue
+          const label =
+            span === 'day'
+              ? pad2(date.getHours()) + ':' + pad2(date.getMinutes())
+              : pad2(date.getMonth() + 1) + '-' + pad2(date.getDate())
+          ctx.fillText(label, xs[index], height - padB + 6)
+        }
+        if (baseline) {
+          const threshold = baseline.recall_at_k - baseline.threshold_percent / 100
+          const y = yAt(threshold)
+          ctx.strokeStyle = EVAL_REGRESSION_COLOR
+          ctx.setLineDash([5, 4])
+          ctx.beginPath()
+          ctx.moveTo(padL, y)
+          ctx.lineTo(width - padR, y)
+          ctx.stroke()
+          ctx.setLineDash([])
+        }
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'bottom'
+        for (let index = 0; index < count; index += 1) {
+          if (!points[index].is_baseline_update) continue
+          ctx.strokeStyle = ink(0.3)
+          ctx.setLineDash([3, 3])
+          ctx.beginPath()
+          ctx.moveTo(xs[index], padT)
+          ctx.lineTo(xs[index], padT + plotH)
+          ctx.stroke()
+          ctx.setLineDash([])
+          ctx.fillStyle = ink(0.55)
+          ctx.fillText(tk('ev.trend.baselineUpdate'), xs[index], padT - 4)
+        }
+        const hoverIndex = hoverRef.current ? hoverRef.current.index : null
+        if (hoverIndex != null && xs[hoverIndex] !== undefined) {
+          ctx.strokeStyle = ink(0.25)
+          ctx.beginPath()
+          ctx.moveTo(xs[hoverIndex], padT)
+          ctx.lineTo(xs[hoverIndex], padT + plotH)
+          ctx.stroke()
+        }
+        for (const metric of visibleSeries()) {
+          const pts = []
+          for (let index = 0; index < count; index += 1) {
+            const value = points[index][metric.key]
+            if (value == null) continue
+            pts.push({ index, x: xs[index], y: yAt(value) })
+          }
+          if (pts.length === 0) continue
+          ctx.strokeStyle = metric.color
+          ctx.lineWidth = 2
+          ctx.globalAlpha = 0.9
+          if (metric.layer === 2) ctx.setLineDash([6, 4])
+          ctx.beginPath()
+          pts.forEach((point, order) => (order === 0 ? ctx.moveTo(point.x, point.y) : ctx.lineTo(point.x, point.y)))
+          ctx.stroke()
+          ctx.setLineDash([])
+          ctx.globalAlpha = 1
+          for (const point of pts) {
+            const highlighted = hoverIndex === point.index
+            const regression =
+              metric.key === 'recall_at_k' &&
+              points[point.index].regression &&
+              points[point.index].regression.detected
+            ctx.beginPath()
+            ctx.arc(point.x, point.y, highlighted ? 4 : 2.6, 0, Math.PI * 2)
+            if (regression) {
+              ctx.fillStyle = EVAL_REGRESSION_COLOR
+              ctx.fill()
+            } else if (metric.layer === 1) {
+              ctx.fillStyle = metric.color
+              ctx.fill()
+            } else {
+              ctx.fillStyle = dark ? '#202127' : '#ffffff'
+              ctx.fill()
+              ctx.strokeStyle = metric.color
+              ctx.lineWidth = 1.4
+              ctx.stroke()
+            }
+          }
+        }
+      }, [points, baseline, span, tk, visibleSeries])
+
+      React.useEffect(() => {
+        draw()
+      }, [draw])
+      React.useEffect(() => {
+        const wrap = wrapRef.current
+        if (!wrap) return undefined
+        const observer = new ResizeObserver(() => draw())
+        observer.observe(wrap)
+        return () => observer.disconnect()
+      }, [draw])
+
+      const onMouseMove = (event) => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const rect = canvas.getBoundingClientRect()
+        const mx = event.clientX - rect.left
+        const xs = layoutRef.current.xs
+        let best = null
+        let bestDistance = 18
+        for (let index = 0; index < xs.length; index += 1) {
+          const distance = Math.abs(xs[index] - mx)
+          if (distance <= bestDistance) {
+            bestDistance = distance
+            best = index
+          }
+        }
+        if (best === null) {
+          if (hover) setHover(null)
+          return
+        }
+        setHover({ index: best, x: mx, y: event.clientY - rect.top })
+      }
+
+      const buildTooltip = (index) => {
+        const point = points[index]
+        if (!point) return null
+        const rows = []
+        for (const metric of visibleSeries()) {
+          const value = point[metric.key]
+          if (value == null) {
+            if (pickerSelected.indexOf(metric.key) >= 0) {
+              rows.push(
+                h(
+                  'div',
+                  { key: metric.key, className: 'hrag-ev-tip-row' },
+                  h('span', { className: 'hrag-ev-legend-dot', style: { backgroundColor: metric.color } }),
+                  tk(metric.labelKey) + ' ',
+                  h('span', { className: 'hrag-ev-muted' }, tk('ev.trend.notRunInTier')),
+                ),
+              )
+            }
+            continue
+          }
+          let delta = null
+          for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+            const prev = points[cursor][metric.key]
+            if (prev != null) {
+              delta = value - prev
+              break
+            }
+          }
+          rows.push(
+            h(
+              'div',
+              { key: metric.key, className: 'hrag-ev-tip-row' },
+              h('span', { className: 'hrag-ev-legend-dot', style: { backgroundColor: metric.color } }),
+              tk(metric.labelKey) + ' ',
+              h('b', null, evPercent(value)),
+              delta != null
+                ? h('span', { className: 'hrag-ev-tip-delta' }, (delta >= 0 ? '↑' : '↓') + (Math.abs(delta) * 100).toFixed(1) + '%')
+                : null,
+            ),
+          )
+        }
+        return h(
+          React.Fragment,
+          null,
+          h('div', { className: 'hrag-ev-tip-head' }, evFmtRunTime(point.ts)),
+          rows,
+          point.regression && point.regression.detected && point.regression.categories.length > 0
+            ? h(
+                'div',
+                { className: 'hrag-ev-tip-regression' },
+                tk('ev.trend.regressionPrefix') + ': ' + point.regression.categories.join(', '),
+              )
+            : null,
+          point.is_baseline_update
+            ? h('div', { className: 'hrag-ev-tip-meta' }, tk('ev.trend.baselineUpdate'))
+            : null,
+          h('div', { className: 'hrag-ev-tip-meta' }, tk('ev.trend.clickForDetail') + ' →'),
+        )
+      }
+
+      const wrapWidth = wrapRef.current ? wrapRef.current.clientWidth : 320
+      const tipLeft = hover ? Math.max(6, Math.min(hover.x + 12, Math.max(6, wrapWidth - 236))) : 0
+      return h(
+        'div',
+        { className: 'hrag-ev-chartwrap', ref: wrapRef },
+        h('canvas', {
+          ref: canvasRef,
+          className: 'hrag-ev-chart' + (hover ? ' hrag-ev-chart-hover' : ''),
+          onMouseMove,
+          onMouseLeave: () => setHover(null),
+          onClick: () => {
+            if (hover && points[hover.index]) onOpenRun(points[hover.index].run_id)
+          },
+        }),
+        hover
+          ? h('div', { className: 'hrag-ev-tip', style: { left: tipLeft + 'px', top: '8px' } }, buildTooltip(hover.index))
+          : null,
+      )
+    }
+
+    /** 单次运行详情抽屉（照 EvalRunDrawer）：sticky 头＝运行时间＋芯片行；
+        运行信息卡（run_id 复制）＋检索质量卡（4 瓦片）＋生成质量卡（8 瓦片＋
+        路由口径 callout）；层未执行显「未执行」提示。 */
+    function EvalRunDrawer({ t, tk, kbId, runId, onClose, notify }) {
+      const [state, setState] = React.useState({ phase: 'idle', data: null, failure: null })
+      React.useEffect(() => {
+        if (runId === null) return undefined
+        let cancelled = false
+        setState({ phase: 'loading', data: null, failure: null })
+        callOp('evalRunDetail', { kb_id: kbId, run_id: runId })
+          .then((payload) => {
+            if (!cancelled) setState({ phase: 'ready', data: payload, failure: null })
+          })
+          .catch((error) => {
+            if (!cancelled) setState({ phase: 'error', data: null, failure: error })
+          })
+        return () => {
+          cancelled = true
+        }
+      }, [runId, kbId])
+      if (runId === null) return null
+      const run = state.data
+      const envLabel = run
+        ? run.environment === 'ci'
+          ? tk('ev.history.envCi')
+          : run.environment === 'nightly'
+            ? tk('ev.history.envNightly')
+            : tk('ev.history.envLocal')
+        : ''
+      const statusLabel = run
+        ? run.status === 'error'
+          ? tk('ev.drawer.statusError')
+          : run.status === 'skipped'
+            ? tk('ev.drawer.statusSkipped')
+            : run.status === 'cancelled'
+              ? tk('ev.drawer.statusCancelled')
+              : tk('ev.drawer.statusCompleted')
+        : ''
+      const hasL1 = Boolean(run && run.layer1_metrics && run.layer1_metrics.summary)
+      const hasL2 = Boolean(run && run.layer2_metrics && run.layer2_metrics.ragas)
+      const scopeLabel = run
+        ? hasL1 && hasL2
+          ? tk('ev.history.scopeFull')
+          : hasL1
+            ? tk('ev.history.scopeQuick')
+            : hasL2
+              ? tk('ev.history.scopeGeneration')
+              : null
+        : null
+      const copyRunId = () => {
+        if (!run) return
+        const clipboard = navigator.clipboard
+        if (!clipboard || typeof clipboard.writeText !== 'function') {
+          notify(tk('ev.copyFailed'), true)
+          return
+        }
+        clipboard
+          .writeText(run.run_id)
+          .then(() => notify(tk('ev.copied')))
+          .catch(() => notify(tk('ev.copyFailed'), true))
+      }
+      const tile = (key, label, note, value, disabled, disabledReason) =>
+        h(EvalMetricTile, { key, tk, label, note, value, disabled, disabledReason })
+      const l1Body = hasL1
+        ? h(
+            'div',
+            { className: 'hrag-ev-grid2' },
+            [
+              tile('hit', tk('ev.tableHitRate'), null, run.layer1_metrics.summary.hit_rate),
+              tile(
+                'recall',
+                run.layer1_metrics.top_k != null
+                  ? tk('ev.tableRecallAtKv', run.layer1_metrics.top_k)
+                  : tk('ev.tableRecallAtK'),
+                null,
+                run.layer1_metrics.summary.recall_at_k,
+              ),
+              tile('mrr', tk('ev.tableMrr'), null, run.layer1_metrics.summary.mrr),
+              tile('path', tk('ev.tablePathAccuracy'), null, run.layer1_metrics.summary.path_accuracy),
+            ],
+          )
+        : h('div', { className: 'hrag-ev-hint' }, tk('ev.drawer.notRun'))
+      const l2Body = hasL2
+        ? h(
+            React.Fragment,
+            null,
+            h(
+              'div',
+              { className: 'hrag-ev-grid2' },
+              [
+                tile('faithfulness', tk('ev.ragasCard.faithfulness'), tk('ev.cardNote.faithfulness'), run.layer2_metrics.ragas.faithfulness),
+                tile('answer_relevancy', tk('ev.ragasCard.answerRelevancy'), tk('ev.cardNote.answerRelevancy'), run.layer2_metrics.ragas.answer_relevancy),
+                tile('context_precision', tk('ev.ragasCard.contextPrecision'), tk('ev.cardNote.contextPrecision'), run.layer2_metrics.ragas.context_precision),
+                tile('context_recall', tk('ev.drawer.contextRecallLabel'), tk('ev.cardNote.contextRecall'), run.layer2_metrics.ragas.context_recall),
+                tile('citation_precision', tk('ev.citationPrecision'), tk('ev.cardNote.citationPrecision'), run.layer2_metrics.arch_specific.citation_precision),
+                tile('citation_recall', tk('ev.citationRecall'), tk('ev.cardNote.citationRecall'), run.layer2_metrics.arch_specific.citation_recall),
+                tile(
+                  'seed_hit_rate',
+                  tk('ev.seedHitRate'),
+                  tk('ev.cardNote.seedHitRate'),
+                  run.layer2_metrics.arch_specific.seed_hit_rate,
+                  !run.layer2_metrics.has_graph_questions,
+                  tk('ev.noGraphQuestions'),
+                ),
+                tile(
+                  'routing_hit_rate',
+                  tk('ev.routingHitRate'),
+                  null,
+                  run.layer2_metrics.path_accuracy != null ? run.layer2_metrics.path_accuracy : null,
+                ),
+              ],
+            ),
+            h('p', { className: 'hrag-ev-muted hrag-ev-callout' }, tk('ev.cardNote.routingHitRate')),
+          )
+        : h('div', { className: 'hrag-ev-hint' }, tk('ev.drawer.notRun'))
+      return h(
+        'div',
+        { className: 'hrag-graph-drawer' },
+        h('div', { className: 'hrag-drawer-overlay', onClick: onClose }),
+        h(
+          'div',
+          { className: 'hrag-drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': tk('ev.drawer.title') },
+          h(
+            'div',
+            { className: 'hrag-drawer-head' },
+            h('span', { className: 'hrag-drawer-title hrag-ev-tabnums' }, run ? evFmtRunTime(run.created_at) : tk('ev.drawer.title')),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline hrag-drawer-close', 'aria-label': t('chunk.close'), onClick: onClose },
+              '✕',
+            ),
+          ),
+          h(
+            'div',
+            { className: 'hrag-drawer-body hrag-ev-drawerbody' },
+            run
+              ? h(
+                  React.Fragment,
+                  null,
+                  h(
+                    'div',
+                    { className: 'hrag-ev-chips' },
+                    h('span', { className: 'hrag-ev-badge' }, envLabel),
+                    h('span', { className: 'hrag-ev-badge' }, statusLabel),
+                    scopeLabel ? h('span', { className: 'hrag-ev-badge' }, scopeLabel) : null,
+                    run.is_baseline
+                      ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-baseline' }, tk('ev.drawer.baselineBadge'))
+                      : null,
+                    run.baseline_diff && run.baseline_diff.regression_detected
+                      ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-danger' }, tk('ev.regressionBadge'))
+                      : null,
+                  ),
+                  h(
+                    'section',
+                    { className: 'hrag-ev-card' },
+                    h('div', { className: 'hrag-ev-cardhead hrag-ev-cardhead-open' }, tk('ev.drawer.runInfoSection')),
+                    h(
+                      'div',
+                      { className: 'hrag-ev-cardbody' },
+                      h(
+                        'div',
+                        { className: 'hrag-ev-inforow' },
+                        h('span', { className: 'hrag-ev-infolabel' }, tk('ev.drawer.runIdLabel')),
+                        h('span', { className: 'hrag-ev-runidbox', title: run.run_id }, run.run_id),
+                        h(
+                          'button',
+                          { type: 'button', className: 'hrag-ev-iconbtn', title: tk('ev.copied'), onClick: copyRunId },
+                          '⧉',
+                        ),
+                      ),
+                      h(
+                        'div',
+                        { className: 'hrag-ev-inforow' },
+                        h('span', { className: 'hrag-ev-infolabel' }, tk('ev.drawer.createdAtLabel')),
+                        h('span', { className: 'hrag-ev-tabnums hrag-ev-fulltime' }, evFmtFullTime(run.created_at)),
+                      ),
+                    ),
+                  ),
+                  h(
+                    'section',
+                    { className: 'hrag-ev-card' },
+                    h(
+                      'div',
+                      { className: 'hrag-ev-cardhead hrag-ev-cardhead-open' },
+                      tk('ev.drawer.layer1Section'),
+                      hasL1
+                        ? h(
+                            'span',
+                            { className: 'hrag-ev-badge hrag-ev-tabnums' },
+                            'n=' + String(run.layer1_metrics.summary.question_count),
+                          )
+                        : null,
+                    ),
+                    h('div', { className: 'hrag-ev-cardbody' }, l1Body),
+                  ),
+                  h(
+                    'section',
+                    { className: 'hrag-ev-card' },
+                    h('div', { className: 'hrag-ev-cardhead hrag-ev-cardhead-open' }, tk('ev.drawer.layer2Section')),
+                    h('div', { className: 'hrag-ev-cardbody' }, l2Body),
+                  ),
+                )
+              : state.phase === 'error'
+                ? h('div', { className: 'hrag-ev-hint hrag-ev-hint-error' }, tk('ev.loadFailed'))
+                : h('div', { className: 'hrag-ev-hint' }, tk('ev.loading')),
+          ),
+        ),
+      )
+    }
+
+    /** B′ 锚定拦截共享状态机（照 useAnchorConfirm）：keyed 红块；首击提交不带
+        anchor_ack（盲双击不绕过），422 结构化 detail 落红块；红块内「仍要…」
+        才以 anchor_ack=true 重提；missing_chunk 不可覆盖。其他错误上抛留 toast。 */
+    function useAnchorBlocks() {
+      const [blocks, setBlocks] = React.useState({})
+      const clear = React.useCallback((key) => {
+        setBlocks((current) => {
+          if (!(key in current)) return current
+          const next = Object.assign({}, current)
+          delete next[key]
+          return next
+        })
+      }, [])
+      const runGuarded = React.useCallback(
+        (key, ack, run) =>
+          Promise.resolve()
+            .then(() => run(ack))
+            .then(() => {
+              clear(key)
+              return true
+            })
+            .catch((error) => {
+              const detail = evAsAnchorBlockDetail(error)
+              if (detail !== null) {
+                setBlocks((current) => Object.assign({}, current, { [key]: detail }))
+                return false
+              }
+              throw error
+            }),
+        [clear],
+      )
+      const submit = React.useCallback((key, run) => runGuarded(key, false, run), [runGuarded])
+      const confirm = React.useCallback((key, run) => runGuarded(key, true, run), [runGuarded])
+      const blockFor = React.useCallback((key) => blocks[key] || null, [blocks])
+      return { blockFor, submit, confirm, clear }
+    }
+
+    /** 题库视图（照工作台）：表格（选择集/参考切片数＋悬空/存疑徽章/召回率
+        三态点/行菜单）＋考题抽屉＋添加/合成弹层＋底部候选题审核停靠。 */
+    function EvalBank({ t, tk, kbId, enabled, questionsQ, overviewData, search, selected, onSelectedChange, addOpen, onAddOpenChange, synthOpen, onSynthOpenChange, onTrigger, onReproduce, notify }) {
+      const [sortKey, setSortKey] = React.useState('default')
+      const [sortDir, setSortDir] = React.useState('asc')
+      const [drawerQuestionId, setDrawerQuestionId] = React.useState(null)
+      const [deleteTargets, setDeleteTargets] = React.useState(null)
+      const [busy, setBusy] = React.useState(false)
+      const [docTitles, setDocTitles] = React.useState(null)
+
+      React.useEffect(() => {
+        setDrawerQuestionId(null)
+        setDeleteTargets(null)
+      }, [kbId])
+
+      // 文档标题映射（参考切片 tooltip 与抽屉组头共用；文档 tab 同端点）。
+      React.useEffect(() => {
+        if (!enabled || docTitles !== null) return
+        callOp('listDocuments', { kb_id: kbId })
+          .then((rows) => {
+            const map = new Map()
+            for (const doc of Array.isArray(rows) ? rows : []) map.set(String(doc.id), String(doc.name))
+            setDocTitles(map)
+          })
+          .catch(() => setDocTitles(new Map()))
+      }, [enabled, kbId, docTitles])
+
+      const allQuestions = questionsQ.data && Array.isArray(questionsQ.data.questions) ? questionsQ.data.questions : []
+      const trimmedSearch = String(search || '').trim().toLowerCase()
+      const visibleQuestions = trimmedSearch
+        ? allQuestions.filter((question) => String(question.query).toLowerCase().indexOf(trimmedSearch) >= 0)
+        : allQuestions
+      const questionMetrics = React.useMemo(() => {
+        const list = overviewData && overviewData.question_results ? overviewData.question_results : []
+        return new Map(list.map((metric) => [metric.id, metric]))
+      }, [overviewData])
+      const docTitle = (docId) => {
+        const name = docTitles ? docTitles.get(docId) : null
+        return name || String(docId).slice(0, 8)
+      }
+      const drawerQuestion =
+        drawerQuestionId !== null
+          ? allQuestions.find((question) => question.id === drawerQuestionId) || null
+          : null
+
+      // 数据刷新后剔除已不存在的选中（同工作台幽灵选择纪律）。
+      React.useEffect(() => {
+        const alive = allQuestions.filter((question) => selected.has(question.id))
+        if (alive.length !== selected.size) {
+          onSelectedChange(new Set(alive.map((question) => question.id)))
+        }
+      }, [allQuestions, selected, onSelectedChange])
+
+      const sortedQuestions = React.useMemo(() => {
+        if (sortKey === 'default') return visibleQuestions
+        const sign = sortDir === 'asc' ? 1 : -1
+        const value = (question) => {
+          if (sortKey === 'query') return String(question.query).toLowerCase()
+          if (sortKey === 'category') return tk('ev.category.' + question.category)
+          if (sortKey === 'refDocs') return evRefDocIds(question.relevant_chunk_ids).length
+          if (sortKey === 'recall') {
+            const metric = questionMetrics.get(question.id)
+            return metric && metric.recall != null ? metric.recall : null
+          }
+          return null
+        }
+        return [...visibleQuestions].sort((a, b) => {
+          const av = value(a)
+          const bv = value(b)
+          if (av == null && bv == null) return 0
+          if (av == null) return 1
+          if (bv == null) return -1
+          if (typeof av === 'string' && typeof bv === 'string') return sign * (av < bv ? -1 : av > bv ? 1 : 0)
+          return sign * (Number(av) - Number(bv))
+        })
+      }, [visibleQuestions, sortKey, sortDir, questionMetrics, tk])
+
+      const toggleQuestion = (questionId, checked) => {
+        const next = new Set(selected)
+        if (checked) next.add(questionId)
+        else next.delete(questionId)
+        onSelectedChange(next)
+      }
+      const allVisibleSelected = visibleQuestions.length > 0 && visibleQuestions.every((question) => selected.has(question.id))
+      const toggleSelectAll = () => {
+        const next = new Set(selected)
+        if (allVisibleSelected) visibleQuestions.forEach((question) => next.delete(question.id))
+        else visibleQuestions.forEach((question) => next.add(question.id))
+        onSelectedChange(next)
+      }
+      const handleRowContextMenu = (questionId) => {
+        if (!selected.has(questionId)) onSelectedChange(new Set([questionId]))
+      }
+
+      const handleDeleteConfirm = () => {
+        if (deleteTargets === null) return
+        setBusy(true)
+        const removed = new Set(deleteTargets.map((question) => question.id))
+        Promise.allSettled(
+          deleteTargets.map((question) => callOp('deleteEvalQuestion', { kb_id: kbId, question_id: question.id })),
+        )
+          .then((results) => {
+            const failed = results.some((result) => result.status === 'rejected')
+            if (failed) notify(tk('ev.questions.deleteFailed'), true)
+            else notify(tk('ev.questions.deletedToast'))
+            onSelectedChange(new Set([...selected].filter((id) => !removed.has(id))))
+            setDeleteTargets(null)
+            questionsQ.refresh()
+          })
+          .finally(() => setBusy(false))
+      }
+
+      const rowMenu = (question) =>
+        h(EvalMenu, {
+          className: 'hrag-ev-rowmenu',
+          label: '⋯',
+          align: 'end',
+          render: (close) => [
+            h(
+              EvalMenuItem,
+              {
+                key: 'l1',
+                onSelect: () => {
+                  close()
+                  onTrigger({ layers: 'l1', question_ids: [question.id] })
+                },
+              },
+              tk('ev.tierQuick'),
+            ),
+            h(
+              EvalMenuItem,
+              {
+                key: 'full',
+                onSelect: () => {
+                  close()
+                  onTrigger({ layers: 'l1_l2', question_ids: [question.id] })
+                },
+              },
+              tk('ev.tierFull'),
+            ),
+            h('div', { key: 'sep', className: 'hrag-ev-menu-sep' }),
+            h(
+              EvalMenuItem,
+              {
+                key: 'del',
+                danger: true,
+                onSelect: () => {
+                  close()
+                  setDeleteTargets([question])
+                },
+              },
+              tk('ev.questions.rowDelete'),
+            ),
+          ],
+        })
+
+      const recallCell = (question) => {
+        const metric = questionMetrics.get(question.id)
+        const recall = metric && metric.recall != null ? metric.recall : null
+        if (recall === null) {
+          return h('span', { className: 'hrag-ev-muted' }, '—')
+        }
+        const dotClass = recall >= 1 ? 'hrag-ev-dot-ok' : recall > 0 ? 'hrag-ev-dot-part' : 'hrag-ev-dot-miss'
+        return h(
+          'span',
+          {
+            className: 'hrag-ev-recall hrag-ev-tabnums',
+            title: tk('ev.questions.recallTip', evPercent(recall), metric.actual_path || '-'),
+          },
+          h('span', { className: 'hrag-ev-dot ' + dotClass }),
+          evPercent(recall),
+        )
+      }
+
+      let table = null
+      if (questionsQ.failure) {
+        table = h('div', { className: 'hrag-ev-hint hrag-ev-hint-full hrag-ev-hint-error' }, tk('ev.loadFailed'))
+      } else if (questionsQ.data === null) {
+        table = h('div', { className: 'hrag-ev-hint hrag-ev-hint-full' }, tk('ev.loading'))
+      } else if (allQuestions.length === 0) {
+        table = h(
+          'div',
+          { className: 'hrag-ev-hint hrag-ev-hint-full' },
+          h('p', null, tk('ev.questions.emptyBank')),
+          h('p', null, tk('ev.questions.emptyBankSynthesis')),
+        )
+      } else if (visibleQuestions.length === 0) {
+        table = h('div', { className: 'hrag-ev-hint hrag-ev-hint-full' }, tk('ev.questions.noMatch'))
+      } else {
+        table = h(
+          'table',
+          { className: 'hrag-ev-table hrag-ev-banktable' },
+          h(
+            'thead',
+            null,
+            h(
+              'tr',
+              null,
+              h(
+                'th',
+                { className: 'hrag-ev-th-check' },
+                h('input', {
+                  type: 'checkbox',
+                  className: 'hrag-ev-check',
+                  'aria-label': tk('ev.selection.selectAllAria'),
+                  checked: allVisibleSelected,
+                  onChange: () => toggleSelectAll(),
+                }),
+              ),
+              h('th', null, tk('ev.questions.columnQuery')),
+              h('th', null, tk('ev.questions.columnCategory')),
+              h(
+                'th',
+                { className: 'hrag-ev-th-num' },
+                h('span', { className: 'hrag-ev-th-withnote' },
+                  overviewData && overviewData.layer1 && overviewData.layer1.metrics.top_k != null
+                    ? tk('ev.tableRecallAtKv', overviewData.layer1.metrics.top_k)
+                    : tk('ev.tableRecallAtK'),
+                  h('span', { className: 'hrag-ev-tile-note', title: tk('ev.questions.columnRecallNote'), 'aria-label': tk('ev.questions.columnRecallNote') }, 'ⓘ'),
+                ),
+              ),
+              h('th', { className: 'hrag-ev-th-num' }, tk('ev.questions.columnRefChunks')),
+              h(
+                'th',
+                { className: 'hrag-ev-th-sort' },
+                h(EvalMenu, {
+                  label: '⇅',
+                  align: 'end',
+                  render: (close) => [
+                    h(EvalMenuItem, { key: 'default', selected: sortKey === 'default', onSelect: () => { setSortKey('default'); close() } }, tk('ev.questions.sortDefault')),
+                    h(EvalMenuItem, { key: 'query', selected: sortKey === 'query', onSelect: () => { setSortKey('query'); close() } }, tk('ev.questions.columnQuery')),
+                    h(EvalMenuItem, { key: 'category', selected: sortKey === 'category', onSelect: () => { setSortKey('category'); close() } }, tk('ev.questions.columnCategory')),
+                    h(EvalMenuItem, { key: 'refDocs', selected: sortKey === 'refDocs', onSelect: () => { setSortKey('refDocs'); close() } }, tk('ev.questions.sortDocsCount')),
+                    h(
+                      EvalMenuItem,
+                      { key: 'recall', selected: sortKey === 'recall', onSelect: () => { setSortKey('recall'); close() } },
+                      overviewData && overviewData.layer1 && overviewData.layer1.metrics.top_k != null
+                        ? tk('ev.tableRecallAtKv', overviewData.layer1.metrics.top_k)
+                        : tk('ev.tableRecallAtK'),
+                    ),
+                    h('div', { key: 'sep', className: 'hrag-ev-menu-sep' }),
+                    h(EvalMenuItem, { key: 'asc', selected: sortDir === 'asc', onSelect: () => { setSortDir('asc'); close() } }, t('sort.asc')),
+                    h(EvalMenuItem, { key: 'desc', selected: sortDir === 'desc', onSelect: () => { setSortDir('desc'); close() } }, t('sort.desc')),
+                  ],
+                }),
+              ),
+            ),
+          ),
+          h(
+            'tbody',
+            null,
+            sortedQuestions.map((question) => {
+              const isSelected = selected.has(question.id)
+              const docIds = evRefDocIds(question.relevant_chunk_ids)
+              return h(
+                'tr',
+                {
+                  key: question.id,
+                  className: 'hrag-ev-tr' + (isSelected ? ' hrag-ev-tr-on' : ''),
+                  onClick: () => setDrawerQuestionId(question.id),
+                  onContextMenu: (event) => {
+                    event.preventDefault()
+                    handleRowContextMenu(question.id)
+                  },
+                },
+                h(
+                  'td',
+                  { className: 'hrag-ev-th-check' },
+                  h('input', {
+                    type: 'checkbox',
+                    className: 'hrag-ev-check',
+                    'aria-label': tk('ev.selection.rowSelectAria', question.query),
+                    checked: isSelected,
+                    onClick: (event) => event.stopPropagation(),
+                    onChange: (event) => toggleQuestion(question.id, event.target.checked),
+                  }),
+                ),
+                h('td', { className: 'hrag-ev-td-query', title: question.query }, question.query),
+                h('td', null, h('span', { className: 'hrag-ev-badge' }, tk('ev.category.' + question.category))),
+                h('td', { className: 'hrag-ev-th-num' }, recallCell(question)),
+                h(
+                  'td',
+                  { className: 'hrag-ev-th-num hrag-ev-tabnums' },
+                  h(
+                    'span',
+                    { className: 'hrag-ev-refchunks' },
+                    question.relevant_chunk_ids.length > 0
+                      ? h(
+                          'span',
+                          { title: docIds.map(docTitle).join('\n') },
+                          String(question.relevant_chunk_ids.length),
+                        )
+                      : null,
+                    question.missing_chunk_ids && question.missing_chunk_ids.length > 0
+                      ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-danger' }, tk('ev.questions.danglingBadge'))
+                      : null,
+                    question.anchor_mismatch != null
+                      ? h(
+                          'span',
+                          { className: 'hrag-ev-badge hrag-ev-badge-amber', title: question.anchor_mismatch.miss_terms.join(' ') },
+                          tk('ev.questions.mismatchBadge'),
+                        )
+                      : null,
+                  ),
+                ),
+                h(
+                  'td',
+                  { className: 'hrag-ev-th-sort' },
+                  h(
+                    'span',
+                    { className: 'hrag-ev-rowmenu-wrap', onClick: (event) => event.stopPropagation() },
+                    rowMenu(question),
+                  ),
+                ),
+              )
+            }),
+          ),
+        )
+      }
+
+      return h(
+        'div',
+        { className: 'hrag-ev-bank' },
+        h('div', { className: 'hrag-ev-bankscroll' }, table),
+        // 选中集批量动作条（工作台为工具栏原位切换；插件版＝表下方浮条，精简档）。
+        selected.size > 0
+          ? h(
+              'div',
+              { className: 'hrag-ev-bulkbar' },
+              h('span', { className: 'hrag-ev-muted hrag-ev-tabnums' }, tk('ev.selection.selected', selected.size)),
+              h(
+                'button',
+                { type: 'button', className: 'hrag-btn hrag-ev-graybtn', onClick: () => onTrigger({ layers: 'l1', question_ids: [...selected] }) },
+                tk('ev.tierQuick'),
+              ),
+              h(
+                'button',
+                { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => onTrigger({ layers: 'l1_l2', question_ids: [...selected] }) },
+                tk('ev.tierFull'),
+              ),
+              h(
+                'button',
+                { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => onSelectedChange(new Set()) },
+                tk('ev.selection.clear'),
+              ),
+            )
+          : null,
+        h(EvalSynthReview, { t, tk, kbId, enabled, notify, docTitle }),
+        h(EvalAddQuestionDialog, {
+          t,
+          tk,
+          kbId,
+          open: addOpen,
+          onClose: () => onAddOpenChange(false),
+          notify,
+          onSaved: () => questionsQ.refresh(),
+        }),
+        h(EvalSynthDialog, {
+          t,
+          tk,
+          kbId,
+          open: synthOpen,
+          onClose: () => onSynthOpenChange(false),
+          notify,
+        }),
+        h(EvalQuestionDrawer, {
+          t,
+          tk,
+          kbId,
+          question: drawerQuestion,
+          docTitle,
+          onClose: () => setDrawerQuestionId(null),
+          onDelete: (question) => {
+            setDrawerQuestionId(null)
+            setDeleteTargets([question])
+          },
+          onReproduce,
+          notify,
+          onSaved: () => questionsQ.refresh(),
+        }),
+        deleteTargets !== null
+          ? h(ConfirmDialog, {
+              t,
+              title: tk('ev.questions.rowDelete'),
+              description:
+                (deleteTargets.length === 1 && deleteTargets[0]
+                  ? deleteTargets[0].query
+                  : tk('ev.selection.selected', deleteTargets.length)) +
+                ' ' +
+                tk('ev.questions.deleteConfirmDesc'),
+              busy,
+              cancelKey: 'doc.cancel',
+              confirmKey: 'doc.confirmDelete',
+              onCancel: () => setDeleteTargets(null),
+              onConfirm: handleDeleteConfirm,
+            })
+          : null,
+      )
+    }
+
+    /** 添加考题弹层（照工作台简化表单）：query＋分类＋预期路径（≥1）＋参考
+        答案；不暴露锚定输入（锚的正源＝召回「存为考题」）；B′ 红块同接线。 */
+    function EvalAddQuestionDialog({ t, tk, kbId, open, onClose, notify, onSaved }) {
+      const [query, setQuery] = React.useState('')
+      const [category, setCategory] = React.useState('fact')
+      const [paths, setPaths] = React.useState(['vector'])
+      const [referenceAnswer, setReferenceAnswer] = React.useState('')
+      const [busy, setBusy] = React.useState(false)
+      const anchor = useAnchorBlocks()
+      const anchorBlock = anchor.blockFor('form')
+      React.useEffect(() => {
+        if (!open) return
+        setQuery('')
+        setCategory('fact')
+        setPaths(['vector'])
+        setReferenceAnswer('')
+        anchor.clear('form')
+      }, [open])
+      if (!open) return null
+      const togglePath = (path) =>
+        setPaths((current) =>
+          current.indexOf(path) >= 0 ? current.filter((item) => item !== path) : [...current, path],
+        )
+      const canSubmit = query.trim().length > 0 && paths.length > 0 && !busy
+      const submitQuestion = (ack) =>
+        callOp('createEvalQuestion', {
+          kb_id: kbId,
+          body: {
+            query: query.trim(),
+            category,
+            expected_paths: paths,
+            reference_answer: referenceAnswer.trim() ? referenceAnswer.trim() : null,
+            anchor_ack: ack,
+          },
+        })
+      const run = (mode) => {
+        setBusy(true)
+        const guarded = mode === 'ack' ? anchor.confirm('form', submitQuestion) : anchor.submit('form', submitQuestion)
+        guarded
+          .then((saved) => {
+            if (!saved) return
+            notify(tk('ev.questions.addedToast'))
+            onSaved()
+            onClose()
+          })
+          .catch((error) => notify(errorDetail(error), true))
+          .finally(() => setBusy(false))
+      }
+      return h(
+        'div',
+        {
+          className: 'hrag-overlay',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget && !busy) onClose()
+          },
+        },
+        h(
+          'div',
+          { className: 'hrag-dialog hrag-dialog-wide', role: 'dialog', 'aria-modal': 'true', 'aria-label': tk('ev.questions.addQuestion') },
+          h('div', { className: 'hrag-dialog-title' }, tk('ev.questions.addTitle')),
+          h(
+            'div',
+            { className: 'hrag-ev-form' },
+            h(
+              'label',
+              { className: 'hrag-ev-field' },
+              h('span', { className: 'hrag-ev-fieldlabel' }, tk('ev.questions.queryLabel')),
+              h('textarea', {
+                className: 'hrag-input hrag-ev-textarea',
+                'aria-label': tk('ev.questions.queryLabel'),
+                value: query,
+                onChange: (event) => setQuery(event.target.value),
+              }),
+            ),
+            h(
+              'div',
+              { className: 'hrag-ev-formrow' },
+              h(
+                'label',
+                { className: 'hrag-ev-field' },
+                h('span', { className: 'hrag-ev-fieldlabel' }, tk('ev.questions.categoryLabel')),
+                h(
+                  'select',
+                  {
+                    className: 'hrag-input hrag-ev-select',
+                    'aria-label': tk('ev.questions.categoryLabel'),
+                    value: category,
+                    onChange: (event) => setCategory(event.target.value),
+                  },
+                  ['fact', 'relation', 'concept', 'global'].map((id) =>
+                    h('option', { key: id, value: id }, tk('ev.category.' + id)),
+                  ),
+                ),
+              ),
+              h(
+                'div',
+                { className: 'hrag-ev-field' },
+                h('span', { className: 'hrag-ev-fieldlabel' }, tk('ev.questions.expectedPathLabel')),
+                h(
+                  'span',
+                  { className: 'hrag-ev-checkrow' },
+                  ['vector', 'graph', 'wiki'].map((path) =>
+                    h(
+                      'label',
+                      { key: path, className: 'hrag-ev-checklabel' },
+                      h('input', {
+                        type: 'checkbox',
+                        className: 'hrag-ev-check',
+                        checked: paths.indexOf(path) >= 0,
+                        onChange: () => togglePath(path),
+                      }),
+                      path,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            h(
+              'label',
+              { className: 'hrag-ev-field' },
+              h('span', { className: 'hrag-ev-fieldlabel' }, tk('ev.questions.referenceAnswerLabel')),
+              h('textarea', {
+                className: 'hrag-input hrag-ev-textarea',
+                'aria-label': tk('ev.questions.referenceAnswerLabel'),
+                value: referenceAnswer,
+                onChange: (event) => {
+                  setReferenceAnswer(event.target.value)
+                  anchor.clear('form')
+                },
+              }),
+            ),
+            h('p', { className: 'hrag-ev-muted hrag-ev-formnote' }, tk('ev.questions.unanchoredNote')),
+          ),
+          anchorBlock !== null
+            ? h(EvalAnchorNotice, {
+                tk,
+                detail: anchorBlock,
+                confirmLabel: tk('ev.anchorBlock.confirmSave'),
+                confirming: busy,
+                onConfirm: () => run('ack'),
+              })
+            : null,
+          h(
+            'div',
+            { className: 'hrag-dialog-actions' },
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: busy, onClick: onClose },
+              tk('ev.questions.cancel'),
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: !canSubmit, onClick: () => run('submit') },
+              tk('ev.questions.submit'),
+            ),
+          ),
+        ),
+      )
+    }
+
+    /** 合成考题弹层（照工作台）：已索引文档多选（勾选序即提交序）＋候选题数
+        （1–10，默认 5）→ 202 幂等；enqueued 关窗，already_running 留窗。 */
+    function EvalSynthDialog({ t, tk, kbId, open, onClose, notify }) {
+      const [docIds, setDocIds] = React.useState([])
+      const [count, setCount] = React.useState(5)
+      const [docs, setDocs] = React.useState(null)
+      const [busy, setBusy] = React.useState(false)
+      React.useEffect(() => {
+        if (!open) return undefined
+        setDocIds([])
+        setCount(5)
+        setDocs(null)
+        let cancelled = false
+        callOp('listDocuments', { kb_id: kbId })
+          .then((rows) => {
+            if (!cancelled) setDocs(Array.isArray(rows) ? rows.filter((doc) => doc.status === 'ready') : [])
+          })
+          .catch(() => {
+            if (!cancelled) setDocs([])
+          })
+        return () => {
+          cancelled = true
+        }
+      }, [open, kbId])
+      if (!open) return null
+      const readyDocs = docs || []
+      const toggle = (docId) =>
+        setDocIds((current) =>
+          current.indexOf(docId) >= 0 ? current.filter((id) => id !== docId) : [...current, docId],
+        )
+      const submit = () => {
+        if (docIds.length === 0 || busy) return
+        setBusy(true)
+        callOp('triggerSynthesis', { kb_id: kbId, body: { doc_ids: docIds, count } })
+          .then((response) => {
+            notify(tk('ev.syn.generating'))
+            if (response && response.status === 'enqueued') onClose()
+          })
+          .catch((error) => notify(errorDetail(error), true))
+          .finally(() => setBusy(false))
+      }
+      return h(
+        'div',
+        {
+          className: 'hrag-overlay',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget && !busy) onClose()
+          },
+        },
+        h(
+          'div',
+          { className: 'hrag-dialog hrag-dialog-wide', role: 'dialog', 'aria-modal': 'true', 'aria-label': tk('ev.syn.dialogTitle') },
+          h('div', { className: 'hrag-dialog-title' }, tk('ev.syn.dialogTitle')),
+          h('div', { className: 'hrag-dialog-body' }, tk('ev.syn.docPlaceholder')),
+          h(
+            'div',
+            { className: 'hrag-ev-form' },
+            h(
+              'div',
+              { className: 'hrag-ev-field' },
+              h('span', { className: 'hrag-ev-fieldlabel' }, tk('ev.syn.docLabel')),
+              h(
+                'div',
+                { className: 'hrag-ev-doclist', role: 'group', 'aria-label': tk('ev.syn.docLabel') },
+                readyDocs.length === 0
+                  ? h('p', { className: 'hrag-ev-muted hrag-ev-doclist-empty' }, tk('ev.syn.empty'))
+                  : readyDocs.map((doc) =>
+                      h(
+                        'label',
+                        {
+                          key: doc.id,
+                          className: 'hrag-ev-docrow' + (docIds.indexOf(doc.id) >= 0 ? ' hrag-ev-docrow-on' : ''),
+                        },
+                        h('input', {
+                          type: 'checkbox',
+                          className: 'hrag-ev-check',
+                          checked: docIds.indexOf(doc.id) >= 0,
+                          onChange: () => toggle(doc.id),
+                        }),
+                        h('span', { className: 'hrag-ev-docrow-name', title: doc.name }, String(doc.name)),
+                      ),
+                    ),
+              ),
+            ),
+            h(
+              'label',
+              { className: 'hrag-ev-field' },
+              h('span', { className: 'hrag-ev-fieldlabel' }, tk('ev.syn.countLabel')),
+              h(
+                'select',
+                {
+                  className: 'hrag-input hrag-ev-select',
+                  'aria-label': tk('ev.syn.countLabel'),
+                  value: String(count),
+                  onChange: (event) => setCount(Number(event.target.value)),
+                },
+                [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => h('option', { key: value, value: String(value) }, String(value))),
+              ),
+            ),
+          ),
+          h(
+            'div',
+            { className: 'hrag-dialog-actions' },
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: busy, onClick: onClose },
+              tk('ev.questions.cancel'),
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: docIds.length === 0 || busy, onClick: submit },
+              tk('ev.syn.generate'),
+            ),
+          ),
+        ),
+      )
+    }
+
+    /** 候选题审核停靠（照工作台底部常驻容器）：无候选＝单行头（空态/生成中）；
+        有候选＝展开与表格分高，卡内采纳/忽略（B′ 逐候选红块）＋头部批量动作；
+        in_progress 时 3s 轮询（useEvalCall pollWhile）。 */
+    function EvalSynthReview({ t, tk, kbId, enabled, notify, docTitle }) {
+      const statusQ = useEvalCall(kbId, enabled, 'synthesisStatus', null, (payload) =>
+        Boolean(payload && payload.in_progress),
+      )
+      const [collapsed, setCollapsed] = React.useState(false)
+      const [busyId, setBusyId] = React.useState(null)
+      const anchor = useAnchorBlocks()
+      const data = statusQ.data
+      const candidates = data && Array.isArray(data.candidates) ? data.candidates : []
+      const hasCandidates = candidates.length > 0
+      const inProgress = Boolean(data && data.in_progress)
+      const expanded = hasCandidates && !collapsed
+      const acceptCandidate = (candidateId, ack) =>
+        callOp('acceptSynthesis', { kb_id: kbId, candidate_id: candidateId, anchor_ack: ack })
+      const handleAccept = (candidateId) => {
+        setBusyId(candidateId)
+        anchor
+          .submit(candidateId, (ack) => acceptCandidate(candidateId, ack))
+          .then((accepted) => {
+            if (accepted) {
+              notify(tk('ev.questions.addedToast'))
+              statusQ.refresh()
+            }
+          })
+          .catch((error) => notify(errorDetail(error), true))
+          .finally(() => setBusyId(null))
+      }
+      const handleAcceptConfirmed = (candidateId) => {
+        setBusyId(candidateId)
+        anchor
+          .confirm(candidateId, (ack) => acceptCandidate(candidateId, ack))
+          .then((accepted) => {
+            if (accepted) {
+              notify(tk('ev.questions.addedToast'))
+              statusQ.refresh()
+            }
+          })
+          .catch((error) => notify(errorDetail(error), true))
+          .finally(() => setBusyId(null))
+      }
+      const handleReject = (candidateId) => {
+        setBusyId(candidateId)
+        callOp('rejectSynthesis', { kb_id: kbId, candidate_id: candidateId })
+          .then(() => {
+            anchor.clear(candidateId)
+            statusQ.refresh()
+          })
+          .catch((error) => notify(errorDetail(error), true))
+          .finally(() => setBusyId(null))
+      }
+      const handleAcceptAll = () => {
+        Promise.allSettled(
+          candidates.map((candidate) =>
+            anchor.submit(candidate.candidate_id, (ack) => acceptCandidate(candidate.candidate_id, ack)),
+          ),
+        ).then((results) => {
+          const accepted = results.some((result) => result.status === 'fulfilled' && result.value)
+          if (accepted) notify(tk('ev.questions.addedToast'))
+          else notify(tk('ev.syn.acceptFailed'), true)
+          statusQ.refresh()
+        })
+      }
+      const handleRejectAll = () => {
+        Promise.allSettled(
+          candidates.map((candidate) =>
+            callOp('rejectSynthesis', { kb_id: kbId, candidate_id: candidate.candidate_id }),
+          ),
+        ).then(() => statusQ.refresh())
+      }
+      const docIds = data && Array.isArray(data.doc_ids) ? data.doc_ids : []
+      const docsLine =
+        docIds.length <= 2
+          ? docIds.map(docTitle).join('、')
+          : docIds.slice(0, 2).map(docTitle).join('、') + ' 等 ' + String(docIds.length) + ' 篇'
+      const metaTip =
+        data && data.generated_at != null ? tk('ev.syn.reviewMetaTip', docsLine, evFmtRunTime(data.generated_at)) : null
+      const busy = busyId !== null
+      return h(
+        'section',
+        { className: 'hrag-ev-card hrag-ev-review' + (expanded ? ' hrag-ev-review-open' : '') },
+        h(
+          'div',
+          { className: 'hrag-ev-cardhead' + (expanded ? ' hrag-ev-cardhead-open' : '') },
+          hasCandidates
+            ? h(
+                'button',
+                { type: 'button', className: 'hrag-ev-cardtoggle', onClick: () => setCollapsed((value) => !value) },
+                tk('ev.syn.reviewTitle'),
+              )
+            : h('span', { className: 'hrag-ev-review-static' }, tk('ev.syn.reviewTitle')),
+          inProgress
+            ? h('span', { className: 'hrag-ev-muted hrag-ev-spin-text' }, tk('ev.syn.generating'))
+            : hasCandidates
+              ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-amber hrag-ev-tabnums' }, tk('ev.syn.reviewCount', candidates.length))
+              : h('span', { className: 'hrag-ev-muted' }, tk('ev.syn.empty')),
+          h(
+            'span',
+            { className: 'hrag-ev-cardhead-side' },
+            data && data.dropped > 0
+              ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-amber hrag-ev-tabnums', title: tk('ev.syn.metaLine', data.dropped) }, tk('ev.syn.droppedChip', data.dropped))
+              : null,
+            metaTip ? h('span', { className: 'hrag-ev-tile-note', title: metaTip, 'aria-label': metaTip }, 'ⓘ') : null,
+            hasCandidates
+              ? h(
+                  'button',
+                  { type: 'button', className: 'hrag-ev-linkbtn', disabled: busy, onClick: handleAcceptAll },
+                  tk('ev.syn.acceptAll'),
+                )
+              : null,
+            hasCandidates
+              ? h(
+                  'button',
+                  { type: 'button', className: 'hrag-ev-linkbtn', disabled: busy, onClick: handleRejectAll },
+                  tk('ev.syn.rejectAll'),
+                )
+              : null,
+          ),
+        ),
+        expanded
+          ? h(
+              'div',
+              { className: 'hrag-ev-reviewlist' },
+              candidates.map((candidate) => {
+                const candidateDocIds = evRefDocIds(candidate.relevant_chunk_ids)
+                const candidateBlock = anchor.blockFor(candidate.candidate_id)
+                return h(
+                  'div',
+                  { key: candidate.candidate_id, className: 'hrag-ev-cand' },
+                  h('p', { className: 'hrag-ev-cand-query' }, candidate.query),
+                  h(
+                    'div',
+                    { className: 'hrag-ev-cand-chips' },
+                    h('span', { className: 'hrag-ev-badge' }, tk('ev.category.' + candidate.category)),
+                    candidate.expected_paths.map((path) => h('span', { key: path, className: 'hrag-ev-badge' }, path)),
+                    candidate.relevant_chunk_ids.length > 0
+                      ? h(
+                          'span',
+                          { className: 'hrag-ev-muted hrag-ev-tabnums', title: candidateDocIds.map(docTitle).join('\n') },
+                          String(candidate.relevant_chunk_ids.length),
+                        )
+                      : null,
+                  ),
+                  candidate.reference_answer !== null
+                    ? h('p', { className: 'hrag-ev-muted hrag-ev-cand-answer' }, candidate.reference_answer)
+                    : null,
+                  h(
+                    'div',
+                    { className: 'hrag-ev-cand-actions' },
+                    h(
+                      'button',
+                      { type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: busy, onClick: () => handleAccept(candidate.candidate_id) },
+                      tk('ev.syn.accept'),
+                    ),
+                    h(
+                      'button',
+                      { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: busy, onClick: () => handleReject(candidate.candidate_id) },
+                      tk('ev.syn.reject'),
+                    ),
+                  ),
+                  candidateBlock !== null
+                    ? h(EvalAnchorNotice, {
+                        tk,
+                        detail: candidateBlock,
+                        confirmLabel: tk('ev.anchorBlock.confirmAccept'),
+                        confirming: busy,
+                        onConfirm: () => handleAcceptConfirmed(candidate.candidate_id),
+                      })
+                    : null,
+                )
+              }),
+            )
+          : null,
+      )
+    }
+
+    /** 考题详情抽屉（照 EvalQuestionDrawer）：sticky 头（query 承载身份＋
+        分类/路径芯片）；参考答案卡＋参考文档卡（读态＝逐片折叠预览（chunksByIds
+        一次两用：预览＋悬空判定）/ 编辑态＝按文档分组勾选改锚，50/页加载更多）＋
+        实体卡（仅有值显）；底部动作＝复现/删除。改锚只动锚；B′ 红块拦截。 */
+    function EvalQuestionDrawer({ t, tk, kbId, question, docTitle, onClose, onDelete, onReproduce, notify, onSaved }) {
+      const questionId = question ? question.id : null
+      const [chunks, setChunks] = React.useState(null)
+      const [openChunks, setOpenChunks] = React.useState(() => new Set())
+      const [editing, setEditing] = React.useState(false)
+      const [draft, setDraft] = React.useState([])
+      const [docs, setDocs] = React.useState(null)
+      const [expandedDocs, setExpandedDocs] = React.useState(() => new Set())
+      const [docPages, setDocPages] = React.useState({})
+      const [busy, setBusy] = React.useState(false)
+      const anchor = useAnchorBlocks()
+      const anchorBlock = questionId !== null ? anchor.blockFor(questionId) : null
+
+      React.useEffect(() => {
+        setChunks(null)
+        setOpenChunks(new Set())
+        setEditing(false)
+        setDraft([])
+        setExpandedDocs(new Set())
+        setDocPages({})
+      }, [questionId])
+
+      const anchorIds = question && Array.isArray(question.relevant_chunk_ids) ? question.relevant_chunk_ids : []
+      const anchorIdsKey = anchorIds.join('\n')
+      React.useEffect(() => {
+        if (questionId === null || anchorIds.length === 0) return undefined
+        let cancelled = false
+        callOp('chunksByIds', { kb_id: kbId, chunk_ids: anchorIds })
+          .then((payload) => {
+            if (cancelled) return
+            const items = payload && Array.isArray(payload.items) ? payload.items : []
+            setChunks(items)
+          })
+          .catch(() => {
+            if (!cancelled) setChunks([])
+          })
+        return () => {
+          cancelled = true
+        }
+      }, [questionId, kbId, anchorIdsKey])
+      const chunkById = new Map((chunks || []).map((chunk) => [String(chunk.chunk_id), chunk]))
+      const danglingIds = new Set(chunks !== null ? anchorIds.filter((id) => !chunkById.has(id)) : [])
+      const groups = []
+      for (const chunkId of anchorIds) {
+        const parts = String(chunkId).split('#')
+        const docId = parts[0]
+        if (!docId) continue
+        let group = groups.find((entry) => entry.docId === docId)
+        if (!group) {
+          group = { docId, sequences: [] }
+          groups.push(group)
+        }
+        group.sequences.push(parts[1] || '')
+      }
+      const concern = question ? question.anchor_mismatch || null : null
+      const preview = (text) => {
+        const line = String(text || '')
+          .split(/\r?\n/)
+          .find((entry) => entry.trim().length > 0)
+        return (line || text || '').trim()
+      }
+      const loadDocPage = (docId, offset) => {
+        setDocPages((current) => {
+          const prev = current[docId] || { items: [], total: 0, loading: false }
+          return Object.assign({}, current, { [docId]: Object.assign({}, prev, { loading: true }) })
+        })
+        callOp('listChunks', { kb_id: kbId, doc_id: docId, offset, limit: 50 })
+          .then((page) => {
+            const items = page && Array.isArray(page.items) ? page.items : []
+            const total = page && typeof page.total === 'number' ? page.total : items.length
+            setDocPages((current) => {
+              const prev = current[docId] || { items: [], total: 0, loading: false }
+              const seen = new Set(prev.items.map((item) => item.chunk_id))
+              return Object.assign({}, current, {
+                [docId]: {
+                  items: prev.items.concat(items.filter((item) => !seen.has(item.chunk_id))),
+                  total,
+                  loading: false,
+                },
+              })
+            })
+          })
+          .catch(() => {
+            setDocPages((current) => {
+              const prev = current[docId] || { items: [], total: 0, loading: false }
+              return Object.assign({}, current, { [docId]: Object.assign({}, prev, { loading: false }) })
+            })
+          })
+      }
+      const enterEdit = () => {
+        const anchors = question ? question.relevant_chunk_ids : []
+        setDraft([...anchors])
+        const initialDocs = new Set(anchors.map((id) => String(id).split('#')[0]).filter(Boolean))
+        setExpandedDocs(initialDocs)
+        setDocPages({})
+        anchor.clear(questionId)
+        setEditing(true)
+        if (docs === null) {
+          callOp('listDocuments', { kb_id: kbId })
+            .then((rows) => setDocs(Array.isArray(rows) ? rows : []))
+            .catch(() => setDocs([]))
+        }
+        for (const docId of initialDocs) loadDocPage(docId, 0)
+      }
+      const exitEdit = () => {
+        setEditing(false)
+        anchor.clear(questionId)
+      }
+      const toggleDoc = (docId) => {
+        setExpandedDocs((current) => {
+          const next = new Set(current)
+          if (next.has(docId)) next.delete(docId)
+          else next.add(docId)
+          return next
+        })
+        if (expandedDocs.has(docId) === false && !docPages[docId]) loadDocPage(docId, 0)
+      }
+      const toggleDraft = (chunkId) => {
+        setDraft((current) =>
+          current.indexOf(chunkId) >= 0 ? current.filter((id) => id !== chunkId) : [...current, chunkId],
+        )
+        anchor.clear(questionId)
+      }
+      const toggleChunk = (chunkId) => {
+        setOpenChunks((current) => {
+          const next = new Set(current)
+          if (next.has(chunkId)) next.delete(chunkId)
+          else next.add(chunkId)
+          return next
+        })
+      }
+      const submitAnchors = (ack) =>
+        callOp('updateEvalQuestion', {
+          kb_id: kbId,
+          question_id: questionId,
+          body: ack ? { relevant_chunk_ids: [...draft], anchor_ack: true } : { relevant_chunk_ids: [...draft] },
+        })
+      const save = (mode) => {
+        setBusy(true)
+        const guarded =
+          mode === 'ack' ? anchor.confirm(questionId, submitAnchors) : anchor.submit(questionId, submitAnchors)
+        guarded
+          .then((saved) => {
+            if (!saved) return
+            setEditing(false)
+            onSaved()
+          })
+          .catch((error) => notify(errorDetail(error), true))
+          .finally(() => setBusy(false))
+      }
+      if (question === null) return null
+      const cardHead = (label, extra) =>
+        h('div', { className: 'hrag-ev-cardhead hrag-ev-cardhead-open' }, label, extra || null)
+      const readBody =
+        groups.length === 0
+          ? h('p', { className: 'hrag-ev-muted hrag-ev-cardnote' }, tk('ev.questions.unanchored'))
+          : groups.map((group) =>
+              h(
+                'div',
+                { key: group.docId, className: 'hrag-ev-anchorgroup' },
+                h('div', { className: 'hrag-ev-anchordoc', title: docTitle(group.docId) }, docTitle(group.docId)),
+                group.sequences.map((sequence) => {
+                  const chunkId = group.docId + '#' + sequence
+                  const chunk = chunkById.get(chunkId)
+                  const dangling = chunks !== null && chunk === undefined
+                  if (dangling) {
+                    return h(
+                      'div',
+                      { key: chunkId, className: 'hrag-ev-danglingrow' },
+                      h('span', { className: 'hrag-ev-badge hrag-ev-badge-danger hrag-ev-tabnums' }, '#' + sequence),
+                      h('span', null, tk('ev.questions.danglingBadge')),
+                    )
+                  }
+                  const open = openChunks.has(chunkId)
+                  const suspect = concern !== null && concern.chunk_ids.indexOf(chunkId) >= 0
+                  return h(
+                    'div',
+                    { key: chunkId, className: 'hrag-ev-anchorchunk' },
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-ev-anchorchunk-trigger',
+                        'aria-expanded': open,
+                        title: suspect && concern ? concern.miss_terms.join(' ') : null,
+                        onClick: () => toggleChunk(chunkId),
+                      },
+                      h('span', { className: 'hrag-ev-caret' + (open ? ' hrag-ev-caret-open' : '') }, '▾'),
+                      h('span', { className: 'hrag-ev-badge hrag-ev-tabnums' }, '#' + sequence),
+                      suspect
+                        ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-amber' }, tk('ev.questions.mismatchBadge'))
+                        : null,
+                      !open && chunk !== undefined
+                        ? h('span', { className: 'hrag-ev-anchorchunk-preview' }, preview(chunk.text))
+                        : null,
+                    ),
+                    open && chunk !== undefined
+                      ? h('div', { className: 'hrag-ev-anchorchunk-body' }, String(chunk.text))
+                      : null,
+                  )
+                }),
+              ),
+            )
+      const editBody = h(
+        React.Fragment,
+        null,
+        (docs || []).map((doc) => {
+          const page = docPages[doc.id] || { items: [], total: 0, loading: false }
+          const total = docPages[doc.id] !== undefined ? page.total : doc.chunk_count || 0
+          const selectedCount = draft.filter((id) => String(id).indexOf(doc.id + '#') === 0).length
+          const expanded = expandedDocs.has(doc.id)
+          return h(
+            'div',
+            { key: doc.id, className: 'hrag-ev-editgroup' },
+            h(
+              'button',
+              { type: 'button', className: 'hrag-ev-anchordoc hrag-ev-editgroup-head', 'aria-expanded': expanded, onClick: () => toggleDoc(doc.id) },
+              h('span', { className: 'hrag-ev-caret' + (expanded ? ' hrag-ev-caret-open' : '') }, '▾'),
+              h('span', { className: 'hrag-ev-editgroup-name', title: String(doc.name) }, String(doc.name)),
+              h('span', { className: 'hrag-ev-muted hrag-ev-tabnums' }, tk('ev.questions.anchorEditSelected', selectedCount, total)),
+            ),
+            expanded
+              ? h(
+                  'div',
+                  { className: 'hrag-ev-editgroup-body' },
+                  page.items.map((chunk) =>
+                    h(
+                      'label',
+                      { key: chunk.chunk_id, className: 'hrag-ev-checklabel hrag-ev-checklabel-block' },
+                      h('input', {
+                        type: 'checkbox',
+                        className: 'hrag-ev-check',
+                        checked: draft.indexOf(chunk.chunk_id) >= 0,
+                        onChange: () => toggleDraft(chunk.chunk_id),
+                      }),
+                      h('span', { className: 'hrag-ev-editgroup-preview' }, preview(chunk.text)),
+                    ),
+                  ),
+                  draft
+                    .filter((id) => String(id).indexOf(doc.id + '#') === 0 && danglingIds.has(id))
+                    .map((id) =>
+                      h(
+                        'label',
+                        { key: id, className: 'hrag-ev-checklabel hrag-ev-checklabel-block' },
+                        h('input', {
+                          type: 'checkbox',
+                          className: 'hrag-ev-check',
+                          checked: true,
+                          onChange: () => toggleDraft(id),
+                        }),
+                        h('span', { className: 'hrag-ev-badge hrag-ev-badge-danger hrag-ev-tabnums' }, '#' + String(id).split('#')[1]),
+                        h('span', { className: 'hrag-ev-danger-text' }, tk('ev.questions.danglingBadge')),
+                      ),
+                    ),
+                  page.items.length < page.total
+                    ? h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'hrag-btn hrag-btn-outline hrag-ev-loadmore',
+                          disabled: page.loading,
+                          onClick: () => loadDocPage(doc.id, page.items.length),
+                        },
+                        tk('ev.questions.loadMore'),
+                      )
+                    : null,
+                )
+              : null,
+          )
+        }),
+        h(
+          'div',
+          { className: 'hrag-ev-editactions' },
+          h(
+            'button',
+            { type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: busy, onClick: () => save('submit') },
+            tk('ev.questions.save'),
+          ),
+          h(
+            'button',
+            { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: busy, onClick: exitEdit },
+            tk('ev.questions.cancel'),
+          ),
+        ),
+        anchorBlock !== null
+          ? h(EvalAnchorNotice, {
+              tk,
+              detail: anchorBlock,
+              confirmLabel: tk('ev.anchorBlock.confirmUpdate'),
+              confirming: busy,
+              onConfirm: () => save('ack'),
+            })
+          : null,
+      )
+      return h(
+        'div',
+        { className: 'hrag-graph-drawer' },
+        h('div', { className: 'hrag-drawer-overlay', onClick: onClose }),
+        h(
+          'div',
+          { className: 'hrag-drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': tk('ev.questions.drawerTitle') },
+          h(
+            'div',
+            { className: 'hrag-drawer-head' },
+            h('span', { className: 'hrag-drawer-title hrag-ev-drawer-qtitle', title: String(question.query) }, String(question.query)),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline hrag-drawer-close', 'aria-label': t('chunk.close'), onClick: onClose },
+              '✕',
+            ),
+          ),
+          h(
+            'div',
+            { className: 'hrag-drawer-body hrag-ev-drawerbody' },
+            h(
+              'div',
+              { className: 'hrag-ev-chips' },
+              h('span', { className: 'hrag-ev-badge' }, tk('ev.category.' + question.category)),
+              question.expected_paths.map((path) => h('span', { key: path, className: 'hrag-ev-badge' }, path)),
+            ),
+            h(
+              'section',
+              { className: 'hrag-ev-card' },
+              cardHead(tk('ev.questions.answerSection')),
+              h(
+                'div',
+                { className: 'hrag-ev-cardbody' },
+                question.reference_answer
+                  ? h('p', { className: 'hrag-ev-pre' }, question.reference_answer)
+                  : h('p', { className: 'hrag-ev-muted' }, tk('ev.questions.noReferenceAnswer')),
+              ),
+            ),
+            h(
+              'section',
+              { className: 'hrag-ev-card' },
+              cardHead(
+                tk('ev.questions.columnRefChunks'),
+                h(
+                  'span',
+                  { className: 'hrag-ev-cardhead-side' },
+                  question.relevant_chunk_ids.length > 0
+                    ? h('span', { className: 'hrag-ev-badge hrag-ev-tabnums' }, tk('ev.questions.drawerChunksCount', question.relevant_chunk_ids.length))
+                    : null,
+                  h(
+                    'button',
+                    { type: 'button', className: 'hrag-ev-iconbtn hrag-ev-iconbtn-text', onClick: editing ? exitEdit : enterEdit },
+                    tk('ev.questions.anchorEditButton'),
+                  ),
+                ),
+              ),
+              h('div', { className: 'hrag-ev-cardbody' }, editing ? editBody : readBody),
+            ),
+            question.relevant_entities && question.relevant_entities.length > 0
+              ? h(
+                  'section',
+                  { className: 'hrag-ev-card' },
+                  cardHead(
+                    tk('ev.questions.entitiesSection'),
+                    h('span', { className: 'hrag-ev-badge hrag-ev-tabnums hrag-ev-cardhead-side' }, String(question.relevant_entities.length)),
+                  ),
+                  h(
+                    'div',
+                    { className: 'hrag-ev-chipwrap' },
+                    question.relevant_entities.map((entity) => h('span', { key: entity, className: 'hrag-ev-badge' }, entity)),
+                  ),
+                )
+              : null,
+          ),
+          h(
+            'div',
+            { className: 'hrag-ev-footer' },
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => onReproduce && onReproduce(question.query) },
+              '↗ ' + tk('ev.questions.rowReproduce'),
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline hrag-ev-danger-text', onClick: () => onDelete(question) },
+              tk('ev.questions.rowDelete'),
+            ),
+          ),
+        ),
+      )
+    }
+
+    /** 历史视图（照 EvalRunHistory 精简档）：五列表（时间胶囊：回退红/基线琥珀｜
+        环境｜评测内容｜状态｜时长右对齐）＋选择集批量删除＋行级删除确认（含
+        基线警示）；行点击＝run 详情抽屉。时长恒紧凑词汇（工作台另有按秒格式
+        下拉——精简省略）。 */
+    function EvalHistory({ t, tk, kbId, runsQ, onOpenRun, notify }) {
+      const [selectedIds, setSelectedIds] = React.useState(() => new Set())
+      const [deleteTargets, setDeleteTargets] = React.useState(null)
+      const [busy, setBusy] = React.useState(false)
+      const [sortKey, setSortKey] = React.useState('default')
+      const [sortDir, setSortDir] = React.useState('asc')
+      React.useEffect(() => {
+        setSelectedIds(new Set())
+        setDeleteTargets(null)
+      }, [kbId])
+      const runs = runsQ.data && Array.isArray(runsQ.data.runs) ? runsQ.data.runs : []
+      React.useEffect(() => {
+        const alive = runs.filter((run) => selectedIds.has(run.run_id))
+        if (alive.length !== selectedIds.size) setSelectedIds(new Set(alive.map((run) => run.run_id)))
+      }, [runs, selectedIds])
+      const envLabel = (run) =>
+        run.environment === 'ci'
+          ? tk('ev.history.envCi')
+          : run.environment === 'nightly'
+            ? tk('ev.history.envNightly')
+            : tk('ev.history.envLocal')
+      const scopeLabel = (run) =>
+        run.has_layer1 && run.has_layer2
+          ? tk('ev.history.scopeFull')
+          : run.has_layer1
+            ? tk('ev.history.scopeQuick')
+            : run.has_layer2
+              ? tk('ev.history.scopeGeneration')
+              : null
+      const statusLabel = (run) =>
+        run.status === 'error'
+          ? tk('ev.history.statusError')
+          : run.status === 'skipped'
+            ? tk('ev.history.statusSkipped')
+            : run.status === 'cancelled'
+              ? tk('ev.history.statusCancelled')
+              : tk('ev.history.statusCompleted')
+      const statusGlyph = (run) => (run.status === 'error' ? '✕' : run.status === 'skipped' ? '‣' : run.status === 'cancelled' ? '⊘' : '✓')
+      const durationText = (run) => {
+        const secs = evRunDurationSeconds(run)
+        return secs === null ? null : evDurationText(t, secs)
+      }
+      const sortedRuns = React.useMemo(() => {
+        if (sortKey === 'default') return runs
+        const sign = sortDir === 'asc' ? 1 : -1
+        const value = (run) => {
+          if (sortKey === 'time') return run.created_at ? Date.parse(run.created_at) : null
+          if (sortKey === 'env') return envLabel(run)
+          if (sortKey === 'scope') return scopeLabel(run)
+          if (sortKey === 'status') return statusLabel(run)
+          if (sortKey === 'duration') return evRunDurationSeconds(run)
+          return null
+        }
+        return [...runs].sort((a, b) => {
+          const av = value(a)
+          const bv = value(b)
+          if (av == null && bv == null) return 0
+          if (av == null) return 1
+          if (bv == null) return -1
+          if (typeof av === 'string' && typeof bv === 'string') return sign * (av < bv ? -1 : av > bv ? 1 : 0)
+          return sign * (Number(av) - Number(bv))
+        })
+      }, [runs, sortKey, sortDir])
+      const toggleRun = (runId, checked) => {
+        const next = new Set(selectedIds)
+        if (checked) next.add(runId)
+        else next.delete(runId)
+        setSelectedIds(next)
+      }
+      const allSelected = runs.length > 0 && runs.every((run) => selectedIds.has(run.run_id))
+      const toggleSelectAll = () => {
+        setSelectedIds(allSelected ? new Set() : new Set(runs.map((run) => run.run_id)))
+      }
+      const handleDeleteConfirm = () => {
+        if (deleteTargets === null) return
+        setBusy(true)
+        const removed = new Set(deleteTargets)
+        callOp('deleteEvalRuns', { kb_id: kbId, body: { run_ids: deleteTargets } })
+          .then(() => {
+            notify(tk('ev.history.deletedToast'))
+            setSelectedIds((current) => new Set([...current].filter((id) => !removed.has(id))))
+            setDeleteTargets(null)
+            runsQ.refresh()
+          })
+          .catch(() => notify(tk('ev.history.deleteFailed'), true))
+          .finally(() => setBusy(false))
+      }
+      const targetRuns = (deleteTargets || []).map((id) => runs.find((run) => run.run_id === id)).filter(Boolean)
+      const targetsIncludeBaseline = targetRuns.some((run) => run.is_baseline)
+      const rowMenu = (run) =>
+        h(EvalMenu, {
+          className: 'hrag-ev-rowmenu',
+          label: '⋯',
+          align: 'end',
+          render: (close) => [
+            h(
+              EvalMenuItem,
+              {
+                key: 'del',
+                danger: true,
+                onSelect: () => {
+                  close()
+                  setDeleteTargets([run.run_id])
+                },
+              },
+              tk('ev.history.rowDelete'),
+            ),
+          ],
+        })
+      let table = null
+      if (runsQ.failure) {
+        table = h('div', { className: 'hrag-ev-hint hrag-ev-hint-full hrag-ev-hint-error' }, tk('ev.loadFailed'))
+      } else if (runsQ.data === null) {
+        table = h('div', { className: 'hrag-ev-hint hrag-ev-hint-full' }, tk('ev.loading'))
+      } else if (runs.length === 0) {
+        table = h('div', { className: 'hrag-ev-hint hrag-ev-hint-full' }, tk('ev.history.emptyHistory'))
+      } else {
+        table = h(
+          'table',
+          { className: 'hrag-ev-table hrag-ev-banktable' },
+          h(
+            'thead',
+            null,
+            h(
+              'tr',
+              null,
+              h(
+                'th',
+                { className: 'hrag-ev-th-check' },
+                h('input', {
+                  type: 'checkbox',
+                  className: 'hrag-ev-check',
+                  'aria-label': tk('ev.selection.selectAllAria'),
+                  checked: allSelected,
+                  onChange: toggleSelectAll,
+                }),
+              ),
+              h('th', null, tk('ev.history.colTime')),
+              h('th', null, tk('ev.history.colEnv')),
+              h('th', null, tk('ev.history.colScope')),
+              h('th', null, tk('ev.history.colStatus')),
+              h('th', { className: 'hrag-ev-th-num' }, tk('ev.history.colDuration')),
+              h(
+                'th',
+                { className: 'hrag-ev-th-sort' },
+                h(EvalMenu, {
+                  label: '⇅',
+                  align: 'end',
+                  render: (close) => [
+                    h(EvalMenuItem, { key: 'default', selected: sortKey === 'default', onSelect: () => { setSortKey('default'); close() } }, tk('ev.questions.sortDefault')),
+                    h(EvalMenuItem, { key: 'time', selected: sortKey === 'time', onSelect: () => { setSortKey('time'); close() } }, tk('ev.history.colTime')),
+                    h(EvalMenuItem, { key: 'env', selected: sortKey === 'env', onSelect: () => { setSortKey('env'); close() } }, tk('ev.history.colEnv')),
+                    h(EvalMenuItem, { key: 'scope', selected: sortKey === 'scope', onSelect: () => { setSortKey('scope'); close() } }, tk('ev.history.colScope')),
+                    h(EvalMenuItem, { key: 'status', selected: sortKey === 'status', onSelect: () => { setSortKey('status'); close() } }, tk('ev.history.colStatus')),
+                    h(EvalMenuItem, { key: 'duration', selected: sortKey === 'duration', onSelect: () => { setSortKey('duration'); close() } }, tk('ev.history.colDuration')),
+                    h('div', { key: 'sep', className: 'hrag-ev-menu-sep' }),
+                    h(EvalMenuItem, { key: 'asc', selected: sortDir === 'asc', onSelect: () => { setSortDir('asc'); close() } }, t('sort.asc')),
+                    h(EvalMenuItem, { key: 'desc', selected: sortDir === 'desc', onSelect: () => { setSortDir('desc'); close() } }, t('sort.desc')),
+                  ],
+                }),
+              ),
+            ),
+          ),
+          h(
+            'tbody',
+            null,
+            sortedRuns.map((run) => {
+              const isSelected = selectedIds.has(run.run_id)
+              const timeTone = run.regression_detected
+                ? ' hrag-ev-time-regression'
+                : run.is_baseline
+                  ? ' hrag-ev-time-baseline'
+                  : ''
+              const scope = scopeLabel(run)
+              return h(
+                'tr',
+                {
+                  key: run.run_id,
+                  className: 'hrag-ev-tr' + (isSelected ? ' hrag-ev-tr-on' : ''),
+                  onClick: () => onOpenRun(run.run_id),
+                },
+                h(
+                  'td',
+                  { className: 'hrag-ev-th-check' },
+                  h('input', {
+                    type: 'checkbox',
+                    className: 'hrag-ev-check',
+                    'aria-label': tk('ev.history.rowSelectAria', evFmtRunTime(run.created_at)),
+                    checked: isSelected,
+                    onClick: (event) => event.stopPropagation(),
+                    onChange: (event) => toggleRun(run.run_id, event.target.checked),
+                  }),
+                ),
+                h(
+                  'td',
+                  null,
+                  h('span', { className: 'hrag-ev-time' + timeTone, title: evFmtFullTime(run.created_at) }, evFmtRunTime(run.created_at)),
+                ),
+                h('td', null, h('span', { className: 'hrag-ev-badge' }, envLabel(run))),
+                h('td', { className: scope === null ? 'hrag-ev-muted' : null }, scope === null ? '—' : scope),
+                h(
+                  'td',
+                  null,
+                  h('span', { className: 'hrag-ev-status hrag-ev-status-' + run.status }, statusGlyph(run) + ' ' + statusLabel(run)),
+                ),
+                h('td', { className: 'hrag-ev-th-num hrag-ev-muted hrag-ev-tabnums' }, durationText(run) || '—'),
+                h(
+                  'td',
+                  { className: 'hrag-ev-th-sort' },
+                  h('span', { className: 'hrag-ev-rowmenu-wrap', onClick: (event) => event.stopPropagation() }, rowMenu(run)),
+                ),
+              )
+            }),
+          ),
+        )
+      }
+      return h(
+        'div',
+        { className: 'hrag-ev-bank' },
+        h('div', { className: 'hrag-ev-bankscroll' }, table),
+        selectedIds.size > 0
+          ? h(
+              'div',
+              { className: 'hrag-ev-bulkbar' },
+              h('span', { className: 'hrag-ev-muted hrag-ev-tabnums' }, tk('ev.selection.selected', selectedIds.size)),
+              h(
+                'button',
+                { type: 'button', className: 'hrag-btn hrag-btn-danger', onClick: () => setDeleteTargets([...selectedIds]) },
+                tk('ev.history.rowDelete'),
+              ),
+              h(
+                'button',
+                { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => setSelectedIds(new Set()) },
+                tk('ev.selection.clear'),
+              ),
+            )
+          : null,
+        deleteTargets !== null
+          ? h(ConfirmDialog, {
+              t,
+              title: tk('ev.history.deleteConfirmTitle'),
+              description:
+                (deleteTargets.length === 1 && targetRuns[0]
+                  ? evFmtRunTime(targetRuns[0].created_at) + ' · ' + envLabel(targetRuns[0])
+                  : tk('ev.selection.selected', deleteTargets.length)) +
+                ' ' +
+                tk('ev.history.deleteConfirmDesc', deleteTargets.length) +
+                (targetsIncludeBaseline ? ' ' + tk('ev.history.baselineWarn') : ''),
+              busy,
+              cancelKey: 'doc.cancel',
+              confirmKey: 'doc.confirmDelete',
+              onCancel: () => setDeleteTargets(null),
+              onConfirm: handleDeleteConfirm,
+            })
+          : null,
+      )
+    }
+
+    /** 存为考题弹层（照 EvalSaveQuestionDialog，Task 8 补面）：召回面板勾选
+        切片后一键入题库——query 预填可改、分类默认事实、预期路径默认＝勾选
+        来源路径集合（混路即多选）、参考答案可选；锚定集＝selectedChunkIds。
+        B′ 红块同接线；普通错误内联（面板无 toast 面）。 */
+    function EvalSaveAsQuestionDialog({ t, kbId, open, onClose, prefillQuery, defaultPaths, selectedChunkIds, selectionCount, onSaved }) {
+      const tk = (key, ...args) => evText(t(key), args)
+      const [query, setQuery] = React.useState('')
+      const [category, setCategory] = React.useState('fact')
+      const [paths, setPaths] = React.useState([])
+      const [referenceAnswer, setReferenceAnswer] = React.useState('')
+      const [busy, setBusy] = React.useState(false)
+      const [errorText, setErrorText] = React.useState(null)
+      const anchor = useAnchorBlocks()
+      const anchorBlock = anchor.blockFor('save')
+      const openPrevRef = React.useRef(false)
+      // 升沿重置（props 派生数组每渲染新引用——仅 open 翻真那拍重置，防编辑中被打断）。
+      React.useEffect(() => {
+        if (open && !openPrevRef.current) {
+          setQuery(prefillQuery || '')
+          setCategory('fact')
+          setPaths([...(defaultPaths || [])])
+          setReferenceAnswer('')
+          setErrorText(null)
+          anchor.clear('save')
+        }
+        openPrevRef.current = open
+      }, [open, prefillQuery, defaultPaths])
+      if (!open) return null
+      const togglePath = (path) =>
+        setPaths((current) =>
+          current.indexOf(path) >= 0 ? current.filter((item) => item !== path) : [...current, path],
+        )
+      const canSubmit = query.trim().length > 0 && paths.length > 0 && !busy
+      const submitQuestion = (ack) =>
+        callOp('createEvalQuestion', {
+          kb_id: kbId,
+          body: {
+            query: query.trim(),
+            category,
+            expected_paths: paths,
+            relevant_chunk_ids: [...selectedChunkIds],
+            reference_answer: referenceAnswer.trim() ? referenceAnswer.trim() : null,
+            anchor_ack: ack,
+          },
+        })
+      const run = (mode) => {
+        setBusy(true)
+        setErrorText(null)
+        const guarded = mode === 'ack' ? anchor.confirm('save', submitQuestion) : anchor.submit('save', submitQuestion)
+        guarded
+          .then((saved) => {
+            if (!saved) return
+            onSaved()
+            onClose()
+          })
+          .catch((error) => setErrorText(errorDetail(error)))
+          .finally(() => setBusy(false))
+      }
+      return h(
+        'div',
+        {
+          className: 'hrag-overlay',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget && !busy) onClose()
+          },
+        },
+        h(
+          'div',
+          { className: 'hrag-dialog hrag-dialog-wide', role: 'dialog', 'aria-modal': 'true', 'aria-label': tk('recall.saveAs.button') },
+          h('div', { className: 'hrag-dialog-title' }, tk('recall.saveAs.button')),
+          h('div', { className: 'hrag-dialog-body' }, tk('recall.saveAs.selectedCount', selectionCount)),
+          h(
+            'div',
+            { className: 'hrag-ev-form' },
+            h(
+              'label',
+              { className: 'hrag-ev-field' },
+              h('span', { className: 'hrag-ev-fieldlabel' }, tk('recall.saveAs.queryLabel')),
+              h('textarea', {
+                className: 'hrag-input hrag-ev-textarea',
+                'aria-label': tk('recall.saveAs.queryLabel'),
+                value: query,
+                onChange: (event) => setQuery(event.target.value),
+              }),
+            ),
+            h(
+              'div',
+              { className: 'hrag-ev-formrow' },
+              h(
+                'label',
+                { className: 'hrag-ev-field' },
+                h('span', { className: 'hrag-ev-fieldlabel' }, tk('recall.saveAs.categoryLabel')),
+                h(
+                  'select',
+                  {
+                    className: 'hrag-input hrag-ev-select',
+                    'aria-label': tk('recall.saveAs.categoryLabel'),
+                    value: category,
+                    onChange: (event) => setCategory(event.target.value),
+                  },
+                  ['fact', 'relation', 'concept', 'global'].map((id) =>
+                    h('option', { key: id, value: id }, tk('ev.category.' + id)),
+                  ),
+                ),
+              ),
+              h(
+                'div',
+                { className: 'hrag-ev-field' },
+                h('span', { className: 'hrag-ev-fieldlabel' }, tk('recall.saveAs.expectedPathsLabel')),
+                h(
+                  'span',
+                  { className: 'hrag-ev-checkrow' },
+                  ['vector', 'graph', 'wiki'].map((path) =>
+                    h(
+                      'label',
+                      { key: path, className: 'hrag-ev-checklabel' },
+                      h('input', {
+                        type: 'checkbox',
+                        className: 'hrag-ev-check',
+                        checked: paths.indexOf(path) >= 0,
+                        onChange: () => togglePath(path),
+                      }),
+                      path,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            h('p', { className: 'hrag-ev-muted hrag-ev-formnote' }, tk('recall.saveAs.anchorHint')),
+            h(
+              'label',
+              { className: 'hrag-ev-field' },
+              h('span', { className: 'hrag-ev-fieldlabel' }, tk('recall.saveAs.referenceAnswerLabel')),
+              h('textarea', {
+                className: 'hrag-input hrag-ev-textarea',
+                'aria-label': tk('recall.saveAs.referenceAnswerLabel'),
+                value: referenceAnswer,
+                onChange: (event) => {
+                  setReferenceAnswer(event.target.value)
+                  anchor.clear('save')
+                },
+              }),
+            ),
+          ),
+          errorText ? h('div', { className: 'hrag-dialog-error' }, errorText) : null,
+          anchorBlock !== null
+            ? h(EvalAnchorNotice, {
+                tk,
+                detail: anchorBlock,
+                confirmLabel: tk('ev.anchorBlock.confirmSave'),
+                confirming: busy,
+                onConfirm: () => run('ack'),
+              })
+            : null,
+          h(
+            'div',
+            { className: 'hrag-dialog-actions' },
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: busy, onClick: onClose },
+              tk('recall.saveAs.cancel'),
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: !canSubmit, onClick: () => run('submit') },
+              tk('recall.saveAs.submit'),
+            ),
+          ),
+        ),
+      )
+    }
+
     function KnowledgePanel({ t }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -3669,6 +7985,8 @@ window.__ModuleLoader__.load({
         reindexBusy || (reindexState !== null && reindexState.in_progress === true)
       // 检索联动叠加（照工作台「在向量空间查看」）：召回触发 → 切投影分区并投影。
       const [overlayRequest, setOverlayRequest] = React.useState(null)
+      // 复现预填（评测 → 召回，§7.2）：{query, nonce}——切分区并预填检索框。
+      const [recallPrefill, setRecallPrefill] = React.useState(null)
       // 图谱联动叠加（Task 7「在图谱中查看」）：召回触发 → 切图谱分区并高亮路径。
       const [graphOverlayRequest, setGraphOverlayRequest] = React.useState(null)
       const fileInputRef = React.useRef(null)
@@ -3961,6 +8279,7 @@ window.__ModuleLoader__.load({
             ? h(RecallView, {
                 t,
                 kbId,
+                prefill: recallPrefill,
                 onOpenChunk: (chunkId, docName) => {
                   const docId = String(chunkId).split('#')[0]
                   setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
@@ -4001,6 +8320,20 @@ window.__ModuleLoader__.load({
               overlayRequest: graphOverlayRequest,
               onOpenChunk: (docId, chunkId, docName) => {
                 setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
+              },
+            }),
+          ),
+          // 评测视图 keep-alive（同口径）；「复现」通道：题库/详情 ↗ → 召回预填。
+          h(
+            'div',
+            { className: 'hrag-ev-slot', style: { display: section === 'eval' ? 'flex' : 'none' } },
+            h(EvalView, {
+              t,
+              kbId,
+              enabled: section === 'eval',
+              onReproduce: (query) => {
+                setRecallPrefill({ query, nonce: Date.now() })
+                setSection('recall')
               },
             }),
           ),
