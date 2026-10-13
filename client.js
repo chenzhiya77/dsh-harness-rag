@@ -41,6 +41,7 @@ window.__ModuleLoader__.load({
       'shell.tab.docs': '文档',
       'shell.tab.recall': '召回',
       'shell.tab.vectors': '投影',
+      'shell.tab.graph': '图谱',
       'shell.viewPending': '此分区实装中',
       'doc.loading': '正在加载文档…',
       'doc.empty': '暂无文档',
@@ -108,6 +109,36 @@ window.__ModuleLoader__.load({
       'vec.overlayFailed': '检索叠加失败——请重试',
       'vec.hitsPrefix': '命中',
       'vec.clearOverlay': '清除叠加',
+      'recall.viewInGraphSpace': '在知识图谱查看',
+      'graph.loading': '正在加载知识图谱…',
+      'graph.loadFailed': '知识图谱加载失败——请稍后重试',
+      'graph.empty': '暂无可视化的实体——索引文档后自动构建',
+      'graph.entitiesUnit': '实体',
+      'graph.relationsUnit': '关系',
+      'graph.communitiesUnit': '社区',
+      'graph.mentionsPre': '被',
+      'graph.mentionsPost': '个切片提及',
+      'graph.relatedChunks': '关联切片',
+      'graph.entityDescription': '描述',
+      'graph.entityNoDescription': '暂无描述',
+      'graph.entityNoChunks': '暂无关联切片',
+      'graph.unknownDoc': '（文档已删除）',
+      'graph.searchEntities': '搜索实体',
+      'graph.searchNoMatch': '未找到匹配的实体',
+      'graph.colorByType': '按类型',
+      'graph.colorByCommunity': '按社区',
+      'graph.communityBadgePre': '社区 #',
+      'graph.slicePosPre': '切片 #',
+      'graph.overlaySeeds': '种子',
+      'graph.overlayExpanded': '扩展',
+      'graph.overlayEvidence': '证据',
+      'graph.overlayStale': '图谱内容已更新，检索路径高亮已清除',
+      'graph.clearOverlay': '清除路径高亮',
+      'graph.guideHint': '实体过多，已隐藏细节——放大查看，或点开实体查看其邻居',
+      'graph.focusHidden': '实体过多，该实体未在当前层显示',
+      'graph.neighborhoodTitle': '局部图',
+      'graph.hop1': '1 跳',
+      'graph.hop2': '2 跳',
     }
     const en = {
       'tab.title': 'Knowledge Base',
@@ -137,6 +168,7 @@ window.__ModuleLoader__.load({
       'shell.tab.docs': 'Documents',
       'shell.tab.recall': 'Recall',
       'shell.tab.vectors': 'Projection',
+      'shell.tab.graph': 'Graph',
       'shell.viewPending': 'This section is under construction',
       'doc.loading': 'Loading documents…',
       'doc.empty': 'No documents yet',
@@ -204,6 +236,36 @@ window.__ModuleLoader__.load({
       'vec.overlayFailed': 'Overlay failed — please retry',
       'vec.hitsPrefix': 'Hits',
       'vec.clearOverlay': 'Clear overlay',
+      'recall.viewInGraphSpace': 'View in the knowledge graph',
+      'graph.loading': 'Loading the knowledge graph…',
+      'graph.loadFailed': 'Failed to load the knowledge graph — please try again',
+      'graph.empty': 'Nothing to visualize yet — entities appear after documents are indexed',
+      'graph.entitiesUnit': 'entities',
+      'graph.relationsUnit': 'relations',
+      'graph.communitiesUnit': 'communities',
+      'graph.mentionsPre': 'Mentioned by',
+      'graph.mentionsPost': 'chunks',
+      'graph.relatedChunks': 'Related chunks',
+      'graph.entityDescription': 'Description',
+      'graph.entityNoDescription': 'No description yet',
+      'graph.entityNoChunks': 'No linked chunks',
+      'graph.unknownDoc': '(document deleted)',
+      'graph.searchEntities': 'Search entities',
+      'graph.searchNoMatch': 'No matching entity',
+      'graph.colorByType': 'By type',
+      'graph.colorByCommunity': 'By community',
+      'graph.communityBadgePre': 'Community #',
+      'graph.slicePosPre': 'Chunk #',
+      'graph.overlaySeeds': 'Seeds',
+      'graph.overlayExpanded': 'Expanded',
+      'graph.overlayEvidence': 'Evidence',
+      'graph.overlayStale': 'The graph changed — the retrieval path highlight was cleared',
+      'graph.clearOverlay': 'Clear path highlight',
+      'graph.guideHint': 'Too many entities — details hidden; zoom in, or open an entity for its neighborhood',
+      'graph.focusHidden': 'Too many entities — this one is hidden at the current detail level',
+      'graph.neighborhoodTitle': 'Neighborhood',
+      'graph.hop1': '1 hop',
+      'graph.hop2': '2 hops',
     }
 
     /** Panel data seam: every panel request is a POST of JSON parameters to
@@ -264,6 +326,7 @@ window.__ModuleLoader__.load({
       { id: 'docs', label: 'shell.tab.docs' },
       { id: 'recall', label: 'shell.tab.recall' },
       { id: 'vectors', label: 'shell.tab.vectors' },
+      { id: 'graph', label: 'shell.tab.graph' },
     ]
 
     /** Component-owned styles (removed when the component unmounts), built
@@ -341,6 +404,36 @@ window.__ModuleLoader__.load({
           '.hrag-spin { animation: hrag-rotate 900ms linear infinite; }',
           '@keyframes hrag-rotate { to { transform: rotate(360deg); } }',
           '@media (prefers-reduced-motion: reduce) { .hrag-spin { animation-duration: 1ms; } }',
+          '.hrag-graph-slot { flex-direction: column; min-height: 0; flex: 1; }',
+          '.hrag-graph { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
+          '.hrag-graph-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }',
+          '.hrag-graph-search { flex: 1; min-width: 120px; display: flex; }',
+          '.hrag-graph-search .hrag-input { width: 100%; height: 26px; font-size: 12px; }',
+          '.hrag-graph-body { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }',
+          '.hrag-graph-canvas { position: relative; flex: 1; min-height: 220px; overflow: hidden; }',
+          '.hrag-graph-canvas canvas { display: block; width: 100%; height: 100%; }',
+          '.hrag-graph-stats { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); z-index: 5; padding: 3px 10px; border-radius: 6px; background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 68%, transparent); backdrop-filter: blur(4px); color: var(--dsw-alias-label-tertiary); font-size: 11px; white-space: nowrap; }',
+          '.hrag-graph-guide { position: absolute; top: 6px; right: 6px; z-index: 5; max-width: 55%; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 78%, transparent); backdrop-filter: blur(4px); border: 1px solid color-mix(in srgb, var(--dsw-alias-label-tertiary) 20%, transparent); color: var(--dsw-alias-label-tertiary); font-size: 11px; }',
+          '.hrag-gcard-graph { height: 220px; display: flex; flex-direction: column; }',
+          '.hrag-graph-drawer .hrag-drawer-overlay { z-index: 56; }',
+          '.hrag-graph-drawer .hrag-drawer { z-index: 57; }',
+          '.hrag-graph-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
+          '.hrag-gchips { display: flex; flex-wrap: wrap; gap: 6px; }',
+          '.hrag-gchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 11px; }',
+          '.hrag-gcard { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; }',
+          '.hrag-gcard-head { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
+          '.hrag-gcard-count { margin-left: auto; color: var(--dsw-alias-label-tertiary); font-variant-numeric: tabular-nums; }',
+          '.hrag-gcard-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-left: auto; padding: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 6px; background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
+          '.hrag-gcard-iconbtn:hover { color: var(--dsw-alias-label-primary); background: color-mix(in srgb, var(--dsw-alias-label-primary) 8%, transparent); }',
+          '.hrag-gcard-body { padding: 8px 10px; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }',
+          '.hrag-gcard-empty { color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-gchunk-list { display: flex; flex-direction: column; padding: 3px; }',
+          '.hrag-gchunkrow { display: flex; width: 100%; align-items: center; gap: 6px; padding: 5px 7px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-gchunkrow:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-gchunkrow:disabled { cursor: default; opacity: 0.6; }',
+          '.hrag-gchunkrow-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }',
+          '.hrag-gchunkrow-pos { flex-shrink: 0; color: var(--dsw-alias-label-tertiary); font-variant-numeric: tabular-nums; }',
+          '.hrag-gchunkrow-chevron { flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-overlay { position: absolute; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--dsw-alias-bg-mask-1); }',
           '.hrag-dialog { width: min(340px, 100%); display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-lg); background: var(--dsw-alias-bg-layer-1); box-shadow: var(--dsw-elevation-panel); }',
           '.hrag-dialog-wide { width: min(480px, 100%); }',
@@ -573,6 +666,238 @@ window.__ModuleLoader__.load({
     const VEC_VIEW_PITCH = 0.5
     const VEC_SIDE_RATIO = 0.72
     const VEC_PERSPECTIVE_D = 8
+
+    // ── 知识图谱（Task 7）────────────────────────────────────────────────────
+    // 20 色板/尺寸/描边语汇照工作台 graph-utils（语义对齐，代码新写）。
+    const GRAPH_PALETTE = [
+      '#42a5f5', '#66bb6a', '#ffa726', '#ab47bc', '#26c6da',
+      '#ec407a', '#9ccc65', '#ff7043', '#7e57c2', '#8d6e63',
+      '#e57373', '#5c6bc0', '#29b6f6', '#26a69a', '#d4e157',
+      '#78909c', '#ba68c8', '#4db6ac', '#aed581', '#ffb74d',
+    ]
+    const GRAPH_HIT_BORDER = '#f5222d'
+    const GRAPH_EXPANSION_BORDER = '#ffd700'
+    const GRAPH_HOVER_BORDER = '#1677ff'
+    const GRAPH_SEED_SIZE_BOOST = 1.35
+    const GRAPH_LABEL_HIDE_BELOW = 0.6
+    const GRAPH_LABEL_FULL_ABOVE = 0.9
+    const GRAPH_IMPORTANT_MENTION = 2
+    const GRAPH_MIN_SCALE = 0.3
+    const GRAPH_MAX_SCALE = 3
+    const GRAPH_FOCUS_ZOOM = 1.6
+    // 力参数（2026-10-13 二轮：逐公式对齐工作台 echarts forceHelper——layout:'force'
+    // 的真身）。旧自研 FR（k²/d 斥力 + 无理想长弹簧 + 速度域微重力）把弱连接组件甩到
+    // 画外、缩到底仍看不全（验收实测）；echarts 口径 = 位置域三力 + Verlet 积分 +
+    // friction 冷却，重力强两个数量级 → 紧凑圆盘。
+    // 理想边长：工作台 edgeLength [40,120]，边无 value → linearMap 中值 80。
+    const GRAPH_EDGE_LENGTH = 80
+    const GRAPH_REPULSION = 120
+    const GRAPH_GRAVITY = 0.1
+    // 冷却（照 forceHelper）：0.6 起步、每步 ×0.992、< 0.01 停（约 511 步）。
+    const GRAPH_FRICTION = 0.6
+    const GRAPH_FRICTION_DECAY = 0.992
+    const GRAPH_FRICTION_MIN = 0.01
+
+    // ── LOD 分层渲染（2026-10-13 点名补；照工作台 Task 7b 口径）──────────────
+    // 缩放 = 地图层级三层（<0.6 hub 枢纽层／0.6–0.9 重要层／>0.9 全量层），
+    // 全靠滚轮跨档；>2000 实体熔断 guide 档（右上角引导提示）。
+    /** 激活门控：总数 ≤ 500 时 LOD 不激活（小库全量渲染零行为变化）。 */
+    const GRAPH_LOD_MIN_NODES = 500
+    /** zoom < 0.6 → hub（每社区 Top3 枢纽）。 */
+    const GRAPH_LOD_ZOOM_HUB_BELOW = 0.6
+    /** zoom ≤ 0.9 → all-important（mention≥2）；> 0.9 → all-full / guide。 */
+    const GRAPH_LOD_ZOOM_FULL_ABOVE = 0.9
+    /** all-full 硬上限：超出熔断 guide（不硬渲全量，防万级实体卡死）。 */
+    const GRAPH_LOD_FULL_HARD_LIMIT = 2000
+    /** hub 层每社区入选的枢纽数（Top N，与预算共同截断）。 */
+    const GRAPH_LOD_HUB_TOP_PER_COMMUNITY = 3
+    /** hub 层节点预算（微社区图上 Top3×社区数会爆；按社区规模降序累计截断）。 */
+    const GRAPH_LOD_HUB_NODE_BUDGET = 200
+
+    /** 缩放 + 总数 → 渲染档位（照工作台 renderTierForZoom）。边界：0.6 入
+        all-important，> 0.9 才入 all-full；all-full 超 2000 熔断 guide。 */
+    function graphRenderTierForZoom(zoom, totalNodes) {
+      if (totalNodes <= GRAPH_LOD_MIN_NODES) return 'full'
+      if (zoom < GRAPH_LOD_ZOOM_HUB_BELOW) return 'hub'
+      if (zoom <= GRAPH_LOD_ZOOM_FULL_ABOVE) return 'all-important'
+      return totalNodes <= GRAPH_LOD_FULL_HARD_LIMIT ? 'all-full' : 'guide'
+    }
+
+    /** 初始 zoom（照工作台 initialZoomForGraph）：大库从最缩略档（0.3 → hub）
+        起步，小库恒 1（full + 全标签，行为不变）。 */
+    function graphInitialZoomForGraph(nodeCount) {
+      return nodeCount > GRAPH_LOD_MIN_NODES ? 0.3 : 1
+    }
+
+    /** 档位渲染子集（照工作台 tierNodeIds）：full / all-full 返 null（全量不裁）；
+        hub = 每社区 Top3 枢纽（节点预算内按社区规模降序截断）；余档 = mention≥2。 */
+    function graphTierNodeIds(nodes, communities, tier) {
+      if (tier === 'full' || tier === 'all-full') return null
+      const keep = new Set()
+      if (tier === 'hub') {
+        const bySize = [...communities].sort((a, b) => b.memberCount - a.memberCount || a.id - b.id)
+        for (const community of bySize) {
+          for (const member of community.topMembers.slice(0, GRAPH_LOD_HUB_TOP_PER_COMMUNITY)) {
+            if (keep.size >= GRAPH_LOD_HUB_NODE_BUDGET) break
+            keep.add(member.id)
+          }
+          if (keep.size >= GRAPH_LOD_HUB_NODE_BUDGET) break
+        }
+      } else {
+        for (const node of nodes) {
+          if (node.mention_count >= GRAPH_IMPORTANT_MENTION) keep.add(node.id)
+        }
+      }
+      return keep
+    }
+
+    /** 局部图裁剪（照工作台 filterNeighborhood 逐句移植；入口＝右键「查看局部图」）：
+        焦点 + N 跳邻居（BFS，边按无向扩展——对齐 graph_search 邻域语义）；
+        返回引用原对象的裁剪子图。 */
+    function graphNeighborhood(nodes, edges, focusId, hops) {
+      const byId = new Map(nodes.map((node) => [node.id, node]))
+      if (!byId.has(focusId)) return { nodes: [], edges: [] }
+      const kept = new Set([focusId])
+      let frontier = [focusId]
+      for (let hop = 0; hop < hops && frontier.length > 0; hop += 1) {
+        const next = []
+        for (const edge of edges) {
+          for (const endpoint of [edge.source, edge.target]) {
+            const other = endpoint === edge.source ? edge.target : edge.source
+            if (frontier.includes(endpoint) && !kept.has(other)) {
+              kept.add(other)
+              next.push(other)
+            }
+          }
+        }
+        frontier = next
+      }
+      return {
+        nodes: nodes.filter((node) => kept.has(node.id)),
+        edges: edges.filter((edge) => kept.has(edge.source) && kept.has(edge.target)),
+      }
+    }
+
+    /** 跳数切换的图标（局部图卡标题栏单枚钮，2026-10-13 再改案：两枚钮合一）：
+        1 跳＝两节链、2 跳＝三节链；颜色随 currentColor。 */
+    function graphHopIcon(hops) {
+      const dots = hops === 2 ? [2.5, 8, 13.5] : [3.5, 12.5]
+      return h(
+        'svg',
+        { width: 16, height: 16, viewBox: '0 0 16 16', 'aria-hidden': 'true' },
+        h('line', {
+          x1: dots[0],
+          y1: 8,
+          x2: dots[dots.length - 1],
+          y2: 8,
+          stroke: 'currentColor',
+          strokeWidth: 1.2,
+        }),
+        dots.map((cx) => h('circle', { key: String(cx), cx, cy: 8, r: 2.4, fill: 'currentColor' })),
+      )
+    }
+
+    /** FNV-1a 32 位（照工作台）：短字符串稳定着色。 */
+    function graphFnv1a(text) {
+      let hash = 0x811c9dc5
+      for (let i = 0; i < text.length; i += 1) {
+        hash ^= text.charCodeAt(i)
+        hash = Math.imul(hash, 0x01000193)
+      }
+      return hash >>> 0
+    }
+
+    /** 实体 type → 色板稳定取色。 */
+    function graphTypeColor(type) {
+      return GRAPH_PALETTE[graphFnv1a(String(type || '')) % GRAPH_PALETTE.length]
+    }
+
+    /** 社区邻接图贪心着色（Welsh-Powell，照工作台 graph-utils）：相邻社区
+        异色优先、色号使用均匀（稀疏图孤立社区不聚同一色号）。 */
+    function buildGraphColorMap(nodes, edges) {
+      const communityOf = new Map()
+      for (const node of nodes) communityOf.set(node.id, node.community)
+      const neighbors = new Map()
+      for (const node of nodes) {
+        if (!neighbors.has(node.community)) neighbors.set(node.community, new Set())
+      }
+      for (const edge of edges) {
+        const a = communityOf.get(edge.source)
+        const b = communityOf.get(edge.target)
+        if (a === undefined || b === undefined || a === b) continue
+        neighbors.get(a).add(b)
+        neighbors.get(b).add(a)
+      }
+      const ordered = [...neighbors.keys()].sort((a, b) => {
+        const diff = neighbors.get(b).size - neighbors.get(a).size
+        return diff !== 0 ? diff : a - b
+      })
+      const colorMap = new Map()
+      const usage = new Array(GRAPH_PALETTE.length).fill(0)
+      for (const community of ordered) {
+        const used = new Set()
+        for (const neighbor of neighbors.get(community)) {
+          const assigned = colorMap.get(neighbor)
+          if (assigned !== undefined) used.add(assigned)
+        }
+        let index = -1
+        let bestUsage = Infinity
+        for (let i = 0; i < GRAPH_PALETTE.length; i += 1) {
+          if (used.has(i)) continue
+          if (usage[i] < bestUsage) {
+            bestUsage = usage[i]
+            index = i
+          }
+        }
+        if (index === -1) index = community % GRAPH_PALETTE.length
+        colorMap.set(community, index)
+        usage[index] += 1
+      }
+      return colorMap
+    }
+
+    /** 社区 → 色值（带 colorMap 走 Welsh-Powell，缺省取模）。 */
+    function graphCommunityColor(community, colorMap) {
+      const index =
+        colorMap && colorMap.has(community) ? colorMap.get(community) : community % GRAPH_PALETTE.length
+      return GRAPH_PALETTE[index]
+    }
+
+    /** 节点尺寸：√mention 映射 10–28（长尾压平）。 */
+    function graphNodeSize(mention) {
+      if (mention <= 0) return 10
+      return Math.min(28, 10 + 6 * Math.sqrt(mention))
+    }
+
+    /** 邻接表（hover 邻域蓝描边数据源；有向边按无向）。 */
+    function buildGraphAdjacency(edges) {
+      const sets = new Map()
+      const ensure = (key) => {
+        let set = sets.get(key)
+        if (!set) {
+          set = new Set()
+          sets.set(key, set)
+        }
+        return set
+      }
+      for (const edge of edges) {
+        ensure(edge.source).add(edge.target)
+        ensure(edge.target).add(edge.source)
+      }
+      const map = new Map()
+      for (const [key, set] of sets) map.set(key, [...set])
+      return map
+    }
+
+    /** trace → 三层查询表（种子/扩展 hop/证据；null 短路）。 */
+    function graphOverlayLookup(trace) {
+      if (!trace) return null
+      const seeds = new Set(trace.seed_entities || [])
+      const hops = new Map((trace.expanded_nodes || []).map((node) => [node.name, node.hop]))
+      const evidence = new Set(trace.evidence_entities || [])
+      const all = new Set([...seeds, ...hops.keys(), ...evidence])
+      return { seeds, hops, evidence, all }
+    }
 
     /** mm:ss timecode for video shot chunks (workbench chip convention). */
     function chunkTimecode(chunk) {
@@ -879,7 +1204,27 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function RecallView({ t, kbId, onOpenChunk, onViewInVectorSpace }) {
+    /** 「在知识图谱查看」图标（三点连线＝图谱语义，照工作台 Waypoints 的手绘等价物）。 */
+    function graphSpaceIcon() {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 14 14', 'aria-hidden': 'true' },
+        h('path', {
+          d: 'M3 10.4 L7 3.6 L11 9.8',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 1.2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          opacity: 0.7,
+        }),
+        h('circle', { cx: 3, cy: 10.4, r: 1.6, fill: 'currentColor' }),
+        h('circle', { cx: 7, cy: 3.6, r: 1.7, fill: 'currentColor' }),
+        h('circle', { cx: 11, cy: 9.8, r: 1.6, fill: 'currentColor' }),
+      )
+    }
+
+    function RecallView({ t, kbId, onOpenChunk, onViewInVectorSpace, onViewInGraphSpace }) {
       const [query, setQuery] = React.useState('')
       const [topK, setTopK] = React.useState(5)
       const [pending, setPending] = React.useState(false)
@@ -964,6 +1309,31 @@ window.__ModuleLoader__.load({
                 },
               },
               vectorSpaceIcon(),
+            )
+          : null,
+        result && onViewInGraphSpace
+          ? h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-outline hrag-btn-icon',
+                disabled: !(
+                  result.paths &&
+                  result.paths.graph &&
+                  result.paths.graph.trace &&
+                  ((result.paths.graph.trace.seed_entities || []).length +
+                    (result.paths.graph.trace.expanded_nodes || []).length +
+                    (result.paths.graph.trace.evidence_entities || []).length) >
+                    0
+                ),
+                'aria-label': t('recall.viewInGraphSpace'),
+                title: t('recall.viewInGraphSpace'),
+                onClick: () => {
+                  const trace = (result.paths && result.paths.graph && result.paths.graph.trace) || null
+                  onViewInGraphSpace({ text: result.query, trace })
+                },
+              },
+              graphSpaceIcon(),
             )
           : null,
       )
@@ -2029,6 +2399,1011 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 图谱画布（手写 canvas＋自研力导向，照工作台语义）：节点/边/缩放分级标签/
+        hover 邻域蓝描边（加法）／三层路径叠加；拖节点、拖空白平移、滚轮缩放。
+        LOD 分层（2026-10-13）：滚轮跨档重建渲染子集（照工作台 rebuildSeriesAtTier）。 */
+    function GraphCanvas({ t, nodes, edges, communities, colorBy, overlayTrace, focusNode, onNodeClick, onRenderTierChange, colorMap: providedColorMap, deltaIds }) {
+      const wrapRef = React.useRef(null)
+      const canvasRef = React.useRef(null)
+      const viewRef = React.useRef({ zoom: 1, ox: 0, oy: 0 })
+      const simRef = React.useRef(null)
+      const dragRef = React.useRef(null)
+      const hoverRef = React.useRef(null)
+      const projectedRef = React.useRef([])
+      const rafRef = React.useRef(null)
+      const focusRef = React.useRef(null)
+      // LOD 渲染档位（跨档重建的门闩）；上报走穿透 ref 防闭包陈旧。
+      const renderTierRef = React.useRef('full')
+      const tierCbRef = React.useRef(onRenderTierChange)
+      tierCbRef.current = onRenderTierChange
+      // 身份漂移隔离：applyTier 经 ref 取最新闭包（数据 effect 只随数据身份重跑，
+      // colorBy/叠加切换引起的 draw→startSim→applyTier 链式身份变化不得触发重建）；
+      // 搜索定位防重放（同一次 focusNode 只处理一次）＋稳定窗计时器句柄。
+      const applyTierRef = React.useRef(null)
+      const focusTokenRef = React.useRef(null)
+      const recenterRef = React.useRef(null)
+      const [tip, setTip] = React.useState(null)
+      const [grabbing, setGrabbing] = React.useState(false)
+
+      const internalColorMap = React.useMemo(() => buildGraphColorMap(nodes, edges), [nodes, edges])
+      // 配色源（2026-10-13 七轮修）：缺省按本图节点自算；提供外部映射时优先用——
+      // 局部图卡传全图映射，与主画布/抽屉芯片恒同色（子集自算恒从色号 0 起发，
+      // 单社区邻域全蓝且与全图色断开——实测 8/8 复现）。
+      const colorMap = providedColorMap != null ? providedColorMap : internalColorMap
+      const adjacency = React.useMemo(() => buildGraphAdjacency(edges), [edges])
+      const lookup = React.useMemo(() => graphOverlayLookup(overlayTrace), [overlayTrace])
+      const nodeById = React.useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
+
+      /** 单帧绘制（交互/模拟/缩放都经它落画布）。 */
+      const draw = React.useCallback(() => {
+        const canvas = canvasRef.current
+        const wrap = wrapRef.current
+        if (!canvas || !wrap) return
+        const w = wrap.clientWidth
+        const h = wrap.clientHeight
+        if (!w || !h) return
+        const dpr = window.devicePixelRatio || 1
+        if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+          canvas.width = Math.round(w * dpr)
+          canvas.height = Math.round(h * dpr)
+        }
+        const ctx = canvas.getContext('2d')
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        ctx.clearRect(0, 0, w, h)
+        const view = viewRef.current
+        const sim = simRef.current
+        const inkColor = getComputedStyle(wrap).color || '#3c3c3c'
+        const cx = w / 2 + view.ox
+        const cy = h / 2 + view.oy
+        const toScreen = (x, y) => ({ sx: cx + x * view.zoom, sy: cy + y * view.zoom })
+        // 边层。命中路径边（两端均在并集）荧光金发光；其余 ink 0.35。
+        const inkLine = wrap.style.getPropertyValue('--hrag-graph-line') || inkColor
+        for (const edge of edges) {
+          const a = sim && sim.byId.get(edge.source)
+          const b = sim && sim.byId.get(edge.target)
+          if (!a || !b) continue
+          const pa = toScreen(a.x, a.y)
+          const pb = toScreen(b.x, b.y)
+          const onPath = lookup != null && lookup.all.has(edge.source) && lookup.all.has(edge.target)
+          const dx = pb.sx - pa.sx
+          const dy = pb.sy - pa.sy
+          const len = Math.hypot(dx, dy) || 1
+          // 端点裁到节点圆边界外（2026-10-13：原线到圆心、箭头也画在圆心，整段
+          // 被节点圆盖住——工作台里箭头在符号边界外；种子按放大后半径裁）。
+          const nodeA = nodeById.get(edge.source)
+          const nodeB = nodeById.get(edge.target)
+          const trimA = nodeA ? (graphNodeSize(nodeA.mention_count) / 2) * (lookup != null && lookup.seeds.has(nodeA.id) ? GRAPH_SEED_SIZE_BOOST : 1) + 2 : 0
+          const trimB = nodeB ? (graphNodeSize(nodeB.mention_count) / 2) * (lookup != null && lookup.seeds.has(nodeB.id) ? GRAPH_SEED_SIZE_BOOST : 1) + 2 : 0
+          if (len <= trimA + trimB + 4) continue // 短边两端裁帽重叠：整边被节点盖住，跳过
+          const ux = dx / len
+          const uy = dy / len
+          const ax = pa.sx + ux * trimA
+          const ay = pa.sy + uy * trimA
+          const bx = pb.sx - ux * trimB
+          const by = pb.sy - uy * trimB
+          // 轻微弧线防并行边重叠（照工作台 curveness 0.1）。
+          const mx = (pa.sx + pb.sx) / 2 + (-dy / len) * len * 0.1
+          const my = (pa.sy + pb.sy) / 2 + (dx / len) * len * 0.1
+          // 箭头切线（控制点→尖端）；线体终点收在箭头底边（尖端回退 7px）——线不
+          // 垫进三角肚里，避免双半透明叠加透出线痕（2026-10-13 截图实证）。
+          const angle = Math.atan2(by - my, bx - mx)
+          const baseX = bx - 7 * Math.cos(angle)
+          const baseY = by - 7 * Math.sin(angle)
+          ctx.beginPath()
+          ctx.moveTo(ax, ay)
+          ctx.quadraticCurveTo(mx, my, baseX, baseY)
+          if (onPath) {
+            ctx.strokeStyle = GRAPH_EXPANSION_BORDER
+            ctx.lineWidth = 2
+            ctx.globalAlpha = 0.8
+            ctx.shadowColor = GRAPH_EXPANSION_BORDER
+            ctx.shadowBlur = 8
+          } else {
+            ctx.strokeStyle = inkColor
+            ctx.lineWidth = 1
+            ctx.globalAlpha = 0.35
+            ctx.shadowBlur = 0
+          }
+          ctx.stroke()
+          ctx.shadowBlur = 0
+          ctx.globalAlpha = 1
+          // 箭头（照工作台 edgeSymbol arrow size 6）：尖端在目标端节点边界外。
+          ctx.beginPath()
+          ctx.moveTo(baseX + 3.2 * Math.sin(angle), baseY - 3.2 * Math.cos(angle))
+          ctx.lineTo(bx, by)
+          ctx.lineTo(baseX - 3.2 * Math.sin(angle), baseY + 3.2 * Math.cos(angle))
+          ctx.closePath()
+          ctx.fillStyle = onPath ? GRAPH_EXPANSION_BORDER : inkColor
+          ctx.globalAlpha = onPath ? 0.8 : 0.35
+          ctx.fill()
+          ctx.globalAlpha = 1
+        }
+        // 节点层。
+        const hover = hoverRef.current
+        const hoverSet = hover ? new Set([hover.id, ...(adjacency.get(hover.id) || [])]) : null
+        const tier =
+          view.zoom < GRAPH_LABEL_HIDE_BELOW ? 'hidden' : view.zoom < GRAPH_LABEL_FULL_ABOVE ? 'important' : 'full'
+        const projected = []
+        const labelBoxes = []
+        const list = sim ? sim.items : []
+        for (const item of list) {
+          const node = nodeById.get(item.id)
+          if (!node) continue
+          const p = toScreen(item.x, item.y)
+          projected.push({ sx: p.sx, sy: p.sy, r: graphNodeSize(node.mention_count) / 2 + 3, node })
+        }
+        for (const entry of projected) {
+          const { node } = entry
+          const ownColor =
+            colorBy === 'community' ? graphCommunityColor(node.community, colorMap) : graphTypeColor(node.type)
+          const isSeed = lookup != null && lookup.seeds.has(node.id)
+          const isHit = isSeed || (lookup != null && lookup.evidence.has(node.id))
+          const isHop = !isHit && lookup != null && lookup.hops.has(node.id)
+          let radius = entry.r - 3
+          if (isSeed) radius *= GRAPH_SEED_SIZE_BOOST
+          ctx.beginPath()
+          ctx.arc(entry.sx, entry.sy, radius, 0, Math.PI * 2)
+          ctx.fillStyle = ownColor
+          ctx.fill()
+          // 描边与发光：叠加层（红命中/金路径）优先，hover 蓝为临时聚焦。
+          ctx.shadowBlur = 0
+          if (isHit) {
+            ctx.strokeStyle = GRAPH_HIT_BORDER
+            ctx.lineWidth = 3
+            ctx.shadowColor = GRAPH_HIT_BORDER
+            ctx.shadowBlur = 12
+          } else if (isHop) {
+            ctx.strokeStyle = GRAPH_EXPANSION_BORDER
+            ctx.lineWidth = 2
+          } else if (deltaIds && deltaIds.has(node.id)) {
+            // 二跳新增圈（金细边，与叠加「扩展金」同语言、无发光）：一跳→二跳
+            // 的增量可视（10-13 报「一跳变二跳不易看出」）。
+            ctx.strokeStyle = GRAPH_EXPANSION_BORDER
+            ctx.lineWidth = 2
+          } else if (hoverSet && hoverSet.has(node.id)) {
+            ctx.strokeStyle = GRAPH_HOVER_BORDER
+            ctx.lineWidth = 3
+            ctx.shadowColor = GRAPH_HOVER_BORDER
+            ctx.shadowBlur = 8
+          } else {
+            ctx.strokeStyle = inkColor
+            ctx.lineWidth = 1
+            ctx.globalAlpha = 0.35
+          }
+          ctx.stroke()
+          ctx.shadowBlur = 0
+          ctx.globalAlpha = 1
+          // 标签：缩放分级 + 悬停单体常显 + 贪心防重叠（照工作台 hideOverlap）。
+          const hovered = hover != null && hover.id === node.id
+          let label = ''
+          if (hovered) label = node.id
+          else if (tier === 'full') label = node.id
+          else if (tier === 'important' && node.mention_count >= GRAPH_IMPORTANT_MENTION) label = node.id
+          if (label) {
+            ctx.font = '11px sans-serif'
+            const lx = entry.sx + radius + 4
+            const ly = entry.sy + 4
+            const width = ctx.measureText(label).width
+            const box = { x: lx - 1, y: ly - 11, w: width + 2, h: 13 }
+            let overlaps = false
+            for (const other of labelBoxes) {
+              if (
+                box.x < other.x + other.w &&
+                box.x + box.w > other.x &&
+                box.y < other.y + other.h &&
+                box.y + box.h > other.y
+              ) {
+                overlaps = true
+                break
+              }
+            }
+            if (!overlaps || hovered) {
+              labelBoxes.push(box)
+              ctx.fillStyle = inkColor
+              ctx.globalAlpha = 0.75
+              ctx.fillText(label, lx, ly)
+              ctx.globalAlpha = 1
+            }
+          }
+        }
+        projectedRef.current = projected
+      }, [nodes, edges, colorBy, adjacency, lookup, nodeById, colorMap, deltaIds])
+
+      // 力导向模拟（2026-10-13 二轮：逐公式对齐工作台 echarts forceHelper）。
+      // 位置域三力 + Verlet 积分，顺序与源码一致：先弹簧（逐边）、再重力（逐点）、
+      // 再斥力（两两、只累计进「上一位置」pp）、最后积分（p += (p−pp)·friction）。
+      const startSim = React.useCallback(() => {
+        const step = () => {
+          const sim = simRef.current
+          if (!sim) return
+          const { items, links, byId } = sim
+          const n = items.length
+          const friction = sim.friction
+          // ① 弹簧（逐边）：p += 单位方向·(|Δ|−理想长)·w·friction——短于理想长反向
+          // 推开（防重叠）；w = rep_b/(rep_a+rep_b) = 0.5（均匀权重）。
+          for (const edge of links) {
+            const a = byId.get(edge.source)
+            const b = byId.get(edge.target)
+            if (!a || !b || a === b) continue
+            let dx = b.x - a.x
+            let dy = b.y - a.y
+            let dist = Math.hypot(dx, dy)
+            if (dist === 0) {
+              dx = Math.random() - 0.5
+              dy = Math.random() - 0.5
+              dist = Math.hypot(dx, dy) || 1
+            }
+            const push = ((dist - GRAPH_EDGE_LENGTH) * friction) / dist
+            if (!a.fixed) {
+              a.x += dx * push * 0.5
+              a.y += dy * push * 0.5
+            }
+            if (!b.fixed) {
+              b.x -= dx * push * 0.5
+              b.y -= dy * push * 0.5
+            }
+          }
+          // ② 重力（逐点）：p += (中心−p)·gravity·friction，中心 = 世界原点（画布
+          // 中心；roam 平移不改布局）。线性强压实——旧速度域微重力的根因替身。
+          for (const item of items) {
+            if (item.fixed) continue
+            item.x -= item.x * GRAPH_GRAVITY * friction
+            item.y -= item.y * GRAPH_GRAVITY * friction
+          }
+          // ③ 斥力（两两）：位移 = 2·repulsion/d，累计进 pp（Verlet 口径——用「上一
+          // 位置」制造反向速度）；fixed 节点整体豁免。
+          for (let i = 0; i < n; i += 1) {
+            const a = items[i]
+            for (let j = i + 1; j < n; j += 1) {
+              const b = items[j]
+              let dx = b.x - a.x
+              let dy = b.y - a.y
+              let dist = Math.hypot(dx, dy)
+              if (dist === 0) {
+                dx = Math.random() - 0.5
+                dy = Math.random() - 0.5
+                dist = 1
+              }
+              const repFact = (GRAPH_REPULSION + GRAPH_REPULSION) / (dist * dist)
+              if (!a.fixed) {
+                a.ppx += dx * repFact
+                a.ppy += dy * repFact
+              }
+              if (!b.fixed) {
+                b.ppx -= dx * repFact
+                b.ppy -= dy * repFact
+              }
+            }
+          }
+          // ④ 积分（逐点）：p += (p−pp)·friction；pp 同步为新 p。
+          for (const item of items) {
+            if (item.fixed) continue
+            const vx = item.x - item.ppx
+            const vy = item.y - item.ppy
+            item.x += vx * friction
+            item.y += vy * friction
+            item.ppx = item.x
+            item.ppy = item.y
+          }
+          sim.friction *= GRAPH_FRICTION_DECAY
+          draw()
+          if (sim.friction > GRAPH_FRICTION_MIN) {
+            rafRef.current = window.requestAnimationFrame(step)
+          } else {
+            rafRef.current = null
+          }
+        }
+        if (rafRef.current !== null) window.cancelAnimationFrame(rafRef.current)
+        rafRef.current = window.requestAnimationFrame(step)
+      }, [draw])
+
+      // 换档重建（照工作台 rebuildSeriesAtTier，2026-10-13）：渲染子集 = 档位裁剪
+      // （hub 枢纽层／重要层／full 全量）；幸存节点保位、新点画布内随机撒点；力场
+      // 从 friction 0.6 重启（跨档 = 布局重跑的既定语义，与工作台 series 重建一致）。
+      const applyTier = React.useCallback(
+        (tier) => {
+          const sim = simRef.current
+          const keep = graphTierNodeIds(nodes, communities, tier)
+          const wrap = wrapRef.current
+          const initW = (wrap && wrap.clientWidth) || 600
+          const initH = (wrap && wrap.clientHeight) || 400
+          const items = []
+          const byId = new Map()
+          for (const node of nodes) {
+            if (keep !== null && !keep.has(node.id)) continue
+            const prev = sim ? sim.byId.get(node.id) : null
+            const x = prev ? prev.x : initW * (Math.random() - 0.5)
+            const y = prev ? prev.y : initH * (Math.random() - 0.5)
+            const item = { id: node.id, x, y, ppx: x, ppy: y, fixed: false }
+            items.push(item)
+            byId.set(node.id, item)
+          }
+          simRef.current = {
+            items,
+            byId,
+            links: edges
+              .filter((edge) => byId.has(edge.source) && byId.has(edge.target))
+              .map((edge) => ({ source: edge.source, target: edge.target })),
+            friction: GRAPH_FRICTION,
+          }
+          renderTierRef.current = tier
+          if (tierCbRef.current) tierCbRef.current(tier)
+          startSim()
+        },
+        [nodes, edges, communities, startSim],
+      )
+      applyTierRef.current = applyTier
+
+      React.useEffect(() => {
+        // 重建触发面（照工作台 notMerge 语义，2026-10-13 二改修正）：数据变化与
+        // colorBy 切换都整图重建（视口复位＋布局重跑＋随机撒点——工作台 data
+        // effect 的 deps 就含 colorBy，notMerge 下 preservedPoints 丢失即随机重排）；
+        // 叠加切换走 merge 直绘不重建（照工作台 overlay effect 分工）。
+        simRef.current = null
+        const zoom = graphInitialZoomForGraph(nodes.length)
+        viewRef.current = { zoom, ox: 0, oy: 0 }
+        hoverRef.current = null
+        applyTierRef.current(graphRenderTierForZoom(zoom, nodes.length))
+        return () => {
+          if (rafRef.current !== null) {
+            window.cancelAnimationFrame(rafRef.current)
+            rafRef.current = null
+          }
+        }
+      }, [nodes, edges, communities, colorBy])
+
+      // 搜索定位：命中节点居中 + 高亮（zoom 1.6，照工作台 GRAPH_FOCUS_ZOOM）。
+      // 命中不在当前渲染子集（hub/重要层）→ 升档重建（照工作台搜索升档）；重建后
+      // 力场重启、坐标仍会漂——1000ms 稳定窗后再居中一次（近似 FOCUS_SETTLE_MS）。
+      // 防重放：同一次 focusNode 只处理一次（draw/applyTier 身份漂移不重放定位）。
+      React.useEffect(() => {
+        if (!focusNode) return
+        if (focusTokenRef.current === focusNode) return
+        focusTokenRef.current = focusNode
+        if (recenterRef.current !== null) {
+          window.clearTimeout(recenterRef.current)
+          recenterRef.current = null
+        }
+        const sim = simRef.current
+        if (!sim) return
+        let item = sim.byId.get(focusNode.id)
+        if (!item) {
+          applyTierRef.current(graphRenderTierForZoom(GRAPH_FOCUS_ZOOM, nodes.length))
+          item = simRef.current.byId.get(focusNode.id)
+          if (!item) return // guide 熔断兜底（tab 层已先行判定并提示）：无物可居中
+          recenterRef.current = window.setTimeout(() => {
+            recenterRef.current = null
+            const current = simRef.current
+            const moved = current && current.byId.get(focusNode.id)
+            if (!moved) return
+            viewRef.current = { zoom: GRAPH_FOCUS_ZOOM, ox: -moved.x * GRAPH_FOCUS_ZOOM, oy: -moved.y * GRAPH_FOCUS_ZOOM }
+            draw()
+          }, 1000)
+        }
+        viewRef.current = { zoom: GRAPH_FOCUS_ZOOM, ox: -item.x * GRAPH_FOCUS_ZOOM, oy: -item.y * GRAPH_FOCUS_ZOOM }
+        hoverRef.current = { id: focusNode.id }
+        focusRef.current = focusNode.id
+        draw()
+      }, [focusNode, draw, applyTier, nodes.length])
+
+      React.useEffect(() => {
+        draw()
+      }, [draw])
+
+      React.useEffect(() => {
+        const wrap = wrapRef.current
+        if (!wrap) return
+        const observer = new ResizeObserver(() => draw())
+        observer.observe(wrap)
+        return () => observer.disconnect()
+      }, [draw])
+
+      // 滚轮缩放（0.3–3，照工作台 scaleLimit；锚光标）。
+      React.useEffect(() => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const onWheel = (event) => {
+          event.preventDefault()
+          const rect = canvas.getBoundingClientRect()
+          const mx = event.clientX - rect.left
+          const my = event.clientY - rect.top
+          const view = viewRef.current
+          const factor = Math.exp(-event.deltaY * 0.0012)
+          const next = Math.min(GRAPH_MAX_SCALE, Math.max(GRAPH_MIN_SCALE, view.zoom * factor))
+          const real = next / view.zoom
+          view.ox = mx - rect.width / 2 - (mx - rect.width / 2 - view.ox) * real
+          view.oy = my - rect.height / 2 - (my - rect.height / 2 - view.oy) * real
+          view.zoom = next
+          // LOD 跨档（照工作台 roam 判定，2026-10-13）：档位变 → 子集重建＋力场
+          // 重启；同档直绘（点成本）。≤500 小库恒 full，永不进重建分支。
+          const nextTier = graphRenderTierForZoom(next, nodes.length)
+          if (nextTier !== renderTierRef.current) {
+            applyTier(nextTier)
+          } else {
+            draw()
+          }
+        }
+        canvas.addEventListener('wheel', onWheel, { passive: false })
+        return () => canvas.removeEventListener('wheel', onWheel)
+      }, [draw, applyTier, nodes.length])
+
+      const pick = (event) => {
+        const rect = event.currentTarget.getBoundingClientRect()
+        const mx = event.clientX - rect.left
+        const my = event.clientY - rect.top
+        const projected = projectedRef.current
+        for (let i = projected.length - 1; i >= 0; i -= 1) {
+          const entry = projected[i]
+          const dx = mx - entry.sx
+          const dy = my - entry.sy
+          if (dx * dx + dy * dy <= entry.r * entry.r) return { entry, mx, my }
+        }
+        return null
+      }
+
+      const handleMove = (event) => {
+        const drag = dragRef.current
+        if (drag) {
+          const dx = event.clientX - drag.x
+          const dy = event.clientY - drag.y
+          if (Math.abs(event.clientX - drag.startX) + Math.abs(event.clientY - drag.startY) > 3) drag.moved = true
+          drag.x = event.clientX
+          drag.y = event.clientY
+          if (drag.kind === 'pan') {
+            viewRef.current.ox += dx
+            viewRef.current.oy += dy
+          } else if (drag.item) {
+            drag.item.x += dx / viewRef.current.zoom
+            drag.item.y += dy / viewRef.current.zoom
+            // 拖动中钉住该点（照 GraphView：setFixed 令力场豁免），每个 drag 事件
+            // warmUp（friction 回 0.6×0.8）并确保迭代在跑——邻居随拉力沉降。
+            drag.item.fixed = true
+            const sim = simRef.current
+            if (sim) {
+              sim.friction = GRAPH_FRICTION * 0.8
+              if (rafRef.current === null) startSim()
+            }
+          }
+          draw()
+          return
+        }
+        const found = pick(event)
+        if (found) {
+          const id = found.entry.node.id
+          const prev = hoverRef.current
+          hoverRef.current = { id }
+          setTip({ x: found.mx + 12, y: found.my + 12, node: found.entry.node })
+          if (!prev || prev.id !== id) {
+            draw()
+          }
+        } else if (tip) {
+          hoverRef.current = null
+          setTip(null)
+          draw()
+        }
+      }
+
+      const handleDown = (event) => {
+        if (event.button !== 0) return // 仅左键起拖拽/点击（照工作台：右/中键不触发）
+        const found = pick(event)
+        dragRef.current = {
+          kind: found ? 'node' : 'pan',
+          item: found && simRef.current ? simRef.current.byId.get(found.entry.node.id) : null,
+          x: event.clientX,
+          y: event.clientY,
+          startX: event.clientX,
+          startY: event.clientY,
+          moved: false,
+        }
+        setGrabbing(true)
+      }
+
+      const handleUp = (event) => {
+        const drag = dragRef.current
+        dragRef.current = null
+        setGrabbing(false)
+        if (drag && drag.item) {
+          // 解钉并把 pp 同步到当前位（照 echarts setUnfixed；pp 同步是本实现的
+          // 补丁——固定期间积分被跳过，pp 滞留拖拽起点，不同步会以陈旧速度弹跳）。
+          drag.item.fixed = false
+          drag.item.ppx = drag.item.x
+          drag.item.ppy = drag.item.y
+        }
+        if (drag && !drag.moved) {
+          const found = pick(event)
+          if (found && onNodeClick) onNodeClick(found.entry.node)
+        }
+      }
+
+      const handleLeave = () => {
+        const drag = dragRef.current
+        dragRef.current = null
+        setGrabbing(false)
+        if (drag && drag.item) {
+          drag.item.fixed = false
+          drag.item.ppx = drag.item.x
+          drag.item.ppy = drag.item.y
+        }
+        if (tip) setTip(null)
+        if (hoverRef.current && focusRef.current !== (hoverRef.current && hoverRef.current.id)) {
+          hoverRef.current = null
+          draw()
+        }
+      }
+
+      return h(
+        'div',
+        { className: 'hrag-graph-canvas', ref: wrapRef },
+        h('canvas', {
+          ref: canvasRef,
+          style: { cursor: grabbing ? 'grabbing' : tip ? 'pointer' : 'grab' },
+          onMouseDown: handleDown,
+          onMouseMove: handleMove,
+          onMouseUp: handleUp,
+          onMouseLeave: handleLeave,
+        }),
+        tip
+          ? h(
+              'div',
+              { className: 'hrag-vec-tip', style: { left: String(tip.x) + 'px', top: String(tip.y) + 'px' } },
+              h('span', { className: 'hrag-vec-tip-label' }, vecTruncate(tip.node.id, VEC_TOOLTIP_MAX)),
+              tip.node.description
+                ? h('span', { className: 'hrag-vec-tip-preview' }, vecTruncate(tip.node.description, 40))
+                : null,
+            )
+          : null,
+      )
+    }
+
+    /** 图谱视图（Task 7）：工具栏（实体搜索／着色切换）＋画布＋统计/叠加徽标；
+        点击实体开「实体抽屉」（描述＋关联切片 #K → 切片抽屉，链式复用）；召回
+        「在图谱中查看」叠加三层路径高亮。keep-alive；enabled 门控首次取数。 */
+    function GraphView({ t, kbId, enabled, overlayRequest, onOpenChunk }) {
+      const [phase, setPhase] = React.useState('idle')
+      const [graph, setGraph] = React.useState(null)
+      const [failure, setFailure] = React.useState(null)
+      const [colorBy, setColorBy] = React.useState('community')
+      const [query, setQuery] = React.useState('')
+      const [focusNode, setFocusNode] = React.useState(null)
+      const [selected, setSelected] = React.useState(null)
+      const [positions, setPositions] = React.useState(null)
+      const [docNames, setDocNames] = React.useState(null)
+      const [notice, setNotice] = React.useState(null)
+      const [activeOverlay, setActiveOverlay] = React.useState(null)
+      // LOD 渲染档位（画布上报；guide 档显示右上角引导提示）。
+      const [renderTier, setRenderTier] = React.useState('full')
+      // 局部图跳数（2026-10-13 六轮定形：详情「局部图」卡放抽屉最下、卡内直接
+      // 显示邻居子图、去掉「查看局部图」行钮——标题栏图标钮一点，卡内图直接重裁）。
+      const [hopDraft, setHopDraft] = React.useState(1)
+      const overlayNonceRef = React.useRef(null)
+      const graphFp = graph ? graph.stats.node_count + ':' + graph.stats.edge_count : null
+      const communityColorMap = React.useMemo(
+        () => (graph ? buildGraphColorMap(graph.nodes, graph.edges) : new Map()),
+        [graph],
+      )
+      // 详情卡内直显的邻居子图（N 跳 BFS，照工作台 filterNeighborhood 口径）；
+      // 仅实体抽屉打开时计算，跳数钮一动即重裁（六轮定形）。
+      const drawerNeighborhood = React.useMemo(() => {
+        if (!graph || !selected) return null
+        return graphNeighborhood(graph.nodes, graph.edges, selected.id, hopDraft)
+      }, [graph, selected, hopDraft])
+      // 二跳新增圈（10-13 报「一跳变二跳不易看出」）：仅列 2 跳新增节点（2 跳
+      // 子集 − 1 跳子集），卡内画布对它们描金细边（与叠加「扩展金」同语言）。
+      const drawerDeltaIds = React.useMemo(() => {
+        if (!graph || !selected || hopDraft !== 2 || !drawerNeighborhood) return null
+        const oneIds = new Set(
+          graphNeighborhood(graph.nodes, graph.edges, selected.id, 1).nodes.map((node) => node.id),
+        )
+        const delta = new Set()
+        for (const node of drawerNeighborhood.nodes) {
+          if (!oneIds.has(node.id)) delta.add(node.id)
+        }
+        return delta
+      }, [graph, selected, hopDraft, drawerNeighborhood])
+
+      React.useEffect(() => {
+        setGraph(null)
+        setPhase('idle')
+        setSelected(null)
+        setActiveOverlay(null)
+        setDocNames(null)
+        setRenderTier('full')
+        overlayNonceRef.current = null
+      }, [kbId])
+
+      React.useEffect(() => {
+        if (!notice) return
+        const timer = window.setTimeout(() => setNotice(null), NOTICE_DISMISS_MS)
+        return () => window.clearTimeout(timer)
+      }, [notice])
+
+      const load = React.useCallback(() => {
+        setPhase((current) => (current === 'ready' ? 'ready' : 'loading'))
+        setFailure(null)
+        callOp('knowledgeGraph', { kb_id: kbId })
+          .then((data) => {
+            const nodes = data && Array.isArray(data.nodes) ? data.nodes : []
+            setGraph(nodes.length > 0 ? data : null)
+            setPhase(nodes.length > 0 ? 'ready' : 'empty')
+          })
+          .catch((error) => {
+            setFailure(error)
+            setPhase('error')
+          })
+      }, [kbId])
+
+      React.useEffect(() => {
+        if (!enabled) return
+        load()
+      }, [enabled, load])
+
+      // 文档名映射（实体抽屉切片行用；静默拉取，失败不打扰）。
+      React.useEffect(() => {
+        if (!enabled || docNames !== null) return
+        callOp('listDocuments', { kb_id: kbId })
+          .then((rows) => {
+            const map = new Map()
+            for (const doc of Array.isArray(rows) ? rows : []) map.set(String(doc.id), String(doc.name))
+            setDocNames(map)
+          })
+          .catch(() => setDocNames(new Map()))
+      }, [enabled, kbId, docNames])
+
+      // 叠加消费（召回跳转）：图就绪后应用；同一请求不重复（nonce 去重）。
+      React.useEffect(() => {
+        if (!enabled || !overlayRequest || !graph) return
+        if (overlayNonceRef.current === overlayRequest.nonce) return
+        overlayNonceRef.current = overlayRequest.nonce
+        setActiveOverlay({ text: overlayRequest.text, trace: overlayRequest.trace, fingerprint: graphFp })
+      }, [enabled, overlayRequest, graph, graphFp])
+
+      // 指纹漂移（文档增删改）→ 旧叠加留在图上是误导：清除并提示（照工作台）。
+      React.useEffect(() => {
+        if (activeOverlay && graphFp && activeOverlay.fingerprint !== graphFp) {
+          setActiveOverlay(null)
+          setNotice(t('graph.overlayStale'))
+        }
+      }, [graphFp, activeOverlay, t])
+
+      const handleSearch = (event) => {
+        event.preventDefault()
+        const needle = query.trim().toLowerCase()
+        if (!needle || !graph) return
+        const hit = graph.nodes.find((node) => String(node.id).toLowerCase().includes(needle))
+        if (!hit) {
+          setNotice(t('graph.searchNoMatch'))
+          return
+        }
+        // 定位档可达性（照工作台 isNodeRenderedAtZoom）：熔断档（>2000）里长尾实体
+        // 不在渲染子集时无法居中——直接提示，不派发注定落空的定位。
+        const kept = graphTierNodeIds(
+          graph.nodes,
+          graph.communities || [],
+          graphRenderTierForZoom(GRAPH_FOCUS_ZOOM, graph.nodes.length),
+        )
+        if (kept !== null && !kept.has(hit.id)) {
+          setNotice(t('graph.focusHidden'))
+          return
+        }
+        setFocusNode({ id: hit.id, token: Date.now() })
+      }
+
+      // 实体抽屉：拉关联切片位次（「切片 #K」同词表；失败静默空）。
+      React.useEffect(() => {
+        setPositions(null)
+        if (!selected) return
+        const ids = Array.isArray(selected.source_chunk_ids) ? selected.source_chunk_ids : []
+        if (ids.length === 0) return
+        let cancelled = false
+        callOp('chunkPositions', { kb_id: kbId, chunk_ids: ids })
+          .then((data) => {
+            if (!cancelled) setPositions(data && data.positions ? data.positions : {})
+          })
+          .catch(() => {
+            if (!cancelled) setPositions({})
+          })
+        return () => {
+          cancelled = true
+        }
+      }, [selected, kbId])
+
+      // 切片行排序：文档名 → #K 升序（照工作台；缺位次排末尾保持稳定序）。
+      const orderedChunks = React.useMemo(() => {
+        if (!selected) return []
+        const ids = Array.isArray(selected.source_chunk_ids) ? selected.source_chunk_ids : []
+        const docOf = (chunkId) => {
+          const sep = String(chunkId).lastIndexOf('#')
+          return sep > 0 ? String(chunkId).slice(0, sep) : ''
+        }
+        return ids
+          .map((chunkId, index) => ({ chunkId, index }))
+          .sort((a, b) => {
+            const nameA = docNames ? docNames.get(docOf(a.chunkId)) || '' : ''
+            const nameB = docNames ? docNames.get(docOf(b.chunkId)) || '' : ''
+            if (nameA !== nameB) return nameA < nameB ? -1 : 1
+            const posA = positions && positions[a.chunkId] != null ? positions[a.chunkId] : Number.MAX_SAFE_INTEGER
+            const posB = positions && positions[b.chunkId] != null ? positions[b.chunkId] : Number.MAX_SAFE_INTEGER
+            return posA - posB || a.index - b.index
+          })
+      }, [selected, docNames, positions])
+
+      const bar = h(
+        'div',
+        { className: 'hrag-graph-bar' },
+        h(
+          'form',
+          { className: 'hrag-graph-search', onSubmit: handleSearch },
+          h('input', {
+            type: 'text',
+            className: 'hrag-input',
+            placeholder: t('graph.searchEntities'),
+            'aria-label': t('graph.searchEntities'),
+            value: query,
+            onChange: (event) => setQuery(event.target.value),
+          }),
+        ),
+        h(
+          'span',
+          { className: 'hrag-seg', role: 'group', 'aria-label': t('graph.colorByCommunity') },
+          h(
+            'button',
+            {
+              type: 'button',
+              'aria-pressed': colorBy === 'community',
+              onClick: () => setColorBy('community'),
+            },
+            t('graph.colorByCommunity'),
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              'aria-pressed': colorBy === 'type',
+              onClick: () => setColorBy('type'),
+            },
+            t('graph.colorByType'),
+          ),
+        ),
+      )
+
+      let body
+      if (phase === 'idle' || phase === 'loading') {
+        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('graph.loading')))
+      } else if (phase === 'error') {
+        body = h(
+          'div',
+          { className: 'hrag-state hrag-state-error' },
+          h('div', { className: 'hrag-state-title' }, t('graph.loadFailed')),
+          h('div', { className: 'hrag-state-detail' }, errorDetail(failure)),
+          h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.retry')),
+        )
+      } else if (phase === 'empty') {
+        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('graph.empty')))
+      } else {
+        const trace = activeOverlay ? activeOverlay.trace : null
+        const layers = trace
+          ? {
+              seeds: (trace.seed_entities || []).length,
+              expanded: (trace.expanded_nodes || []).length,
+              evidence: (trace.evidence_entities || []).length,
+            }
+          : null
+        const stats = graph.stats || { node_count: graph.nodes.length, edge_count: graph.edges.length, community_count: 0 }
+        body = h(
+          'div',
+          { className: 'hrag-graph-body' },
+          h(GraphCanvas, {
+            t,
+            nodes: graph.nodes,
+            edges: graph.edges,
+            communities: graph.communities || [],
+            colorBy,
+            overlayTrace: trace,
+            focusNode,
+            onNodeClick: (node) => setSelected(node),
+            onRenderTierChange: setRenderTier,
+          }),
+          renderTier === 'guide'
+            ? h('span', { className: 'hrag-graph-guide' }, t('graph.guideHint'))
+            : null,
+          activeOverlay && layers
+            ? h(
+                'div',
+                { className: 'hrag-vec-overlay-badge' },
+                h('span', { className: 'hrag-chip-dot', style: { backgroundColor: GRAPH_HIT_BORDER } }),
+                h('span', { className: 'hrag-vec-overlay-label', title: activeOverlay.text }, activeOverlay.text),
+                h(
+                  'span',
+                  { className: 'hrag-vec-overlay-hits' },
+                  t('graph.overlaySeeds') +
+                    ' ' + String(layers.seeds) +
+                    ' · ' + t('graph.overlayExpanded') +
+                    ' ' + String(layers.expanded) +
+                    ' · ' + t('graph.overlayEvidence') +
+                    ' ' + String(layers.evidence),
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-vec-overlay-close',
+                    'aria-label': t('graph.clearOverlay'),
+                    title: t('graph.clearOverlay'),
+                    onClick: () => setActiveOverlay(null),
+                  },
+                  '✕',
+                ),
+              )
+            : null,
+          h(
+            'span',
+            { className: 'hrag-graph-stats' },
+            String(stats.node_count) + ' ' + t('graph.entitiesUnit') +
+              ' · ' + String(stats.edge_count) + ' ' + t('graph.relationsUnit') +
+              ' · ' + String(stats.community_count) + ' ' + t('graph.communitiesUnit'),
+          ),
+        )
+      }
+
+      const entityDrawer = selected
+        ? h(
+            'div',
+            { className: 'hrag-graph-drawer' },
+            h('div', { className: 'hrag-drawer-overlay', onClick: () => setSelected(null) }),
+            h(
+              'div',
+              { className: 'hrag-drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': String(selected.id) },
+              h(
+                'div',
+                { className: 'hrag-drawer-head' },
+                h('span', { className: 'hrag-drawer-title', title: String(selected.id) }, String(selected.id)),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-outline hrag-drawer-close',
+                    'aria-label': t('chunk.close'),
+                    onClick: () => setSelected(null),
+                  },
+                  '✕',
+                ),
+              ),
+              h(
+                'div',
+                { className: 'hrag-drawer-body hrag-graph-drawer-body' },
+                h(
+                  'div',
+                  { className: 'hrag-gchips' },
+                  selected.type
+                    ? h(
+                        'span',
+                        { className: 'hrag-gchip' },
+                        h('span', { className: 'hrag-chip-dot', style: { backgroundColor: graphTypeColor(selected.type) } }),
+                        String(selected.type),
+                      )
+                    : null,
+                  h(
+                    'span',
+                    { className: 'hrag-gchip' },
+                    t('graph.mentionsPre') + ' ' + String(selected.mention_count) + ' ' + t('graph.mentionsPost'),
+                  ),
+                  h(
+                    'span',
+                    { className: 'hrag-gchip' },
+                    h('span', {
+                      className: 'hrag-chip-dot',
+                      style: { backgroundColor: graphCommunityColor(selected.community, communityColorMap) },
+                    }),
+                    t('graph.communityBadgePre') + String(selected.community),
+                  ),
+                ),
+                h(
+                  'div',
+                  { className: 'hrag-gcard' },
+                  h('div', { className: 'hrag-gcard-head' }, t('graph.entityDescription')),
+                  h(
+                    'div',
+                    { className: selected.description ? 'hrag-gcard-body' : 'hrag-gcard-body hrag-gcard-empty' },
+                    selected.description || t('graph.entityNoDescription'),
+                  ),
+                ),
+                h(
+                  'div',
+                  { className: 'hrag-gcard' },
+                  h(
+                    'div',
+                    { className: 'hrag-gcard-head' },
+                    t('graph.relatedChunks'),
+                    h('span', { className: 'hrag-gcard-count' }, String((orderedChunks || []).length)),
+                  ),
+                  orderedChunks.length === 0
+                    ? h('div', { className: 'hrag-gcard-body hrag-gcard-empty' }, t('graph.entityNoChunks'))
+                    : h(
+                        'div',
+                        { className: 'hrag-gchunk-list' },
+                        orderedChunks.map((entry) => {
+                          const chunkId = entry.chunkId
+                          const sep = String(chunkId).lastIndexOf('#')
+                          const docId = sep > 0 ? String(chunkId).slice(0, sep) : ''
+                          const docName = docNames
+                            ? docNames.get(docId) || t('graph.unknownDoc')
+                            : t('graph.unknownDoc')
+                          const position = positions ? positions[chunkId] : null
+                          return h(
+                            'button',
+                            {
+                              key: chunkId,
+                              type: 'button',
+                              className: 'hrag-gchunkrow',
+                              disabled: !docId,
+                              onClick: () => {
+                                if (docId && onOpenChunk) onOpenChunk(docId, chunkId, docName)
+                              },
+                            },
+                            h('span', { className: 'hrag-gchunkrow-name' }, docName),
+                            position != null
+                              ? h('span', { className: 'hrag-gchunkrow-pos' }, t('graph.slicePosPre') + String(position))
+                              : null,
+                            h('span', { className: 'hrag-gchunkrow-chevron' }, '›'),
+                          )
+                        }),
+                      ),
+                ),
+                h(
+                  'div',
+                  { className: 'hrag-gcard' },
+                  h(
+                    'div',
+                    { className: 'hrag-gcard-head' },
+                    t('graph.neighborhoodTitle'),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-gcard-iconbtn',
+                        'aria-label': hopDraft === 2 ? t('graph.hop2') : t('graph.hop1'),
+                        title: hopDraft === 2 ? t('graph.hop2') : t('graph.hop1'),
+                        onClick: () => setHopDraft(hopDraft === 2 ? 1 : 2),
+                      },
+                      graphHopIcon(hopDraft),
+                    ),
+                  ),
+                  drawerNeighborhood
+                    ? h(
+                        'div',
+                        { className: 'hrag-gcard-graph' },
+                        h(GraphCanvas, {
+                          t,
+                          nodes: drawerNeighborhood.nodes,
+                          edges: drawerNeighborhood.edges,
+                          communities: graph.communities || [],
+                          colorBy,
+                          colorMap: communityColorMap,
+                          deltaIds: drawerDeltaIds,
+                          overlayTrace: activeOverlay ? activeOverlay.trace : null,
+                          focusNode: null,
+                          onNodeClick: (node) => setSelected(node),
+                        }),
+                      )
+                    : null,
+                ),
+              ),
+            ),
+          )
+        : null
+
+      return h(
+        'div',
+        { className: 'hrag-graph' },
+        bar,
+        notice
+          ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
+          : null,
+        body,
+        entityDrawer,
+      )
+    }
+
     /** 文档面板：列表＋行内动作（重试只对 failed/降级出现；删除走级联确认）。
         照工作台词汇；随 kb 或壳刷新重载。 */
     function DocsView({ t, kbId, refreshToken, onOpenChunks }) {
@@ -2256,6 +3631,8 @@ window.__ModuleLoader__.load({
         reindexBusy || (reindexState !== null && reindexState.in_progress === true)
       // 检索联动叠加（照工作台「在向量空间查看」）：召回触发 → 切投影分区并投影。
       const [overlayRequest, setOverlayRequest] = React.useState(null)
+      // 图谱联动叠加（Task 7「在图谱中查看」）：召回触发 → 切图谱分区并高亮路径。
+      const [graphOverlayRequest, setGraphOverlayRequest] = React.useState(null)
       const fileInputRef = React.useRef(null)
 
       const load = React.useCallback(() => {
@@ -2296,6 +3673,7 @@ window.__ModuleLoader__.load({
         setBarNotice(null)
         setReindexState(null)
         setOverlayRequest(null)
+        setGraphOverlayRequest(null)
       }, [kbId])
 
       // 提示行自动消退（工作台 toast 语义：短确认；持久真值在列表与状态行）。
@@ -2553,6 +3931,10 @@ window.__ModuleLoader__.load({
                   setOverlayRequest(Object.assign({}, request, { nonce: Date.now() }))
                   setSection('vectors')
                 },
+                onViewInGraphSpace: (request) => {
+                  setGraphOverlayRequest(Object.assign({}, request, { nonce: Date.now() }))
+                  setSection('graph')
+                },
               })
             : null,
           // 投影视图 keep-alive（照工作台 forceMount 语义）：切走不丢配置与叠加；
@@ -2565,6 +3947,20 @@ window.__ModuleLoader__.load({
               kbId,
               enabled: section === 'vectors',
               overlayRequest,
+              onOpenChunk: (docId, chunkId, docName) => {
+                setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
+              },
+            }),
+          ),
+          // 图谱视图 keep-alive（同投影口径）：切走不丢视口与叠加。
+          h(
+            'div',
+            { className: 'hrag-graph-slot', style: { display: section === 'graph' ? 'flex' : 'none' } },
+            h(GraphView, {
+              t,
+              kbId,
+              enabled: section === 'graph',
+              overlayRequest: graphOverlayRequest,
               onOpenChunk: (docId, chunkId, docName) => {
                 setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
               },
