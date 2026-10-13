@@ -368,6 +368,49 @@ window.__ModuleLoader__.load({
       'recall.saveAs.savedToast': '已存为考题',
       'recall.saveAs.saveFailed': '存为考题失败',
       'recall.saveAs.selectLabel': '存为考题：{0}',
+      // ── 百科（Task 9）：词汇照工作台 tk / t.knowledge.wikiPanel / wikiDrawer / manualCards ──
+      'shell.tab.wiki': '百科',
+      'wk.search': '搜索百科条目与卡片…',
+      'wk.clearSearch': '清空搜索',
+      'wk.more': '百科操作',
+      'wk.updateWiki': '更新百科',
+      'wk.rebuildWiki': '重建百科',
+      'wk.rebuildTitle': '全部重建百科？',
+      'wk.rebuildDesc': '将按当前图谱重写所有合格条目（包括未变化的），LLM 调用成本较高，仅在生成规则升级后使用。',
+      'wk.rebuildConfirm': '确认重建',
+      'wk.enqueued': '百科生成任务已提交，完成后条目可查',
+      'wk.updated': '百科已更新',
+      'wk.updateFailed': '百科更新失败，部分条目可能仍待更新，请重试',
+      'wk.alreadyRunning': '百科正在更新中，无需重复提交',
+      'wk.loadFailed': '百科数据加载失败',
+      'wk.loading': '加载中…',
+      'wk.entries': '生成条目',
+      'wk.entriesEmpty': '百科条目会自动沉淀、逐步出现',
+      'wk.entriesNoMatch': '没有匹配的条目',
+      'wk.dirty': '待更新',
+      'wk.updating': '更新中',
+      'wk.updatedAt': '更新于',
+      'wk.selectEntry': '选择条目',
+      'wk.openEntry': '打开详情',
+      'wk.updateEntry': '更新条目',
+      'wk.updateSelected': '更新所选',
+      'wk.deleteEntry': '删除条目',
+      'wk.deleteSelected': '删除所选',
+      'wk.deleteBatchTitle': '删除 {0} 条百科条目？',
+      'wk.deleteConfirmTitle': '删除这条百科条目？',
+      'wk.deleteConfirmDesc': '将删除条目正文与检索向量，实体本身保留。若实体仍符合生成资格，下次生成时会按最新材料重新创建该条目。',
+      'wk.selectedCount': '已选 {0} 项',
+      'wk.cancelSelection': '取消选择',
+      'wk.entryNotFound': '条目不存在或已删除',
+      'wk.sourceChunks': '个源切片',
+      'wk.deletedSources': '个源切片已删除',
+      'wk.cards': '我的条目',
+      'wk.cardsEmpty': '新建卡片，记录属于你的知识',
+      'wk.cardsNoMatch': '没有匹配的卡片',
+      'wk.includeInSearch': '混入搜索',
+      'wk.cardType': '我的卡片',
+      'wk.openCard': '打开详情',
+      'wk.cardNotFound': '卡片不存在或已删除',
     }
     const en = {
       'tab.title': 'Knowledge Base',
@@ -736,6 +779,51 @@ window.__ModuleLoader__.load({
       'recall.saveAs.savedToast': 'Saved as a question',
       'recall.saveAs.saveFailed': 'Failed to save as question',
       'recall.saveAs.selectLabel': 'Save as question: {0}',
+      // ── Wiki (Task 9): copy mirrors the workbench wiki strings ──
+      'shell.tab.wiki': 'Wiki',
+      'wk.search': 'Search wiki entries and cards…',
+      'wk.clearSearch': 'Clear search',
+      'wk.more': 'Wiki actions',
+      'wk.updateWiki': 'Update wiki',
+      'wk.rebuildWiki': 'Rebuild wiki',
+      'wk.rebuildTitle': 'Rebuild all wiki entries?',
+      'wk.rebuildDesc':
+        'This rewrites every eligible entry from the current graph — including unchanged ones — at full LLM cost. Use only after generation rules change (e.g. prompt or template upgrades).',
+      'wk.rebuildConfirm': 'Rebuild',
+      'wk.enqueued': 'Wiki generation queued — entries become searchable when ready',
+      'wk.updated': 'Wiki updated',
+      'wk.updateFailed': 'Wiki update failed — some entries may still be stale, please retry',
+      'wk.alreadyRunning': 'Wiki update already in progress',
+      'wk.loadFailed': 'Failed to load wiki data',
+      'wk.loading': 'Loading…',
+      'wk.entries': 'Generated Entries',
+      'wk.entriesEmpty': 'Wiki entries accumulate automatically and appear over time',
+      'wk.entriesNoMatch': 'No matching entries',
+      'wk.dirty': 'Stale',
+      'wk.updating': 'Updating',
+      'wk.updatedAt': 'Updated',
+      'wk.selectEntry': 'Select entry',
+      'wk.openEntry': 'Open details',
+      'wk.updateEntry': 'Update entry',
+      'wk.updateSelected': 'Update selected',
+      'wk.deleteEntry': 'Delete entry',
+      'wk.deleteSelected': 'Delete selected',
+      'wk.deleteBatchTitle': 'Delete {0} wiki entries?',
+      'wk.deleteConfirmTitle': 'Delete this wiki entry?',
+      'wk.deleteConfirmDesc':
+        'Deletes the entry text and its search vector; the entity itself stays. If the entity is still eligible, the next generation run recreates the entry from current material.',
+      'wk.selectedCount': '{0} selected',
+      'wk.cancelSelection': 'Clear selection',
+      'wk.entryNotFound': 'Entry missing or deleted',
+      'wk.sourceChunks': 'source chunks',
+      'wk.deletedSources': 'source chunks deleted',
+      'wk.cards': 'My Entries',
+      'wk.cardsEmpty': 'Create a card to capture your own knowledge',
+      'wk.cardsNoMatch': 'No matching cards',
+      'wk.includeInSearch': 'Mixed into search',
+      'wk.cardType': 'My Card',
+      'wk.openCard': 'Open details',
+      'wk.cardNotFound': 'Card missing or deleted',
     }
 
     /** Panel data seam: every panel request is a POST of JSON parameters to
@@ -794,6 +882,7 @@ window.__ModuleLoader__.load({
 
     const SECTIONS = [
       { id: 'docs', label: 'shell.tab.docs' },
+      { id: 'wiki', label: 'shell.tab.wiki' },
       { id: 'recall', label: 'shell.tab.recall' },
       { id: 'vectors', label: 'shell.tab.vectors' },
       { id: 'graph', label: 'shell.tab.graph' },
@@ -888,6 +977,52 @@ window.__ModuleLoader__.load({
           '.hrag-gcard-graph { height: 220px; display: flex; flex-direction: column; }',
           '.hrag-graph-drawer .hrag-drawer-overlay { z-index: 56; }',
           '.hrag-graph-drawer .hrag-drawer { z-index: 57; }',
+          '.hrag-wk-drawer .hrag-drawer-overlay { z-index: 56; }',
+          '.hrag-wk-drawer .hrag-drawer { z-index: 57; }',
+          '.hrag-wk-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
+          '.hrag-wk-slot { flex-direction: column; min-height: 0; flex: 1; }',
+          '.hrag-wk-canvas { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
+          '.hrag-wk-sect { display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); }',
+          '.hrag-wk-sect-open { flex: 1 1 0; min-height: 0; }',
+          '.hrag-wk-secthead { display: flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; flex-shrink: 0; }',
+          '.hrag-wk-secthead:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-wk-secttoggle { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; padding: 6px; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; font-family: inherit; cursor: pointer; text-align: left; }',
+          '.hrag-wk-secticon { display: inline-flex; color: var(--dsw-alias-label-secondary); flex-shrink: 0; }',
+          '.hrag-wk-secttitle { font-weight: 500; }',
+          '.hrag-wk-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; flex: 1; padding: 16px; color: var(--dsw-alias-label-tertiary); font-size: 12px; text-align: center; }',
+          '.hrag-wk-empty p { margin: 0; }',
+          '.hrag-wk-empty-icon { display: inline-flex; opacity: 0.4; }',
+          '.hrag-wk-inset { margin: 6px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }',
+          '.hrag-wk-list { display: flex; flex-direction: column; gap: 1px; overflow-y: auto; min-height: 0; flex: 1; padding: 4px 6px 6px; }',
+          '.hrag-wk-row { display: flex; align-items: center; gap: 6px; padding: 0 6px; height: 36px; border-radius: var(--dsw-radius-sm); min-width: 0; }',
+          '.hrag-wk-row:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-wk-row-on { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-wk-row .hrag-ev-check { opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-wk-row:hover .hrag-ev-check { opacity: 1; }',
+          '.hrag-wk-row .hrag-ev-check:checked { opacity: 1; }',
+          '.hrag-wk-list-selecting .hrag-ev-check { opacity: 1; }',
+          '.hrag-wk-row-main { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; height: 100%; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-wk-rowicon { display: inline-flex; color: var(--dsw-alias-label-tertiary); flex-shrink: 0; }',
+          '.hrag-wk-rowtitle { max-width: 45%; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }',
+          '.hrag-wk-rowsummary { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-wk-dirty { flex-shrink: 0; }',
+          '.hrag-wk-dirtydot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }',
+          '.hrag-wk-rowtime { flex-shrink: 0; font-size: 12px; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-wk-cardrow { width: 100%; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 13px; text-align: left; cursor: pointer; }',
+          '.hrag-hitbadge { flex-shrink: 0; display: inline-flex; align-items: center; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; padding: 0 5px; font-size: 10px; line-height: 15px; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-wk-metarow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-wk-srcbtn { height: 24px; padding: 0 8px; font-size: 11px; }',
+          '.hrag-wk-metaline { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-wk-lin { display: flex; flex-direction: column; gap: 6px; }',
+          '.hrag-wk-linitem { border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); overflow: hidden; }',
+          '.hrag-wk-linhead { display: flex; width: 100%; align-items: center; gap: 6px; padding: 5px 8px; border: none; border-bottom: 0.5px solid var(--dsw-alias-border-l2); background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-wk-linhead:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-wk-linhead:disabled { cursor: default; }',
+          '.hrag-wk-linname { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }',
+          '.hrag-wk-linpos { flex-shrink: 0; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-wk-linchev { flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-wk-lintext { padding: 6px 8px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }',
+          '.hrag-wk-tags { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); }',
           '.hrag-graph-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
           '.hrag-gchips { display: flex; flex-wrap: wrap; gap: 6px; }',
           '.hrag-gchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 11px; }',
@@ -2248,7 +2383,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function RecallView({ t, kbId, onOpenChunk, onViewInVectorSpace, onViewInGraphSpace, prefill }) {
+    function RecallView({ t, kbId, onOpenChunk, onViewInVectorSpace, onViewInGraphSpace, prefill, onOpenWikiEntry, onOpenManualCard }) {
       const [query, setQuery] = React.useState('')
       const [topK, setTopK] = React.useState(5)
       const [pending, setPending] = React.useState(false)
@@ -2427,6 +2562,7 @@ window.__ModuleLoader__.load({
               },
               entry.rank != null ? h('span', { className: 'hrag-hitrank' }, '#' + String(entry.rank)) : null,
               h('span', { className: 'hrag-hitdoc', title: entry.docName }, String(entry.docName || '')),
+              entry.badge ? h('span', { className: 'hrag-hitbadge' }, entry.badge) : null,
               h('span', { className: 'hrag-hitlead' }, entry.lead),
               entry.page != null ? h('span', { className: 'hrag-hitpage' }, 'p.' + String(entry.page)) : null,
               h('span', { className: 'hrag-hitscore' }, formatScore(entry.score)),
@@ -2453,9 +2589,28 @@ window.__ModuleLoader__.load({
               ),
             )
           }
-          return (result.paths.wiki.hits || []).map((hit) =>
-            hitRow(hit.entry_id, { rank: hit.rank, docName: hit.title, lead: stripSummaryHeading(hit.summary), page: null, score: hit.score }, null),
-          )
+          return (result.paths.wiki.hits || []).map((hit) => {
+            const manual = hit.source_type === 'manual'
+            const open = manual
+              ? onOpenManualCard
+                ? () => onOpenManualCard(hit.entry_id)
+                : null
+              : onOpenWikiEntry
+                ? () => onOpenWikiEntry(hit.entry_id)
+                : null
+            return hitRow(
+              hit.entry_id,
+              {
+                rank: hit.rank,
+                docName: hit.title,
+                lead: stripSummaryHeading(hit.summary),
+                page: null,
+                score: hit.score,
+                badge: manual ? t('wk.cardType') : null,
+              },
+              open,
+            )
+          })
         }
         const section = (path) =>
           h(
@@ -7963,6 +8118,863 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 百科书页图标（16 视窗、stroke 1.2、currentColor；工作台 BookOpen 等价物）。 */
+    function wikiBookIcon(size) {
+      return h(
+        'svg',
+        { width: size || 14, height: size || 14, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
+        h('path', {
+          d: 'M2 2.5h3.5A2.5 2.5 0 0 1 8 5v8.5a2 2 0 0 0-2-1.5H2z',
+          stroke: 'currentColor',
+          strokeWidth: 1.2,
+          strokeLinejoin: 'round',
+        }),
+        h('path', {
+          d: 'M14 2.5h-3.5A2.5 2.5 0 0 0 8 5v8.5a2 2 0 0 1 2-1.5h4z',
+          stroke: 'currentColor',
+          strokeWidth: 1.2,
+          strokeLinejoin: 'round',
+        }),
+      )
+    }
+
+    /** 便签图标（16 视窗、stroke 1.2；工作台 StickyNote 等价物）。 */
+    function wikiNoteIcon(size) {
+      return h(
+        'svg',
+        { width: size || 14, height: size || 14, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
+        h('path', {
+          d: 'M10.5 1.5h-7A1.5 1.5 0 0 0 2 3v10a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 14 13V5z',
+          stroke: 'currentColor',
+          strokeWidth: 1.2,
+          strokeLinejoin: 'round',
+        }),
+        h('path', {
+          d: 'M10.5 1.5V5H14',
+          stroke: 'currentColor',
+          strokeWidth: 1.2,
+          strokeLinejoin: 'round',
+        }),
+      )
+    }
+
+    /** 百科视图（Task 9）：统一搜索＋「生成条目」「我的条目」双卡分高（照工作台
+        wiki-tab 定高分屏语义：都展开各半、收起一个让位另一个）；⋯ 承接更新/重建
+        （重建走确认闸）；条目状态轮询（generating 3s＋触发后 12s 力度窗）；drain 边
+        按 last_run 出真话提示；行级/批量更新与删除（编辑档不做＝富文本编辑另案）。 */
+    function WikiView({ t, kbId, enabled, onOpenEntry, onOpenCard }) {
+      const tk = (key, ...args) => evText(t(key), args)
+      const [query, setQuery] = React.useState('')
+      const [notice, setNotice] = React.useState(null)
+      const [entriesCollapsed, setEntriesCollapsed] = React.useState(false)
+      const [cardsCollapsed, setCardsCollapsed] = React.useState(false)
+      const [selectedIds, setSelectedIds] = React.useState(() => new Set())
+      const [deleteTargets, setDeleteTargets] = React.useState(null)
+      const [regeneratingIds, setRegeneratingIds] = React.useState([])
+      const [pending, setPending] = React.useState(false)
+      const [busy, setBusy] = React.useState(false)
+      const [rebuildOpen, setRebuildOpen] = React.useState(false)
+      const pollUntilRef = React.useRef(0)
+      const manualRunRef = React.useRef(false)
+
+      React.useEffect(() => {
+        setQuery('')
+        setNotice(null)
+        setSelectedIds(new Set())
+        setDeleteTargets(null)
+        setRegeneratingIds([])
+        manualRunRef.current = false
+      }, [kbId])
+
+      React.useEffect(() => {
+        if (!notice) return undefined
+        const timer = window.setTimeout(
+          () => setNotice(null),
+          notice.isError ? NOTICE_DISMISS_ERROR_MS : NOTICE_DISMISS_MS,
+        )
+        return () => window.clearTimeout(timer)
+      }, [notice])
+      const notify = (text, isError) => setNotice({ text, isError: Boolean(isError) })
+
+      const entriesQ = useEvalCall(kbId, enabled, 'listWikiEntries', null, (payload) =>
+        Boolean(payload && (payload.generation === 'generating' || Date.now() < pollUntilRef.current)),
+      )
+      const cardsQ = useEvalCall(kbId, enabled, 'listManualCards', { offset: 0, limit: 200 })
+
+      const entries = entriesQ.data && Array.isArray(entriesQ.data.entries) ? entriesQ.data.entries : []
+      const generation = entriesQ.data ? entriesQ.data.generation : null
+      const cards = cardsQ.data && Array.isArray(cardsQ.data.items) ? cardsQ.data.items : []
+
+      // drain 边（照工作台 page.tsx）：generating→idle；清局部目标；手动 run 真话提示。
+      const prevGenerationRef = React.useRef(null)
+      React.useEffect(() => {
+        const prev = prevGenerationRef.current
+        prevGenerationRef.current = generation
+        const drained = prev === 'generating' && generation === 'idle'
+        if (!drained) return
+        setRegeneratingIds([])
+        cardsQ.refresh()
+        if (!manualRunRef.current) return
+        manualRunRef.current = false
+        if (entriesQ.data && entriesQ.data.last_run === 'failed') notify(tk('wk.updateFailed'), true)
+        else notify(tk('wk.updated'))
+      }, [generation, entriesQ.data, cardsQ, tk])
+
+      const updating = pending || generation === 'generating'
+
+      const triggerWiki = (mode, entryIds) => {
+        setPending(true)
+        const request =
+          mode === 'entries'
+            ? callOp('regenerateWikiEntries', { kb_id: kbId, entry_ids: entryIds })
+            : callOp('generateWiki', { kb_id: kbId, mode })
+        request
+          .then((ack) => {
+            if (ack && ack.status === 'already_running') {
+              if (mode === 'entries') setRegeneratingIds([])
+              notify(tk('wk.alreadyRunning'))
+              return
+            }
+            manualRunRef.current = true
+            pollUntilRef.current = Date.now() + 12000
+            notify(tk('wk.enqueued'))
+            entriesQ.refresh()
+          })
+          .catch((error) => {
+            if (mode === 'entries') setRegeneratingIds([])
+            notify(errorDetail(error), true)
+          })
+          .finally(() => setPending(false))
+      }
+      const handleRegenerateEntries = (entryIds) => {
+        if (entryIds.length === 0) return
+        setRegeneratingIds(entryIds)
+        triggerWiki('entries', entryIds)
+      }
+
+      // 过滤（照工作台：条目标题+摘要、卡片标题+摘要+标签，客户端包含匹配）。
+      const needle = query.trim().toLowerCase()
+      const visibleEntries = needle
+        ? entries.filter(
+            (entry) =>
+              String(entry.title).toLowerCase().indexOf(needle) >= 0 ||
+              String(entry.summary).toLowerCase().indexOf(needle) >= 0,
+          )
+        : entries
+      const visibleCards = needle
+        ? cards.filter(
+            (card) =>
+              String(card.title).toLowerCase().indexOf(needle) >= 0 ||
+              String(card.summary).toLowerCase().indexOf(needle) >= 0 ||
+              (card.tags || []).some((tag) => String(tag).toLowerCase().indexOf(needle) >= 0),
+          )
+        : cards
+      const searching = needle.length > 0
+      const entriesExpanded = !entriesCollapsed || (searching && visibleEntries.length > 0)
+      const cardsExpanded = !cardsCollapsed || (searching && visibleCards.length > 0)
+
+      // 过滤即清选择（照工作台：批量动作不触达看不见的行）。
+      const lastQueryRef = React.useRef(query)
+      if (lastQueryRef.current !== query) {
+        lastQueryRef.current = query
+        if (selectedIds.size > 0) setSelectedIds(new Set())
+      }
+
+      const toggleEntry = (entryId, checked) => {
+        const next = new Set(selectedIds)
+        if (checked) next.add(entryId)
+        else next.delete(entryId)
+        setSelectedIds(next)
+      }
+      const allVisibleSelected =
+        visibleEntries.length > 0 && visibleEntries.every((entry) => selectedIds.has(entry.id))
+      const toggleSelectAll = () => {
+        setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleEntries.map((entry) => entry.id)))
+      }
+      const handleDeleteConfirm = () => {
+        if (deleteTargets === null) return
+        setBusy(true)
+        const removed = new Set(deleteTargets.map((entry) => entry.id))
+        Promise.allSettled(
+          deleteTargets.map((entry) => callOp('deleteWikiEntry', { kb_id: kbId, entry_id: entry.id })),
+        )
+          .then(() => {
+            setSelectedIds((current) => new Set([...current].filter((id) => !removed.has(id))))
+            setDeleteTargets(null)
+            entriesQ.refresh()
+          })
+          .finally(() => setBusy(false))
+      }
+      const rowUpdating = (entryId) =>
+        regeneratingIds.indexOf(entryId) >= 0 || (updating && regeneratingIds.length === 0)
+
+      const entryRowMenu = (entry) =>
+        h(EvalMenu, {
+          className: 'hrag-ev-rowmenu',
+          label: '⋯',
+          align: 'end',
+          render: (close) => [
+            h(
+              EvalMenuItem,
+              {
+                key: 'open',
+                onSelect: () => {
+                  close()
+                  onOpenEntry(entry.id)
+                },
+              },
+              tk('wk.openEntry'),
+            ),
+            h(
+              EvalMenuItem,
+              {
+                key: 'update',
+                disabled: updating,
+                onSelect: () => {
+                  close()
+                  handleRegenerateEntries([entry.id])
+                },
+              },
+              tk('wk.updateEntry'),
+            ),
+            h('div', { key: 'sep', className: 'hrag-ev-menu-sep' }),
+            h(
+              EvalMenuItem,
+              {
+                key: 'del',
+                danger: true,
+                onSelect: () => {
+                  close()
+                  setDeleteTargets([entry])
+                },
+              },
+              tk('wk.deleteEntry'),
+            ),
+          ],
+        })
+
+      const sectionEmpty = (icon, text) =>
+        h('div', { className: 'hrag-wk-empty' }, h('span', { className: 'hrag-wk-empty-icon' }, icon), h('p', null, text))
+
+      const entriesSection = h(
+        'section',
+        { className: 'hrag-wk-sect' + (entriesExpanded ? ' hrag-wk-sect-open' : '') },
+        h(
+          'div',
+          { className: 'hrag-wk-secthead' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'hrag-wk-secttoggle',
+              'aria-expanded': entriesExpanded,
+              onClick: () => setEntriesCollapsed((value) => !value),
+            },
+            h('span', { className: 'hrag-ev-caret' + (entriesExpanded ? ' hrag-ev-caret-open' : '') }, '▾'),
+            h('span', { className: 'hrag-wk-secticon' }, wikiBookIcon()),
+            h('span', { className: 'hrag-wk-secttitle' }, tk('wk.entries')),
+            h('span', { className: 'hrag-ev-badge hrag-ev-tabnums' }, String(entries.length)),
+            updating
+              ? h(
+                  'span',
+                  { className: 'hrag-ev-badge hrag-ev-badge-amber hrag-ev-spin-text' },
+                  h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }),
+                  tk('wk.updating'),
+                )
+              : null,
+          ),
+          entriesExpanded && visibleEntries.length > 0
+            ? h('input', {
+                type: 'checkbox',
+                className: 'hrag-ev-check',
+                'aria-label': tk('wk.selectEntry'),
+                checked: allVisibleSelected,
+                onChange: toggleSelectAll,
+              })
+            : null,
+        ),
+        entriesExpanded
+          ? entriesQ.failure
+            ? h(
+                'div',
+                { className: 'hrag-ev-hint hrag-ev-hint-error hrag-wk-inset' },
+                tk('wk.loadFailed'),
+              )
+            : entriesQ.data === null
+              ? h('div', { className: 'hrag-ev-hint hrag-wk-inset' }, tk('wk.loading'))
+              : visibleEntries.length === 0
+                ? sectionEmpty(wikiBookIcon(28), entries.length === 0 ? tk('wk.entriesEmpty') : tk('wk.entriesNoMatch'))
+                : h(
+                    'div',
+                    {
+                      className:
+                        'hrag-wk-list' + (selectedIds.size > 0 ? ' hrag-wk-list-selecting' : ''),
+                    },
+                    visibleEntries.map((entry) => {
+                      const isSelected = selectedIds.has(entry.id)
+                      const rowBusy = rowUpdating(entry.id)
+                      return h(
+                        'div',
+                        { key: entry.id, className: 'hrag-wk-row' + (isSelected ? ' hrag-wk-row-on' : '') },
+                        h('input', {
+                          type: 'checkbox',
+                          className: 'hrag-ev-check',
+                          'aria-label': tk('wk.selectEntry') + ': ' + entry.title,
+                          checked: isSelected,
+                          onChange: (event) => toggleEntry(entry.id, event.target.checked),
+                        }),
+                        h(
+                          'button',
+                          { type: 'button', className: 'hrag-wk-row-main', onClick: () => onOpenEntry(entry.id) },
+                          h('span', { className: 'hrag-wk-rowicon' }, wikiBookIcon()),
+                          h('span', { className: 'hrag-wk-rowtitle', title: entry.title }, entry.title),
+                          h('span', { className: 'hrag-wk-rowsummary' }, stripSummaryHeading(entry.summary)),
+                        ),
+                        entry.status === 'dirty'
+                          ? h(
+                              'span',
+                              {
+                                className:
+                                  'hrag-ev-badge hrag-ev-badge-amber hrag-wk-dirty' +
+                                  (rowBusy ? ' hrag-ev-spin-text' : ''),
+                              },
+                              rowBusy
+                                ? h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' })
+                                : h('span', { className: 'hrag-wk-dirtydot' }),
+                              rowBusy ? tk('wk.updating') : tk('wk.dirty'),
+                            )
+                          : null,
+                        h(
+                          'span',
+                          { className: 'hrag-wk-rowtime hrag-ev-tabnums', title: evFmtFullTime(entry.updated_at) },
+                          evFmtRunTime(entry.updated_at),
+                        ),
+                        h('span', { className: 'hrag-ev-rowmenu-wrap' }, entryRowMenu(entry)),
+                      )
+                    }),
+                  )
+          : null,
+      )
+
+      const cardsSection = h(
+        'section',
+        { className: 'hrag-wk-sect' + (cardsExpanded ? ' hrag-wk-sect-open' : '') },
+        h(
+          'div',
+          { className: 'hrag-wk-secthead' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'hrag-wk-secttoggle',
+              'aria-expanded': cardsExpanded,
+              onClick: () => setCardsCollapsed((value) => !value),
+            },
+            h('span', { className: 'hrag-ev-caret' + (cardsExpanded ? ' hrag-ev-caret-open' : '') }, '▾'),
+            h('span', { className: 'hrag-wk-secticon' }, wikiNoteIcon()),
+            h('span', { className: 'hrag-wk-secttitle' }, tk('wk.cards')),
+            h('span', { className: 'hrag-ev-badge hrag-ev-tabnums' }, String(cards.length)),
+          ),
+        ),
+        cardsExpanded
+          ? cardsQ.failure
+            ? h(
+                'div',
+                { className: 'hrag-ev-hint hrag-ev-hint-error hrag-wk-inset' },
+                tk('wk.loadFailed'),
+              )
+            : cardsQ.data === null
+              ? h('div', { className: 'hrag-ev-hint hrag-wk-inset' }, tk('wk.loading'))
+              : visibleCards.length === 0
+                ? sectionEmpty(wikiNoteIcon(28), cards.length === 0 ? tk('wk.cardsEmpty') : tk('wk.cardsNoMatch'))
+                : h(
+                    'div',
+                    { className: 'hrag-wk-list' },
+                    visibleCards.map((card) =>
+                      h(
+                        'button',
+                        {
+                          key: card.id,
+                          type: 'button',
+                          className: 'hrag-wk-row hrag-wk-cardrow',
+                          title: tk('wk.openCard'),
+                          onClick: () => onOpenCard(card.id),
+                        },
+                        h('span', { className: 'hrag-wk-rowicon' }, wikiNoteIcon()),
+                        h('span', { className: 'hrag-wk-rowtitle', title: card.title }, card.title),
+                        h('span', { className: 'hrag-wk-rowsummary' }, card.summary),
+                        card.include_in_wiki_search
+                          ? h('span', { className: 'hrag-ev-badge' }, tk('wk.includeInSearch'))
+                          : null,
+                        h(
+                          'span',
+                          { className: 'hrag-wk-rowtime hrag-ev-tabnums', title: evFmtFullTime(card.updated_at) },
+                          evFmtRunTime(card.updated_at),
+                        ),
+                      ),
+                    ),
+                  )
+          : null,
+      )
+
+      return h(
+        'div',
+        { className: 'hrag-ev' },
+        h(
+          'div',
+          { className: 'hrag-ev-bar' },
+          h(
+            'span',
+            { className: 'hrag-ev-searchwrap' },
+            h('input', {
+              type: 'text',
+              className: 'hrag-input hrag-ev-search',
+              placeholder: tk('wk.search'),
+              'aria-label': tk('wk.search'),
+              value: query,
+              onChange: (event) => setQuery(event.target.value),
+            }),
+            query
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-ev-searchclear',
+                    'aria-label': tk('wk.clearSearch'),
+                    onClick: () => setQuery(''),
+                  },
+                  '✕',
+                )
+              : null,
+          ),
+          h(
+            'span',
+            { className: 'hrag-ev-runbtns' },
+            h(EvalMenu, {
+              icon: '⋯',
+              title: tk('wk.more'),
+              align: 'end',
+              render: (close) => [
+                h(
+                  EvalMenuItem,
+                  {
+                    key: 'update',
+                    disabled: updating,
+                    onSelect: () => {
+                      close()
+                      triggerWiki('incremental')
+                    },
+                  },
+                  updating
+                    ? h(
+                        'span',
+                        { className: 'hrag-ev-spin-text' },
+                        h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }),
+                        tk('wk.updating'),
+                      )
+                    : h(React.Fragment, null, wikiBookIcon(), tk('wk.updateWiki')),
+                ),
+                h(
+                  EvalMenuItem,
+                  {
+                    key: 'rebuild',
+                    disabled: updating,
+                    onSelect: () => {
+                      close()
+                      setRebuildOpen(true)
+                    },
+                  },
+                  h(React.Fragment, null, refreshIcon(), tk('wk.rebuildWiki')),
+                ),
+              ],
+            }),
+          ),
+        ),
+        notice
+          ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
+          : null,
+        h(
+          'div',
+          { className: 'hrag-wk-canvas' },
+          entriesSection,
+          cardsSection,
+          selectedIds.size > 0
+            ? h(
+                'div',
+                { className: 'hrag-ev-bulkbar' },
+                h('span', { className: 'hrag-ev-muted hrag-ev-tabnums' }, tk('wk.selectedCount', selectedIds.size)),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-ev-graybtn',
+                    disabled: updating,
+                    onClick: () => handleRegenerateEntries([...selectedIds]),
+                  },
+                  tk('wk.updateSelected'),
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-danger',
+                    onClick: () => setDeleteTargets(entries.filter((entry) => selectedIds.has(entry.id))),
+                  },
+                  tk('wk.deleteSelected'),
+                ),
+                h(
+                  'button',
+                  { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => setSelectedIds(new Set()) },
+                  tk('wk.cancelSelection'),
+                ),
+              )
+            : null,
+        ),
+        rebuildOpen
+          ? h(ConfirmDialog, {
+              t,
+              title: tk('wk.rebuildTitle'),
+              description: tk('wk.rebuildDesc'),
+              busy: false,
+              danger: false,
+              cancelKey: 'doc.cancel',
+              confirmKey: 'wk.rebuildConfirm',
+              onCancel: () => setRebuildOpen(false),
+              onConfirm: () => {
+                setRebuildOpen(false)
+                triggerWiki('full')
+              },
+            })
+          : null,
+        deleteTargets !== null
+          ? h(ConfirmDialog, {
+              t,
+              title:
+                deleteTargets.length > 1
+                  ? tk('wk.deleteBatchTitle', deleteTargets.length)
+                  : tk('wk.deleteConfirmTitle'),
+              description: tk('wk.deleteConfirmDesc'),
+              busy,
+              cancelKey: 'doc.cancel',
+              confirmKey: 'doc.confirmDelete',
+              onCancel: () => setDeleteTargets(null),
+              onConfirm: handleDeleteConfirm,
+            })
+          : null,
+      )
+    }
+
+    /** 剥同名 H1（照工作台 stripTitleHeading，显示层去重）：正文首行 `# 标题`
+        与头部标题同名时剥掉，避免「标题出现两次」。 */
+    function stripTitleHeading(content, title) {
+      const value = String(content == null ? '' : content)
+      const match = /^#\s+(.+)\r?\n/.exec(value)
+      if (match && match[1].trim() === String(title == null ? '' : title).trim()) {
+        return value.slice(match[0].length)
+      }
+      return value
+    }
+
+    /** 百科条目抽屉（Task 9，照工作台 wiki-entry-drawer）：头部书页图标＋标题＋
+        待更新徽章；正文卡（剥同名 H1、pre-wrap）；元信息行＝来源切片展开钮
+        （chunksByIds 惰取）＋更新时间；来源切片行可点 → 切片续读（照图谱实体
+        抽屉：本层 z 帧 56/57 垫在续读抽屉下，关掉续读回本条）；404 按不存在。
+        Escape 不接（照图谱抽屉——续读抽屉在上时单次 Esc 只关顶层）。 */
+    function WikiEntryDrawer({ t, kbId, entryId, onClose, onOpenChunk }) {
+      const tk = (key, ...args) => evText(t(key), args)
+      const [entry, setEntry] = React.useState(null)
+      const [phase, setPhase] = React.useState('loading')
+      const [failure, setFailure] = React.useState(null)
+      const [lineageOpen, setLineageOpen] = React.useState(false)
+      const [lineage, setLineage] = React.useState(null)
+      const [lineageLoading, setLineageLoading] = React.useState(false)
+      const [lineageFailure, setLineageFailure] = React.useState(null)
+
+      React.useEffect(() => {
+        let cancelled = false
+        setEntry(null)
+        setPhase('loading')
+        setFailure(null)
+        setLineageOpen(false)
+        setLineage(null)
+        setLineageLoading(false)
+        setLineageFailure(null)
+        callOp('wikiEntry', { kb_id: kbId, entry_id: entryId })
+          .then((data) => {
+            if (cancelled) return
+            setEntry(data || null)
+            setPhase(data ? 'ready' : 'missing')
+          })
+          .catch((error) => {
+            if (cancelled) return
+            if (error && error.info && error.info.status === 404) setPhase('missing')
+            else {
+              setFailure(error)
+              setPhase('error')
+            }
+          })
+        return () => {
+          cancelled = true
+        }
+      }, [kbId, entryId])
+
+      const sourceIds = entry && Array.isArray(entry.source_chunk_ids) ? entry.source_chunk_ids : []
+
+      const toggleLineage = () => {
+        if (lineageOpen) {
+          setLineageOpen(false)
+          return
+        }
+        setLineageOpen(true)
+        if (lineage !== null || lineageLoading || sourceIds.length === 0) return
+        setLineageLoading(true)
+        setLineageFailure(null)
+        callOp('chunksByIds', { kb_id: kbId, chunk_ids: sourceIds })
+          .then((data) => {
+            setLineage(data && Array.isArray(data.items) ? data.items : [])
+            setLineageLoading(false)
+          })
+          .catch((error) => {
+            setLineageFailure(error)
+            setLineageLoading(false)
+          })
+      }
+
+      let body
+      if (phase === 'loading') {
+        body = h('div', { className: 'hrag-pane' }, tk('wk.loading'))
+      } else if (phase === 'error') {
+        body = h(
+          'div',
+          { className: 'hrag-state hrag-state-error' },
+          h('div', { className: 'hrag-state-title' }, tk('wk.loadFailed')),
+          h('div', { className: 'hrag-state-detail' }, errorDetail(failure)),
+        )
+      } else if (phase === 'missing') {
+        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, tk('wk.entryNotFound')))
+      } else if (entry) {
+        body = h(
+          'div',
+          { className: 'hrag-drawer-body hrag-wk-drawer-body' },
+          h(
+            'div',
+            { className: 'hrag-gcard' },
+            h('div', { className: 'hrag-gcard-body' }, stripTitleHeading(entry.content, entry.title)),
+          ),
+          h(
+            'div',
+            { className: 'hrag-wk-metarow' },
+            sourceIds.length > 0
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-outline hrag-wk-srcbtn',
+                    'aria-expanded': lineageOpen,
+                    onClick: toggleLineage,
+                  },
+                  String(sourceIds.length) + ' ' + tk('wk.sourceChunks'),
+                  h('span', { className: 'hrag-ev-caret' + (lineageOpen ? ' hrag-ev-caret-open' : '') }, '▾'),
+                )
+              : null,
+            h('span', null, tk('wk.updatedAt') + ' ' + evFmtFullTime(entry.updated_at)),
+          ),
+          lineageOpen
+            ? h(
+                'div',
+                { className: 'hrag-wk-lin' },
+                lineageLoading ? h('div', { className: 'hrag-ev-hint' }, tk('wk.loading')) : null,
+                lineageFailure
+                  ? h('div', { className: 'hrag-ev-hint hrag-ev-hint-error' }, tk('wk.loadFailed'))
+                  : null,
+                (lineage || []).map((chunk) => {
+                  const chunkId = chunk.chunk_id
+                  const docName = chunk.doc_name || String(chunkId).split('#')[0]
+                  const heading = Array.isArray(chunk.heading_path) && chunk.heading_path.length > 0
+                    ? chunk.heading_path.join(' / ')
+                    : ''
+                  const pos = heading || (chunk.page != null ? 'p.' + String(chunk.page) : '')
+                  return h(
+                    'div',
+                    { className: 'hrag-wk-linitem', key: chunkId },
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-wk-linhead',
+                        disabled: !onOpenChunk,
+                        onClick: () => onOpenChunk && onOpenChunk(chunkId, docName),
+                      },
+                      h('span', { className: 'hrag-wk-linname', title: docName }, docName),
+                      pos ? h('span', { className: 'hrag-wk-linpos', title: pos }, pos) : null,
+                      h('span', { className: 'hrag-wk-linchev' }, '›'),
+                    ),
+                    h('div', { className: 'hrag-wk-lintext' }, String(chunk.text || '')),
+                  )
+                }),
+                lineage && sourceIds.length > lineage.length
+                  ? h(
+                      'p',
+                      { className: 'hrag-wk-metaline' },
+                      String(sourceIds.length - lineage.length) + ' ' + tk('wk.deletedSources'),
+                    )
+                  : null,
+              )
+            : null,
+        )
+      }
+
+      return h(
+        'div',
+        { className: 'hrag-wk-drawer' },
+        h('div', {
+          className: 'hrag-drawer-overlay',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) onClose()
+          },
+        }),
+        h(
+          'div',
+          {
+            className: 'hrag-drawer',
+            role: 'dialog',
+            'aria-modal': 'true',
+            'aria-label': entry ? String(entry.title) : tk('wk.entries'),
+          },
+          h(
+            'div',
+            { className: 'hrag-drawer-head' },
+            h('span', { className: 'hrag-wk-secticon' }, wikiBookIcon()),
+            h('span', { className: 'hrag-drawer-title', title: entry ? String(entry.title) : '' }, entry ? String(entry.title) : tk('wk.loading')),
+            entry && entry.status === 'dirty'
+              ? h('span', { className: 'hrag-ev-badge hrag-wk-dirty' }, tk('wk.dirty'))
+              : null,
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-outline hrag-drawer-close',
+                'aria-label': t('chunk.close'),
+                title: t('chunk.close'),
+                onClick: onClose,
+              },
+              '✕',
+            ),
+          ),
+          body,
+        ),
+      )
+    }
+
+    /** 人工卡片抽屉（Task 9，照工作台 manual-card-drawer）：头部便签图标＋标题＋
+        「我的卡片」/「混入搜索」徽章；正文卡（标签行 border-b 分隔 ＋ pre-wrap
+        正文）；更新时间行。只读档（卡片编辑不做＝另案）。 */
+    function ManualCardDrawer({ t, kbId, cardId, onClose }) {
+      const tk = (key, ...args) => evText(t(key), args)
+      const [card, setCard] = React.useState(null)
+      const [phase, setPhase] = React.useState('loading')
+      const [failure, setFailure] = React.useState(null)
+
+      React.useEffect(() => {
+        let cancelled = false
+        setCard(null)
+        setPhase('loading')
+        setFailure(null)
+        callOp('manualCard', { kb_id: kbId, card_id: cardId })
+          .then((data) => {
+            if (cancelled) return
+            setCard(data || null)
+            setPhase(data ? 'ready' : 'missing')
+          })
+          .catch((error) => {
+            if (cancelled) return
+            if (error && error.info && error.info.status === 404) setPhase('missing')
+            else {
+              setFailure(error)
+              setPhase('error')
+            }
+          })
+        return () => {
+          cancelled = true
+        }
+      }, [kbId, cardId])
+
+      let body
+      if (phase === 'loading') {
+        body = h('div', { className: 'hrag-pane' }, tk('wk.loading'))
+      } else if (phase === 'error') {
+        body = h(
+          'div',
+          { className: 'hrag-state hrag-state-error' },
+          h('div', { className: 'hrag-state-title' }, tk('wk.loadFailed')),
+          h('div', { className: 'hrag-state-detail' }, errorDetail(failure)),
+        )
+      } else if (phase === 'missing') {
+        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, tk('wk.cardNotFound')))
+      } else if (card) {
+        const tags = Array.isArray(card.tags) ? card.tags : []
+        body = h(
+          'div',
+          { className: 'hrag-drawer-body hrag-wk-drawer-body' },
+          h(
+            'div',
+            { className: 'hrag-gcard' },
+            tags.length > 0
+              ? h(
+                  'div',
+                  { className: 'hrag-wk-tags' },
+                  tags.map((tag) => h('span', { className: 'hrag-gchip', key: tag }, tag)),
+                )
+              : null,
+            h('div', { className: 'hrag-gcard-body' }, String(card.content || '')),
+          ),
+          h('p', { className: 'hrag-wk-metaline' }, tk('wk.updatedAt') + ' ' + evFmtFullTime(card.updated_at)),
+        )
+      }
+
+      return h(
+        'div',
+        { className: 'hrag-wk-drawer' },
+        h('div', {
+          className: 'hrag-drawer-overlay',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) onClose()
+          },
+        }),
+        h(
+          'div',
+          {
+            className: 'hrag-drawer',
+            role: 'dialog',
+            'aria-modal': 'true',
+            'aria-label': card ? String(card.title) : tk('wk.cards'),
+          },
+          h(
+            'div',
+            { className: 'hrag-drawer-head' },
+            h('span', { className: 'hrag-wk-secticon' }, wikiNoteIcon()),
+            h('span', { className: 'hrag-drawer-title', title: card ? String(card.title) : '' }, card ? String(card.title) : tk('wk.loading')),
+            card ? h('span', { className: 'hrag-ev-badge hrag-wk-dirty' }, tk('wk.cardType')) : null,
+            card && card.include_in_wiki_search
+              ? h('span', { className: 'hrag-ev-badge' }, tk('wk.includeInSearch'))
+              : null,
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-outline hrag-drawer-close',
+                'aria-label': t('chunk.close'),
+                title: t('chunk.close'),
+                onClick: onClose,
+              },
+              '✕',
+            ),
+          ),
+          body,
+        ),
+      )
+    }
+
     function KnowledgePanel({ t }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -7971,6 +8983,9 @@ window.__ModuleLoader__.load({
       const [section, setSection] = React.useState('docs')
       const [refreshToken, setRefreshToken] = React.useState(0)
       const [drawer, setDrawer] = React.useState(null)
+      // 百科抽屉壳（Task 9）：百科 tab 行点击与召回 wiki 命中共用；组件级渲染
+      // 在面板根（同 ChunkDrawer 层位，z 帧 56/57 垫在续读抽屉下）。
+      const [wikiDrawer, setWikiDrawer] = React.useState(null)
       const [uploading, setUploading] = React.useState(false)
       const [barNotice, setBarNotice] = React.useState(null)
       const [acceptedSuffixes, setAcceptedSuffixes] = React.useState(null)
@@ -8030,6 +9045,7 @@ window.__ModuleLoader__.load({
         setReindexState(null)
         setOverlayRequest(null)
         setGraphOverlayRequest(null)
+        setWikiDrawer(null)
       }, [kbId])
 
       // 提示行自动消退（工作台 toast 语义：短确认；持久真值在列表与状态行）。
@@ -8280,6 +9296,8 @@ window.__ModuleLoader__.load({
                 t,
                 kbId,
                 prefill: recallPrefill,
+                onOpenWikiEntry: (entryId) => setWikiDrawer({ kind: 'entry', id: entryId }),
+                onOpenManualCard: (cardId) => setWikiDrawer({ kind: 'card', id: cardId }),
                 onOpenChunk: (chunkId, docName) => {
                   const docId = String(chunkId).split('#')[0]
                   setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
@@ -8294,6 +9312,19 @@ window.__ModuleLoader__.load({
                 },
               })
             : null,
+          // 百科视图 keep-alive（同口径）：搜索/折叠/选择切走不丢；抽屉壳在面板级
+          //（召回命中同样开它），本槽只承载双卡列表。
+          h(
+            'div',
+            { className: 'hrag-wk-slot', style: { display: section === 'wiki' ? 'flex' : 'none' } },
+            h(WikiView, {
+              t,
+              kbId,
+              enabled: section === 'wiki',
+              onOpenEntry: (entryId) => setWikiDrawer({ kind: 'entry', id: entryId }),
+              onOpenCard: (cardId) => setWikiDrawer({ kind: 'card', id: cardId }),
+            }),
+          ),
           // 投影视图 keep-alive（照工作台 forceMount 语义）：切走不丢配置与叠加；
           // enabled 门控首次取数——没打开过投影就不发请求。
           h(
@@ -8357,6 +9388,25 @@ window.__ModuleLoader__.load({
                 refreshToken,
                 onClose: () => setDrawer(null),
               })
+            : null,
+          wikiDrawer
+            ? wikiDrawer.kind === 'entry'
+              ? h(WikiEntryDrawer, {
+                  t,
+                  kbId,
+                  entryId: wikiDrawer.id,
+                  onClose: () => setWikiDrawer(null),
+                  onOpenChunk: (chunkId, docName) => {
+                    const docId = String(chunkId).split('#')[0]
+                    setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
+                  },
+                })
+              : h(ManualCardDrawer, {
+                  t,
+                  kbId,
+                  cardId: wikiDrawer.id,
+                  onClose: () => setWikiDrawer(null),
+                })
             : null,
           reindexOpen
             ? h(ConfirmDialog, {
