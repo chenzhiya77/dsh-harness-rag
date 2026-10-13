@@ -1552,6 +1552,33 @@ window.__ModuleLoader__.load({
       return nodeCount > GRAPH_LOD_MIN_NODES ? 0.3 : 1
     }
 
+    /** 包围盒拟合视口（自动全览，2026-10-13）：八折留边、只缩不放（上限 1）、
+        下限夹取；需要缩放时再压到标签隐藏阈下（全览态零标签）。力场步进与
+        初载预拟合共用同一纯函数——初载在撒点后即刻拟合，防「首帧全图一闪
+        再缩」。容器未挂尺寸（0×0）或空 → null（调用方保持原视口）。 */
+    function graphFitViewport(wrap, items) {
+      if (!wrap || !items || items.length === 0) return null
+      const w = wrap.clientWidth
+      const h = wrap.clientHeight
+      if (!(w > 0) || !(h > 0)) return null
+      let minX = Infinity
+      let maxX = -Infinity
+      let minY = Infinity
+      let maxY = -Infinity
+      for (const item of items) {
+        if (item.x < minX) minX = item.x
+        if (item.x > maxX) maxX = item.x
+        if (item.y < minY) minY = item.y
+        if (item.y > maxY) maxY = item.y
+      }
+      const boxW = Math.max(80, maxX - minX)
+      const boxH = Math.max(80, maxY - minY)
+      const rawFit = Math.min(w / boxW, h / boxH) * 0.8
+      const fit = rawFit >= 1 ? 1 : Math.min(rawFit, GRAPH_LABEL_HIDE_BELOW * 0.96)
+      const zoom = Math.max(GRAPH_MIN_SCALE, Math.min(GRAPH_MAX_SCALE, fit))
+      return { zoom, ox: -((minX + maxX) / 2) * zoom, oy: -((minY + maxY) / 2) * zoom }
+    }
+
     /** 档位渲染子集（照工作台 tierNodeIds）：full / all-full 返 null（全量不裁）；
         hub = 每社区 Top3 枢纽（节点预算内按社区规模降序截断）；余档 = mention≥2。 */
     function graphTierNodeIds(nodes, communities, tier) {
@@ -3664,6 +3691,10 @@ window.__ModuleLoader__.load({
       const canvasRef = React.useRef(null)
       const viewRef = React.useRef({ zoom: 1, ox: 0, oy: 0 })
       const simRef = React.useRef(null)
+      // 本代视口上限（只缩不放，2026-10-13 三报·帧迹实证）：重建预拟合值＝上限；
+      // 收敛早期的重力坍缩会让瞬时包围盒缩小、fit 经 rawFit≥1 分支跳回 1——正是
+      // 「进入一瞬全图（含文字）再变缩略」的根因，钳上限后全程只减不增。
+      const fitCeilingRef = React.useRef(null)
       const dragRef = React.useRef(null)
       const hoverRef = React.useRef(null)
       const projectedRef = React.useRef([])
@@ -3946,32 +3977,21 @@ window.__ModuleLoader__.load({
             item.ppy = item.y
           }
           // 自动全览（2026-10-13 他报「默认缩放偏大」——初始应为全图入画的
-          // 缩略态）：收敛期间每帧按当前包围盒拟合视口（八折留边），只缩不放
-          // （上限 zoom 1，小图行为不变）、下限受 GRAPH_MIN_SCALE 夹取。
+          // 缩略态）：收敛期间每帧按当前包围盒拟合视口（八折留边、只缩不放、
+          // 下限夹取；需要缩放时压标签阈下＝全览零标签）。首帧由数据 effect 预
+          // 拟合；本代视口上限＝预拟合值——收敛早期的重力坍缩会让瞬时包围盒缩
+          // 小、fit 经 rawFit≥1 分支跳回 1（「一瞬全图再缩」根因·帧迹实证），
+          // 钳上限后全程只减不增。
           if (autoFitRef.current) {
-            const wrap = wrapRef.current
-            const w = wrap ? wrap.clientWidth : 0
-            const h = wrap ? wrap.clientHeight : 0
-            if (w > 0 && h > 0 && items.length > 0) {
-              let minX = Infinity
-              let maxX = -Infinity
-              let minY = Infinity
-              let maxY = -Infinity
-              for (const item of items) {
-                if (item.x < minX) minX = item.x
-                if (item.x > maxX) maxX = item.x
-                if (item.y < minY) minY = item.y
-                if (item.y > maxY) maxY = item.y
+            const fitted = graphFitViewport(wrapRef.current, items)
+            if (fitted) {
+              const ceiling = fitCeilingRef.current
+              if (ceiling != null && fitted.zoom > ceiling) {
+                const k = ceiling / fitted.zoom
+                viewRef.current = { zoom: ceiling, ox: fitted.ox * k, oy: fitted.oy * k }
+              } else {
+                viewRef.current = fitted
               }
-              const boxW = Math.max(80, maxX - minX)
-              const boxH = Math.max(80, maxY - minY)
-              // 全览态不露文字（10-13 他二报）：需要缩放的图把拟合值再夹到标签
-              // 隐藏阈之下（strictly < 0.6 才 hidden，取 0.96 倍防边界）；本来就
-              // 装得下（rawFit ≥ 1）的小图维持 zoom 1，行为不变。
-              const rawFit = Math.min(w / boxW, h / boxH) * 0.8
-              const fit = rawFit >= 1 ? 1 : Math.min(rawFit, GRAPH_LABEL_HIDE_BELOW * 0.96)
-              const zoom = Math.max(GRAPH_MIN_SCALE, Math.min(GRAPH_MAX_SCALE, fit))
-              viewRef.current = { zoom, ox: -((minX + maxX) / 2) * zoom, oy: -((minY + maxY) / 2) * zoom }
             }
           }
           sim.friction *= GRAPH_FRICTION_DECAY
@@ -4036,6 +4056,17 @@ window.__ModuleLoader__.load({
         viewRef.current = { zoom, ox: 0, oy: 0 }
         hoverRef.current = null
         applyTierRef.current(graphRenderTierForZoom(zoom, nodes.length))
+        // 首帧预拟合（2026-10-13 他报「进入一瞬是全图、随后变缩略」）：撒点后、
+        // 首绘前先按包围盒拟合一次——首帧即全览态；收敛期间仍逐帧跟随（步进内）。
+        // colorBy 切换走同一 effect（重建）——同享此预拟合，不再闪一帧。
+        fitCeilingRef.current = null
+        if (autoFitRef.current && simRef.current) {
+          const fitted = graphFitViewport(wrapRef.current, simRef.current.items)
+          if (fitted) {
+            viewRef.current = fitted
+            fitCeilingRef.current = fitted.zoom
+          }
+        }
         return () => {
           if (rafRef.current !== null) {
             window.cancelAnimationFrame(rafRef.current)
