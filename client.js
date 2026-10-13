@@ -1094,6 +1094,12 @@ window.__ModuleLoader__.load({
           '.hrag-hitlead { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); font-size: 11px; }',
           '.hrag-hitpage { flex-shrink: 0; color: var(--dsw-alias-label-tertiary); font-size: 11px; }',
           '.hrag-hitscore { flex-shrink: 0; margin-left: auto; color: var(--dsw-alias-label-tertiary); font-size: 11px; font-family: ui-monospace, monospace; }',
+          '.hrag-textchip { display: inline-flex; align-items: center; flex-shrink: 0; max-width: 240px; padding: 1px 7px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; color: var(--dsw-alias-label-tertiary); font-size: 10px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }',
+          '.hrag-hitrow-row .hrag-hitselect { opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-hitrow-row:hover .hrag-hitselect { opacity: 1; }',
+          '.hrag-hitselect:focus-visible { opacity: 1; }',
+          '.hrag-hitselect-on { opacity: 1; }',
+          '.hrag-recall-rows-selecting .hrag-hitselect { opacity: 1; }',
           '.hrag-recall-sections { display: flex; flex-direction: column; gap: 8px; }',
           '.hrag-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 100%; }',
           '@keyframes hrag-fade-in { from { opacity: 0; } to { opacity: 1; } }',
@@ -1259,7 +1265,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-cand { display: flex; flex-direction: column; gap: 6px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); padding: 8px 10px; }',
           '.hrag-ev-cand-query { margin: 0; font-size: 13px; color: var(--dsw-alias-label-primary); }',
           '.hrag-ev-cand-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }',
-          '.hrag-ev-cand-answer { margin: 0; font-size: 11px; white-space: pre-wrap; }',
+          '.hrag-ev-cand-answer { margin: 0; font-size: 11px; white-space: pre-wrap; word-break: break-word; }',
           '.hrag-ev-cand-actions { display: flex; gap: 6px; }',
           '.hrag-ev-form { display: flex; flex-direction: column; gap: 10px; }',
           '.hrag-ev-formrow { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }',
@@ -1278,7 +1284,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-anchorchunk { display: flex; flex-direction: column; gap: 4px; }',
           '.hrag-ev-anchorchunk-trigger { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; border: none; background: transparent; color: var(--dsw-alias-label-primary); cursor: pointer; padding: 2px 0; text-align: left; width: 100%; font-family: inherit; }',
           '.hrag-ev-anchorchunk-preview { font-size: 11px; color: var(--dsw-alias-label-tertiary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-left: 16px; }',
-          '.hrag-ev-anchorchunk-body { font-size: 11px; color: var(--dsw-alias-label-secondary); white-space: pre-wrap; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 6px; padding: 6px 8px; max-height: 180px; overflow-y: auto; margin-left: 16px; }',
+          '.hrag-ev-anchorchunk-body { font-size: 11px; color: var(--dsw-alias-label-secondary); white-space: pre-wrap; word-break: break-word; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 6px; padding: 6px 8px; max-height: 180px; overflow-y: auto; margin-left: 16px; }',
           '.hrag-ev-danglingrow { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dsw-alias-label-error); }',
           '.hrag-ev-caret { display: inline-block; font-size: 10px; color: var(--dsw-alias-label-tertiary); transition: transform 120ms ease; flex-shrink: 0; }',
           '.hrag-ev-caret-open { transform: rotate(180deg); }',
@@ -1309,7 +1315,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-drawerbody { display: flex; flex-direction: column; gap: 10px; }',
           '.hrag-ev-footer { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; }',
           '.hrag-ev-danger-text { color: var(--dsw-alias-label-error); }',
-          '.hrag-ev-pre { margin: 0; font-size: 12px; white-space: pre-wrap; }',
+          '.hrag-ev-pre { margin: 0; font-size: 12px; white-space: pre-wrap; word-break: break-word; }',
           // 召回补面（存为考题）：行勾选与底栏。
           '.hrag-hitrow-row { display: flex; align-items: stretch; gap: 4px; min-width: 0; }',
           '.hrag-hitrow-row .hrag-hitrow { flex: 1; min-width: 0; }',
@@ -2274,9 +2280,9 @@ window.__ModuleLoader__.load({
                     { className: 'hrag-chunkrow-path' },
                     Array.isArray(chunk.heading_path) && chunk.heading_path.length > 0 ? chunk.heading_path.join(' / ') : '',
                   ),
-                  timecode ? h('span', { className: 'hrag-chip', title: t('chunk.timecode') }, timecode) : null,
+                  timecode ? h('span', { className: 'hrag-textchip', title: t('chunk.timecode') }, timecode) : null,
                   chunk.page != null
-                    ? h('span', { className: 'hrag-chip' }, t('chunk.page') + ' ' + String(chunk.page))
+                    ? h('span', { className: 'hrag-textchip' }, t('chunk.page') + ' ' + String(chunk.page))
                     : null,
                   h(
                     'button',
@@ -2657,17 +2663,20 @@ window.__ModuleLoader__.load({
               'div',
               { className: 'hrag-recall-head' },
               h('span', { className: 'hrag-recall-name' }, t('recall.path.' + path)),
-              h('span', { className: 'hrag-chip' }, String((result.score_type && result.score_type[path]) || '')),
+              h('span', { className: 'hrag-textchip', title: String((result.score_type && result.score_type[path]) || '') }, String((result.score_type && result.score_type[path]) || '')),
               h(
                 'span',
                 { className: 'hrag-recall-meta' },
-                h('span', { className: 'hrag-chip' }, String((result.elapsed_ms && result.elapsed_ms[path]) || 0) + ' ms'),
-                h('span', { className: 'hrag-chip' }, String(counts[path])),
+                h('span', { className: 'hrag-textchip' }, String((result.elapsed_ms && result.elapsed_ms[path]) || 0) + ' ms'),
+                h('span', { className: 'hrag-textchip' }, String(counts[path])),
               ),
             ),
             h(
               'div',
-              { className: 'hrag-recall-rows' },
+              {
+                className:
+                  'hrag-recall-rows' + (selectedChunks.size > 0 ? ' hrag-recall-rows-selecting' : ''),
+              },
               counts[path] === 0
                 ? h('div', { className: 'hrag-recall-empty' }, messages[path])
                 : rowsFor(path),
