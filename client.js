@@ -416,6 +416,57 @@ window.__ModuleLoader__.load({
       'crash.title': '视图渲染出错（{0}）',
       'crash.hint': '该视图已隔离，其他分区可继续使用；点「重试」重新挂载。',
       'crash.retry': '重试',
+      'menu.more': '更多操作',
+      'menu.upload': '上传文档',
+      'menu.uploading': '上传中…',
+      'menu.refreshUi': '刷新界面',
+      'menu.renameKb': '重命名知识库',
+      'menu.deleteKb': '删除知识库',
+      'menu.modelSettings': '功能模型设置',
+      'renameKb.title': '重命名知识库',
+      'renameKb.nameLabel': '知识库名称',
+      'renameKb.save': '保存',
+      'renameKb.done': '已重命名',
+      'deleteKb.title': '删除知识库？',
+      'deleteKb.desc': '将同时删除全部文档、切片、向量、图谱与百科条目，且不可恢复。',
+      'set.readonlyHint': '当前为只读展示；编辑与探测将在后续批次开放。',
+      'set.loadFailed': '设置加载失败',
+      'set.migrationRunning': '维度迁移中',
+      'set.migrationSucceeded': '维度迁移已完成，新宽度已生效。',
+      'set.migrationFailed': '维度迁移失败：',
+      'set.group.default': 'RAG 默认模型',
+      'set.group.retrieval': '检索',
+      'set.group.extraction': '图谱抽取',
+      'set.group.evaluation': '评测裁判',
+      'set.group.multimodal': '多模态与视频',
+      'set.group.services': '服务与令牌',
+      'set.field.defaultModel': 'RAG 默认模型',
+      'set.field.embeddingProvider': '向量提供方',
+      'set.field.embeddingModel': '向量模型',
+      'set.field.dimension': '维度',
+      'set.field.embeddingBaseUrl': '向量接口地址',
+      'set.field.sparseSource': '稀疏向量来源',
+      'set.field.sparseProvider': '稀疏服务提供方',
+      'set.field.sparseModel': '稀疏模型',
+      'set.field.sparseBaseUrl': '稀疏服务地址',
+      'set.field.rerankProvider': '重排提供方',
+      'set.field.rerankModel': '重排模型',
+      'set.field.rerankBaseUrl': '重排接口地址',
+      'set.field.extractModel': '图谱抽取模型',
+      'set.field.wikiModel': '百科生成模型',
+      'set.field.synthesisModel': '考题合成模型',
+      'set.field.judgeModel': '裁判模型',
+      'set.field.captionModel': '图片描述模型 (VLM)',
+      'set.field.asrProvider': '语音识别 (ASR)',
+      'set.field.asrModel': 'ASR 模型',
+      'set.field.asrBaseUrl': 'ASR 接口地址',
+      'set.field.parseProvider': '解析提供方',
+      'set.field.parseBaseUrl': '服务地址',
+      'set.field.parseTier': '解析档位',
+      'set.field.parseLanguage': '解析语种',
+      'set.field.parseModelVersion': '模型版本',
+      'set.field.qdrantUrl': 'Qdrant 地址',
+      'set.field.mineruToken': 'MinerU 解析令牌',
     }
     const en = {
       'tab.title': 'Knowledge Base',
@@ -834,6 +885,58 @@ window.__ModuleLoader__.load({
       'crash.title': 'View render failed ({0})',
       'crash.hint': 'The view is isolated; other sections keep working. Retry remounts it.',
       'crash.retry': 'Retry',
+      'menu.more': 'More actions',
+      'menu.upload': 'Upload document',
+      'menu.uploading': 'Uploading…',
+      'menu.refreshUi': 'Refresh panel',
+      'menu.renameKb': 'Rename knowledge base',
+      'menu.deleteKb': 'Delete knowledge base',
+      'menu.modelSettings': 'Functional model settings',
+      'renameKb.title': 'Rename knowledge base',
+      'renameKb.nameLabel': 'Knowledge base name',
+      'renameKb.save': 'Save',
+      'renameKb.done': 'Renamed',
+      'deleteKb.title': 'Delete this knowledge base?',
+      'deleteKb.desc':
+        'All documents, chunks, vectors, graph data and wiki entries will be cascade-deleted. This cannot be undone.',
+      'set.readonlyHint': 'Read-only view; editing and probes arrive in later batches.',
+      'set.loadFailed': 'Failed to load the settings',
+      'set.migrationRunning': 'Dimension migration in progress',
+      'set.migrationSucceeded': 'Dimension migration finished; the new width is in effect.',
+      'set.migrationFailed': 'Dimension migration failed:',
+      'set.group.default': 'RAG default model',
+      'set.group.retrieval': 'Retrieval',
+      'set.group.extraction': 'Graph extraction',
+      'set.group.evaluation': 'Evaluation judge',
+      'set.group.multimodal': 'Multimodal & video',
+      'set.group.services': 'Services & tokens',
+      'set.field.defaultModel': 'RAG default model',
+      'set.field.embeddingProvider': 'Embedding provider',
+      'set.field.embeddingModel': 'Embedding model',
+      'set.field.dimension': 'Dimension',
+      'set.field.embeddingBaseUrl': 'Embedding endpoint',
+      'set.field.sparseSource': 'Sparse source',
+      'set.field.sparseProvider': 'Sparse provider',
+      'set.field.sparseModel': 'Sparse model',
+      'set.field.sparseBaseUrl': 'Sparse service endpoint',
+      'set.field.rerankProvider': 'Rerank provider',
+      'set.field.rerankModel': 'Rerank model',
+      'set.field.rerankBaseUrl': 'Rerank endpoint',
+      'set.field.extractModel': 'Graph extraction model',
+      'set.field.wikiModel': 'Wiki generation model',
+      'set.field.synthesisModel': 'Question synthesis model',
+      'set.field.judgeModel': 'Judge model',
+      'set.field.captionModel': 'Caption model (VLM)',
+      'set.field.asrProvider': 'Speech recognition (ASR)',
+      'set.field.asrModel': 'ASR model',
+      'set.field.asrBaseUrl': 'ASR endpoint',
+      'set.field.parseProvider': 'Parse provider',
+      'set.field.parseBaseUrl': 'Service endpoint',
+      'set.field.parseTier': 'Parse tier',
+      'set.field.parseLanguage': 'Parse language',
+      'set.field.parseModelVersion': 'Model version',
+      'set.field.qdrantUrl': 'Qdrant URL',
+      'set.field.mineruToken': 'MinerU parsing token',
     }
 
     /** Panel data seam: every panel request is a POST of JSON parameters to
@@ -910,19 +1013,25 @@ window.__ModuleLoader__.load({
         [
           '.hrag-shell { display: flex; flex-direction: column; gap: 10px; padding: 12px; min-width: 0; box-sizing: border-box; min-height: 100%; }',
           '.hrag-bar { display: flex; align-items: center; gap: 8px; min-width: 0; }',
-          ".hrag-bar select { flex: 1; min-width: 0; height: 32px; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; }",
-          '.hrag-bar select:focus-visible { outline: none; border-color: var(--dsw-alias-state-business-primary); }',
+          '.hrag-kbtrigger { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-width: 0; padding: 2px 4px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }',
+          '.hrag-kbtrigger:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-kbtrigger-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-kbtrigger-chev { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-iconbare { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
+          '.hrag-iconbare:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-mm-check { margin-left: auto; display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-secondary); }',
           '.hrag-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 0 12px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
           '.hrag-btn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-btn:active:not(:disabled) { background: var(--dsw-alias-interactive-bg-active); }',
           '.hrag-btn:disabled { cursor: not-allowed; opacity: 0.4; }',
           '.hrag-btn:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
           '.hrag-btn-outline { border: 0.5px solid var(--dsw-alias-border-l3); }',
-          '.hrag-tabs { display: grid; grid-template-columns: repeat(var(--hrag-tabs, 3), 1fr); gap: 0; padding: 4px; border-radius: var(--dsw-radius-lg); background: var(--dsw-alias-bg-module-platform); }',
-          ".hrag-tab { height: 34px; padding: 0 12px; border: none; background: transparent; border-radius: var(--dsw-radius-md); color: var(--dsw-alias-label-secondary); font-size: 14px; font-family: inherit; cursor: pointer; transition: color 180ms ease; }",
-          ".hrag-tab:hover, .hrag-tab[aria-selected='true'] { color: var(--dsw-alias-label-primary); }",
-          ".hrag-tab[aria-selected='true'] { font-weight: 600; }",
-          '.hrag-tab:focus-visible { outline: none; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }',
+          '.hrag-tabs { position: relative; display: flex; flex-wrap: wrap; gap: 0 36px; border-bottom: 0.5px solid var(--dsw-alias-border-l3); }',
+          '.hrag-tab { position: relative; padding: 0 0 9px; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 13px; font-weight: 500; line-height: 16px; font-family: inherit; cursor: pointer; }',
+          '.hrag-tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 2px; background: transparent; }',
+          ".hrag-tab[aria-selected='true'] { color: var(--dsw-alias-state-business-primary); }",
+          ".hrag-tab[aria-selected='true']::after { background: var(--dsw-alias-state-business-primary); }",
+          '.hrag-tab:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); border-radius: 4px; }',
           '.hrag-pane { padding: 8px 2px; color: var(--dsw-alias-label-tertiary); font-size: 13px; line-height: 20px; }',
           '.hrag-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; text-align: center; }',
           '.hrag-state-title { color: var(--dsw-alias-label-primary); font-size: 14px; line-height: 22px; }',
@@ -1037,6 +1146,29 @@ window.__ModuleLoader__.load({
           '.hrag-crash-title { margin: 0; color: var(--dsw-alias-label-error); font-size: 13px; font-weight: 600; }',
           '.hrag-crash-hint { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 1.6; }',
           '.hrag-crash-pre { margin: 0; max-height: 220px; overflow: auto; padding: 8px; border-radius: 6px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-secondary); font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }',
+          '.hrag-mm-wrap { position: relative; display: inline-flex; }',
+          '.hrag-bar > .hrag-mm-wrap + .hrag-mm-wrap { margin-left: auto; }',
+          '.hrag-mm-backdrop { position: fixed; inset: 0; z-index: 40; }',
+          '.hrag-mm { position: fixed; z-index: 41; min-width: 144px; padding: 4px; border: none; border-radius: var(--dsw-radius-lg); background: var(--dsw-menu-surface-fill, var(--dsw-alias-bg-layer-1)); backdrop-filter: var(--dsw-menu-backdrop-filter); -webkit-backdrop-filter: var(--dsw-menu-backdrop-filter); box-shadow: var(--dsw-elevation-prominent); }',
+          '.hrag-mm-item { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 34px; padding: 6px 8px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-mm-item:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-mm-item:disabled { opacity: 0.5; cursor: not-allowed; }',
+          '.hrag-mm-item-danger { color: var(--dsw-alias-state-error-primary); }',
+          '.hrag-mm-item-danger:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-danger); }',
+          '.hrag-mm-sep { height: 0.5px; background: var(--dsw-alias-border-l2); margin: 3px 2px; }',
+          '.hrag-mm-icon { display: inline-flex; flex-shrink: 0; color: inherit; }',
+          '.hrag-set-body { display: flex; flex-direction: column; gap: 10px; }',
+          '.hrag-set-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-set-migration { padding: 6px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
+          '.hrag-set-migration-failed { color: var(--dsw-alias-label-error); border-color: color-mix(in srgb, var(--dsw-alias-label-error) 40%, transparent); }',
+          '.hrag-set-card { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; }',
+          '.hrag-set-cardhead { padding: 6px 10px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
+          '.hrag-set-cardbody { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 8px 10px; }',
+          '.hrag-set-group { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); }',
+          '.hrag-set-grouptitle { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; }',
+          '.hrag-set-row { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 8px; font-size: 12px; line-height: 20px; }',
+          '.hrag-set-label { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-set-value { color: var(--dsw-alias-label-primary); word-break: break-word; }',
           '.hrag-graph-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
           '.hrag-gchips { display: flex; flex-wrap: wrap; gap: 6px; }',
           '.hrag-gchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 11px; }',
@@ -5129,6 +5261,181 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 菜单图标：DSH 真值原路径（16 视窗・stroke 1・currentColor——menu-batch
+        Task 0 自宿主 web bundle 提取，证据 hrag-probe/dsh-icons-extract.json）。 */
+    function dshMenuIcon(paths) {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', strokeWidth: 1, 'aria-hidden': 'true' },
+        paths.map((path, index) =>
+          h('path', {
+            key: index,
+            d: path.d,
+            fill: path.fill ? 'currentColor' : 'none',
+            stroke: path.fill ? 'none' : 'currentColor',
+          }),
+        ),
+      )
+    }
+    function dshEllipsisIcon() {
+      return dshMenuIcon([
+        { d: 'M3 9C3.55228 9 4 8.55228 4 8C4 7.44772 3.55228 7 3 7C2.44772 7 2 7.44772 2 8C2 8.55228 2.44772 9 3 9Z', fill: true },
+        { d: 'M8 9C8.55228 9 9 8.55228 9 8C9 7.44772 8.55228 7 8 7C7.44772 7 7 7.44772 7 8C7 8.55228 7.44772 9 8 9Z', fill: true },
+        { d: 'M13 9C13.5523 9 14 8.55228 14 8C14 7.44772 13.5523 7 13 7C12.4477 7 12 7.44772 12 8C12 8.55228 12.4477 9 13 9Z', fill: true },
+      ])
+    }
+    function dshRefreshIcon() {
+      return dshMenuIcon([
+        { d: 'M14.5001 8C14.5 9.28552 14.1188 10.5422 13.4045 11.611C12.6903 12.6799 11.6752 13.5129 10.4875 14.0049C9.29982 14.4968 7.99295 14.6255 6.73212 14.3747C5.4713 14.124 4.31314 13.505 3.4041 12.596C2.49514 11.687 1.87614 10.5288 1.62537 9.26798C1.37459 8.00716 1.50331 6.70028 1.99525 5.51261C2.48719 4.32494 3.32025 3.30981 4.3891 2.59557C5.45795 1.88134 6.71458 1.50008 8.0001 1.5C9.9001 1.5 11.7001 2.3 13.0001 3.6L14.5001 5.1' },
+        { d: 'M14.4999 1.5V5.1H10.8999' },
+      ])
+    }
+    function dshEditIcon() {
+      return dshMenuIcon([
+        { d: 'M8.85596 2.69971H4.19971C3.37141 2.69971 2.69992 3.37146 2.69971 4.19971V11.8003C2.69992 12.6285 3.37141 13.3003 4.19971 13.3003H11.8003C12.6283 13.2999 13.3001 12.6283 13.3003 11.8003V7.89893H14.3003V11.8003C14.3001 13.1806 13.1806 14.2999 11.8003 14.3003H4.19971C2.81913 14.3003 1.69992 13.1808 1.69971 11.8003V4.19971C1.69992 2.81918 2.81913 1.69971 4.19971 1.69971H8.85596V2.69971Z', fill: true },
+        { d: 'M7.7849 8.23878L13.888 2.13574' },
+      ])
+    }
+    function dshTrashIcon() {
+      return dshMenuIcon([
+        { d: 'M1.28149 3.88831H14.7187' },
+        { d: 'M5.41602 3.88833V2.47962C5.41602 2.29282 5.52492 2.11366 5.71876 1.98157C5.9126 1.84948 6.17551 1.77527 6.44964 1.77527H9.55053C9.82466 1.77527 10.0876 1.84948 10.2814 1.98157C10.4753 2.11366 10.5842 2.29282 10.5842 2.47962V3.88833' },
+        { d: 'M2.57349 3.88831L3.19366 13.2943C3.21937 13.5502 3.33952 13.7872 3.53065 13.9593C3.72178 14.1313 3.97016 14.2259 4.22729 14.2246H11.7728C12.0299 14.2259 12.2783 14.1313 12.4694 13.9593C12.6605 13.7872 12.7807 13.5502 12.8064 13.2943L13.4266 3.88831' },
+        { d: 'M6.44946 6.98926V11.1238' },
+        { d: 'M9.55054 6.98926V11.1238' },
+      ])
+    }
+    function dshSettingsIcon() {
+      return dshMenuIcon([
+        { d: 'M8 9.75012C8.9665 9.75012 9.75 8.96662 9.75 8.00012C9.75 7.03362 8.9665 6.25012 8 6.25012C7.0335 6.25012 6.25 7.03362 6.25 8.00012C6.25 8.96662 7.0335 9.75012 8 9.75012Z' },
+        { d: 'M13.0107 7.79377C12.9505 7.89401 12.9205 7.94413 12.9205 7.99951C12.9205 8.0549 12.9505 8.10502 13.0106 8.20528L13.9849 9.83006C14.045 9.93029 14.0751 9.9804 14.0751 10.0358C14.0751 10.0911 14.045 10.1413 13.9849 10.2415L13.0037 11.8777C12.9468 11.9726 12.9184 12.0201 12.8725 12.0461C12.8267 12.072 12.7713 12.072 12.6607 12.072H10.6704C10.5598 12.072 10.5045 12.072 10.4586 12.098C10.4128 12.1239 10.3843 12.1714 10.3274 12.2662L9.33825 13.9142C9.28133 14.009 9.25287 14.0564 9.20703 14.0823C9.16118 14.1083 9.10588 14.1083 8.99529 14.1083H7.00486C6.89426 14.1083 6.83896 14.1083 6.79312 14.0823C6.74727 14.0564 6.71881 14.009 6.6619 13.9142L5.67273 12.2662C5.61581 12.1714 5.58735 12.1239 5.54151 12.098C5.49566 12.072 5.44036 12.072 5.32977 12.072H3.33945C3.2288 12.072 3.17347 12.072 3.12761 12.0461C3.08176 12.0201 3.0533 11.9726 2.9964 11.8777L2.0152 10.2415C1.9551 10.1413 1.92505 10.0911 1.92505 10.0358C1.92505 9.9804 1.9551 9.93029 2.0152 9.83006L2.98951 8.20528C3.04963 8.10502 3.07969 8.0549 3.07969 7.99951C3.07968 7.94413 3.04961 7.89401 2.98946 7.79377L2.01529 6.17011C1.95514 6.06987 1.92507 6.01975 1.92507 5.96437C1.92506 5.90899 1.95512 5.85886 2.01524 5.7586L2.9964 4.1224C3.0533 4.0275 3.08176 3.98005 3.12761 3.95408C3.17347 3.92811 3.2288 3.92811 3.33945 3.92811H5.32977C5.44036 3.92811 5.49566 3.92811 5.54151 3.90216C5.58735 3.87621 5.61581 3.82879 5.67273 3.73397L6.6619 2.08599C6.71881 1.99116 6.74727 1.94375 6.79312 1.9178C6.83896 1.89185 6.89426 1.89185 7.00486 1.89185H8.99529C9.10588 1.89185 9.16118 1.89185 9.20703 1.9178C9.25287 1.94375 9.28133 1.99116 9.33825 2.08599L10.3274 3.73397C10.3843 3.82879 10.4128 3.87621 10.4586 3.90216C10.5045 3.92811 10.5598 3.92811 10.6704 3.92811H12.6607C12.7713 3.92811 12.8267 3.92811 12.8725 3.95408C12.9184 3.98005 12.9468 4.0275 13.0037 4.1224L13.9849 5.7586C14.045 5.85886 14.0751 5.90899 14.0751 5.96437C14.0751 6.01975 14.045 6.06987 13.9849 6.17011L13.0107 7.79377Z' },
+      ])
+    }
+    /** 知识库标题下拉的 chevron 与菜单选中勾（宿主原路径，Task 8 取证）。 */
+    function dshChevronDownIcon() {
+      return dshMenuIcon([
+        { d: 'M4 6L7.29289 9.29289C7.68342 9.68342 8.31658 9.68342 8.70711 9.29289L12 6' },
+      ])
+    }
+    function dshCheckIcon() {
+      return dshMenuIcon([
+        { d: 'M2.25 8.5L5.49732 11.7473C5.90519 12.1552 6.57263 12.1344 6.95426 11.7018L13.75 4' },
+      ])
+    }
+
+    /** 菜单图标：工作台同款（lucide 24 视窗・stroke 2・圆头——宿主无对应件档，
+        spec M3「相同语言」）。 */
+    function lucideMenuIcon(paths) {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        paths.map((d, index) => h('path', { key: index, d, stroke: 'currentColor' })),
+      )
+    }
+    function lucideUploadIcon() {
+      return lucideMenuIcon(['M12 3v12', 'm17 8-5-5-5 5', 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'])
+    }
+    function lucideBookOpenIcon() {
+      return lucideMenuIcon([
+        'M12 7v14',
+        'M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z',
+      ])
+    }
+    function lucideRefreshCwIcon() {
+      return lucideMenuIcon([
+        'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8',
+        'M21 3v5h-5',
+        'M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16',
+        'M8 16H3v5',
+      ])
+    }
+
+    /** DSH 真值菜单（菜单批 Task 1，spec M2）：面板/行/危险色/分隔全照宿主
+        Menu.module.css；fixed 测位（同 EvalMenu 配方：开拍测位、下方不足朝上、
+        背板点收）。与评测域 EvalMenu 互不复用（隔离由 spec M2 注钉）。 */
+    function DshMenu({ title, trigger, align, className, render }) {
+      const [open, setOpen] = React.useState(false)
+      const [pos, setPos] = React.useState(null)
+      const btnRef = React.useRef(null)
+      const toggle = () => {
+        if (open) {
+          setOpen(false)
+          return
+        }
+        const el = btnRef.current
+        if (el) {
+          const rect = el.getBoundingClientRect()
+          const spaceBelow = window.innerHeight - rect.bottom
+          const openUp = spaceBelow < 200 && rect.top > spaceBelow
+          setPos({
+            top: openUp ? null : rect.bottom + 4,
+            bottom: openUp ? window.innerHeight - rect.top + 4 : null,
+            left: rect.left,
+            right: window.innerWidth - rect.right,
+          })
+        }
+        setOpen(true)
+      }
+      return h(
+        'div',
+        { className: 'hrag-mm-wrap' },
+        h(
+          'button',
+          {
+            type: 'button',
+            ref: btnRef,
+            className: className || 'hrag-btn hrag-btn-outline hrag-btn-icon',
+            'aria-label': title,
+            title,
+            'aria-haspopup': 'menu',
+            'aria-expanded': open,
+            onClick: toggle,
+          },
+          trigger,
+        ),
+        open
+          ? h(
+              React.Fragment,
+              null,
+              h('div', { className: 'hrag-mm-backdrop', onMouseDown: () => setOpen(false) }),
+              h(
+                'div',
+                {
+                  className: 'hrag-mm',
+                  role: 'menu',
+                  style: pos
+                    ? {
+                        top: pos.top !== null ? pos.top + 'px' : 'auto',
+                        bottom: pos.bottom !== null ? pos.bottom + 'px' : 'auto',
+                        left: align === 'end' ? 'auto' : pos.left + 'px',
+                        right: align === 'end' ? pos.right + 'px' : 'auto',
+                      }
+                    : undefined,
+                },
+                render(() => setOpen(false)),
+              ),
+            )
+          : null,
+      )
+    }
+
+    /** DSH 真值菜单行：34px 行高・13px・图标槽。 */
+    function DshMenuItem({ danger, disabled, selected, icon, onSelect, children }) {
+      return h(
+        'button',
+        {
+          type: 'button',
+          role: 'menuitem',
+          className: 'hrag-mm-item' + (danger ? ' hrag-mm-item-danger' : ''),
+          disabled,
+          onClick: () => onSelect && onSelect(),
+        },
+        icon ? h('span', { className: 'hrag-mm-icon' }, icon) : null,
+        children,
+        selected ? h('span', { className: 'hrag-mm-check' }, dshCheckIcon()) : null,
+      )
+    }
+
     /** 趋势指标选择图标（滑杆三条＋旋钮，照工作台 SlidersHorizontal 语汇）。 */
     function evalSlidersIcon() {
       return h(
@@ -8216,7 +8523,7 @@ window.__ModuleLoader__.load({
         wiki-tab 定高分屏语义：都展开各半、收起一个让位另一个）；⋯ 承接更新/重建
         （重建走确认闸）；条目状态轮询（generating 3s＋触发后 12s 力度窗）；drain 边
         按 last_run 出真话提示；行级/批量更新与删除（编辑档不做＝富文本编辑另案）。 */
-    function WikiView({ t, kbId, enabled, onOpenEntry, onOpenCard }) {
+    function WikiView({ t, kbId, enabled, onOpenEntry, onOpenCard, command, onBusyChange }) {
       const tk = (key, ...args) => evText(t(key), args)
       const [query, setQuery] = React.useState('')
       const [notice, setNotice] = React.useState(null)
@@ -8305,6 +8612,18 @@ window.__ModuleLoader__.load({
         setRegeneratingIds(entryIds)
         triggerWiki('entries', entryIds)
       }
+
+      // 壳级菜单指令线（菜单批 Task 1）：菜单项先切百科、再以 nonce 发令，同令只消费一次。
+      const commandNonceRef = React.useRef(0)
+      React.useEffect(() => {
+        if (!command || !command.nonce || commandNonceRef.current === command.nonce) return
+        commandNonceRef.current = command.nonce
+        triggerWiki(command.mode)
+      }, [command])
+      // 在飞态上报壳级（菜单「更新百科」行 spinner/禁用）。
+      React.useEffect(() => {
+        if (onBusyChange) onBusyChange(updating)
+      }, [updating, onBusyChange])
 
       // 过滤（照工作台：条目标题+摘要、卡片标题+摘要+标签，客户端包含匹配）。
       const needle = query.trim().toLowerCase()
@@ -9070,6 +9389,178 @@ window.__ModuleLoader__.load({
       }
     }
 
+    /** 功能模型设置面·批 1（菜单批 Task 1，spec M4）：Sheet 骨架＋只读七组
+        主行＋重建索引入口（自顶栏移入，行为逐项一致）＋迁移状态行。批 2+ 逐组
+        换完整表单（工作台 functional-models-view 对照）。 */
+    const SET_GROUPS = [
+      { title: 'set.group.default', rows: [['default_model', 'set.field.defaultModel']] },
+      {
+        title: 'set.group.retrieval',
+        rows: [
+          ['embedding_provider', 'set.field.embeddingProvider'],
+          ['embedding_model', 'set.field.embeddingModel'],
+          ['embedding_dimension', 'set.field.dimension'],
+          ['embedding_base_url', 'set.field.embeddingBaseUrl'],
+          ['embedding_sparse_source', 'set.field.sparseSource'],
+          ['sparse_provider', 'set.field.sparseProvider'],
+          ['sparse_model', 'set.field.sparseModel'],
+          ['sparse_base_url', 'set.field.sparseBaseUrl'],
+          ['rerank_provider', 'set.field.rerankProvider'],
+          ['rerank_model', 'set.field.rerankModel'],
+          ['rerank_base_url', 'set.field.rerankBaseUrl'],
+        ],
+      },
+      {
+        title: 'set.group.extraction',
+        rows: [
+          ['extract_model', 'set.field.extractModel'],
+          ['wiki_model', 'set.field.wikiModel'],
+          ['synthesis_model', 'set.field.synthesisModel'],
+        ],
+      },
+      { title: 'set.group.evaluation', rows: [['judge_model', 'set.field.judgeModel']] },
+      {
+        title: 'set.group.multimodal',
+        rows: [
+          ['vlm_model', 'set.field.captionModel'],
+          ['video.asr_provider', 'set.field.asrProvider'],
+          ['video.asr_model', 'set.field.asrModel'],
+          ['asr_base_url', 'set.field.asrBaseUrl'],
+        ],
+      },
+      {
+        title: 'set.group.services',
+        rows: [
+          ['parse_provider', 'set.field.parseProvider'],
+          ['parse_base_url', 'set.field.parseBaseUrl'],
+          ['parse_tier', 'set.field.parseTier'],
+          ['parse_language', 'set.field.parseLanguage'],
+          ['parse_model_version', 'set.field.parseModelVersion'],
+          ['qdrant_url', 'set.field.qdrantUrl'],
+          ['mineru_api_token', 'set.field.mineruToken'],
+        ],
+      },
+    ]
+
+    function setValueAt(config, path) {
+      const parts = String(path).split('.')
+      let value = config
+      for (const part of parts) {
+        if (value == null || typeof value !== 'object') return null
+        value = value[part]
+      }
+      return value
+    }
+
+    function ModelSettingsPanel({ t, kbId, onClose, reindexLine, reindexBusy, reindexRunning, onReindex }) {
+      const configQ = useEvalCall(kbId, true, 'ragConfigGet', null)
+      const migrationQ = useEvalCall(kbId, true, 'ragMigration', null, (payload) =>
+        Boolean(payload && payload.state === 'running'),
+      )
+      const config = configQ.data && configQ.data.config ? configQ.data.config : {}
+      const migration =
+        (migrationQ.data && typeof migrationQ.data === 'object' ? migrationQ.data : null) ||
+        (configQ.data && configQ.data.migration ? configQ.data.migration : null)
+
+      let migrationLine = null
+      if (migration && migration.state === 'running') {
+        migrationLine = h(
+          'div',
+          { className: 'hrag-set-migration' },
+          t('set.migrationRunning') +
+            (migration.target_dimension != null ? ' → ' + String(migration.target_dimension) : ''),
+        )
+      } else if (migration && migration.state === 'failed') {
+        migrationLine = h(
+          'div',
+          { className: 'hrag-set-migration hrag-set-migration-failed' },
+          t('set.migrationFailed') + ' ' + String(migration.detail || ''),
+        )
+      } else if (migration && migration.state === 'succeeded') {
+        migrationLine = h('div', { className: 'hrag-set-migration' }, t('set.migrationSucceeded'))
+      }
+
+      return h(
+        React.Fragment,
+        null,
+        h('div', {
+          className: 'hrag-drawer-overlay',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) onClose()
+          },
+        }),
+        h(
+          'div',
+          { className: 'hrag-drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('menu.modelSettings') },
+          h(
+            'div',
+            { className: 'hrag-drawer-head' },
+            h('span', { className: 'hrag-wk-secticon' }, dshSettingsIcon()),
+            h('span', { className: 'hrag-drawer-title' }, t('menu.modelSettings')),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-outline hrag-drawer-close',
+                'aria-label': t('chunk.close'),
+                title: t('chunk.close'),
+                onClick: onClose,
+              },
+              '✕',
+            ),
+          ),
+          h(
+            'div',
+            { className: 'hrag-drawer-body hrag-set-body' },
+            h('p', { className: 'hrag-set-hint' }, t('set.readonlyHint')),
+            migrationLine,
+            h(
+              'div',
+              { className: 'hrag-set-card' },
+              h('div', { className: 'hrag-set-cardhead' }, t('reindex.button')),
+              h(
+                'div',
+                { className: 'hrag-set-cardbody' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-outline hrag-btn-sm',
+                    disabled: reindexBusy || reindexRunning,
+                    title: t('reindex.button'),
+                    onClick: onReindex,
+                  },
+                  t('reindex.button'),
+                ),
+                reindexLine ? h('div', { className: 'hrag-reindex-status' }, reindexLine) : null,
+              ),
+            ),
+            configQ.failure
+              ? h('div', { className: 'hrag-ev-hint hrag-ev-hint-error hrag-wk-inset' }, t('set.loadFailed'))
+              : configQ.data === null
+                ? h('div', { className: 'hrag-ev-hint hrag-wk-inset' }, t('wk.loading'))
+                : SET_GROUPS.map((group) =>
+                    h(
+                      'div',
+                      { className: 'hrag-set-group', key: group.title },
+                      h('div', { className: 'hrag-set-grouptitle' }, t(group.title)),
+                      group.rows.map(([path, labelKey]) => {
+                        const raw = setValueAt(config, path)
+                        const text = raw === null || raw === undefined || raw === '' ? '—' : String(raw)
+                        return h(
+                          'div',
+                          { className: 'hrag-set-row', key: path },
+                          h('span', { className: 'hrag-set-label' }, t(labelKey)),
+                          h('span', { className: 'hrag-set-value', title: text }, text),
+                        )
+                      }),
+                    ),
+                  ),
+          ),
+        ),
+      )
+    }
+
     function KnowledgePanel({ t }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -9091,6 +9582,16 @@ window.__ModuleLoader__.load({
       // 派生（reindexBusy＝点击→首次轮询的缝隙），空闲示上次结果行。
       const [reindexState, setReindexState] = React.useState(null)
       const [reindexKick, setReindexKick] = React.useState(0)
+      // 菜单批 Task 1：库级 ⋯ 菜单状态——重命名弹层/删除确认/设置面/百科指令线。
+      const [menuRenameOpen, setMenuRenameOpen] = React.useState(false)
+      const [renameValue, setRenameValue] = React.useState('')
+      const [kbDeleteOpen, setKbDeleteOpen] = React.useState(false)
+      const [kbDeleteBusy, setKbDeleteBusy] = React.useState(false)
+      const [settingsOpen, setSettingsOpen] = React.useState(false)
+      const [shellRebuildOpen, setShellRebuildOpen] = React.useState(false)
+      const [wikiCommand, setWikiCommand] = React.useState(null)
+      const [wikiBusy, setWikiBusy] = React.useState(false)
+      const currentKb = kbs.find((item) => String(item.id) === kbId) || null
       const reindexRunning =
         reindexBusy || (reindexState !== null && reindexState.in_progress === true)
       // 检索联动叠加（照工作台「在向量空间查看」）：召回触发 → 切投影分区并投影。
@@ -9243,6 +9744,40 @@ window.__ModuleLoader__.load({
           })
       }
 
+      const openRename = () => {
+        const kb = kbs.find((item) => String(item.id) === kbId)
+        setRenameValue(kb ? String(kb.name || '') : '')
+        setMenuRenameOpen(true)
+      }
+      const confirmRename = () => {
+        const name = renameValue.trim()
+        if (!name || !kbId) return
+        callOp('renameKb', { kb_id: kbId, name })
+          .then(() => {
+            setMenuRenameOpen(false)
+            setKbs((list) => list.map((item) => (String(item.id) === kbId ? Object.assign({}, item, { name }) : item)))
+            setBarNotice({ text: t('renameKb.done') })
+          })
+          .catch((error) => setBarNotice({ text: errorDetail(error), isError: true }))
+      }
+      const confirmDeleteKb = () => {
+        if (!kbId) return
+        setKbDeleteBusy(true)
+        callOp('deleteKb', { kb_id: kbId })
+          .then(() => {
+            setKbDeleteBusy(false)
+            setKbDeleteOpen(false)
+            setKbId('')
+            load()
+            setRefreshToken((value) => value + 1)
+          })
+          .catch((error) => {
+            setKbDeleteBusy(false)
+            setKbDeleteOpen(false)
+            setBarNotice({ text: errorDetail(error), isError: true })
+          })
+      }
+
       // 重建状态行（照工作台 functional-models-view 的三态文本）。
       let reindexLine = null
       if (reindexRunning) {
@@ -9291,61 +9826,139 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'hrag-bar' },
-            h(
-              'select',
-              {
-                value: kbId,
-                'aria-label': t('shell.kbLabel'),
-                onChange: (event) => setKbId(event.target.value),
-              },
-              kbs.map((kb) =>
-                h('option', { key: String(kb.id), value: String(kb.id) }, String(kb.name || kb.id)),
+            h(DshMenu, {
+              title: t('shell.kbLabel'),
+              align: 'start',
+              className: 'hrag-kbtrigger',
+              trigger: h(
+                React.Fragment,
+                null,
+                h(
+                  'span',
+                  { className: 'hrag-kbtrigger-name' },
+                  currentKb ? String(currentKb.name || currentKb.id) : '',
+                ),
+                h('span', { className: 'hrag-kbtrigger-chev' }, dshChevronDownIcon()),
               ),
-            ),
-            h(
-              'button',
-              {
-                type: 'button',
-                className: 'hrag-btn hrag-btn-outline',
-                onClick: () => {
-                  load()
-                  setRefreshToken((value) => value + 1)
-                },
-              },
-              t('shell.refresh'),
-            ),
-            h(
-              'button',
-              {
-                type: 'button',
-                className: 'hrag-btn hrag-btn-outline',
-                disabled: uploading,
-                title: t('shell.upload'),
-                onClick: () => {
-                  const input = fileInputRef.current
-                  if (input) input.click()
-                },
-              },
-              uploading ? t('upload.uploading') : t('shell.upload'),
-            ),
-            h(
-              'button',
-              {
-                type: 'button',
-                className: 'hrag-btn hrag-btn-outline',
-                disabled: reindexBusy || reindexRunning,
-                title: t('reindex.button'),
-                onClick: () => {
-                  setReindexError(null)
-                  setReindexOpen(true)
-                },
-              },
-              t('reindex.button'),
-            ),
+              render: (close) =>
+                kbs.map((kb) =>
+                  h(
+                    DshMenuItem,
+                    {
+                      key: String(kb.id),
+                      selected: String(kb.id) === kbId,
+                      onSelect: () => {
+                        close()
+                        setKbId(String(kb.id))
+                      },
+                    },
+                    String(kb.name || kb.id),
+                  ),
+                ),
+            }),
+            h(DshMenu, {
+              title: t('menu.more'),
+              align: 'end',
+              className: 'hrag-iconbare',
+              trigger: dshEllipsisIcon(),
+              render: (close) => [
+                h(
+                  DshMenuItem,
+                  {
+                    key: 'upload',
+                    icon: lucideUploadIcon(),
+                    disabled: uploading,
+                    onSelect: () => {
+                      close()
+                      const input = fileInputRef.current
+                      if (input) input.click()
+                    },
+                  },
+                  uploading ? t('menu.uploading') : t('menu.upload'),
+                ),
+                h(
+                  DshMenuItem,
+                  {
+                    key: 'refresh',
+                    icon: dshRefreshIcon(),
+                    onSelect: () => {
+                      close()
+                      load()
+                      setRefreshToken((value) => value + 1)
+                    },
+                  },
+                  t('menu.refreshUi'),
+                ),
+                h('div', { key: 'sep-1', className: 'hrag-mm-sep' }),
+                h(
+                  DshMenuItem,
+                  {
+                    key: 'update-wiki',
+                    icon: wikiBusy ? h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }) : lucideBookOpenIcon(),
+                    disabled: wikiBusy,
+                    onSelect: () => {
+                      close()
+                      setWikiCommand({ mode: 'incremental', nonce: Date.now() })
+                      setSection('wiki')
+                    },
+                  },
+                  wikiBusy ? t('wk.updating') : t('wk.updateWiki'),
+                ),
+                h(
+                  DshMenuItem,
+                  {
+                    key: 'rebuild-wiki',
+                    icon: lucideRefreshCwIcon(),
+                    disabled: wikiBusy,
+                    onSelect: () => {
+                      close()
+                      setShellRebuildOpen(true)
+                    },
+                  },
+                  t('wk.rebuildWiki'),
+                ),
+                h('div', { key: 'sep-2', className: 'hrag-mm-sep' }),
+                h(
+                  DshMenuItem,
+                  {
+                    key: 'rename',
+                    icon: dshEditIcon(),
+                    onSelect: () => {
+                      close()
+                      openRename()
+                    },
+                  },
+                  t('menu.renameKb'),
+                ),
+                h(
+                  DshMenuItem,
+                  {
+                    key: 'delete',
+                    danger: true,
+                    icon: dshTrashIcon(),
+                    onSelect: () => {
+                      close()
+                      setKbDeleteOpen(true)
+                    },
+                  },
+                  t('menu.deleteKb'),
+                ),
+                h('div', { key: 'sep-3', className: 'hrag-mm-sep' }),
+                h(
+                  DshMenuItem,
+                  {
+                    key: 'settings',
+                    icon: dshSettingsIcon(),
+                    onSelect: () => {
+                      close()
+                      setSettingsOpen(true)
+                    },
+                  },
+                  t('menu.modelSettings'),
+                ),
+              ],
+            }),
           ),
-          reindexLine
-            ? h('div', { className: 'hrag-reindex-status' }, reindexLine)
-            : null,
           h('input', {
             type: 'file',
             multiple: true,
@@ -9362,7 +9975,7 @@ window.__ModuleLoader__.load({
             : null,
           h(
             'div',
-            { className: 'hrag-tabs', style: { '--hrag-tabs': String(SECTIONS.length) }, role: 'tablist' },
+            { className: 'hrag-tabs', role: 'tablist' },
             SECTIONS.map((entry) =>
               h(
                 'button',
@@ -9424,6 +10037,8 @@ window.__ModuleLoader__.load({
               t,
               kbId,
               enabled: section === 'wiki',
+              command: wikiCommand,
+              onBusyChange: setWikiBusy,
               onOpenEntry: (entryId) => setWikiDrawer({ kind: 'entry', id: entryId }),
               onOpenCard: (cardId) => setWikiDrawer({ kind: 'card', id: cardId }),
             })),
@@ -9534,6 +10149,102 @@ window.__ModuleLoader__.load({
                 confirmKey: 'reindex.confirmAction',
                 onCancel: () => setReindexOpen(false),
                 onConfirm: confirmReindex,
+              })
+            : null,
+          menuRenameOpen
+            ? h(
+                'div',
+                {
+                  className: 'hrag-overlay',
+                  onMouseDown: (event) => {
+                    if (event.target === event.currentTarget) setMenuRenameOpen(false)
+                  },
+                },
+                h(
+                  'div',
+                  {
+                    className: 'hrag-dialog',
+                    role: 'dialog',
+                    'aria-modal': 'true',
+                    'aria-label': t('renameKb.title'),
+                    onKeyDown: (event) => {
+                      if (event.key === 'Escape') setMenuRenameOpen(false)
+                    },
+                  },
+                  h('div', { className: 'hrag-dialog-title' }, t('renameKb.title')),
+                  h('input', {
+                    className: 'hrag-input',
+                    value: renameValue,
+                    autoFocus: true,
+                    'aria-label': t('renameKb.nameLabel'),
+                    onChange: (event) => setRenameValue(event.target.value),
+                    onKeyDown: (event) => {
+                      if (event.key === 'Enter') confirmRename()
+                    },
+                  }),
+                  h(
+                    'div',
+                    { className: 'hrag-dialog-actions' },
+                    h(
+                      'button',
+                      { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => setMenuRenameOpen(false) },
+                      t('doc.cancel'),
+                    ),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-btn hrag-btn-outline',
+                        disabled: !renameValue.trim(),
+                        onClick: confirmRename,
+                      },
+                      t('renameKb.save'),
+                    ),
+                  ),
+                ),
+              )
+            : null,
+          kbDeleteOpen
+            ? h(ConfirmDialog, {
+                t,
+                title: t('deleteKb.title'),
+                description: t('deleteKb.desc'),
+                busy: kbDeleteBusy,
+                cancelKey: 'doc.cancel',
+                confirmKey: 'doc.confirmDelete',
+                onCancel: () => setKbDeleteOpen(false),
+                onConfirm: confirmDeleteKb,
+              })
+            : null,
+          shellRebuildOpen
+            ? h(ConfirmDialog, {
+                t,
+                title: t('wk.rebuildTitle'),
+                description: t('wk.rebuildDesc'),
+                busy: false,
+                danger: false,
+                cancelKey: 'doc.cancel',
+                confirmKey: 'wk.rebuildConfirm',
+                onCancel: () => setShellRebuildOpen(false),
+                onConfirm: () => {
+                  setShellRebuildOpen(false)
+                  setWikiCommand({ mode: 'full', nonce: Date.now() })
+                  setSection('wiki')
+                },
+              })
+            : null,
+          settingsOpen
+            ? h(ModelSettingsPanel, {
+                t,
+                kbId,
+                onClose: () => setSettingsOpen(false),
+                reindexLine,
+                reindexBusy,
+                reindexRunning,
+                onReindex: () => {
+                  setReindexError(null)
+                  setReindexOpen(true)
+                },
               })
             : null,
         ),
