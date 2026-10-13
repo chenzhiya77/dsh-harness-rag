@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-12-t3-panel-spec.md](../specs/2026-10-12-t3-panel-spec.md)（问题＋D1–D6 决定＋接口契约＋验收）
-**Status:** 执行中 · 已提交未推（D1–D6 已拍 2026-10-12：D1 全做 / D2 甲 / D3 甲 / D4 乙 / D5 全保留（**10-13 复查补记：百科原枚举漏格，已补入**）/ D6 延后；**Task 0–5 已收官**——逐格实测见本文件；Task 6–12 未开始）；编码起于 Task 1（Task 0 为只读核实）。
+**Status:** 执行中 · 已提交未推（D1–D6 已拍 2026-10-12：D1 全做 / D2 甲 / D3 甲 / D4 乙 / D5 全保留（**10-13 复查补记：百科原枚举漏格，已补入**）/ D6 延后；**Task 0–9 已落地**——逐格实测见本文件（Task 7/8 真跑待补验；Task 9 真跑 10-13 全过）；Task 10–12 未开始）；编码起于 Task 1（Task 0 为只读核实）。
 **Parent:** [2026-10-11-equivalence-freeze-plan.md](2026-10-11-equivalence-freeze-plan.md)（T2 冻结对——本对复用其数据缝口径、验收惯例与「有意不做插件侧单测」声明）· 步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（全线索进度与决策；全勾后回写 T3 行）。
 
 **Architecture:** 三件事 —— **① 面板本体**（`client.js` 占位串 → 真壳；单文件内分区承载各视图：库·文档｜切片｜百科｜召回｜投影｜图谱｜评测）；**② host 半薄代理**（`kb_proxy` 组：面板动作一函数一个、透传既有 `api()` ＋错误规范化；面板侧不持 base URL/凭证——D3 甲）；**③ locale 词条**（面板面全部进 `locale/{zh,en}.json`）。**deer-flow 零改动**——工作台只作功能与形态对照、代码不搬；可视化（投影/图谱/评测）在 DSH 内新写（D5）。
@@ -259,13 +259,19 @@
 > 动到的文件：`client.js`（百科分区段）＋ host 代理（wiki 读取＋管理面）。
 > **验收对应**：spec §4.3（重建百科闸——五闸之五）＋ §4.1（一条龙含百科）＋ §4.2（同库对照）＋ §2 D5（10-13 补入）。
 
-- [ ] **读档**：百科分区＝词条列表（`source_type` 分流词条/人工卡片）＋条目抽屉（读：正文＋来源切片锚定）＋卡片抽屉（读）；列表词汇/截断口径照工作台；
-- [ ] **管理档**：重建百科＝确认级闸（照 `wiki-rebuild-dialog` 语义）＋更新百科（incremental）入口；提交后状态刷新照工作台（条目状态轮询）；
-- [ ] **召回收口**：wiki 命中行改开条目抽屉（Task 4「不可点」注随之作废）；
-- [ ] **编辑档不做**：条目/卡片富文本编辑登记 spec §6 另案（A 裁定范围）；
-- [ ] **真跑**：同库对照——词条列表/抽屉与工作台一致；重建百科闸走一遍。
+- [x] **读档**：百科分区＝词条列表（`source_type` 分流词条/人工卡片）＋条目抽屉（读：正文＋来源切片锚定）＋卡片抽屉（读）；列表词汇/截断口径照工作台；
+- [x] **管理档**：重建百科＝确认级闸（照 `wiki-rebuild-dialog` 语义）＋更新百科（incremental）入口；提交后状态刷新照工作台（条目状态轮询）；
+- [x] **召回收口**：wiki 命中行改开条目抽屉（Task 4「不可点」注随之作废）；
+- [x] **编辑档不做**：条目/卡片富文本编辑登记 spec §6 另案（A 裁定范围）；
+- [x] **真跑**：同库对照——词条列表/抽屉与工作台一致；重建百科闸走一遍。
 
-**实测**（Task 9，执行后回填）：
+**实测**（Task 9，2026-10-13；编码＋探针就绪 → 真栈验收全过）：
+
+- **落码**：host 半 `kb_proxy.ts` op＋7——`listWikiEntries`／`wikiEntry`（entry_id 编码）／`deleteWikiEntry`（DELETE，204 中继）／`regenerateWikiEntries`（`entry_ids` 守卫，单条与库级同族）／`generateWiki`（`mode=incremental|full` 守卫）／`listManualCards`（offset/limit 透传）／`manualCard`；client 半＝百科分区：「百科」tab 插第 2 位（照工作台 docs→wiki→recall 序）＋keep-alive 槽；统一搜索框＋双卡定高分屏（生成条目／我的条目，都展开各半、收起互让、搜索命中强制展开）；条目行（勾选／标题≤45% 截断／剥 H1 摘要／dirty 徽章／相对时间／⋯ 行菜单）＋批量条（更新所选／删除所选／取消选择）；条目抽屉（正文剥同名 H1、`N 个源切片` 惰取展开（`chunksByIds`）、源切片行 → 续读抽屉叠层（z 帧 56/57 照图谱实体抽屉，关掉回条目）、404 按「条目不存在」）；卡片抽屉（标签行＋「我的卡片」/「混入搜索」徽章，只读）；⋯ 管理菜单（更新百科 incremental 在飞转 spinner＋重建百科——经工作台同款成本警示确认弹层）；条目状态轮询（generating 3s＋触发后 12s 力度窗；行级/全库在飞分流「更新中」）＋drain 边真话 toast（按 `last_run` 分流）；**召回收口**——wiki 命中行按 `source_type` 分流（manual → 卡片抽屉＋「我的卡片」徽章；词条 → 条目抽屉），Task 4「不可点」注作废。
+- **探针/自检**：`client-load-check.mjs`（仓外新写：stub 模块加载器＋react-dom/server）**13/13**——工厂装载/apply/词典 42 键/Styles/各视图初始渲染＋夹具数据渲染（行/徽章/批量条/lineage/删除来源行/召回分流）；`probe-wiki.mjs`（仓外新写，mock 后端）**8/8**——7 op passthrough/守卫/entry_id 编码/失败路径；回归 `probe-t8.mjs` 5/5、`probe-t9.mjs` 11/11；`node --check` 过。
+- **模块代事故（照步骤记录 §8 体检法·第三实证）**：首开双节「百科数据加载失败」——桥直探 `unknown panel op: listWikiEntries`（`listKbs` 正常）＋进程 CreationDate 早于源码 mtime ⇒ host 半旧代（client 半随窗口重载已是新码＝半边新半边旧）；托盘完整退出重开即过——未改一行代码。
+- **真跑（他手点，10-13 全过）**：百科 tab 8 条条目＋1 卡（验收材料＝为其建「银河拍摄备忘」卡、混入搜索开——兼顾徽章与召回分流入径）；条目行→条目抽屉→源切片展开→切片行→续读叠层→关掉回条目；卡片行→卡片抽屉；⋯ 更新百科/重建百科确认闸；召回 wiki 段两类命中分流；行勾选→批量条。
+- 本 Task 两文件改动（`client.js`／`src/kb_proxy.ts`）＋仓外两探针（不入库）——host/client 已随本批前两笔提交，本笔（docs）为三件套第三笔。
 
 ---
 
