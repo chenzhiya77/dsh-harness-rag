@@ -35,6 +35,13 @@ export async function api<T>(
   }
   const url = new URL(path, base)
   for (const [key, value] of Object.entries(init?.query ?? {})) {
+    // 数组 → 重复键（FastAPI List[...] Query 口径：chunks-by-ids 的 ids 多值）。
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item !== undefined && item !== null && item !== '') url.searchParams.append(key, String(item))
+      }
+      continue
+    }
     if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value))
   }
   const headers: Record<string, string> = { 'content-type': 'application/json' }

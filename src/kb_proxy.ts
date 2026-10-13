@@ -22,7 +22,9 @@ export const KB_PROXY_ROUTE = '/dsh-harness-rag/api'
  * status; the multipart upload rides its own raw pass-through below);
  * Task 6 the vector projection (coordinates + the query overlay transform);
  * Task 7 the knowledge graph (nodes / edges / communities) and the chunk
- * positions behind the "slice #K" labels.
+ * positions behind the "slice #K" labels; Task 8 the eval family (question
+ * bank CRUD, the synthesis quartet, run history / trigger / cancel / delete /
+ * latest / trend / detail, and the anchor-preview chunk lookup).
  */
 /** Shared projection query mirror for both projection ops: collections join
  * into the comma form the route declares (absent array = route default),
@@ -50,6 +52,15 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
   }
   const kbPath = (args: unknown) => `/api/knowledge-bases/${encodeURIComponent(needString(args, 'kb_id'))}`
   const docPath = (args: unknown) => `${kbPath(args)}/documents/${encodeURIComponent(needString(args, 'doc_id'))}`
+  /** Panel-composed JSON body pass-through (eval family): a plain object is
+   * required; field-level validation is the service's own contract (422). */
+  const bodyOf = (args: unknown): Record<string, unknown> => {
+    const body = (args as Record<string, unknown> | null | undefined)?.body
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new HarnessRagError({ kind: 'http', status: 400, detail: 'panel op requires an object "body"' })
+    }
+    return body as Record<string, unknown>
+  }
 
   return {
     listKbs: () => api(config, '/api/knowledge-bases'),
@@ -111,6 +122,54 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
         query: projectionQueryParams(args),
         body: { text },
       })
+    },
+    // ── 评测（Task 8）：题库 CRUD／合成四端点／运行族／锚片预览 ─────────────
+    listEvalQuestions: (args) => api(config, `${kbPath(args)}/eval/questions`),
+    createEvalQuestion: (args) => api(config, `${kbPath(args)}/eval/questions`, { body: bodyOf(args) }),
+    updateEvalQuestion: (args) =>
+      api(config, `${kbPath(args)}/eval/questions/${encodeURIComponent(needString(args, 'question_id'))}`, {
+        method: 'PATCH',
+        body: bodyOf(args),
+      }),
+    deleteEvalQuestion: (args) =>
+      api(config, `${kbPath(args)}/eval/questions/${encodeURIComponent(needString(args, 'question_id'))}`, {
+        method: 'DELETE',
+      }),
+    triggerSynthesis: (args) => api(config, `${kbPath(args)}/eval/questions/synthesize`, { body: bodyOf(args) }),
+    synthesisStatus: (args) => api(config, `${kbPath(args)}/eval/questions/synthesize`),
+    acceptSynthesis: (args) => {
+      // Bodyless unless the panel confirms past an anchor block (B′ contract).
+      const ack = (args as Record<string, unknown> | null | undefined)?.anchor_ack === true
+      return api(
+        config,
+        `${kbPath(args)}/eval/questions/synthesize/${encodeURIComponent(needString(args, 'candidate_id'))}/accept`,
+        { method: 'POST', ...(ack ? { body: { anchor_ack: true } } : {}) },
+      )
+    },
+    rejectSynthesis: (args) =>
+      api(config, `${kbPath(args)}/eval/questions/synthesize/${encodeURIComponent(needString(args, 'candidate_id'))}`, {
+        method: 'DELETE',
+      }),
+    listEvalRuns: (args) => {
+      const source = args as Record<string, unknown> | null | undefined
+      const query: Record<string, unknown> = {}
+      if (typeof source?.limit === 'number' && Number.isFinite(source.limit)) query.limit = Math.trunc(source.limit)
+      if (source?.include_ci === true) query.include_ci = 'true'
+      return api(config, `${kbPath(args)}/eval-runs`, { query })
+    },
+    triggerEvalRun: (args) => api(config, `${kbPath(args)}/eval-runs`, { body: bodyOf(args) }),
+    cancelEvalRun: (args) => api(config, `${kbPath(args)}/eval-runs/cancel`, { method: 'POST' }),
+    deleteEvalRuns: (args) => api(config, `${kbPath(args)}/eval-runs`, { method: 'DELETE', body: bodyOf(args) }),
+    evalRunLatest: (args) => api(config, `${kbPath(args)}/eval-runs/latest`),
+    evalRunTrend: (args) => api(config, `${kbPath(args)}/eval-runs/trend`),
+    evalRunDetail: (args) =>
+      api(config, `${kbPath(args)}/eval-runs/${encodeURIComponent(needString(args, 'run_id'))}`),
+    chunksByIds: (args) => {
+      const ids = (args as Record<string, unknown> | null | undefined)?.chunk_ids
+      if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === 'string' && id.trim())) {
+        throw new HarnessRagError({ kind: 'http', status: 400, detail: 'panel op requires "chunk_ids"' })
+      }
+      return api(config, `${kbPath(args)}/chunks`, { query: { ids } })
     },
   }
 }
