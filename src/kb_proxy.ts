@@ -202,6 +202,27 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
     },
     manualCard: (args) =>
       api(config, `${kbPath(args)}/manual-knowledge/${encodeURIComponent(needString(args, 'card_id'))}`),
+    // ── 库级与设置面（菜单批 Task 1）：KB CRUD ＋ RAG 配置读取 ＋ 模型目录 ──
+    createKb: (args) => {
+      const source = args as Record<string, unknown> | null | undefined
+      const name = typeof source?.name === 'string' ? source.name.trim() : ''
+      if (!name) {
+        throw new HarnessRagError({ kind: 'http', status: 400, detail: 'panel op requires "name"' })
+      }
+      const description = typeof source?.description === 'string' ? source.description : ''
+      return api(config, '/api/knowledge-bases', { method: 'POST', body: { name, description } })
+    },
+    renameKb: (args) => {
+      const name = (args as Record<string, unknown> | null | undefined)?.name
+      if (typeof name !== 'string' || !name.trim()) {
+        throw new HarnessRagError({ kind: 'http', status: 400, detail: 'panel op requires "name"' })
+      }
+      return api(config, kbPath(args), { method: 'PATCH', body: { name: name.trim() } })
+    },
+    deleteKb: (args) => api(config, kbPath(args), { method: 'DELETE' }),
+    ragConfigGet: () => api(config, '/api/rag/config'),
+    ragMigration: () => api(config, '/api/rag/config/migration'),
+    listModels: () => api(config, '/api/models'),
   }
 }
 
