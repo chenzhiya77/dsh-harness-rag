@@ -40,6 +40,7 @@ window.__ModuleLoader__.load({
       'shell.kbLabel': '知识库',
       'shell.tab.docs': '文档',
       'shell.tab.recall': '召回',
+      'shell.tab.vectors': '投影',
       'shell.viewPending': '此分区实装中',
       'doc.loading': '正在加载文档…',
       'doc.empty': '暂无文档',
@@ -89,6 +90,24 @@ window.__ModuleLoader__.load({
       'recall.empty': '输入问题后开始检索，对比三通道命中与得分',
       'recall.failed': '检索测试失败',
       'recall.mismatch': '库向量空间与当前嵌入配置不一致，检索质量不保证',
+      'recall.viewInVectorSpace': '在向量空间查看',
+      'vec.loading': '计算投影中…',
+      'vec.empty': '该知识库还没有向量数据——先上传文档',
+      'vec.loadFailed': '投影加载失败',
+      'vec.chips.chunks': '切片',
+      'vec.chips.entities': '实体',
+      'vec.chips.wiki': '百科',
+      'vec.chips.cards': '条目',
+      'vec.algoLabel': '算法',
+      'vec.recompute': '重新计算',
+      'vec.dimsLabel': '维度',
+      'vec.sampled': '已抽样',
+      'vec.pointsUnit': '点',
+      'vec.overlayPcaOnly': '检索叠加仅支持 PCA 投影——请切回 PCA 后重试',
+      'vec.overlayStale': '投影已更新，检索叠加已失效——请重新触发检索',
+      'vec.overlayFailed': '检索叠加失败——请重试',
+      'vec.hitsPrefix': '命中',
+      'vec.clearOverlay': '清除叠加',
     }
     const en = {
       'tab.title': 'Knowledge Base',
@@ -117,6 +136,7 @@ window.__ModuleLoader__.load({
       'shell.kbLabel': 'Knowledge base',
       'shell.tab.docs': 'Documents',
       'shell.tab.recall': 'Recall',
+      'shell.tab.vectors': 'Projection',
       'shell.viewPending': 'This section is under construction',
       'doc.loading': 'Loading documents…',
       'doc.empty': 'No documents yet',
@@ -166,6 +186,24 @@ window.__ModuleLoader__.load({
       'recall.empty': 'Run a query to compare hits and scores across the three paths',
       'recall.failed': 'Recall test failed',
       'recall.mismatch': "This library's vectors do not match the current embedding config; retrieval quality is not guaranteed",
+      'recall.viewInVectorSpace': 'View in vector space',
+      'vec.loading': 'Computing projection…',
+      'vec.empty': 'No vectors in this knowledge base yet — upload documents first',
+      'vec.loadFailed': 'Failed to load projection',
+      'vec.chips.chunks': 'Chunks',
+      'vec.chips.entities': 'Entities',
+      'vec.chips.wiki': 'Wiki',
+      'vec.chips.cards': 'Entries',
+      'vec.algoLabel': 'Algorithm',
+      'vec.recompute': 'Recompute',
+      'vec.dimsLabel': 'Dimensions',
+      'vec.sampled': 'Sampled',
+      'vec.pointsUnit': 'points',
+      'vec.overlayPcaOnly': 'Retrieval overlays need a PCA projection — switch back to PCA and retry',
+      'vec.overlayStale': 'The projection changed; the overlay is stale — rerun the query',
+      'vec.overlayFailed': 'Overlay failed — please retry',
+      'vec.hitsPrefix': 'Hits',
+      'vec.clearOverlay': 'Clear overlay',
     }
 
     /** Panel data seam: every panel request is a POST of JSON parameters to
@@ -225,6 +263,7 @@ window.__ModuleLoader__.load({
     const SECTIONS = [
       { id: 'docs', label: 'shell.tab.docs' },
       { id: 'recall', label: 'shell.tab.recall' },
+      { id: 'vectors', label: 'shell.tab.vectors' },
     ]
 
     /** Component-owned styles (removed when the component unmounts), built
@@ -236,7 +275,7 @@ window.__ModuleLoader__.load({
         'style',
         null,
         [
-          '.hrag-shell { display: flex; flex-direction: column; gap: 10px; padding: 12px; min-width: 0; }',
+          '.hrag-shell { display: flex; flex-direction: column; gap: 10px; padding: 12px; min-width: 0; box-sizing: border-box; min-height: 100%; }',
           '.hrag-bar { display: flex; align-items: center; gap: 8px; min-width: 0; }',
           ".hrag-bar select { flex: 1; min-width: 0; height: 32px; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; }",
           '.hrag-bar select:focus-visible { outline: none; border-color: var(--dsw-alias-state-business-primary); }',
@@ -269,6 +308,39 @@ window.__ModuleLoader__.load({
           '.hrag-notice { padding: 6px 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; word-break: break-word; }',
           '.hrag-notice-error { color: var(--dsw-alias-label-error); }',
           '.hrag-reindex-status { padding: 0 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-btn-icon { width: 32px; padding: 0; }',
+          '.hrag-vec-slot { flex-direction: column; min-height: 0; flex: 1; }',
+          '.hrag-vec { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
+          '.hrag-vec-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }',
+          '.hrag-chip { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: transparent; cursor: pointer; }',
+          '.hrag-chip:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-chip:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          '.hrag-chip-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }',
+          '.hrag-vec-sampled { color: var(--dsw-alias-label-tertiary); font-size: 11px; }',
+          '.hrag-vec-bar-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }',
+          '.hrag-seg { display: inline-flex; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; }',
+          '.hrag-seg button { height: 26px; padding: 0 8px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 12px; font-family: inherit; cursor: pointer; }',
+          ".hrag-seg button[aria-pressed='true'] { background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); font-weight: 600; }",
+          '.hrag-vec-algo { height: 26px; padding: 0 6px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; }',
+          '.hrag-vec-body { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }',
+          '.hrag-vec-canvas { position: relative; flex: 1; min-height: 180px; overflow: hidden; }',
+          '.hrag-vec-canvas canvas { display: block; width: 100%; height: 100%; }',
+          '.hrag-vec-tip { position: absolute; z-index: 20; max-width: 210px; padding: 5px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12); color: var(--dsw-alias-label-primary); font-size: 11px; line-height: 1.5; white-space: normal; pointer-events: none; }',
+          '.hrag-vec-tip-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }',
+          '.hrag-vec-tip-label { font-weight: 500; }',
+          '.hrag-vec-tip-preview { display: block; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-vec-legend { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); z-index: 5; display: inline-flex; flex-wrap: nowrap; max-width: 94%; overflow: hidden; gap: 8px; padding: 3px 10px; border-radius: 6px; background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 68%, transparent); backdrop-filter: blur(4px); }',
+          '.hrag-vec-legend-item { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11px; font-family: inherit; cursor: pointer; }',
+          '.hrag-vec-legend-item:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-vec-legend-off { opacity: 0.45; }',
+          '.hrag-vec-overlay-badge { position: absolute; top: 6px; left: 6px; z-index: 10; display: inline-flex; align-items: center; gap: 6px; max-width: 82%; padding: 3px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-secondary); font-size: 11px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }',
+          '.hrag-vec-overlay-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); }',
+          '.hrag-vec-overlay-hits { flex-shrink: 0; }',
+          '.hrag-vec-overlay-close { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex-shrink: 0; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 10px; line-height: 1; cursor: pointer; }',
+          '.hrag-vec-overlay-close:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-spin { animation: hrag-rotate 900ms linear infinite; }',
+          '@keyframes hrag-rotate { to { transform: rotate(360deg); } }',
+          '@media (prefers-reduced-motion: reduce) { .hrag-spin { animation-duration: 1ms; } }',
           '.hrag-overlay { position: absolute; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--dsw-alias-bg-mask-1); }',
           '.hrag-dialog { width: min(340px, 100%); display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-lg); background: var(--dsw-alias-bg-layer-1); box-shadow: var(--dsw-elevation-panel); }',
           '.hrag-dialog-wide { width: min(480px, 100%); }',
@@ -478,6 +550,29 @@ window.__ModuleLoader__.load({
      * Errors get a longer read. */
     const NOTICE_DISMISS_MS = 4000
     const NOTICE_DISMISS_ERROR_MS = 8000
+
+    // ── 向量投影（Task 6）────────────────────────────────────────────────────
+    // 四类固定色（Material 400，工作台 2026-08-17 用户拍板）＋形状双编码；
+    // 尺寸按类别固定梯度（点越少越大）、透明度按点数排名四档（点最多的最透）。
+    const VEC_COLLECTIONS = ['chunks', 'entities', 'wiki', 'cards']
+    const VEC_SOURCE_OF_COLLECTION = { chunks: 'chunk', entities: 'entity', wiki: 'wiki', cards: 'card' }
+    const VEC_COLLECTION_OF_SOURCE = { chunk: 'chunks', entity: 'entities', wiki: 'wiki', card: 'cards' }
+    const VEC_SOURCE_TYPES = ['chunk', 'entity', 'wiki', 'card']
+    const VEC_COLORS = { chunk: '#42a5f5', entity: '#66bb6a', wiki: '#ab47bc', card: '#ff7043' }
+    const VEC_SHAPES = { chunk: 'circle', entity: 'triangle', wiki: 'rect', card: 'diamond' }
+    const VEC_SIZES = { chunk: 8, entity: 9, wiki: 10, card: 14 }
+    const VEC_RANK_OPACITIES = [0.45, 0.5, 0.6, 0.7]
+    const VEC_HALO_BOOST = 1.2
+    const VEC_DIMMED_OPACITY = 0.12
+    const VEC_OVERLAY_COLOR = '#f5222d'
+    const VEC_SAMPLE_SIZE = 5000
+    const VEC_TOOLTIP_MAX = 20
+    // 3D 默认视角与投影（照工作台实测反推）：方位≈42°、仰角≈28.5°（地面菱形
+    // 两缘近对称）；轻度透视（前缘/后缘≈1.24）；盒占 min 边 0.74（留透视近角余量）。
+    const VEC_VIEW_YAW = 0.74
+    const VEC_VIEW_PITCH = 0.5
+    const VEC_SIDE_RATIO = 0.72
+    const VEC_PERSPECTIVE_D = 8
 
     /** mm:ss timecode for video shot chunks (workbench chip convention). */
     function chunkTimecode(chunk) {
@@ -773,7 +868,18 @@ window.__ModuleLoader__.load({
      * through to the chunks pane focused on the hit (the workbench's two-level
      * jump). Single-path selection and the wiki entry drawer are out of scope
      * (spec §6 registry). */
-    function RecallView({ t, kbId, onOpenChunk }) {
+    /** 「在向量空间查看」图标（散点三连——工作台 ChartScatter 语义的手绘等价物）。 */
+    function vectorSpaceIcon() {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 14 14', 'aria-hidden': 'true' },
+        h('circle', { cx: 3.6, cy: 9.6, r: 1.7, fill: 'currentColor' }),
+        h('circle', { cx: 7.6, cy: 4.8, r: 1.55, fill: 'currentColor', opacity: 0.72 }),
+        h('circle', { cx: 10.9, cy: 9.9, r: 1.35, fill: 'currentColor', opacity: 0.5 }),
+      )
+    }
+
+    function RecallView({ t, kbId, onOpenChunk, onViewInVectorSpace }) {
       const [query, setQuery] = React.useState('')
       const [topK, setTopK] = React.useState(5)
       const [pending, setPending] = React.useState(false)
@@ -835,6 +941,31 @@ window.__ModuleLoader__.load({
           },
           pending ? t('recall.running') : t('recall.run'),
         ),
+        result && onViewInVectorSpace
+          ? h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-outline hrag-btn-icon',
+                disabled: !(
+                  result.paths &&
+                  result.paths.vector &&
+                  result.paths.vector.hits &&
+                  result.paths.vector.hits.length > 0
+                ),
+                'aria-label': t('recall.viewInVectorSpace'),
+                title: t('recall.viewInVectorSpace'),
+                onClick: () => {
+                  const hits = (result.paths && result.paths.vector && result.paths.vector.hits) || []
+                  onViewInVectorSpace({
+                    text: result.query,
+                    hits: hits.map((hit) => ({ pointId: hit.chunk_id, score: hit.score })),
+                  })
+                },
+              },
+              vectorSpaceIcon(),
+            )
+          : null,
       )
 
       let body
@@ -934,9 +1065,972 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** Documents pane: list + row actions (retry gated to failed/degraded
-     * documents; delete behind the cascade confirmation). Copy follows the
-     * workbench; reloads on kb or shell-refresh changes. */
+    // ── 向量投影视图（Task 6·DSH 内新写，语义照工作台；代码不搬）────────────
+    /** 四类点按 source_type 分组：点数多的在前（垫底绘制序＝同序透明度排名）。 */
+    function groupVectorPoints(points) {
+      const buckets = new Map()
+      for (const type of VEC_SOURCE_TYPES) buckets.set(type, [])
+      for (const point of points || []) {
+        const bucket = buckets.get(point.source_type)
+        if (bucket) bucket.push(point)
+      }
+      return VEC_SOURCE_TYPES.filter((type) => buckets.get(type).length > 0)
+        .map((type) => ({
+          sourceType: type,
+          color: VEC_COLORS[type] || '#73c0de',
+          size: VEC_SIZES[type] || 8,
+          points: buckets.get(type),
+        }))
+        .sort((a, b) => b.points.length - a.points.length)
+    }
+
+    /** 透明度四档按点数排名取档（点最多的最透；缺席类别从实端截取）。 */
+    function vectorGroupOpacities(groups) {
+      const slots = VEC_RANK_OPACITIES.slice(Math.max(0, VEC_RANK_OPACITIES.length - groups.length))
+      const map = {}
+      groups.forEach((group, rank) => {
+        map[group.sourceType] = slots[rank] == null ? 0.7 : slots[rank]
+      })
+      return map
+    }
+
+    /** 命中色深（照工作台 overlayHitColor）：score 批内归一化 → alpha 0.45..1；
+        null（rerank 降级）取中档、全等分取最深。 */
+    function overlayHitColor(score, min, max) {
+      const t = score == null ? 0.5 : max <= min ? 1 : (score - min) / (max - min)
+      const alpha = 0.45 + 0.55 * Math.min(1, Math.max(0, t))
+      return 'rgba(245, 34, 45, ' + alpha.toFixed(3) + ')'
+    }
+
+    /** tooltip 截断（照工作台口径：label/preview 各 20 字）。 */
+    function vecTruncate(text, max) {
+      const value = String(text == null ? '' : text)
+      return value.length > max ? value.slice(0, max) + '…' : value
+    }
+
+    /** 坐标网格（照工作台/echarts 逻辑）：逐轴取 1/2/5 族步长、轴界取步长整
+        （floor/ceil ⇒ 每格完整、盒缘即最外刻度线＝闭环）；轴界供逐轴归一映射
+        到同一正方形盒面（GL 立方盒语义：列宽/行高各自均匀，盒恒正方）。 */
+    function computeVectorGrid(points, dims) {
+      const axisBounds = (min, max) => {
+        const step = niceStep(max - min, 3)
+        const lo = Math.floor(min / step) * step
+        const hi = lo + Math.max(1, Math.ceil((max - lo) / step)) * step
+        return [Math.round(lo * 1e12) / 1e12, Math.round(hi * 1e12) / 1e12, step]
+      }
+      let minX = Infinity
+      let maxX = -Infinity
+      let minY = Infinity
+      let maxY = -Infinity
+      let minZ = Infinity
+      let maxZ = -Infinity
+      for (const point of points || []) {
+        if (point.x < minX) minX = point.x
+        if (point.x > maxX) maxX = point.x
+        if (point.y < minY) minY = point.y
+        if (point.y > maxY) maxY = point.y
+        const z = point.z == null ? 0 : point.z
+        if (z < minZ) minZ = z
+        if (z > maxZ) maxZ = z
+      }
+      if (!Number.isFinite(minX)) {
+        return { x: [0, 1], y: [0, 1], z: [0, 1], stepX: 1, stepY: 1, stepZ: 1 }
+      }
+      const gx = axisBounds(minX, maxX)
+      const gy = axisBounds(minY, maxY)
+      const gz = dims === 3 ? axisBounds(minZ, maxZ) : [0, 1, 1]
+      return {
+        x: [gx[0], gx[1]],
+        y: [gy[0], gy[1]],
+        z: [gz[0], gz[1]],
+        stepX: gx[2],
+        stepY: gy[2],
+        stepZ: gz[2],
+      }
+    }
+
+    /** 步长候选（1/2/5 族·**最近邻**取档——照 echarts nice 口径：更稀、更整）。 */
+    function niceStep(span, count) {
+      if (!(span > 0)) return 1
+      const rough = span / count
+      const pow = Math.pow(10, Math.floor(Math.log10(rough)))
+      const norm = rough / pow
+      return (norm >= 3.5 ? 5 : norm >= 1.5 ? 2 : 1) * pow
+    }
+
+    /** 按固定步长生成 [min,max] 内的刻度（两端留浮点余量——盒缘刻度线不丢）。 */
+    function ticksFor(min, max, step) {
+      const ticks = []
+      const start = Math.ceil(min / step - 1e-9)
+      const end = Math.floor(max / step + 1e-9)
+      for (let i = start; i <= end; i += 1) {
+        ticks.push(Math.round(i * step * 1e12) / 1e12)
+      }
+      return ticks
+    }
+
+    /** 刻度文案（两位有效数字，去尾零）。 */
+    function formatTick(value) {
+      return String(Number(value.toPrecision(2)))
+    }
+
+    /** 投影画布（手写 canvas 2D，代码不搬）：2D＝拖拽平移/滚轮缩放，3D＝拖拽
+        旋转/滚轮缩放；绘制照工作台语义——光晕衬底、聚焦淡化、叠加（query 星标
+        ＋命中连线＋score 色深）。悬停拾取返回点级 tooltip；单击回调 onPick。 */
+    function VectorCanvas({ t, dims, points, groups, opacities, hiddenTypes, activeOverlay, onPick }) {
+      const wrapRef = React.useRef(null)
+      const canvasRef = React.useRef(null)
+      const viewRef = React.useRef({ zoom: 1, ox: 0, oy: 0, yaw: VEC_VIEW_YAW, pitch: VEC_VIEW_PITCH })
+      const gridRef = React.useRef({ x: [0, 1], y: [0, 1], z: [0, 1], stepX: 1, stepY: 1, stepZ: 1 })
+      const projectedRef = React.useRef([])
+      const hoverRef = React.useRef(null)
+      const dragRef = React.useRef(null)
+      const [tip, setTip] = React.useState(null)
+      const [grabbing, setGrabbing] = React.useState(false)
+
+      const hitById = React.useMemo(() => {
+        const map = new Map()
+        for (const hit of (activeOverlay && activeOverlay.hits) || []) map.set(hit.pointId, hit.score)
+        return map
+      }, [activeOverlay])
+      const hitRange = React.useMemo(() => {
+        const scores = ((activeOverlay && activeOverlay.hits) || [])
+          .map((hit) => hit.score)
+          .filter((score) => score != null)
+        return { min: scores.length ? Math.min.apply(null, scores) : 0, max: scores.length ? Math.max.apply(null, scores) : 1 }
+      }, [activeOverlay])
+
+      /** 单一绘制函数（数据/视口/悬停/叠加变化都经它落画布）。 */
+      const draw = React.useCallback(() => {
+        const canvas = canvasRef.current
+        const wrap = wrapRef.current
+        if (!canvas || !wrap) return
+        const w = wrap.clientWidth
+        const h = wrap.clientHeight
+        if (!w || !h) return
+        const dpr = window.devicePixelRatio || 1
+        if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+          canvas.width = Math.round(w * dpr)
+          canvas.height = Math.round(h * dpr)
+        }
+        const ctx = canvas.getContext('2d')
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        ctx.clearRect(0, 0, w, h)
+        const view = viewRef.current
+        const box = gridRef.current
+        // 正方形盒面（min 边 VEC_SIDE_RATIO，居中＋平移）——GL 立方盒语义：盒恒正方；
+        // 各轴各自的 [lo,hi] 独立归一铺满盒面 ⇒ 列宽彼此均匀、行高彼此均匀，
+        // 盒缘落最外刻度线（闭环、无残格）。
+        const side = Math.min(w, h) * VEC_SIDE_RATIO * view.zoom
+        // 水平/垂直各自居中（宽栏时盒仍居中——inset 分轴算，此前用 min 边导致靠左）。
+        const insetX = (w - side) / 2
+        const insetY = (h - side) / 2
+        const boxLeft = insetX + view.ox
+        const boxBottom = h - insetY + view.oy
+        const cx = w / 2 + view.ox
+        const cy = h / 2 + view.oy
+        const spanX = box.x[1] - box.x[0] || 1
+        const spanY = box.y[1] - box.y[0] || 1
+        const spanZ = box.z[1] - box.z[0] || 1
+        const project = (x, y, z) => {
+          if (dims === 3) {
+            // 逐轴归一到 [-0.5,0.5]³ 再旋转投影（照工作台：Z 朝上、x/y 铺地面）。
+            const nx = (x - box.x[0]) / spanX - 0.5
+            const ny = (y - box.y[0]) / spanY - 0.5
+            const nz = ((z == null ? 0 : z) - box.z[0]) / spanZ - 0.5
+            const cy1 = Math.cos(view.yaw)
+            const sy1 = Math.sin(view.yaw)
+            const cp = Math.cos(view.pitch)
+            const sp = Math.sin(view.pitch)
+            const x1 = nx * cy1 + ny * sy1
+            const y1 = -nx * sy1 + ny * cy1
+            const up = nz * cp + y1 * sp
+            const depth = y1 * cp - nz * sp
+            // 轻度透视（照工作台）：越远越小，前/后缘≈1.24。
+            const power = VEC_PERSPECTIVE_D / (VEC_PERSPECTIVE_D + depth)
+            return { sx: cx + x1 * side * power, sy: cy - up * side * power, depth }
+          }
+          return {
+            sx: boxLeft + ((x - box.x[0]) / spanX) * side,
+            sy: boxBottom - ((y - box.y[0]) / spanY) * side,
+            depth: 0,
+          }
+        }
+        // 坐标系（照工作台弱化口径）：网格垫底 → 三条轴脊线 → 刻度数字 → 轴名。
+        {
+          const inkColor = getComputedStyle(wrap).color || '#3c3c3c'
+          ctx.strokeStyle = inkColor
+          ctx.fillStyle = inkColor
+          ctx.lineWidth = 1
+          const xs = ticksFor(box.x[0], box.x[1], box.stepX)
+          const ys = ticksFor(box.y[0], box.y[1], box.stepY)
+          const zs = dims === 3 ? ticksFor(box.z[0], box.z[1], box.stepZ) : []
+          // 3D 轴棱自动选位（照工作台＝echarts-gl 源码规则）：X/Y＝地板面（远侧面）的
+          // 近侧边界棱——刻度边永远贴紧绘制面（不会悬空脱面）；Z＝远 x 面×近 y 面的
+          // 竖棱；墙＋地板恒远侧。
+          let xEdge = box.x[0]
+          let yEdge = box.y[0]
+          let xEdgeZ = box.z[0]
+          let yEdgeZ = box.z[0]
+          let zEdgeX = box.x[0]
+          let zEdgeY = box.y[0]
+          let yWall = box.y[1]
+          let xWall = box.x[0]
+          let zFloor = box.z[0]
+          const boxMid = project((box.x[0] + box.x[1]) / 2, (box.y[0] + box.y[1]) / 2, (box.z[0] + box.z[1]) / 2)
+          if (dims === 3) {
+            const midX2 = (box.x[0] + box.x[1]) / 2
+            const midY2 = (box.y[0] + box.y[1]) / 2
+            const midZ2 = (box.z[0] + box.z[1]) / 2
+            // 墙与地板按深度独立取「远侧面」（墙永远在后、地板永远在远侧）。
+            yWall = project(midX2, box.y[0], midZ2).depth >= project(midX2, box.y[1], midZ2).depth ? box.y[0] : box.y[1]
+            xWall = project(box.x[0], midY2, midZ2).depth >= project(box.x[1], midY2, midZ2).depth ? box.x[0] : box.x[1]
+            zFloor = project(midX2, midY2, box.z[0]).depth >= project(midX2, midY2, box.z[1]).depth ? box.z[0] : box.z[1]
+            // X/Y 轴棱＝地板面（z=zFloor）的**近侧边界棱**——刻度边永远跟紧面
+            // （他纠：不能悬空脱面；上下翻时随地板面切到顶面同名棱，依旧贴面）。
+            const ym0 = project(midX2, box.y[0], zFloor)
+            const ym1 = project(midX2, box.y[1], zFloor)
+            yEdge = ym0.depth <= ym1.depth ? box.y[0] : box.y[1]
+            yEdgeZ = zFloor
+            const xm0 = project(box.x[0], midY2, zFloor)
+            const xm1 = project(box.x[1], midY2, zFloor)
+            xEdge = xm0.depth <= xm1.depth ? box.x[0] : box.x[1]
+            xEdgeZ = zFloor
+            // Z 轴棱＝(远侧 x 面 × 近侧 y 面) 的竖棱——echarts-gl 原规则：
+            // zAxisXOffset＝远 x、zAxisZOffset＝近 y（Grid3DView._updateAxisLinePosition）。
+            zEdgeX = xWall
+            zEdgeY = yEdge
+          }
+          // 网格：3D＝远侧双墙＋地板（面线更淡，照工作台「面浅边深」）；2D＝双轴格。
+          ctx.globalAlpha = dims === 3 ? 0.045 : 0.07
+          ctx.beginPath()
+          const seg = (a, b) => {
+            ctx.moveTo(a.sx, a.sy)
+            ctx.lineTo(b.sx, b.sy)
+          }
+          if (dims === 2) {
+            for (const tick of xs) seg(project(tick, box.y[0], 0), project(tick, box.y[1], 0))
+            for (const tick of ys) seg(project(box.x[0], tick, 0), project(box.x[1], tick, 0))
+          } else {
+            // 墙甲 y=yWall：竖线随 x、横线随 z；墙乙 x=xWall：竖线随 y、横线随 z；地板 z=z0。
+            for (const tick of xs) seg(project(tick, yWall, box.z[0]), project(tick, yWall, box.z[1]))
+            for (const tick of zs) seg(project(box.x[0], yWall, tick), project(box.x[1], yWall, tick))
+            for (const tick of ys) seg(project(xWall, tick, box.z[0]), project(xWall, tick, box.z[1]))
+            for (const tick of zs) seg(project(xWall, box.y[0], tick), project(xWall, box.y[1], tick))
+            for (const tick of xs) seg(project(tick, box.y[0], zFloor), project(tick, box.y[1], zFloor))
+            for (const tick of ys) seg(project(box.x[0], tick, zFloor), project(box.x[1], tick, zFloor))
+          }
+          ctx.stroke()
+          // 三条轴脊线（带刻度字母的三棱＝所选 X/Y 轴棱＋所选 Z 竖棱）——与最外圈面线
+          // 同位置叠画，加重加粗以示「轴」。
+          ctx.globalAlpha = 0.4
+          ctx.lineWidth = 1.5
+          ctx.beginPath()
+          if (dims === 3) {
+            seg(project(box.x[0], yEdge, yEdgeZ), project(box.x[1], yEdge, yEdgeZ))
+            seg(project(xEdge, box.y[0], xEdgeZ), project(xEdge, box.y[1], xEdgeZ))
+            seg(project(zEdgeX, zEdgeY, box.z[0]), project(zEdgeX, zEdgeY, box.z[1]))
+          } else {
+            seg(project(box.x[0], box.y[0], 0), project(box.x[1], box.y[0], 0))
+            seg(project(box.x[0], box.y[0], 0), project(box.x[0], box.y[1], 0))
+          }
+          ctx.stroke()
+          ctx.lineWidth = 1
+          // 内侧背角三棱（无刻度字母的三条边）——只比面线深一点点（照工作台）。
+          if (dims === 3) {
+            ctx.globalAlpha = 0.08
+            ctx.beginPath()
+            seg(project(xWall, yWall, box.z[0]), project(xWall, yWall, box.z[1]))
+            seg(project(box.x[0], yWall, zFloor), project(box.x[1], yWall, zFloor))
+            seg(project(xWall, box.y[0], zFloor), project(xWall, box.y[1], zFloor))
+            ctx.stroke()
+          }
+          // 刻度/轴名随选边：3D 一律朝盒外径向偏移（旋转自动换边也不进盒内）；
+          // 2D X 在下缘 +6、Y 在左缘 −6。近角刻度去重：与已画标签 <13px 的不再画
+          // （前角处 X/Y 尾首刻度只留一个）。boxMid 已在选边处算好。
+          const radialAt = (p, dist) => {
+            const dx = p.sx - boxMid.sx
+            const dy = p.sy - boxMid.sy
+            const len = Math.hypot(dx, dy) || 1
+            return { x: p.sx + (dx / len) * dist, y: p.sy + (dy / len) * dist }
+          }
+          const drawnSpots = []
+          const drawSpot = (x, y, text) => {
+            for (const spot of drawnSpots) {
+              if (Math.hypot(x - spot.x, y - spot.y) < 13) return
+            }
+            drawnSpots.push({ x, y })
+            ctx.fillText(text, x, y)
+          }
+          ctx.globalAlpha = 0.45
+          ctx.font = '11px sans-serif'
+          for (const tick of xs) {
+            const p = project(tick, yEdge, yEdgeZ)
+            ctx.textAlign = 'center'
+            if (dims === 3) {
+              const at = radialAt(p, 9)
+              ctx.textBaseline = 'middle'
+              drawSpot(at.x, at.y, formatTick(tick))
+            } else {
+              ctx.textBaseline = 'top'
+              drawSpot(p.sx, p.sy + 6, formatTick(tick))
+            }
+          }
+          for (const tick of ys) {
+            const p = project(xEdge, tick, xEdgeZ)
+            if (dims === 3) {
+              const at = radialAt(p, 9)
+              ctx.textAlign = 'center'
+              ctx.textBaseline = 'middle'
+              drawSpot(at.x, at.y, formatTick(tick))
+            } else {
+              ctx.textAlign = 'right'
+              ctx.textBaseline = 'middle'
+              drawSpot(p.sx - 6, p.sy, formatTick(tick))
+            }
+          }
+          if (dims === 3) {
+            for (const tick of zs) {
+              const at = radialAt(project(zEdgeX, zEdgeY, tick), 9)
+              ctx.textAlign = 'center'
+              ctx.textBaseline = 'middle'
+              drawSpot(at.x, at.y, formatTick(tick))
+            }
+          }
+          // 轴名（照工作台：沿轴中段、朝盒外径向偏移；2D 偏移更大以避开刻度行）。
+          ctx.globalAlpha = 0.6
+          ctx.font = '12px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          const nameOffset = dims === 3 ? 20 : 26
+          const placeName = (p, text) => {
+            // 轴名不受近旁去重影响（此前被中段刻度标签误挤掉——X/Y 消失之因）。
+            const at = radialAt(p, nameOffset)
+            drawnSpots.push({ x: at.x, y: at.y })
+            ctx.fillText(text, at.x, at.y)
+          }
+          placeName(project((box.x[0] + box.x[1]) / 2, yEdge, yEdgeZ), 'X')
+          placeName(project(xEdge, (box.y[0] + box.y[1]) / 2, xEdgeZ), 'Y')
+          if (dims === 3) {
+            placeName(project(zEdgeX, zEdgeY, (box.z[0] + box.z[1]) / 2), 'Z')
+          }
+          ctx.globalAlpha = 1
+        }
+        // 全量投影缓存（绘制与拾取共用；拾取按绘制序逆序找最上层）。
+        const projected = []
+        // 衬底色＝页面底色（浅/暗主题自动；底上隐形，只在盖住散点处显形）。
+        const bodyBg = typeof document === 'undefined' ? '' : getComputedStyle(document.body).backgroundColor
+        const haloColor = bodyBg && bodyBg !== 'transparent' && bodyBg !== 'rgba(0, 0, 0, 0)' ? bodyBg : '#ffffff'
+        const focus = hoverRef.current
+        const isDimmed = (point) => {
+          if (!focus) return false
+          if (focus.sourceType === 'chunk') return point.source_type === 'chunk' && point.color_key !== focus.docId
+          return point.source_type !== focus.sourceType
+        }
+        const list = []
+        for (const group of groups) {
+          if (hiddenTypes && hiddenTypes[group.sourceType]) continue
+          const baseOpacity = opacities[group.sourceType] == null ? 0.7 : opacities[group.sourceType]
+          for (const point of group.points) {
+            const p = project(point.x, point.y, point.z)
+            list.push({ p, point, group, baseOpacity })
+          }
+        }
+        if (dims === 3) list.sort((a, b) => a.p.depth - b.p.depth)
+        const drawMarker = (ctx2, sx, sy, size, shape) => {
+          const r = size / 2
+          ctx2.beginPath()
+          if (shape === 'triangle') {
+            ctx2.moveTo(sx, sy - r)
+            ctx2.lineTo(sx + r, sy + r)
+            ctx2.lineTo(sx - r, sy + r)
+            ctx2.closePath()
+          } else if (shape === 'rect') {
+            ctx2.rect(sx - r, sy - r, r * 2, r * 2)
+          } else if (shape === 'diamond') {
+            ctx2.moveTo(sx, sy - r)
+            ctx2.lineTo(sx + r, sy)
+            ctx2.lineTo(sx, sy + r)
+            ctx2.lineTo(sx - r, sy)
+            ctx2.closePath()
+          } else {
+            ctx2.arc(sx, sy, r, 0, Math.PI * 2)
+          }
+        }
+        for (const entry of list) {
+          const { p, point, group, baseOpacity } = entry
+          if (p.sx < -20 || p.sx > w + 20 || p.sy < -20 || p.sy > h + 20) continue
+          const hit = hitById.has(point.id)
+          const dimmed = isDimmed(point)
+          const alpha = hit ? 1 : dimmed ? VEC_DIMMED_OPACITY : baseOpacity
+          const size = group.size || 8
+          // 光晕衬底（照工作台「白圈」语义）：底色大一圈先画，露出即描边。
+          ctx.globalAlpha = alpha
+          ctx.fillStyle = haloColor
+          drawMarker(ctx, p.sx, p.sy, size + VEC_HALO_BOOST, VEC_SHAPES[group.sourceType])
+          ctx.fill()
+          ctx.fillStyle = hit ? overlayHitColor(hitById.get(point.id), hitRange.min, hitRange.max) : group.color
+          drawMarker(ctx, p.sx, p.sy, size, VEC_SHAPES[group.sourceType])
+          ctx.fill()
+          projected.push({ sx: p.sx, sy: p.sy, r: size / 2 + 2, point })
+        }
+        ctx.globalAlpha = 1
+        // 叠加层（照工作台：query→命中连线 + query 星标；命中点色深已在主pass）。
+        const query = activeOverlay && activeOverlay.query
+        if (query) {
+          const qp = project(query.x, query.y, query.z)
+          const byId = new Map(projected.map((entry) => [entry.point.id, entry]))
+          ctx.strokeStyle = 'rgba(245, 34, 45, 0.55)'
+          ctx.lineWidth = 2
+          ctx.globalAlpha = 0.8
+          ctx.beginPath()
+          for (const hit of activeOverlay.hits || []) {
+            const target = byId.get(hit.pointId)
+            if (!target) continue
+            ctx.moveTo(qp.sx, qp.sy)
+            ctx.lineTo(target.sx, target.sy)
+          }
+          ctx.stroke()
+          ctx.globalAlpha = 0.85
+          ctx.fillStyle = VEC_OVERLAY_COLOR
+          const star = 9
+          ctx.beginPath()
+          for (let i = 0; i < 10; i += 1) {
+            const angle = -Math.PI / 2 + (i * Math.PI) / 5
+            const radius = i % 2 === 0 ? star : star * 0.45
+            const px = qp.sx + Math.cos(angle) * radius
+            const py = qp.sy + Math.sin(angle) * radius
+            if (i === 0) ctx.moveTo(px, py)
+            else ctx.lineTo(px, py)
+          }
+          ctx.closePath()
+          ctx.fill()
+          ctx.globalAlpha = 1
+          projected.push({ sx: qp.sx, sy: qp.sy, r: star, point: null, query: true })
+        }
+        projectedRef.current = projected
+      }, [dims, groups, opacities, hiddenTypes, activeOverlay, hitById, hitRange])
+
+      // 数据/维度变化：重算网格（逐轴取整）& 视口归位（用户配置切换的稳定起点）。
+      React.useEffect(() => {
+        gridRef.current = computeVectorGrid(points, dims)
+        viewRef.current = {
+          zoom: 1,
+          ox: 0,
+          oy: 0,
+          yaw: dims === 3 ? VEC_VIEW_YAW : 0,
+          pitch: dims === 3 ? VEC_VIEW_PITCH : 0,
+        }
+        draw()
+      }, [points, dims, draw])
+
+      React.useEffect(() => {
+        draw()
+      }, [draw])
+
+      React.useEffect(() => {
+        const wrap = wrapRef.current
+        if (!wrap) return
+        const observer = new ResizeObserver(() => draw())
+        observer.observe(wrap)
+        return () => observer.disconnect()
+      }, [draw])
+
+      // 滚轮缩放（native 监听以 preventDefault 压住面板滚动）。
+      React.useEffect(() => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const onWheel = (event) => {
+          event.preventDefault()
+          const rect = canvas.getBoundingClientRect()
+          const mx = event.clientX - rect.left
+          const my = event.clientY - rect.top
+          const view = viewRef.current
+          const factor = Math.exp(-event.deltaY * 0.0012)
+          if (dims === 3) {
+            view.zoom = Math.max(0.05, view.zoom * factor)
+          } else {
+            // 光标下的归一坐标保持不动（boxLeft = inset + ox；boxBottom = h − inset + oy）。
+            const w0 = rect.width
+            const h0 = rect.height
+            const minSide = Math.min(w0, h0)
+            const side0 = minSide * VEC_SIDE_RATIO * view.zoom
+            const insetX0 = (w0 - side0) / 2
+            const insetY0 = (h0 - side0) / 2
+            const u = (mx - (insetX0 + view.ox)) / (side0 || 1)
+            const v = (h0 - insetY0 + view.oy - my) / (side0 || 1)
+            view.zoom = Math.max(0.05, view.zoom * factor)
+            const side1 = minSide * VEC_SIDE_RATIO * view.zoom
+            const insetX1 = (w0 - side1) / 2
+            const insetY1 = (h0 - side1) / 2
+            view.ox = mx - u * side1 - insetX1
+            view.oy = my + v * side1 - (h0 - insetY1)
+          }
+          draw()
+        }
+        canvas.addEventListener('wheel', onWheel, { passive: false })
+        return () => canvas.removeEventListener('wheel', onWheel)
+      }, [dims, draw])
+
+      const pick = (event) => {
+        const rect = event.currentTarget.getBoundingClientRect()
+        const mx = event.clientX - rect.left
+        const my = event.clientY - rect.top
+        const projected = projectedRef.current
+        for (let i = projected.length - 1; i >= 0; i -= 1) {
+          const entry = projected[i]
+          if (entry.query) continue
+          const dx = mx - entry.sx
+          const dy = my - entry.sy
+          if (dx * dx + dy * dy <= entry.r * entry.r) return { entry, mx, my }
+        }
+        return null
+      }
+
+      const handleMove = (event) => {
+        const drag = dragRef.current
+        if (drag) {
+          const dx = event.clientX - drag.x
+          const dy = event.clientY - drag.y
+          if (Math.abs(event.clientX - drag.startX) + Math.abs(event.clientY - drag.startY) > 3) drag.moved = true
+          drag.x = event.clientX
+          drag.y = event.clientY
+          const view = viewRef.current
+          if (dims === 3) {
+            // 抓取语义（他实跑点名「拖拽反了」）：拖向右＝近侧跟随向右。
+            view.yaw -= dx * 0.008
+            view.pitch = Math.max(-1.45, Math.min(1.45, view.pitch + dy * 0.008))
+          } else {
+            view.ox += dx
+            view.oy += dy
+          }
+          draw()
+          return
+        }
+        const found = pick(event)
+        if (found) {
+          const point = found.entry.point
+          const focus =
+            point.source_type === 'chunk'
+              ? { sourceType: 'chunk', docId: point.color_key }
+              : { sourceType: point.source_type }
+          const prev = hoverRef.current
+          const changed = !prev || prev.sourceType !== focus.sourceType || prev.docId !== focus.docId
+          hoverRef.current = focus
+          setTip({
+            x: found.mx + 12,
+            y: found.my + 12,
+            label: point.label,
+            preview: point.preview,
+            type: point.source_type,
+          })
+          if (changed) draw()
+        } else if (tip) {
+          hoverRef.current = null
+          setTip(null)
+          draw()
+        }
+      }
+
+      const handleDown = (event) => {
+        dragRef.current = { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false }
+        setGrabbing(true)
+      }
+      const handleUp = (event) => {
+        const drag = dragRef.current
+        dragRef.current = null
+        setGrabbing(false)
+        if (drag && !drag.moved) {
+          const found = pick(event)
+          if (found && found.entry.point && onPick) onPick(found.entry.point)
+        }
+      }
+      const handleLeave = () => {
+        dragRef.current = null
+        setGrabbing(false)
+        if (tip) setTip(null)
+        if (hoverRef.current) {
+          hoverRef.current = null
+          draw()
+        }
+      }
+
+      return h(
+        'div',
+        { className: 'hrag-vec-canvas', ref: wrapRef },
+        h('canvas', {
+          ref: canvasRef,
+          style: { cursor: grabbing ? 'grabbing' : tip ? 'pointer' : 'crosshair' },
+          onMouseDown: handleDown,
+          onMouseMove: handleMove,
+          onMouseUp: handleUp,
+          onMouseLeave: handleLeave,
+        }),
+        tip
+          ? h(
+              'div',
+              { className: 'hrag-vec-tip', style: { left: String(tip.x) + 'px', top: String(tip.y) + 'px' } },
+              h('span', {
+                className: 'hrag-vec-tip-dot',
+                style: { backgroundColor: VEC_COLORS[tip.type] || '#999' },
+              }),
+              h('span', { className: 'hrag-vec-tip-label' }, vecTruncate(tip.label, VEC_TOOLTIP_MAX)),
+              tip.preview
+                ? h('span', { className: 'hrag-vec-tip-preview' }, vecTruncate(tip.preview, VEC_TOOLTIP_MAX))
+                : null,
+            )
+          : null,
+      )
+    }
+
+    /** 「重新计算」图标（循环箭头；pending 时自旋）。 */
+    function refreshIcon(spinning) {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 14 14', 'aria-hidden': 'true', className: spinning ? 'hrag-spin' : undefined },
+        h('path', {
+          d: 'M11.5 7 A4.5 4.5 0 1 1 7 2.5',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 1.5,
+          strokeLinecap: 'round',
+        }),
+        h('path', { d: 'M7 0.9 L7 4.1 L10.2 2.5 Z', fill: 'currentColor' }),
+      )
+    }
+
+    /** 投影视图（Task 6）：工具栏（四类 chips／2D·3D／算法／重算）＋画布＋
+        图例＋叠加徽标；三态与提示行照面板既有口径。keep-alive 挂载——enabled
+        门控首次取数，切走不丢配置与叠加。 */
+    function VectorView({ t, kbId, enabled, overlayRequest, onOpenChunk }) {
+      const [collections, setCollections] = React.useState(VEC_COLLECTIONS)
+      const [algo, setAlgo] = React.useState('pca')
+      const [dims, setDims] = React.useState(2)
+      const [phase, setPhase] = React.useState('idle')
+      const [projection, setProjection] = React.useState(null)
+      const [failure, setFailure] = React.useState(null)
+      const [notice, setNotice] = React.useState(null)
+      const [recomputing, setRecomputing] = React.useState(false)
+      const [hiddenTypes, setHiddenTypes] = React.useState({})
+      const [activeOverlay, setActiveOverlay] = React.useState(null)
+      const collectionsKey = collections.join(',')
+      const projectionRef = React.useRef(null)
+      projectionRef.current = projection
+
+      React.useEffect(() => {
+        setProjection(null)
+        setPhase('idle')
+        setFailure(null)
+        setActiveOverlay(null)
+      }, [kbId])
+
+      React.useEffect(() => {
+        if (!notice) return
+        const timer = window.setTimeout(
+          () => setNotice(null),
+          notice.isError ? NOTICE_DISMISS_ERROR_MS : NOTICE_DISMISS_MS,
+        )
+        return () => window.clearTimeout(timer)
+      }, [notice])
+
+      const load = React.useCallback(() => {
+        setPhase((current) => (current === 'ready' ? 'ready' : 'loading'))
+        setFailure(null)
+        callOp('vectorProjection', {
+          kb_id: kbId,
+          collections,
+          algo,
+          dims,
+          sample_size: VEC_SAMPLE_SIZE,
+        })
+          .then((data) => {
+            const points = data && Array.isArray(data.points) ? data.points : []
+            setProjection(points.length > 0 ? data : null)
+            setPhase(points.length > 0 ? 'ready' : 'empty')
+          })
+          .catch((error) => {
+            setFailure(error)
+            setPhase('error')
+          })
+      }, [kbId, collectionsKey, algo, dims]) // eslint-disable-line react-hooks/exhaustive-deps
+
+      React.useEffect(() => {
+        if (!enabled) return
+        load()
+      }, [enabled, load])
+
+      const handleRecompute = () => {
+        if (recomputing) return
+        setRecomputing(true)
+        callOp('vectorProjection', {
+          kb_id: kbId,
+          collections,
+          algo,
+          dims,
+          sample_size: VEC_SAMPLE_SIZE,
+          refresh: true,
+        })
+          .then((data) => {
+            setRecomputing(false)
+            const points = data && Array.isArray(data.points) ? data.points : []
+            setProjection(points.length > 0 ? data : null)
+            setPhase(points.length > 0 ? 'ready' : 'empty')
+            setFailure(null)
+          })
+          .catch((error) => {
+            setRecomputing(false)
+            setNotice({ text: errorDetail(error), isError: true })
+          })
+      }
+
+      const toggleCollection = (key) => {
+        setCollections((previous) => {
+          if (previous.includes(key)) {
+            if (previous.length <= 1) return previous
+            return VEC_COLLECTIONS.filter((entry) => entry !== key && previous.includes(entry))
+          }
+          return VEC_COLLECTIONS.filter((entry) => entry === key || previous.includes(entry))
+        })
+      }
+
+      // 叠加取数（照工作台语义）：新触发投影一次；投影指纹变化 → 重锚；
+      // 非 PCA 拒绝（query 投影仅支持缓存 PCA 模型）；409/错位 → 提示并清除。
+      const projectionFp = projection ? projection.fingerprint : null
+      const overlayNonceRef = React.useRef(null)
+      React.useEffect(() => {
+        if (!enabled || !overlayRequest) return
+        const current = projectionRef.current
+        if (!current) return
+        if (current.algo !== algo || current.dims !== dims) return // 等新参数投影落地
+        const isNew = overlayNonceRef.current !== overlayRequest
+        if (isNew) overlayNonceRef.current = overlayRequest
+        if (algo !== 'pca') {
+          if (isNew) setNotice({ text: t('vec.overlayPcaOnly') })
+          return
+        }
+        let cancelled = false
+        callOp('projectVectorQuery', {
+          kb_id: kbId,
+          text: overlayRequest.text,
+          collections,
+          algo,
+          dims,
+          sample_size: VEC_SAMPLE_SIZE,
+        })
+          .then((result) => {
+            if (cancelled) return
+            const latest = projectionRef.current
+            if (!result || !latest || result.fingerprint !== latest.fingerprint) {
+              setActiveOverlay(null)
+              setNotice({ text: t('vec.overlayStale') })
+              return
+            }
+            setActiveOverlay({
+              query: { x: result.x, y: result.y, z: result.z, label: overlayRequest.text },
+              hits: Array.isArray(overlayRequest.hits) ? overlayRequest.hits : [],
+              fingerprint: result.fingerprint,
+            })
+          })
+          .catch(() => {
+            if (!cancelled) setNotice({ text: t('vec.overlayFailed') })
+          })
+        return () => {
+          cancelled = true
+        }
+      }, [enabled, overlayRequest, projectionFp, algo, kbId, collectionsKey, dims, t]) // eslint-disable-line react-hooks/exhaustive-deps
+
+      const points = React.useMemo(() => (projection ? projection.points : []), [projection])
+      const groups = React.useMemo(() => groupVectorPoints(points), [points])
+      const opacities = React.useMemo(() => vectorGroupOpacities(groups), [groups])
+      const overlayHitCounts = React.useMemo(() => {
+        if (!activeOverlay) return null
+        const ids = new Set(points.map((point) => point.id))
+        const matched = activeOverlay.hits.filter((hit) => ids.has(hit.pointId)).length
+        return { matched, total: activeOverlay.hits.length }
+      }, [activeOverlay, points])
+
+      const bar = h(
+        'div',
+        { className: 'hrag-vec-bar' },
+        VEC_COLLECTIONS.map((key) => {
+          const active = collections.includes(key)
+          const color = VEC_COLORS[VEC_SOURCE_OF_COLLECTION[key]]
+          return h(
+            'button',
+            {
+              key,
+              type: 'button',
+              className: 'hrag-chip',
+              'aria-pressed': active,
+              'aria-label': t('vec.chips.' + key),
+              title: t('vec.chips.' + key),
+              style: active ? { borderColor: color + '80', backgroundColor: color + '1f' } : undefined,
+              onClick: () => toggleCollection(key),
+            },
+            h('span', {
+              className: 'hrag-chip-dot',
+              style: { backgroundColor: color, opacity: active ? 1 : 0.4 },
+            }),
+          )
+        }),
+        projection && projection.sampled
+          ? h(
+              'span',
+              { className: 'hrag-vec-sampled' },
+              t('vec.sampled') +
+                ' ' +
+                String(projection.shown_points) +
+                '/' +
+                String(projection.total_points) +
+                ' ' +
+                t('vec.pointsUnit'),
+            )
+          : null,
+        h(
+          'div',
+          { className: 'hrag-vec-bar-right' },
+          h(
+            'span',
+            { className: 'hrag-seg', role: 'group', 'aria-label': t('vec.dimsLabel') },
+            [2, 3].map((value) =>
+              h(
+                'button',
+                {
+                  key: value,
+                  type: 'button',
+                  'aria-pressed': dims === value,
+                  onClick: () => setDims(value),
+                },
+                String(value) + 'D',
+              ),
+            ),
+          ),
+          h(
+            'select',
+            {
+              className: 'hrag-vec-algo',
+              'aria-label': t('vec.algoLabel'),
+              title: t('vec.algoLabel'),
+              value: algo,
+              onChange: (event) => setAlgo(event.target.value),
+            },
+            h('option', { value: 'pca' }, 'PCA'),
+            h('option', { value: 'umap' }, 'UMAP'),
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'hrag-btn hrag-btn-outline hrag-btn-icon',
+              'aria-label': t('vec.recompute'),
+              title: t('vec.recompute'),
+              disabled: recomputing,
+              onClick: handleRecompute,
+            },
+            refreshIcon(recomputing),
+          ),
+        ),
+      )
+
+      let body
+      if (phase === 'idle' || phase === 'loading') {
+        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('vec.loading')))
+      } else if (phase === 'error') {
+        body = h(
+          'div',
+          { className: 'hrag-state hrag-state-error' },
+          h('div', { className: 'hrag-state-title' }, t('vec.loadFailed')),
+          h('div', { className: 'hrag-state-detail' }, errorDetail(failure)),
+          h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.retry')),
+        )
+      } else if (phase === 'empty') {
+        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('vec.empty')))
+      } else {
+        body = h(
+          'div',
+          { className: 'hrag-vec-body' },
+          h(VectorCanvas, {
+            t,
+            dims,
+            points,
+            groups,
+            opacities,
+            hiddenTypes,
+            activeOverlay,
+            onPick: (point) => {
+              if (point.source_type === 'chunk' && onOpenChunk) {
+                onOpenChunk(point.color_key, point.id, point.label)
+              }
+              // wiki/card 点 → 条目/卡片抽屉随 Task 9 接线；entity 照工作台惰性。
+            },
+          }),
+          activeOverlay && overlayHitCounts
+            ? h(
+                'div',
+                { className: 'hrag-vec-overlay-badge' },
+                h('span', { className: 'hrag-chip-dot', style: { backgroundColor: VEC_OVERLAY_COLOR } }),
+                h(
+                  'span',
+                  { className: 'hrag-vec-overlay-label', title: activeOverlay.query.label },
+                  activeOverlay.query.label,
+                ),
+                h(
+                  'span',
+                  { className: 'hrag-vec-overlay-hits' },
+                  t('vec.hitsPrefix') + ' ' + String(overlayHitCounts.matched) + '/' + String(overlayHitCounts.total),
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-vec-overlay-close',
+                    'aria-label': t('vec.clearOverlay'),
+                    title: t('vec.clearOverlay'),
+                    onClick: () => setActiveOverlay(null),
+                  },
+                  '✕',
+                ),
+              )
+            : null,
+          h(
+            'div',
+            { className: 'hrag-vec-legend' },
+            groups.map((group) =>
+              h(
+                'button',
+                {
+                  key: group.sourceType,
+                  type: 'button',
+                  className: hiddenTypes[group.sourceType]
+                    ? 'hrag-vec-legend-item hrag-vec-legend-off'
+                    : 'hrag-vec-legend-item',
+                  onClick: () =>
+                    setHiddenTypes((previous) => ({
+                      ...previous,
+                      [group.sourceType]: !previous[group.sourceType],
+                    })),
+                },
+                h('span', { className: 'hrag-chip-dot', style: { backgroundColor: group.color } }),
+                t('vec.chips.' + VEC_COLLECTION_OF_SOURCE[group.sourceType]) + ' ' + String(group.points.length),
+              ),
+            ),
+          ),
+        )
+      }
+
+      return h(
+        'div',
+        { className: 'hrag-vec' },
+        bar,
+        notice
+          ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
+          : null,
+        body,
+      )
+    }
+
+    /** 文档面板：列表＋行内动作（重试只对 failed/降级出现；删除走级联确认）。
+        照工作台词汇；随 kb 或壳刷新重载。 */
     function DocsView({ t, kbId, refreshToken, onOpenChunks }) {
       const [phase, setPhase] = React.useState('loading')
       const [docs, setDocs] = React.useState([])
@@ -1160,6 +2254,8 @@ window.__ModuleLoader__.load({
       const [reindexKick, setReindexKick] = React.useState(0)
       const reindexRunning =
         reindexBusy || (reindexState !== null && reindexState.in_progress === true)
+      // 检索联动叠加（照工作台「在向量空间查看」）：召回触发 → 切投影分区并投影。
+      const [overlayRequest, setOverlayRequest] = React.useState(null)
       const fileInputRef = React.useRef(null)
 
       const load = React.useCallback(() => {
@@ -1199,6 +2295,7 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         setBarNotice(null)
         setReindexState(null)
+        setOverlayRequest(null)
       }, [kbId])
 
       // 提示行自动消退（工作台 toast 语义：短确认；持久真值在列表与状态行）。
@@ -1443,16 +2540,36 @@ window.__ModuleLoader__.load({
                 refreshToken,
                 onOpenChunks: (doc) => setDrawer({ doc, focus: null }),
               })
-            : section === 'recall'
-              ? h(RecallView, {
-                  t,
-                  kbId,
-                  onOpenChunk: (chunkId, docName) => {
-                    const docId = String(chunkId).split('#')[0]
-                    setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
-                  },
-                })
-              : h('div', { className: 'hrag-pane' }, t('shell.viewPending')),
+            : null,
+          section === 'recall'
+            ? h(RecallView, {
+                t,
+                kbId,
+                onOpenChunk: (chunkId, docName) => {
+                  const docId = String(chunkId).split('#')[0]
+                  setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
+                },
+                onViewInVectorSpace: (request) => {
+                  setOverlayRequest(Object.assign({}, request, { nonce: Date.now() }))
+                  setSection('vectors')
+                },
+              })
+            : null,
+          // 投影视图 keep-alive（照工作台 forceMount 语义）：切走不丢配置与叠加；
+          // enabled 门控首次取数——没打开过投影就不发请求。
+          h(
+            'div',
+            { className: 'hrag-vec-slot', style: { display: section === 'vectors' ? 'flex' : 'none' } },
+            h(VectorView, {
+              t,
+              kbId,
+              enabled: section === 'vectors',
+              overlayRequest,
+              onOpenChunk: (docId, chunkId, docName) => {
+                setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
+              },
+            }),
+          ),
         )
       }
 
