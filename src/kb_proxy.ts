@@ -171,6 +171,37 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
       }
       return api(config, `${kbPath(args)}/chunks`, { query: { ids } })
     },
+    // ── 百科（Task 9）：条目读/删/更新（单条与库级同族）＋人工卡片读 ─────────
+    listWikiEntries: (args) => api(config, `${kbPath(args)}/wiki/entries`),
+    wikiEntry: (args) =>
+      api(config, `${kbPath(args)}/wiki/entries/${encodeURIComponent(needString(args, 'entry_id'))}`),
+    deleteWikiEntry: (args) =>
+      api(config, `${kbPath(args)}/wiki/entries/${encodeURIComponent(needString(args, 'entry_id'))}`, {
+        method: 'DELETE',
+      }),
+    regenerateWikiEntries: (args) => {
+      const ids = (args as Record<string, unknown> | null | undefined)?.entry_ids
+      if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === 'string' && id.trim())) {
+        throw new HarnessRagError({ kind: 'http', status: 400, detail: 'panel op requires "entry_ids"' })
+      }
+      return api(config, `${kbPath(args)}/wiki/regenerate`, { body: { entry_ids: ids } })
+    },
+    generateWiki: (args) => {
+      const mode = (args as Record<string, unknown> | null | undefined)?.mode
+      if (mode !== 'incremental' && mode !== 'full') {
+        throw new HarnessRagError({ kind: 'http', status: 400, detail: 'panel op requires "mode" (incremental|full)' })
+      }
+      return api(config, `${kbPath(args)}/wiki/generate`, { method: 'POST', query: { mode } })
+    },
+    listManualCards: (args) => {
+      const source = args as Record<string, unknown> | null | undefined
+      const query: Record<string, unknown> = {}
+      if (typeof source?.offset === 'number' && Number.isFinite(source.offset)) query.offset = Math.trunc(source.offset)
+      if (typeof source?.limit === 'number' && Number.isFinite(source.limit)) query.limit = Math.trunc(source.limit)
+      return api(config, `${kbPath(args)}/manual-knowledge`, { query })
+    },
+    manualCard: (args) =>
+      api(config, `${kbPath(args)}/manual-knowledge/${encodeURIComponent(needString(args, 'card_id'))}`),
   }
 }
 
