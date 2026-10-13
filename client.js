@@ -2414,6 +2414,9 @@ window.__ModuleLoader__.load({
       const focusRef = React.useRef(null)
       // LOD 渲染档位（跨档重建的门闩）；上报走穿透 ref 防闭包陈旧。
       const renderTierRef = React.useRef('full')
+      // 自动全览门闩（2026-10-13 他报「默认缩放偏大」）：重建/换档后置真，力场
+      // 收敛期间持续拟合视口；用户一动手（滚轮/按下/搜索定位）即置假交还控制权。
+      const autoFitRef = React.useRef(true)
       const tierCbRef = React.useRef(onRenderTierChange)
       tierCbRef.current = onRenderTierChange
       // 身份漂移隔离：applyTier 经 ref 取最新闭包（数据 effect 只随数据身份重跑，
@@ -2685,6 +2688,35 @@ window.__ModuleLoader__.load({
             item.ppx = item.x
             item.ppy = item.y
           }
+          // 自动全览（2026-10-13 他报「默认缩放偏大」——初始应为全图入画的
+          // 缩略态）：收敛期间每帧按当前包围盒拟合视口（八折留边），只缩不放
+          // （上限 zoom 1，小图行为不变）、下限受 GRAPH_MIN_SCALE 夹取。
+          if (autoFitRef.current) {
+            const wrap = wrapRef.current
+            const w = wrap ? wrap.clientWidth : 0
+            const h = wrap ? wrap.clientHeight : 0
+            if (w > 0 && h > 0 && items.length > 0) {
+              let minX = Infinity
+              let maxX = -Infinity
+              let minY = Infinity
+              let maxY = -Infinity
+              for (const item of items) {
+                if (item.x < minX) minX = item.x
+                if (item.x > maxX) maxX = item.x
+                if (item.y < minY) minY = item.y
+                if (item.y > maxY) maxY = item.y
+              }
+              const boxW = Math.max(80, maxX - minX)
+              const boxH = Math.max(80, maxY - minY)
+              // 全览态不露文字（10-13 他二报）：需要缩放的图把拟合值再夹到标签
+              // 隐藏阈之下（strictly < 0.6 才 hidden，取 0.96 倍防边界）；本来就
+              // 装得下（rawFit ≥ 1）的小图维持 zoom 1，行为不变。
+              const rawFit = Math.min(w / boxW, h / boxH) * 0.8
+              const fit = rawFit >= 1 ? 1 : Math.min(rawFit, GRAPH_LABEL_HIDE_BELOW * 0.96)
+              const zoom = Math.max(GRAPH_MIN_SCALE, Math.min(GRAPH_MAX_SCALE, fit))
+              viewRef.current = { zoom, ox: -((minX + maxX) / 2) * zoom, oy: -((minY + maxY) / 2) * zoom }
+            }
+          }
           sim.friction *= GRAPH_FRICTION_DECAY
           draw()
           if (sim.friction > GRAPH_FRICTION_MIN) {
@@ -2701,7 +2733,7 @@ window.__ModuleLoader__.load({
       // （hub 枢纽层／重要层／full 全量）；幸存节点保位、新点画布内随机撒点；力场
       // 从 friction 0.6 重启（跨档 = 布局重跑的既定语义，与工作台 series 重建一致）。
       const applyTier = React.useCallback(
-        (tier) => {
+        (tier, refit = true) => {
           const sim = simRef.current
           const keep = graphTierNodeIds(nodes, communities, tier)
           const wrap = wrapRef.current
@@ -2728,6 +2760,9 @@ window.__ModuleLoader__.load({
           }
           renderTierRef.current = tier
           if (tierCbRef.current) tierCbRef.current(tier)
+          // refit：数据重建/初载＝真（自动全览）；滚轮跨档/搜索升档＝假（用户
+          // 正在操作视口——不得夺回；搜索路径已先置假并自行居中）。
+          if (refit) autoFitRef.current = true
           startSim()
         },
         [nodes, edges, communities, startSim],
@@ -2760,6 +2795,7 @@ window.__ModuleLoader__.load({
         if (!focusNode) return
         if (focusTokenRef.current === focusNode) return
         focusTokenRef.current = focusNode
+        autoFitRef.current = false
         if (recenterRef.current !== null) {
           window.clearTimeout(recenterRef.current)
           recenterRef.current = null
@@ -2768,7 +2804,7 @@ window.__ModuleLoader__.load({
         if (!sim) return
         let item = sim.byId.get(focusNode.id)
         if (!item) {
-          applyTierRef.current(graphRenderTierForZoom(GRAPH_FOCUS_ZOOM, nodes.length))
+          applyTierRef.current(graphRenderTierForZoom(GRAPH_FOCUS_ZOOM, nodes.length), false)
           item = simRef.current.byId.get(focusNode.id)
           if (!item) return // guide 熔断兜底（tab 层已先行判定并提示）：无物可居中
           recenterRef.current = window.setTimeout(() => {
@@ -2804,6 +2840,7 @@ window.__ModuleLoader__.load({
         if (!canvas) return
         const onWheel = (event) => {
           event.preventDefault()
+          autoFitRef.current = false
           const rect = canvas.getBoundingClientRect()
           const mx = event.clientX - rect.left
           const my = event.clientY - rect.top
@@ -2818,7 +2855,7 @@ window.__ModuleLoader__.load({
           // 重启；同档直绘（点成本）。≤500 小库恒 full，永不进重建分支。
           const nextTier = graphRenderTierForZoom(next, nodes.length)
           if (nextTier !== renderTierRef.current) {
-            applyTier(nextTier)
+            applyTier(nextTier, false)
           } else {
             draw()
           }
@@ -2885,6 +2922,7 @@ window.__ModuleLoader__.load({
 
       const handleDown = (event) => {
         if (event.button !== 0) return // 仅左键起拖拽/点击（照工作台：右/中键不触发）
+        autoFitRef.current = false
         const found = pick(event)
         dragRef.current = {
           kind: found ? 'node' : 'pan',
