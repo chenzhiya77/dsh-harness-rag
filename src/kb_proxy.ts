@@ -19,8 +19,25 @@ export const KB_PROXY_ROUTE = '/dsh-harness-rag/api'
  * op (the knowledge-base selector's list); Task 2 the documents pane
  * (list / delete / retry); Task 3 the chunks pane (list / delete preview /
  * delete); Task 5 the ingest actions (supported formats / reindex / reindex
- * status; the multipart upload rides its own raw pass-through below).
+ * status; the multipart upload rides its own raw pass-through below);
+ * Task 6 the vector projection (coordinates + the query overlay transform).
  */
+/** Shared projection query mirror for both projection ops: collections join
+ * into the comma form the route declares (absent array = route default),
+ * algo/dims/sample_size pass through only when well-formed. */
+function projectionQueryParams(args: unknown): Record<string, unknown> {
+  const source = args as Record<string, unknown> | null | undefined
+  const query: Record<string, unknown> = {}
+  const collections = source?.collections
+  if (Array.isArray(collections) && collections.length > 0 && collections.every((key) => typeof key === 'string')) {
+    query.collections = collections.join(',')
+  }
+  if (source?.algo === 'pca' || source?.algo === 'umap') query.algo = source.algo
+  if (source?.dims === 2 || source?.dims === 3) query.dims = source.dims
+  if (typeof source?.sample_size === 'number') query.sample_size = source.sample_size
+  return query
+}
+
 function buildOps(config: Config): Record<string, (args: unknown) => Promise<unknown>> {
   const needString = (args: unknown, key: string): string => {
     const value = (args as Record<string, unknown> | null | undefined)?.[key]
@@ -67,6 +84,24 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
     supportedFormats: () => api(config, '/api/knowledge-bases/supported-formats'),
     reindex: (args) => api(config, `${kbPath(args)}/reindex`, { method: 'POST' }),
     reindexStatus: (args) => api(config, `${kbPath(args)}/reindex/status`),
+    vectorProjection: (args) => {
+      const query = projectionQueryParams(args)
+      if ((args as Record<string, unknown> | null | undefined)?.refresh === true) query.refresh = 'true'
+      return api(config, `${kbPath(args)}/vector-projection`, { query })
+    },
+    projectVectorQuery: (args) => {
+      const source = args as Record<string, unknown> | null | undefined
+      const text = typeof source?.text === 'string' ? source.text.trim() : ''
+      if (!text) {
+        throw new HarnessRagError({ kind: 'http', status: 400, detail: 'panel op requires "text"' })
+      }
+      // Mirror the view's params: the server cache key includes them, so any
+      // drift turns the transform into a 409 by design.
+      return api(config, `${kbPath(args)}/vector-projection/query`, {
+        query: projectionQueryParams(args),
+        body: { text },
+      })
+    },
   }
 }
 
