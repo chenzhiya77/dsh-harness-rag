@@ -104,6 +104,10 @@
 | docErrors 错误分类文案（A⑤） | 分类映射表移植 | 后调（同上） |
 | tab 行溢出降级（A⑦） | 遮罩下拉；现状＝窄档换行缓解 | 后调（归 D6 窄档清单） |
 | 库列表排序拖拽 | 拖拽重排（上次打开记忆已并入 Task 5） | 后调（同上） |
+| 面板拖拽上传（宿主全局手势冲突） | 宿主 `ui-attachment`＝**document 级**监听＋全窗 DropOverlay（`pointer-events:none` 纯装饰层），拖拽入窗＝对话附件为应用级设计；工作台有拖拽上传（`document-panel`）⇒ 一致缺口 | **已裁（10-14）：做面板内拖拽上传（plan Task 7）**——遮罩原样不动、范围仅面板内容区、其余区域维持宿主默认；接不了＝吞掉＋就地提示（**C 口径，不回落会话**）；目录拒 |
+| 行内提示位（顶栏下、占流抖动） | T3 A4「观感差记」的升级诉求；宿主 `Toast` 原件可 require（`primitives` 基线：portal／top 40px 居中／深色面双主题／3s 渐隐／可 `anchor` 锚面板顶栏） | **已裁（10-14）：换宿主 `Toast`，并入 Task 6 统一换件轮**（共享同一次复验） |
+| 宿主原件直用候选（`primitives` 282 导出） | `Menu`／`MenuSurface`／`MenuGroup`／`Tooltip`／`Input`／`Button`＋全图标集均在 `@deepseek-ai/dsh-client-ui-primitives`（`PLATFORM_MODULES` 静态基线 ⇒ 插件可 require；旗舰样板同款 require）；现菜单/图标＝按真值复刻（M2/M3 口径） | **已裁（10-14）：菜单＋图标于本对收口统一换＋一轮复验（plan Task 6）**；批 2–4 新写控件照用宿主件；评测域两枚冻结；宿主无件者维持 M3 三档 |
+| 宿主件采纳候选·有用未用（10-14 对账） | **换皮级**：`Button`（≈`.hrag-btn` 136 引用）／`Input`（手写 19 处）／`Checkbox`／`Tag`·`Pill`·`StateDot`（自绘芯片/状态）／`DisclosureRow`；**行为级**：`Tooltip`（≈80 处原生 `title=`）／`Modal`·`RiskConfirmation`（自绘对话框与确认闸）／`MarkdownText`（切片正文现纯文本 pre-wrap——T3 观感缺口）／`FileTypeIcon`＋`classifyFileType`（＝A⑪ 另案本体）／`ImageLightbox`·`CodeBlock`·`JsonTree`（无渲染）；**小件**：`relativeTime`·`fileSizeText`·`writeClipboard`·`HoverCard`·`SegmentedControl`·`Switch` | 待裁：换皮级可并入收口轮；行为级单项裁；设置面控件批 2–4 自然直用 |
 
 ## 7. 非目标
 

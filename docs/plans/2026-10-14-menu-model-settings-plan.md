@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-14-menu-model-settings-spec.md](../specs/2026-10-14-menu-model-settings-spec.md)（M1–M7 决定＋落点＋验收）
-**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过），Task 5／2–4 未开。
+**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；Task 2–4 未开；**Task 6 已立**（收口统换宿主件，10-14 裁）；**Task 7 已立**（面板内拖拽上传，Task 5 后执行，10-14 裁）。
 **Parent:** T3 plan（[2026-10-12-t3-panel-plan.md](2026-10-12-t3-panel-plan.md)）「RAG 前端全域覆盖审计」A 组裁定行；步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（「模型面归属」条转正）。
 
 **Architecture:** 两件事——**① 顶栏 ⋯ 菜单**（`client.js` 顶栏段：`[裸粗体库名＋chevron 下拉][⋯ 裸钮靠右]`（v2/v3 终态）；菜单件＝`DshMenu`（宿主 `Menu.module.css` 真值），图标宿主原路径（路径级属性：Ellipsis `fill`／Edit `fill`+`stroke`／余 `stroke`）、缺件沿用工作台同款；行内「刷新/上传/重建索引」退役——重建索引落设置面；**六 tab 改对话头设计**）；**② 功能模型设置面**（面板内 Sheet；照工作台 `functional-models-view` 全量、四批落地：读取展示/重建索引入口/迁移状态 → 嵌入段 → 多模态段 → 解析/裁判/抽取段）。**数据缝不变**：host 半 `kb_proxy.ts` 薄代理补 op（createKb/renameKb/deleteKb/ragConfig 读写/migration/五探针/模型目录）；**deer-flow 零改动**。
@@ -11,6 +11,7 @@
 **硬约束（spec 已裁，不许自行放松）**：
 - **皮肤＝宿主真值**（M2）：Menu 面板/行/危险行/分隔线全参照实；触发器 `IconEllipsisOutlineRegular` 原路径。评测域两枚菜单**不改**。
 - **图标三档**（M3）：宿主原生 ≻ 工作台同款 ≻ 相关合适；原路径从 web bundle 提取、逐条留证（不得手绘近似）。
+- **宿主件统换（10-14 追加裁定 → Task 6）**：菜单件与手刻图标于本对收口统一换为宿主 `primitives` 原件（`Menu`/`MenuItemButton`/`MenuSurface`/`MenuGroup`/`Icon*`；基线种子表可 require，无需 `dsh.client.external`）；**行内提示位换宿主 `Toast` 一并入同轮**（10-14 裁）；M2/M3 由「复刻真值」升格「直用真值」；**评测域两枚维持冻结**；宿主无件者（Upload/BookOpen/RefreshCw 等）维持 M3 三档。
 - **重建索引落设置面**（M1/M4）：不进菜单；设置面批 1 交付前不裁撤原行内钮——**同一 Task 内完成位移**（Task 1 含批 1，无「入口悬空」窗口）。
 - **数据缝（承 T3）**：面板不直连后端；新 op 一函数一动作、守卫造句照既有惯例；**缺路由停下待裁**。
 - **先一致后另案（承 T3）**：设置面逐段以工作台为底本；形态创新一律登记。
@@ -22,7 +23,7 @@
 - **插件侧验证**（同 T3 口径，有意不做单测）：host 半编译探针（仓外一次性）＋冒烟回归＋桌面端整重启真跑。
 - **scope fence（本对不做）**：对话主模型治理 · 模型目录增删编辑 · 评测域菜单皮肤统一（§6 登记）· 菜单次序微调（Task 1 复看）· **A 组审计乙档**（②重复上传/④右键出题/⑤docErrors/⑦tab 溢出/⑪类型图标/⑫刻度轨/库排序拖拽——10-14 裁决「照建议登记」→ spec §6，不执行）。
 
-**依赖顺序**：Task 0（只读核实）→ Task 1（菜单重构＋设置面批 1＝骨架/读取/重建索引/迁移）→ **Task 5（甲档小件批，10-14 并入）** → Task 2（嵌入段）→ Task 3（多模态段）→ Task 4（解析/裁判/抽取段＋收口）。Task 1 单独立验（菜单可先上真栈）；Task 5 与菜单同面、紧随 Task 1 验后即可做。
+**依赖顺序**：Task 0（只读核实）→ Task 1（菜单重构＋设置面批 1＝骨架/读取/重建索引/迁移）→ **Task 5（甲档小件批，10-14 并入）** → **Task 7（面板内拖拽上传，10-14 立）** → Task 2（嵌入段）→ Task 3（多模态段）→ Task 4（解析/裁判/抽取段＋收口）→ **Task 6（收口统一换件：菜单/图标/Toast→宿主原件＋一轮复验）**。Task 1 单独立验（菜单可先上真栈）；Task 5 与菜单同面、紧随 Task 1 验后即可做；Task 7 紧随 Task 5 验后执行（与 Task 6 无依赖：提示暂走现提示机制，Task 6 换 Toast 时自然覆盖）；Task 6 随 Task 4 收口执行（10-14 裁）。
 
 ---
 
@@ -113,16 +114,52 @@
 > 动到的文件：`client.js`（库下拉/文档行）＋`src/kb_proxy.ts`（下载 raw GET）。
 > **验收对应**：A 组审计 ①③⑩＋「上次打开库记忆」小尾巴（裁定行「甲档并入」）。
 
-- [ ] **建库入口**：库下拉（DshMenu）底部「＋ 新建知识库」项 → 名称+描述弹层（照工作台 `createKB` 对话框：两字段、名称非空才可创建）→ `createKb`（op 已有）→ 建成后即时选中；
-- [ ] **文档下载**：文档行加「下载」动作 → host 补 `downloadDocument` **raw GET 透传**（字节流，照上传的 raw 通道；文件名取响应头/文档名）；
-- [ ] **上传白名单前置拦截**：选择文件时本地分区（`supportedSuffixes` 现取）——被拒项先行提示、仅合规项入队（照工作台 `partitionFilesBySuffix` 语义）；
-- [ ] **上次打开库记忆**：`localStorage` 记所选 kbId；载入优先选它（失效回退首个）；
-- [ ] **探针＋真跑**：`probe-menu` 扩（下载 raw）；下载一枚／建库一枚／拒档一枚／记忆复开。
+- [x] **建库入口**：库下拉（DshMenu）底部「＋ 新建知识库」项（dshPlus 原路径）→ 名称+描述弹层（照工作台 `createKB` 对话框：两字段、名称非空才可创建、Enter/Esc/遮罩）→ `createKb`（op 已有）→ 建成后即时选中（追加进列表 + setKbId）；
+- [x] **文档下载**：文档行首位加「下载」动作 → host 补 `downloadDocument` **raw GET 透传**（字节流＋content-type/disposition 中继，失败=JSON envelope 保上游状态；照上传的 raw 通道）＋客户端 blob→锚点下载（文件名优先取 Content-Disposition，UTF-8 与引号两式）；
+- [x] **上传白名单前置拦截**：选择文件时本地分区（小写后缀集合，照工作台 `partitionFilesBySuffix`/`fileSuffix` 语义）——被拒项先行提示（照工作台 `unsupportedFilesSkipped` 逐字）、仅合规项入队；白名单未取时放行不拦；
+- [x] **上次打开库记忆**：`localStorage['hrag-last-kb']`——载入优先恢复（失效回退首个）、切换即记（try/catch 兜底）；
+- [x] **探针＋真跑**：`probe-menu` 扩（下载 raw：字节＋双头中继/缺 doc_id 守卫 400 不触后端/上游 404 透传/死后端 502）**6/6 PASS**；`node --check`＋冒烟回归绿。
 
-**实测**（Task 5，执行后回填）：
+**实测**（Task 5，2026-10-14；**全交付·真跑过**）：
+
+- **落码**：host 半＝`forwardDownload`（raw 中继，仿 `forwardUpload`；参数守卫/未配置 503/不可达 502/失败 envelope）；client 半＝建库下拉项＋创建弹层（两字段）、文档行「下载」、上传白名单前置分区（被拒提示）、库记忆（读/写两助手＋load 选择链）。
+- **自检**：`node --check`；`kb_proxy.ts` node 直载；冒烟回归全绿；`probe-menu` **6/6**（新下载中继三测：字节与双头中继/守卫/404 透传）。
+- **真跑（过，10-14 他复「测试好了」）**：整重启桌面端——四项清单过：建库一枚（兼验删除闸）／文档行下载（文件名＝原上传名）／混选不支持后缀＋合规文件（拒项提示＋合规项照传）／切库后重开默认回到上次库。**首轮咬出并已修**：宿主 locale 裸参复发（`upload.rejected` 直传字符串 ⇒ 事件处理器静默 TypeError，不入列不报错）——修＝参数改 `{ 0: … }`；冒烟加「t 裸参静检＋canary 自证」；全仓扫描 212 处 `t(` 仅 4 处带参、0 裸参。
+
+---
+
+## Task 6 — 收口统一换件（菜单/图标→宿主原件）＋一轮复验（10-14 裁）
+
+> 动到的文件：`client.js`（`DshMenu`/`DshMenuItem` 族与手刻图标全量替换）＋冒烟脚本（仓外，补 primitives 供给）。
+> **验收对应**：spec §6「宿主原件直用」裁定行；换件后菜单/图标逐条重对（§4.1 口径）。
+
+- [ ] **菜单换件**：`DshMenu`/`DshMenuItem` → 宿主 `Menu`（items API：`selectedId` 勾选/`align`/键盘导航）＋`MenuItemButton`（`icon`/`danger`/`disabled`/`separatorBefore`）＋`MenuSurface`/`MenuGroup`（按需）；覆盖 `DshMenu` 现全部调用点（顶栏 ⋯、库下拉等）；定位/外点关闭/键盘导航交宿主件（`anchor`/`getAnchorRect`/`useDismissOnOutsidePointer`）；**评测域两枚 `EvalMenu` 不动**（M2 冻结）。
+- [ ] **图标换件**：盘点 `client.js` 手刻 SVG → 凡 `primitives` 有件者换宿主 `Icon*`（Ellipsis/Refresh/Edit/Trash/Settings/Plus/ChevronDown/Check 等）；宿主无件者（Upload/BookOpen/RefreshCw 等）维持 M3 三档（lucide 同款）。
+- [ ] **提示位换 Toast（10-14 裁：并入本轮）**：行内提示（`barNotice` 族：撤占流提示行渲染＋ `.hrag-notice` 相关 CSS）→ 宿主 `Toast` 原件——语义映射（成功/失败 → `tone`/警示图标）、自动消退交宿主（`holdMs` 缺省；旧 4s/8s 口径对照核一遍）、可选 `anchor` 锚面板顶栏（执行时定夺）；盘点其余自绘瞬时提示一并收口。
+- [ ] **require 接线**：`require('@deepseek-ai/dsh-client-ui-primitives')`（基线种子表；`dsh.client.external` 无需改）；冒烟桩补 primitives 供给（宿主提取件或手桩）。
+- [ ] **门禁**：`node --check`＋冒烟回归（含 t 裸参静检）＋探针回归。
+- [ ] **一轮复验**：整重启桌面端——菜单逐项（顶栏 ⋯ 八项＋库下拉＋勾选态）＋图标逐枚对照＋提示位（建库/重命名/上传拒项的 Toast 出位与消退）；**一轮即可**（不复跑各批）。
+
+**实测**（Task 6，执行后回填）：
+
+---
+
+## Task 7 — 面板内拖拽上传（10-14 裁）
+
+> 动到的文件：`client.js`（面板根拖拽处理器＋复用现有上传链＋提示文案）。
+> **验收对应**：spec §6「面板拖拽」裁定行（遮罩不动、范围仅面板、C 口径）。
+
+- [ ] **主路径**：面板内容区根挂 `dragover`（仅当 `dataTransfer.types` 含 `Files`；`preventDefault`＋`dropEffect='copy'`＋`stopPropagation`）与 `drop`（`stopPropagation`＋`preventDefault`，取 `dataTransfer.files` → **直接复用现有上传链** `handleUpload`——白名单前置拦截等逐字同）；**不清 `dragenter`/`dragleave`**（宿主遮罩计数/显隐零变化）；目录项拒（`webkitGetAsEntry().isDirectory`，提示一条）。
+- [ ] **接不了处置（C 口径）**：没选库／上传中 → **吞掉 drop＋就地提示**（「知识库暂不可接收：请先创建知识库」／「上传中，请稍候」）；**不回落会话**（照宿主「接不了就吞、不转移目的地」惯例）。提示暂走现提示机制，Task 6 换 `Toast` 后自然覆盖。
+- [ ] **遮罩收尾**：吞 drop 后宿主自己的 `reset()` 不跑 → 补 `window.dispatchEvent(new Event('dragend'))` 走其既有清理口；真跑核「落下后遮罩即消」。
+- [ ] **范围**：仅面板内容区（全部 tab）；对话区/其他面板/窗口其余位置零改动（宿主默认＝对话附件）。
+- [ ] **冒烟＋真跑**：冒烟加结构项（处理器挂载）；真跑五条——拖到面板→传当前库；拖到对话区→仍为附件；拖到其他面板→默认；接不了（无库/上传中）→提示且不落会话；落下后遮罩正常消。
+
+**实测**（Task 7，执行后回填）：
 
 ---
 
 ## 提交链（滚动记实，本对）
 
 - [x] Task 1 三笔（10-14）：`7b5c73c` host 六 op／`884b422` client（顶栏重做＋设置面批 1＋三迭代）／`03da3ee` docs（Task 0/1 实测＋A 组终裁）。**全部未推**（仓暂无 remote）。
+- [x] Task 5 三笔（10-14）：`a72df3c` host（`downloadDocument` raw 中继）／`7652aad` client（建库弹层·下载·白名单前置·上次库记忆＋`upload.rejected` 裸参修复）／docs 本笔（Task 5 实测收官＋Task 6/7 立项＋§6 三行裁定登记）。**全部未推**（仓暂无 remote）。
