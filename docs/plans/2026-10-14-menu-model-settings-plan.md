@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-14-menu-model-settings-spec.md](../specs/2026-10-14-menu-model-settings-spec.md)（M1–M7 决定＋落点＋验收）
-**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；**Task 2 已收官**（真跑过，10-14）；**Task 8 已收官**（真跑过，10-14）；**Task 3 已收官**（真跑过，10-14；含表现层六轮＋三续）；**Task 4 落码完毕**（真跑待复跑）；**Task 6 已立**（收口统换宿主件，10-14 裁）。
+**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；**Task 2 已收官**（真跑过，10-14）；**Task 8 已收官**（真跑过，10-14）；**Task 3 已收官**（真跑过，10-14；含表现层六轮＋三续）；**Task 4 已收官**（真跑过，10-15）；**Task 6 已立**（收口统换宿主件，10-14 裁）。
 **Parent:** T3 plan（[2026-10-12-t3-panel-plan.md](2026-10-12-t3-panel-plan.md)）「RAG 前端全域覆盖审计」A 组裁定行；步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（「模型面归属」条转正）。
 
 **Architecture:** 两件事——**① 顶栏 ⋯ 菜单**（`client.js` 顶栏段：`[裸粗体库名＋chevron 下拉][⋯ 裸钮靠右]`（v2/v3 终态）；菜单件＝`DshMenu`（宿主 `Menu.module.css` 真值），图标宿主原路径（路径级属性：Ellipsis `fill`／Edit `fill`+`stroke`／余 `stroke`）、缺件沿用工作台同款；行内「刷新/上传/重建索引」退役——重建索引落设置面；**六 tab 改对话头设计**）；**② 功能模型设置面**（面板内 Sheet；照工作台 `functional-models-view` 全量、四批落地：读取展示/重建索引入口/迁移状态 → 嵌入段 → 多模态段 → 解析/裁判/抽取段）。**数据缝不变**：host 半 `kb_proxy.ts` 薄代理补 op（createKb/renameKb/deleteKb/ragConfig 读写/migration/五探针/模型目录）；**deer-flow 零改动**。
@@ -222,3 +222,4 @@
 - [x] Task 2 三笔（10-14）：`5fb0629` host（`ragConfigPut`＋四探针 op）／`93b9ecc` client（设置面批 2 全量＋形态改判〔面板内大弹窗〕＋三案修复〔白屏护栏/flex 压扁/弹窗自锚〕）／`01d0de2` docs（Task 2 实测收官＋形态两轮改判记录）。**全部未推**（仓暂无 remote）。
 - [x] Task 8 两笔（10-14）：`71e8fbe` client（判同三件＋弹层＋上传链前置接线）／`7112e1b` docs（Task 8 实测收官）。**全部未推**（仓暂无 remote）。
 - [x] Task 3 三笔（10-14）：`e80601f` host（`probeAsr`＋`listModelsConfig` op）／`9b351fb` client（多模态组可编辑＋设置面全量下拉统一＋表现层六轮及三续修复）／`609a9cb` docs（Task 3 实测收官）。**全部未推**（仓暂无 remote）。
+- [x] Task 4 两笔（10-15）：`091984c` client（解析段＋裁判/抽取段＋只读机制退役＋分组归位＋头部去线〔续④随携〕）／`dda65b8` docs（实测收官＋收口对照＋§6 登记两行）。**全部未推**（仓暂无 remote）。
