@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-14-menu-model-settings-spec.md](../specs/2026-10-14-menu-model-settings-spec.md)（M1–M7 决定＋落点＋验收）
-**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；**Task 2 已收官**（真跑过，10-14）；Task 3–4 未开；**Task 6 已立**（收口统换宿主件，10-14 裁）；**Task 8 已立**（重复上传拦截 A②，10-14 裁：Task 2 之后）。
+**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；**Task 2 已收官**（真跑过，10-14）；**Task 8 已收官**（真跑过，10-14）；Task 3–4 未开；**Task 6 已立**（收口统换宿主件，10-14 裁）。
 **Parent:** T3 plan（[2026-10-12-t3-panel-plan.md](2026-10-12-t3-panel-plan.md)）「RAG 前端全域覆盖审计」A 组裁定行；步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（「模型面归属」条转正）。
 
 **Architecture:** 两件事——**① 顶栏 ⋯ 菜单**（`client.js` 顶栏段：`[裸粗体库名＋chevron 下拉][⋯ 裸钮靠右]`（v2/v3 终态）；菜单件＝`DshMenu`（宿主 `Menu.module.css` 真值），图标宿主原路径（路径级属性：Ellipsis `fill`／Edit `fill`+`stroke`／余 `stroke`）、缺件沿用工作台同款；行内「刷新/上传/重建索引」退役——重建索引落设置面；**六 tab 改对话头设计**）；**② 功能模型设置面**（面板内 Sheet；照工作台 `functional-models-view` 全量、四批落地：读取展示/重建索引入口/迁移状态 → 嵌入段 → 多模态段 → 解析/裁判/抽取段）。**数据缝不变**：host 半 `kb_proxy.ts` 薄代理补 op（createKb/renameKb/deleteKb/ragConfig 读写/migration/五探针/模型目录）；**deer-flow 零改动**。
@@ -179,12 +179,16 @@
 > 动到的文件：`client.js`（上传链前置判同＋弹层）；（host 半零改动——`deleteDocument` 已有）。
 > **验收对应**：spec §6「重复上传拦截（A②）」裁定行；照工作台三件移植（`duplicate-check`／`duplicate-upload-flow`／`duplicate-upload-dialog`）。
 
-- [ ] **判同**：上传前置（菜单/拖拽/选择器三入口同链）——先查同名（基名精确＋后缀大小写不敏感），命中才算 SHA-256（`crypto.subtle`）比文档清单 `content_hash`（清单带该字段，已实查）：同哈希＝identical（默认跳过／可留副本）、哈希不同或无哈希＝conflict（替换／并存）、无同名＝clean。判同数据＝当前库文档清单（取数方式落码时定：上传时惰取 `listDocuments` 或共享缓存）。
-- [ ] **弹层**：三动作选择照工作台（跳过／替换／并存；identical 另可留副本），多个重复**排队逐个决定**；文案照工作台 `duplicateUpload` 逐字移植。
-- [ ] **流程**：替换＝**先删后传**（顺序冻结——防后置级联冲掉新上传的派生状态）；并存＝自动改名 `name (2).ext`（已存在则递增）。
-- [ ] **门禁＋真跑**：冒烟（判同纯函数用例：同名同哈希／同名异哈希／无同名／无哈希）；真跑——同文件再传→弹层（默认跳过）；改内容同名→替换（列表只留新件）／并存（出现 `(2)`）。
+- [x] **判同**：上传前置（菜单/拖拽/选择器三入口同链）——先查同名（基名精确＋后缀大小写不敏感），命中才算 SHA-256（`crypto.subtle`）比文档清单 `content_hash`（清单带该字段，已实查）：同哈希＝identical（默认跳过／可留副本）、哈希不同或无哈希＝conflict（替换／并存）、无同名＝clean。判同数据＝当前库文档清单（取数方式落码时定：上传时惰取 `listDocuments` 或共享缓存）。
+- [x] **弹层**：三动作选择照工作台（跳过／替换／并存；identical 另可留副本），多个重复**排队逐个决定**；文案照工作台 `duplicateUpload` 逐字移植。
+- [x] **流程**：替换＝**先删后传**（顺序冻结——防后置级联冲掉新上传的派生状态）；并存＝自动改名 `name (2).ext`（已存在则递增）。
+- [x] **门禁＋真跑**：冒烟（判同纯函数用例：同名同哈希／同名异哈希／无同名／无哈希）；真跑——同文件再传→弹层（默认跳过）；改内容同名→替换（列表只留新件）／并存（出现 `(2)`）。
 
-**实测**（Task 8，执行后回填）：
+**实测**（Task 8，2026-10-14；**全交付·真跑过**）：
+
+- **落码**：纯函数照工作台 `duplicate-check` 逐条移植——`dupBaseName`／`dupSuffix`（后缀大小写不敏感、dotfile 无后缀）／`dupFindByName`（基名精确＋后缀不敏感）／`dupVerdict`（同哈希＝identical；异哈希或旧行无哈希＝conflict）／`dupNextCopyName`（`name (2).ext` 递增）／`dupComputeSha256`（WebCrypto hex）。弹层件 `DuplicateUploadDialog`（identical＝［仍上传副本／跳过上传］；conflict＝［取消／保留两份／替换旧文档］；Esc／点遮罩＝cancel；文案照工作台逐字）。壳接线＝`handleUpload` 重写为 `processFile` 链：逐文件 hash → 对当前库清单判同 → 命中弹层等决定 → 执行；**换入点＝上传链前置**（菜单/拖拽/选择器三入口同链）；替换＝**先删后传**（`deleteDocument` 成功才传，本地清单同步剔除）；并存＝`new File([file], copyName)` 改名上传（`seenNames` 含本批已分配副本）；去向提示走 barNotice（已跳过／已作为副本上传／已替换旧文档，照工作台语义）；**降级**＝清单取数失败或 WebCrypto 不可用（非安全上下文）→ 直传不拦；全跳过不出「0 已提交」汇总。
+- **自检**：`node --check` 过；冒烟**全绿**（新增 Task 8 用例 10 断言：精确/大小写/后缀边界/末点 stem/三态判定/无哈希 conflict/副本递增/内点 stem）。host 半零改动（`deleteDocument` 已有）⇒ 探针不扩。
+- **真跑（过，10-14 他复「测试过了」）**：①同文件再传 → 弹层「内容完全一致」→ 默认「跳过上传」→「已跳过重复文件」✓；②同名改内容 → 弹层「同名文件已存在」→「保留两份」出现 `name (2).ext`／「替换旧文档」列表只留新件 ✓；③菜单与拖拽两入口同链 ✓。
 
 ---
 
@@ -194,3 +198,4 @@
 - [x] Task 5 三笔（10-14）：`a72df3c` host（`downloadDocument` raw 中继）／`7652aad` client（建库弹层·下载·白名单前置·上次库记忆＋`upload.rejected` 裸参修复）／`3e95f9a` docs（Task 5 实测收官＋Task 6/7 立项＋§6 三行裁定登记）。**全部未推**（仓暂无 remote）。
 - [x] Task 7 两笔（10-14）：`c86a852` client（面板内拖拽：拦截/吞掉提示/目录拒/遮罩收尾）／`9e8786e` docs（Task 7 实测收官＋Task 8 立项＋§6 A② 改裁）。**全部未推**（仓暂无 remote）。
 - [x] Task 2 三笔（10-14）：`5fb0629` host（`ragConfigPut`＋四探针 op）／`93b9ecc` client（设置面批 2 全量＋形态改判〔面板内大弹窗〕＋三案修复〔白屏护栏/flex 压扁/弹窗自锚〕）／`01d0de2` docs（Task 2 实测收官＋形态两轮改判记录）。**全部未推**（仓暂无 remote）。
+- [x] Task 8 两笔（10-14）：client（判同三件＋弹层＋上传链前置接线）／docs 本笔（Task 8 实测收官）。**全部未推**（仓暂无 remote）。
