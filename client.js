@@ -465,7 +465,7 @@ window.__ModuleLoader__.load({
       'set.form.noChanges': '没有需要保存的改动',
       'set.form.defaultHint': '用于图谱抽取、评测裁判、图片与视频配文未单独指定模型时的选择，不影响聊天主模型及其他功能；此项留空时使用配置中的 RAG 默认，配置也未指定则使用模型列表第一项。',
       'set.form.defaultNone': '（使用配置默认）',
-      'set.form.retrievalHint': '检索时使用：向量模型与重排模型。',
+      'set.form.retrievalHint': '检索时使用：向量模型与重排模型。更换向量模型、提供方、接口地址或稀疏来源后，已用旧配置入库的知识库需要重建索引，否则检索质量会下降。',
       'set.form.provider': '提供商',
       'set.form.model': 'Model ID',
       'set.form.apiKey': 'API Key',
@@ -475,7 +475,6 @@ window.__ModuleLoader__.load({
       'set.form.endpointHint': '必填。以下三种写法均可：主机名（https://host）、带 /v1 的 base（https://host/v1）或整段端点（https://host/v1/embeddings）；与固定段重复的一节不会重复拼接。',
       'set.form.secretHint': '留空表示不再覆盖，改用环境变量。',
       'set.form.secretFromEnvBadge': '环境变量已提供',
-      'set.form.embeddingChangeWarning': '更换向量模型、提供方、接口地址或稀疏来源后，已用旧配置入库的知识库需要重建索引，否则检索质量会下降。',
       'set.form.endpointRequired': '请填写接口地址',
       'set.form.advanced': '高级设置（6 项）',
       'set.form.dimensionHint': '该项决定向量库的宽度（留空为 1024）。修改后将触发全库重建，且修改前后需使用同一模型。',
@@ -514,6 +513,25 @@ window.__ModuleLoader__.load({
       'set.form.dimensionConfirmTitle': '修改维度将触发全库重建？',
       'set.form.dimensionConfirmDescription': '新宽度通过重建生效：每个知识库的向量都会重新生成，期间检索仍使用旧向量。全部完成后才切换；中途失败则保持不变。',
       'set.form.dimensionConfirmAction': '开始迁移',
+      'set.form.multimodalHint': '图片描述将图片与关键帧转为文字；语音识别仅服务视频入库。',
+      'set.form.captionHint': '接口地址与 API Key 取自所选模型条目；留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。仅列出支持视觉的条目——Anthropic 条目按其 Messages 协议调用，其余按 OpenAI 兼容协议调用。',
+      'set.form.vlmNoVision': '尚无视觉模型',
+      'set.form.asrRowLabel': '语音识别模型',
+      'set.form.asrProviderFunasr': 'funasr（本地）',
+      'set.form.asrProviderWhisper': 'whisper（本地）',
+      'set.form.asrProviderOpenaiAudio': 'openai-audio（通用协议）',
+      'set.form.asrProviderDashscope': 'dashscope（百炼）',
+      'set.form.asrGroupLocal': '本地引擎',
+      'set.form.asrGroupProtocol': '通用协议',
+      'set.form.asrGroupNative': '原生协议',
+      'set.form.asrModelCandidates': '常用模型：',
+      'set.form.asrModelFunasrHint': '可填写 ModelScope 模型 id 或本地目录。逐句时间戳：paraformer-zh 支持，paraformer-en 未验证；口述按 VAD 分段落到镜头卡，连续语音可能整段只落一张。',
+      'set.form.asrModelWhisperHint': '内置档位，越大越准越慢；常用 small。也可填写任意合法名（如 large-v2、turbo，或本地 .pt 文件）。',
+      'set.form.asrModelServiceHint': '填写服务侧的模型名（如 qwen-audio-3.1-asr-flash）；候选菜单仅对本地引擎可用。',
+      'set.form.asrApiKey': 'ASR API Key',
+      'set.form.lockedServiceOnly': '仅服务档需要',
+      'set.form.asrProbe': '检测分段时间戳',
+      'set.form.asrProbeBlocksSave': '该服务没有给出可用的段级时间戳：换一个服务，或改回本地引擎。',
       'set.loadFailed': '设置加载失败',
       'set.migrationRunning': '维度迁移中',
       'set.migrationSucceeded': '维度迁移已完成，新宽度已生效。',
@@ -1010,7 +1028,7 @@ window.__ModuleLoader__.load({
       'set.form.defaultHint':
         'Used when graph extraction, evaluation judging, image captioning or video captioning has no separate model selection. It does not affect chat models or other features. Leave this unset to inherit the configured RAG default, or the first model in the list if none is configured.',
       'set.form.defaultNone': '(config default)',
-      'set.form.retrievalHint': 'Used at retrieval time: the embedding model and the rerank model.',
+      'set.form.retrievalHint': 'Used at retrieval time: the embedding model and the rerank model. Changing the embedding model, provider, endpoint or sparse source requires re-indexing the knowledge bases already ingested with the previous one, or their retrieval quality will degrade.',
       'set.form.provider': 'Provider',
       'set.form.model': 'Model ID',
       'set.form.apiKey': 'API key',
@@ -1021,8 +1039,6 @@ window.__ModuleLoader__.load({
         'Required. Any of the three forms is accepted: the host (https://host), a base ending in /v1 (https://host/v1), or the full endpoint (https://host/v1/embeddings); a segment already covered by the leg\u2019s fixed path is never joined twice.',
       'set.form.secretHint': 'Leaving it blank stops the override and falls back to the environment variable.',
       'set.form.secretFromEnvBadge': 'From env',
-      'set.form.embeddingChangeWarning':
-        'Changing the embedding model, provider, endpoint or sparse source requires re-indexing the knowledge bases already ingested with the previous one, or their retrieval quality will degrade.',
       'set.form.endpointRequired': 'Enter the endpoint address',
       'set.form.advanced': 'Advanced settings (6)',
       'set.form.dimensionHint':
@@ -1069,6 +1085,30 @@ window.__ModuleLoader__.load({
       'set.form.dimensionConfirmDescription':
         'The new width takes effect through a rebuild: every library\u2019s vectors are regenerated while search keeps using the old ones. The switch happens only after all of it is complete; a failure leaves everything unchanged.',
       'set.form.dimensionConfirmAction': 'Start migration',
+      'set.form.multimodalHint': 'Image captioning turns images and keyframes into text; speech recognition only serves video ingest.',
+      'set.form.captionHint':
+        'The endpoint and API key come from the selected model entry; leaving it empty withdraws this row\u2019s override, so a value set for it in the configuration still applies, and only when neither is set does the RAG default model take over. Only vision-capable entries are listed \u2014 an Anthropic entry is called over its Messages protocol, and every other entry over the OpenAI-compatible protocol.',
+      'set.form.vlmNoVision': 'No vision model',
+      'set.form.asrRowLabel': 'Speech recognition model',
+      'set.form.asrProviderFunasr': 'funasr (local)',
+      'set.form.asrProviderWhisper': 'whisper (local)',
+      'set.form.asrProviderOpenaiAudio': 'openai-audio (generic protocol)',
+      'set.form.asrProviderDashscope': 'dashscope (DashScope)',
+      'set.form.asrGroupLocal': 'Local engines',
+      'set.form.asrGroupProtocol': 'Generic protocol',
+      'set.form.asrGroupNative': 'Native protocol',
+      'set.form.asrModelCandidates': 'Common models:',
+      'set.form.asrModelFunasrHint':
+        'A ModelScope model id, or a local directory. Sentence timestamps: paraformer-zh provides them, paraformer-en is unverified; speech is split per VAD segment across the shot cards, and continuous speech may still land on a single one.',
+      'set.form.asrModelWhisperHint':
+        'Built-in tiers \u2014 larger is more accurate and slower; small is the common choice. Any valid name also works (large-v2, turbo, or a local .pt file).',
+      'set.form.asrModelServiceHint':
+        'The model name the service itself uses (e.g. qwen-audio-3.1-asr-flash); the candidate menu is available for the local engines only.',
+      'set.form.asrApiKey': 'ASR API key',
+      'set.form.lockedServiceOnly': 'Service tiers only',
+      'set.form.asrProbe': 'Check segment timestamps',
+      'set.form.asrProbeBlocksSave':
+        'This service gave no usable segment timestamps: pick another service, or switch back to a local engine.',
       'set.loadFailed': 'Failed to load the settings',
       'set.migrationRunning': 'Dimension migration in progress',
       'set.migrationSucceeded': 'Dimension migration finished; the new width is in effect.',
@@ -1375,7 +1415,8 @@ window.__ModuleLoader__.load({
           '.hrag-mm-wrap { position: relative; display: inline-flex; }',
           '.hrag-bar > .hrag-mm-wrap + .hrag-mm-wrap { margin-left: auto; }',
           '.hrag-mm-backdrop { position: fixed; inset: 0; z-index: 40; }',
-          '.hrag-mm { position: fixed; z-index: 41; min-width: 144px; padding: 4px; border: none; border-radius: var(--dsw-radius-lg); background: var(--dsw-menu-surface-fill, var(--dsw-alias-bg-layer-1)); backdrop-filter: var(--dsw-menu-backdrop-filter); -webkit-backdrop-filter: var(--dsw-menu-backdrop-filter); box-shadow: var(--dsw-elevation-prominent); }',
+          // box-sizing：框内下拉走等宽内联 width（anchor:'field'）——不设 border-box 会超出 8px（padding）。
+          '.hrag-mm { position: fixed; z-index: 41; box-sizing: border-box; min-width: 144px; padding: 4px; border: none; border-radius: var(--dsw-radius-lg); background: var(--dsw-menu-surface-fill, var(--dsw-alias-bg-layer-1)); backdrop-filter: var(--dsw-menu-backdrop-filter); -webkit-backdrop-filter: var(--dsw-menu-backdrop-filter); box-shadow: var(--dsw-elevation-prominent); }',
           '.hrag-mm-item { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 34px; padding: 6px 8px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-family: inherit; text-align: left; cursor: pointer; }',
           '.hrag-mm-item:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-mm-item:disabled { opacity: 0.5; cursor: not-allowed; }',
@@ -1399,11 +1440,32 @@ window.__ModuleLoader__.load({
           '.hrag-set-row { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 8px; font-size: 12px; line-height: 20px; }',
           '.hrag-set-label { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-set-value { color: var(--dsw-alias-label-primary); word-break: break-word; }',
-          '.hrag-set-select { width: 100%; min-width: 0; height: 32px; padding: 0 26px 0 8px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; }',
-          '.hrag-set-select:focus { outline: none; border-color: var(--dsw-alias-state-business-primary); }',
-          '.hrag-set-control { width: 100%; min-width: 0; }',
+          // 下拉选择器＝与 Model ID 输入框同款外观（宿主 Input 真值：l4 边框／layer-1 底／32 高／
+          // 8 左距／14px；右侧 chevron 12px 同轨）——整盒可点开菜单；选项与更新逻辑不变（10-14 他令）。
+          '.hrag-set-picker { display: flex; width: 100%; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 6px; height: 32px; padding: 0 12px 0 8px; border: 0.5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 14px; line-height: 22px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-set-picker:focus-visible { outline: none; border-color: var(--dsw-alias-state-business-primary); }',
+          '.hrag-set-picker > svg { flex: none; }',
+          '.hrag-set-picker-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          // DshMenu 自带一层 `.hrag-mm-wrap`（inline-flex・内容宽）——与 Model ID 的 trail 用法不同，
+          // 选择器把 DshMenu 直接挂在 field 下，内容宽的壳会让 width:100% 的钮回退成内容宽
+          // （10-14 六轮复跑「都变短了」实证：178px vs 284px）。仅命中「壳即 field 直子」的选择器
+          // 用法；维度/Model ID 的 wrap 在 `.hrag-set-trail` 内，不受此规则影响。
+          '.hrag-set-field > .hrag-mm-wrap { display: flex; width: 100%; }',
+          // box-sizing：宿主 Input 的外壳是 span（页内无全局 border-box）——width:100% 会被
+          // padding+border 顶出字段约 17px（10-14 复跑「Model ID 溢出容器」实证；原生 select/input
+          // 吃 UA border-box 所以不受影响）。同一属性也兜住 primitives 缺件时的原生 input 回退。
+          '.hrag-set-control { width: 100%; min-width: 0; box-sizing: border-box; }',
           '.hrag-set-field { position: relative; width: 100%; min-width: 0; }',
-          '.hrag-set-trail { position: absolute; top: 50%; right: 28px; transform: translateY(-50%); pointer-events: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          // 10-14 复跑案：trail 上的 transform 会成为固定位菜单（DshMenu `.hrag-mm`）的
+          // 包含块——菜单被放到「trail 左上 + 按钮视口坐标」的错位处（面板内不可见、还把
+          // 滚动体撑出横竖滚动条）。改 top/bottom 拉伸 + flex 居中：几何等价、不产生包含块。
+          '.hrag-set-trail { position: absolute; top: 0; bottom: 0; right: 28px; display: flex; align-items: center; pointer-events: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          // 穿透壳里的可点件必须显式取回事件（工作台 pointer-events-auto 同款）——按钮自身
+          // 也要带上：pointer-events 系继承属性，只给包裹层不覆盖 ASR 那枚无包裹类的菜单。
+          // outer button reset：免得吃 UA/宿主 preflight 差异，露出默认描边。
+          '.hrag-set-tierwrap { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
+          '.hrag-set-tierbtn { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
+          '.hrag-set-tierbtn:hover { color: var(--dsw-alias-label-secondary); }',
           '.hrag-set-role { display: flex; align-items: center; margin: 6px 0 2px; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; cursor: pointer; }',
           '.hrag-set-role:disabled { color: var(--dsw-alias-label-secondary); cursor: default; }',
           '.hrag-set-dot { display: inline-block; width: 8px; height: 8px; margin-left: 7px; border-radius: 999px; background: rgba(128, 128, 128, 0.45); }',
@@ -1411,13 +1473,14 @@ window.__ModuleLoader__.load({
           '.hrag-set-dot-ok { background: #10b981; }',
           '.hrag-set-dot-bad, .hrag-set-dot-bad-dimension, .hrag-set-dot-bad-half { background: #f59e0b; }',
           '@keyframes hrag-dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }',
-          '.hrag-set-row-nested { padding-left: 10px; border-left: 1px solid var(--dsw-alias-border-l2); }',
+          // 嵌套行的缩进照工作台 NESTED_GUTTER（ml-3 border-l pl-3）——**只落在标题格**：
+          // 缩进是给标题看的，值列必须与父行同列对齐（10-14 复跑实证：整行 padding 会连框一起推动）。
+          '.hrag-set-row-nested > .hrag-set-label { margin-left: 12px; border-left: 1px solid var(--dsw-alias-border-l2); padding-left: 12px; }',
           '.hrag-set-locked { display: flex; align-items: center; min-height: 32px; padding: 0 10px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); background: rgba(128, 128, 128, 0.08); color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-set-adv { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; cursor: pointer; }',
           '.hrag-set-adv:hover { color: var(--dsw-alias-label-secondary); }',
           '.hrag-set-adv-chev { display: inline-flex; transform: rotate(-90deg); transition: transform 0.15s ease; }',
           '.hrag-set-adv-chev-open { transform: rotate(0deg); }',
-          '.hrag-set-warn { margin: 6px 0 0; color: var(--dsw-alias-label-error); font-size: 12px; line-height: 18px; }',
           '.hrag-set-saverow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }',
           '.hrag-set-savehint { color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-set-saveerr { color: var(--dsw-alias-label-error); font-size: 12px; }',
@@ -5630,10 +5693,23 @@ window.__ModuleLoader__.load({
       ])
     }
 
+    /** 框内下拉触发器 chevron：工作台同款（lucide ChevronDown size-4 opacity-50——
+        维度档位与 ASR 候选两处逐字对照 functional-models-view）。与菜单行图标
+        （lucideMenuIcon 14px）分开：这是值域控件的件，尺寸/透明度跟工作台走。 */
+    function lucideChevronDownIcon() {
+      return h(
+        'svg',
+        { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.5, 'aria-hidden': 'true' },
+        h('path', { d: 'm6 9 6 6 6-6', stroke: 'currentColor' }),
+      )
+    }
+
     /** DSH 真值菜单（菜单批 Task 1，spec M2）：面板/行/危险色/分隔全照宿主
         Menu.module.css；fixed 测位（同 EvalMenu 配方：开拍测位、下方不足朝上、
-        背板点收）。与评测域 EvalMenu 互不复用（隔离由 spec M2 注钉）。 */
-    function DshMenu({ title, trigger, align, className, render }) {
+        背板点收）。与评测域 EvalMenu 互不复用（隔离由 spec M2 注钉）。
+        `anchor: 'field'`＝按所属 `.hrag-set-field`（整框）测位并取等宽——
+        工作台框内下拉口径（`w-(--radix-dropdown-menu-trigger-width)`＋对齐输入框）。 */
+    function DshMenu({ title, trigger, align, className, anchor, render }) {
       const [open, setOpen] = React.useState(false)
       const [pos, setPos] = React.useState(null)
       const btnRef = React.useRef(null)
@@ -5644,7 +5720,8 @@ window.__ModuleLoader__.load({
         }
         const el = btnRef.current
         if (el) {
-          const rect = el.getBoundingClientRect()
+          const anchorEl = anchor === 'field' && el.closest ? el.closest('.hrag-set-field') || el : el
+          const rect = anchorEl.getBoundingClientRect()
           const spaceBelow = window.innerHeight - rect.bottom
           const openUp = spaceBelow < 200 && rect.top > spaceBelow
           setPos({
@@ -5652,6 +5729,7 @@ window.__ModuleLoader__.load({
             bottom: openUp ? window.innerHeight - rect.top + 4 : null,
             left: rect.left,
             right: window.innerWidth - rect.right,
+            width: anchor === 'field' ? rect.width : null,
           })
         }
         setOpen(true)
@@ -5689,6 +5767,7 @@ window.__ModuleLoader__.load({
                         bottom: pos.bottom !== null ? pos.bottom + 'px' : 'auto',
                         left: align === 'end' ? 'auto' : pos.left + 'px',
                         right: align === 'end' ? pos.right + 'px' : 'auto',
+                        width: pos.width ? pos.width + 'px' : undefined,
                       }
                     : undefined,
                 },
@@ -9672,7 +9751,7 @@ window.__ModuleLoader__.load({
     /** 功能模型设置面·批 1（菜单批 Task 1，spec M4）：Sheet 骨架＋只读七组
         主行＋重建索引入口（自顶栏移入，行为逐项一致）＋迁移状态行。批 2+ 逐组
         换完整表单（工作台 functional-models-view 对照）。 */
-    /** 尚为只读的组（批 3/4 逐组转可编辑）；默认模型与检索组已由批 2 表单接管。 */
+    /** 尚为只读的组（批 4 逐组转可编辑）；默认模型/检索（批 2）与多模态（批 3）已由表单接管。 */
     const SET_GROUPS = [
       {
         title: 'set.group.extraction',
@@ -9683,15 +9762,10 @@ window.__ModuleLoader__.load({
         ],
       },
       { title: 'set.group.evaluation', rows: [['judge_model', 'set.field.judgeModel']] },
-      {
-        title: 'set.group.multimodal',
-        rows: [
-          ['vlm_model', 'set.field.captionModel'],
-          ['video.asr_provider', 'set.field.asrProvider'],
-          ['video.asr_model', 'set.field.asrModel'],
-          ['asr_base_url', 'set.field.asrBaseUrl'],
-        ],
-      },
+    ]
+
+    /** 可编辑的多模态组之后、保存之前仍只读的尾段组（批 4 转可编辑）。 */
+    const SET_TAIL_GROUPS = [
       {
         title: 'set.group.services',
         rows: [
@@ -9722,8 +9796,13 @@ window.__ModuleLoader__.load({
         Boolean(payload && payload.state === 'running'),
       )
       const modelsQ = useEvalCall(kbId, true, 'listModels', null)
+      // caption 选择器的合规源＝配置条目面（带声明能力，如 supports_vision）——解析后的
+      // 目录面（models）不带该字段，照工作台 modelsConfig 分开取。
+      const modelsConfigQ = useEvalCall(kbId, true, 'listModelsConfig', null)
       const view = configQ.data && typeof configQ.data === 'object' ? configQ.data : null
       const models = modelsQ.data && Array.isArray(modelsQ.data.models) ? modelsQ.data.models : []
+      const managedModels =
+        modelsConfigQ.data && Array.isArray(modelsConfigQ.data.models) ? modelsConfigQ.data.models : []
       const config = view && view.config ? view.config : {}
       const migration =
         (migrationQ.data && typeof migrationQ.data === 'object' ? migrationQ.data : null) ||
@@ -9880,7 +9959,6 @@ window.__ModuleLoader__.load({
 
       const payload = view && values ? ragBuildInput(values, view) : {}
       const hasChanges = Boolean(view && values && ragHasChanges(values, view))
-      const embeddingChanged = Boolean(view && values && ragIsEmbeddingChange(values, view))
       const sparseCapability = values
         ? ragResolveSparseCapability(values, view ? view.embedding_providers : null, capabilityProbe)
         : 'unknown'
@@ -9896,7 +9974,12 @@ window.__ModuleLoader__.load({
         values && (!values.embedding_base_url.trim() || !values.rerank_base_url.trim())
           ? t('set.form.endpointRequired')
           : null
-      const saveBlockReason = sparseBlockReason || endpointRequiredReason || null
+      // ASR 探针照工作台零入口休眠：判定与门留着（verdict 无来源），兜底＝保存期构造拒绝＋入库期 asr=failed。
+      const asrServiceApplies = Boolean(values && ragAsrServiceApplies(values))
+      const asrVerdict = null
+      const asrBlockReason =
+        asrServiceApplies && ragAsrProbeBlocksSave(asrVerdict) ? t('set.form.asrProbeBlocksSave') : null
+      const saveBlockReason = sparseBlockReason || endpointRequiredReason || asrBlockReason || null
       const sparseUnverified = Boolean(
         values &&
           values.embedding_sparse_source === 'provider' &&
@@ -9992,6 +10075,30 @@ window.__ModuleLoader__.load({
       const update = (key, value) =>
         setValues((prev) => (prev ? Object.assign({}, prev, { [key]: value }) : prev))
 
+      const updateVideo = (key, value) =>
+        setValues((prev) =>
+          prev
+            ? Object.assign({}, prev, { video: Object.assign({}, prev.video, { [key]: value }) })
+            : prev,
+        )
+
+      const readonlyGroup = (group) =>
+        h(
+          'div',
+          { className: 'hrag-set-group', key: group.title },
+          h('div', { className: 'hrag-set-grouptitle' }, t(group.title)),
+          group.rows.map(([path, labelKey]) => {
+            const raw = setValueAt(config, path)
+            const text = raw === null || raw === undefined || raw === '' ? '—' : String(raw)
+            return h(
+              'div',
+              { className: 'hrag-set-row', key: path },
+              h('span', { className: 'hrag-set-label' }, t(labelKey)),
+              h('span', { className: 'hrag-set-value', title: text }, text),
+            )
+          }),
+        )
+
       const submitSave = () => {
         setSaveBusy(true)
         setSaveError(null)
@@ -10064,11 +10171,44 @@ window.__ModuleLoader__.load({
           control,
         )
 
-      const selectControl = (ariaLabel, value, options, labels, onChange) =>
+      /** 下拉选择器共用件（与 Model ID 同款外观，10-14 他令「统一同款·逻辑不变」）：
+          盒＝宿主 Input 真值样式＋工作台 chevron（CSS `.hrag-set-picker`）；整盒即 DshMenu
+          触发钮、`anchor:'field'` 菜单等宽。签名＝（值数组／标签函数／onChange），
+          `disabledFor` 供稀疏来源的「仅稠密」禁选项。 */
+      const pickerControl = (ariaLabel, value, options, labels, onChange, disabledFor) =>
         h(
-          'select',
-          { className: 'hrag-set-select', 'aria-label': ariaLabel, value: value, onChange: (event) => onChange(event.target.value) },
-          options.map((option) => h('option', { key: option, value: option }, labels(option))),
+          'div',
+          { className: 'hrag-set-field' },
+          h(DshMenu, {
+            title: ariaLabel,
+            align: 'end',
+            anchor: 'field',
+            className: 'hrag-set-picker',
+            trigger: h(
+              React.Fragment,
+              null,
+              h('span', { className: 'hrag-set-picker-label' }, labels(value)),
+              lucideChevronDownIcon(),
+            ),
+            render: (close) => [
+              h('div', { key: 'label', className: 'hrag-mm-label' }, ariaLabel),
+              options.map((option) =>
+                h(
+                  DshMenuItem,
+                  {
+                    key: String(option) === '' ? 'none' : String(option),
+                    disabled: disabledFor ? disabledFor(option) : false,
+                    selected: option === value,
+                    onSelect: () => {
+                      close()
+                      onChange(option)
+                    },
+                  },
+                  labels(option),
+                ),
+              ),
+            ],
+          }),
         )
 
       const secretControl = (secretField, value, ariaLabel, onChange) =>
@@ -10109,7 +10249,7 @@ window.__ModuleLoader__.load({
           ),
           fieldRow(
             t('set.form.provider'),
-            selectControl(
+            pickerControl(
               embedding ? t('set.field.embeddingProvider') : t('set.field.rerankProvider'),
               embedding ? values.embedding_provider : values.rerank_provider,
               embedding ? RAG_EMBEDDING_PROVIDER_OPTIONS : RAG_RERANK_PROVIDER_OPTIONS,
@@ -10121,6 +10261,7 @@ window.__ModuleLoader__.load({
             t('set.form.model'),
             h(HostInput, {
               className: 'hrag-set-control',
+              spellCheck: false,
               value: embedding ? values.embedding_model : values.rerank_model,
               'aria-label': info.label,
               onChange: (event) => update(embedding ? 'embedding_model' : 'rerank_model', event.target.value),
@@ -10139,6 +10280,7 @@ window.__ModuleLoader__.load({
             t('set.form.endpoint'),
             h(HostInput, {
               className: 'hrag-set-control',
+              spellCheck: false,
               value: embedding ? values.embedding_base_url : values.rerank_base_url,
               placeholder: ragEndpointPlaceholderFor(
                 view ? (embedding ? view.embedding_providers : view.rerank_providers) : null,
@@ -10157,7 +10299,7 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'hrag-set-group' },
         h('div', { className: 'hrag-set-grouptitle', title: t('set.form.defaultHint') }, t('set.group.default')),
-        selectControl(
+        pickerControl(
           t('set.field.defaultModel'),
           values.default_model || RAG_MODEL_NONE,
           ragModelReferenceOptions(models, values.default_model, t('set.form.defaultNone')).map((option) => option.value),
@@ -10193,7 +10335,8 @@ window.__ModuleLoader__.load({
                 }),
                 h(
                   'span',
-                  { className: 'hrag-set-trail' },
+                  // 12px＝与全部选择器盒内 chevron 同轴（盒内 padding-right 12）；28px 旧轴只剩本行。
+                  { className: 'hrag-set-trail', style: { right: '12px' } },
                   dimensionState
                     ? h('span', { className: 'hrag-set-dot hrag-set-dot-' + (dimensionState.state === 'probing' ? 'probing' : 'untested'), title: dimensionState.reason })
                     : null,
@@ -10201,11 +10344,12 @@ window.__ModuleLoader__.load({
                     ? h(DshMenu, {
                         title: t('set.form.dimensionTierHint'),
                         align: 'end',
+                        anchor: 'field',
                         className: 'hrag-set-tierwrap',
                         trigger: h(
                           'button',
                           { type: 'button', className: 'hrag-set-tierbtn', 'aria-label': t('set.form.dimensionTierHint') },
-                          dshChevronDownIcon(),
+                          lucideChevronDownIcon(),
                         ),
                         render: (close) => [
                           dimensionVerdict && dimensionVerdict.native != null
@@ -10240,26 +10384,24 @@ window.__ModuleLoader__.load({
               h(
                 'div',
                 { className: 'hrag-set-field' },
-                h(
-                  'select',
-                  {
-                    className: 'hrag-set-select',
-                    'aria-label': t('set.field.sparseSource'),
-                    value: values.embedding_sparse_source,
-                    onChange: (event) => update('embedding_sparse_source', event.target.value),
+                pickerControl(
+                  t('set.field.sparseSource'),
+                  values.embedding_sparse_source,
+                  ['provider', 'external', 'bm25'],
+                  (option) => {
+                    const base =
+                      ({
+                        provider: t('set.form.sparseSourceProvider'),
+                        external: t('set.form.sparseSourceExternal'),
+                        bm25: t('set.form.sparseSourceBm25'),
+                      })[option] || option
+                    // 原「禁选」文案后缀照带（原生 select 的 disabled 选项同款措辞）。
+                    return option === 'provider' && ragSparseProviderOptionDisabled(sparseCapability)
+                      ? base + ' · ' + t('set.form.sparseProviderDenseOnly')
+                      : base
                   },
-                  [
-                    ['provider', t('set.form.sparseSourceProvider')],
-                    ['external', t('set.form.sparseSourceExternal')],
-                    ['bm25', t('set.form.sparseSourceBm25')],
-                  ].map(([value, label]) => {
-                    const disabled = value === 'provider' && ragSparseProviderOptionDisabled(sparseCapability)
-                    return h(
-                      'option',
-                      { key: value, value: value, disabled: disabled },
-                      disabled ? label + ' · ' + t('set.form.sparseProviderDenseOnly') : label,
-                    )
-                  }),
+                  (next) => update('embedding_sparse_source', next),
+                  (option) => option === 'provider' && ragSparseProviderOptionDisabled(sparseCapability),
                 ),
                 probeBusy.capability
                   ? h('span', { className: 'hrag-set-trail' }, t('set.form.sparseProbing'))
@@ -10275,7 +10417,7 @@ window.__ModuleLoader__.load({
                   null,
                   fieldRow(
                     t('set.form.provider'),
-                    selectControl(
+                    pickerControl(
                       t('set.field.sparseProvider'),
                       values.sparse_provider,
                       RAG_SPARSE_PROVIDER_OPTIONS,
@@ -10288,6 +10430,7 @@ window.__ModuleLoader__.load({
                     t('set.form.model'),
                     h(HostInput, {
                       className: 'hrag-set-control',
+                      spellCheck: false,
                       value: values.sparse_model,
                       'aria-label': t('set.field.sparseModel'),
                       onChange: (event) => update('sparse_model', event.target.value),
@@ -10308,6 +10451,7 @@ window.__ModuleLoader__.load({
                       { className: 'hrag-set-field' },
                       h(HostInput, {
                         className: 'hrag-set-control',
+                        spellCheck: false,
                         value: values.sparse_base_url,
                         'aria-label': t('set.field.sparseBaseUrl'),
                         onChange: (event) => update('sparse_base_url', event.target.value),
@@ -10327,10 +10471,11 @@ window.__ModuleLoader__.load({
                   React.Fragment,
                   null,
                   [t('set.form.provider'), t('set.form.model'), t('set.form.apiKey'), t('set.form.endpoint')].map((label) =>
-                    fieldRow(
-                      label,
-                      h('div', { className: 'hrag-set-locked' }, t('set.form.lockedExternalOnly')),
-                      { nested: true, key: label },
+                    // key 挂 Fragment（fieldRow 的 options 不落到元素上，旧的 options.key 不会生效）。
+                    h(
+                      React.Fragment,
+                      { key: label },
+                      fieldRow(label, h('div', { className: 'hrag-set-locked' }, t('set.form.lockedExternalOnly')), { nested: true }),
                     ),
                   ),
                 ),
@@ -10356,11 +10501,214 @@ window.__ModuleLoader__.load({
           t('set.form.advanced'),
         ),
         retrievalAdvanced,
-        embeddingChanged
-          ? h('p', { className: 'hrag-set-warn', role: 'alert' }, t('set.form.embeddingChangeWarning'))
-          : null,
-        sparseBlockReason ? h('p', { className: 'hrag-set-warn', role: 'alert' }, sparseBlockReason) : null,
       )
+        : null
+
+      const asrProviderLabel = (id) => {
+        const keys = {
+          funasr: 'asrProviderFunasr',
+          whisper: 'asrProviderWhisper',
+          'openai-audio': 'asrProviderOpenaiAudio',
+          dashscope: 'asrProviderDashscope',
+        }
+        return keys[id] ? t('set.form.' + keys[id]) : id
+      }
+      const asrModelHint = values
+        ? values.video.asr_provider === 'whisper'
+          ? t('set.form.asrModelWhisperHint')
+          : values.video.asr_provider === 'funasr'
+            ? t('set.form.asrModelFunasrHint')
+            : t('set.form.asrModelServiceHint')
+        : ''
+      const hasVisionModel = managedModels.some((model) => ragIsCaptionCapable(model))
+      const captionOptions = values
+        ? ragVisionReferenceOptions(managedModels, values.vlm_model, t('set.form.defaultNone'))
+        : []
+      const captionLabel = (value) => {
+        if (value === RAG_MODEL_NONE) {
+          // 共用同一个框（10-14 他定）：有视觉条目＝「使用配置默认」；没有＝简写提示
+          // （两态互斥）——框中与下拉同一处，不再另起一行提示。
+          return hasVisionModel ? t('set.form.defaultNone') : t('set.form.vlmNoVision')
+        }
+        const found = captionOptions.find((option) => option.value === value)
+        return found ? found.label : value
+      }
+
+      const multimodalGroup = view && values
+        ? h(
+            'div',
+            { className: 'hrag-set-group' },
+            h('div', { className: 'hrag-set-grouptitle', title: t('set.form.multimodalHint') }, t('set.group.multimodal')),
+            fieldRow(
+              t('set.field.captionModel'),
+              h(
+                'div',
+                { className: 'hrag-set-field' },
+                h(DshMenu, {
+                  title: t('set.field.captionModel'),
+                  align: 'end',
+                  anchor: 'field',
+                  className: 'hrag-set-picker',
+                  trigger: h(
+                    React.Fragment,
+                    null,
+                    h('span', { className: 'hrag-set-picker-label' }, captionLabel(values.vlm_model || RAG_MODEL_NONE)),
+                    lucideChevronDownIcon(),
+                  ),
+                  render: (close) => [
+                    h('div', { key: 'label', className: 'hrag-mm-label' }, t('set.field.captionModel')),
+                    captionOptions.map((option) =>
+                      h(
+                        DshMenuItem,
+                        {
+                          key: option.value,
+                          selected: option.value === (values.vlm_model || RAG_MODEL_NONE),
+                          onSelect: () => {
+                            close()
+                            update('vlm_model', option.value === RAG_MODEL_NONE ? '' : option.value)
+                          },
+                        },
+                        captionLabel(option.value),
+                      ),
+                    ),
+                  ],
+                }),
+              ),
+              { info: t('set.form.captionHint') },
+            ),
+            fieldRow(
+              t('set.form.asrRowLabel'),
+              h(
+                'div',
+                { className: 'hrag-set-field' },
+                h(DshMenu, {
+                  title: t('set.field.asrProvider'),
+                  align: 'end',
+                  anchor: 'field',
+                  className: 'hrag-set-picker',
+                  trigger: h(
+                    React.Fragment,
+                    null,
+                    h('span', { className: 'hrag-set-picker-label' }, asrProviderLabel(values.video.asr_provider)),
+                    lucideChevronDownIcon(),
+                  ),
+                  render: (close) => {
+                    const rows = []
+                    RAG_ASR_PROVIDER_GROUPS.forEach((group) => {
+                      rows.push(h('div', { key: 'g-' + group.labelKey, className: 'hrag-mm-label' }, t(group.labelKey)))
+                      group.ids.forEach((id) =>
+                        rows.push(
+                          h(
+                            DshMenuItem,
+                            {
+                              key: id,
+                              selected: id === values.video.asr_provider,
+                              onSelect: () => {
+                                close()
+                                updateVideo('asr_provider', id)
+                                // 切换即改值：另一引擎跑不了的名字换成目标首行（服务档名字是服务侧的、原样带过）。
+                                const kept = ragAsrModelForProviderSwitch(id, values.video.asr_model)
+                                if (kept !== values.video.asr_model) updateVideo('asr_model', kept)
+                              },
+                            },
+                            asrProviderLabel(id),
+                          ),
+                        ),
+                      )
+                    })
+                    return rows
+                  },
+                }),
+              ),
+            ),
+            fieldRow(
+              t('set.form.model'),
+              h(
+                'div',
+                { className: 'hrag-set-field' },
+                h(HostInput, {
+                  className: 'hrag-set-control',
+                  spellCheck: false,
+                  value: values.video.asr_model,
+                  'aria-label': t('set.field.asrModel'),
+                  placeholder: asrServiceApplies ? undefined : RAG_ASR_MODEL_MENU[values.video.asr_provider][0],
+                  onChange: (event) => updateVideo('asr_model', event.target.value),
+                }),
+                asrServiceApplies
+                  ? null
+                  : h(
+                      'span',
+                      { className: 'hrag-set-trail', style: { right: '12px' } },
+                      h(DshMenu, {
+                        title: t('set.form.asrModelCandidates'),
+                        // 框内下拉照工作台（10-14 图2 对照）：等宽于输入框、贴着其左右缘开。
+                        align: 'end',
+                        anchor: 'field',
+                        // 同维度行：className 换掉 DshMenu 默认的描边钮（hrag-btn-outline）——
+                        // 漏传会在框内多出一枚带边框的外壳按钮（10-14 复跑点名）。
+                        className: 'hrag-set-tierwrap',
+                        trigger: h(
+                          'button',
+                          {
+                            type: 'button',
+                            className: 'hrag-set-tierbtn',
+                            'aria-label': t('set.form.asrModelCandidates'),
+                          },
+                          lucideChevronDownIcon(),
+                        ),
+                        render: (close) => [
+                          h('div', { key: 'label', className: 'hrag-mm-label' }, t('set.form.asrModelCandidates')),
+                          RAG_ASR_MODEL_MENU[values.video.asr_provider].map((name) =>
+                            h(
+                              DshMenuItem,
+                              {
+                                key: name,
+                                onSelect: () => {
+                                  close()
+                                  updateVideo('asr_model', name)
+                                },
+                              },
+                              name,
+                            ),
+                          ),
+                        ],
+                      }),
+                    ),
+              ),
+              { nested: true, info: asrModelHint },
+            ),
+            asrServiceApplies
+              ? fieldRow(
+                  t('set.form.apiKey'),
+                  secretControl('asr_api_key', values.asr_api_key, t('set.form.asrApiKey'), (next) =>
+                    update('asr_api_key', next),
+                  ),
+                  { nested: true },
+                )
+              : fieldRow(
+                  t('set.form.apiKey'),
+                  h('div', { className: 'hrag-set-locked' }, t('set.form.lockedServiceOnly')),
+                  { nested: true },
+                ),
+            asrServiceApplies
+              ? fieldRow(
+                  t('set.form.endpoint'),
+                  h(HostInput, {
+                    className: 'hrag-set-control',
+                    spellCheck: false,
+                    value: values.asr_base_url,
+                    placeholder: ragEndpointPlaceholderFor(view ? view.asr_providers : null, values.video.asr_provider),
+                    'aria-label': t('set.field.asrBaseUrl'),
+                    onChange: (event) => update('asr_base_url', event.target.value),
+                  }),
+                  { nested: true },
+                )
+              : fieldRow(
+                  t('set.form.endpoint'),
+                  h('div', { className: 'hrag-set-locked' }, t('set.form.lockedServiceOnly')),
+                  { nested: true },
+                ),
+          )
         : null
 
       const saveRow = h(
@@ -10448,24 +10796,10 @@ window.__ModuleLoader__.load({
                     null,
                     defaultModelGroup,
                     retrievalGroup,
-                    SET_GROUPS.map((group) =>
-                    h(
-                      'div',
-                      { className: 'hrag-set-group', key: group.title },
-                      h('div', { className: 'hrag-set-grouptitle' }, t(group.title)),
-                      group.rows.map(([path, labelKey]) => {
-                        const raw = setValueAt(config, path)
-                        const text = raw === null || raw === undefined || raw === '' ? '—' : String(raw)
-                        return h(
-                          'div',
-                          { className: 'hrag-set-row', key: path },
-                          h('span', { className: 'hrag-set-label' }, t(labelKey)),
-                          h('span', { className: 'hrag-set-value', title: text }, text),
-                        )
-                      }),
-                    ),
-                  ),
-                  saveRow,
+                    SET_GROUPS.map(readonlyGroup),
+                    multimodalGroup,
+                    SET_TAIL_GROUPS.map(readonlyGroup),
+                    saveRow,
                 ),
           ),
         ),
@@ -10678,18 +11012,6 @@ window.__ModuleLoader__.load({
         ragEffectiveDimension(view && view.config ? view.config.embedding_dimension : null)
     }
 
-    /** 整个提供方维度都算：换 provider / 地址 / 稀疏来源同样改变已有向量。 */
-    function ragIsEmbeddingChange(values, view) {
-      const seeded = ragFormValuesFromConfig(view)
-      return (
-        values.embedding_model.trim() !== seeded.embedding_model.trim() ||
-        values.embedding_provider !== seeded.embedding_provider ||
-        values.embedding_base_url.trim() !== seeded.embedding_base_url.trim() ||
-        values.embedding_dimension.trim() !== seeded.embedding_dimension.trim() ||
-        values.embedding_sparse_source !== seeded.embedding_sparse_source
-      )
-    }
-
     /** 结论跟着取值走：编辑后旧结论即失效（键不含稀疏来源本身——它是要问的问题）。 */
     function ragSparseProbeKey(values) {
       return [values.embedding_provider, values.embedding_model.trim(), values.embedding_base_url.trim()].join('|')
@@ -10784,6 +11106,51 @@ window.__ModuleLoader__.load({
           : []
       }
       return []
+    }
+
+    // ── 设置面批 3（Task 3）：多模态纯逻辑，照工作台移植（caption 视觉筛选＋ASR 引擎切换）──
+    const RAG_ASR_LOCAL_ENGINES = ['funasr', 'whisper']
+    const RAG_ASR_PROVIDER_GROUPS = [
+      { labelKey: 'set.form.asrGroupLocal', ids: RAG_ASR_LOCAL_ENGINES },
+      { labelKey: 'set.form.asrGroupProtocol', ids: ['openai-audio'] },
+      { labelKey: 'set.form.asrGroupNative', ids: ['dashscope'] },
+    ]
+    const RAG_ASR_MODEL_MENU = {
+      funasr: ['paraformer-zh', 'paraformer-en'],
+      whisper: ['small', 'tiny', 'base', 'medium', 'large-v3', 'large-v3-turbo'],
+    }
+    const RAG_WHISPER_MODEL_NAMES = new Set([
+      'tiny.en', 'tiny', 'base.en', 'base', 'small.en', 'small', 'medium.en', 'medium',
+      'large-v1', 'large-v2', 'large-v3', 'large', 'turbo', 'large-v3-turbo',
+    ])
+
+    function ragIsCaptionCapable(model) {
+      return Boolean(model && model.supports_vision)
+    }
+
+    /** caption 选择器：只列视觉条目＋「使用配置默认」＋存量孤儿值（照工作台口径）。 */
+    function ragVisionReferenceOptions(models, current, noneLabel) {
+      return ragModelReferenceOptions(models.filter(ragIsCaptionCapable), current, noneLabel)
+    }
+
+    /** 服务档＝两个协议层；本地引擎＝进程内两个（决定锁定态与候选菜单）。 */
+    function ragAsrServiceApplies(values) {
+      return values.video.asr_provider === 'openai-audio' || values.video.asr_provider === 'dashscope'
+    }
+
+    /** 切换引擎即改值：另一引擎跑不了的名字换成目标首行；服务档名字是服务侧的、原样带过。 */
+    function ragAsrModelForProviderSwitch(next, value) {
+      const name = String(value || '').trim()
+      if (next === 'openai-audio' || next === 'dashscope') return value
+      if (next === 'funasr') {
+        return RAG_WHISPER_MODEL_NAMES.has(name) ? RAG_ASR_MODEL_MENU.funasr[0] : value
+      }
+      return RAG_WHISPER_MODEL_NAMES.has(name) ? value : RAG_ASR_MODEL_MENU.whisper[0]
+    }
+
+    /** 唯一能拦 ASR 保存的判定（照工作台探针休眠：门留着，verdict 无来源）。 */
+    function ragAsrProbeBlocksSave(verdict) {
+      return Boolean(verdict && verdict.status === 'no_timestamps')
     }
 
     // Text drags inside the panel must stay untouched — only file drags are ours.
