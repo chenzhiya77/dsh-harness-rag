@@ -429,6 +429,12 @@ window.__ModuleLoader__.load({
       'renameKb.done': '已重命名',
       'deleteKb.title': '删除知识库？',
       'deleteKb.desc': '将同时删除全部文档、切片、向量、图谱与百科条目，且不可恢复。',
+      'createKb.title': '新建知识库',
+      'createKb.namePlaceholder': '知识库名称',
+      'createKb.descPlaceholder': '描述（可选）',
+      'createKb.create': '创建',
+      'doc.download': '下载',
+      'upload.rejected': '已跳过不支持的文件：{0}',
       'set.readonlyHint': '当前为只读展示；编辑与探测将在后续批次开放。',
       'set.loadFailed': '设置加载失败',
       'set.migrationRunning': '维度迁移中',
@@ -899,6 +905,12 @@ window.__ModuleLoader__.load({
       'deleteKb.title': 'Delete this knowledge base?',
       'deleteKb.desc':
         'All documents, chunks, vectors, graph data and wiki entries will be cascade-deleted. This cannot be undone.',
+      'createKb.title': 'New knowledge base',
+      'createKb.namePlaceholder': 'Knowledge base name',
+      'createKb.descPlaceholder': 'Description (optional)',
+      'createKb.create': 'Create',
+      'doc.download': 'Download',
+      'upload.rejected': 'Skipped unsupported files: {0}',
       'set.readonlyHint': 'Read-only view; editing and probes arrive in later batches.',
       'set.loadFailed': 'Failed to load the settings',
       'set.migrationRunning': 'Dimension migration in progress',
@@ -991,6 +1003,62 @@ window.__ModuleLoader__.load({
         throw error
       }
       return payload
+    }
+
+    // ── Task 5（甲档小件）：上次打开库记忆 ＋ 文档下载（raw 中继） ─────────
+    const LAST_KB_KEY = 'hrag-last-kb'
+    function readLastKbId() {
+      try {
+        return String(window.localStorage.getItem(LAST_KB_KEY) || '')
+      } catch (cause) {
+        return ''
+      }
+    }
+    function writeLastKbId(kbId) {
+      try {
+        window.localStorage.setItem(LAST_KB_KEY, String(kbId))
+      } catch (cause) {
+        /* best effort */
+      }
+    }
+    /** 文档源文件名优取 Content-Disposition（FileResponse 的 filename=）。 */
+    async function downloadDocumentFile(kbId, doc) {
+      const response = await fetch(
+        PROXY_ROUTE +
+          '/downloadDocument?kb_id=' +
+          encodeURIComponent(kbId) +
+          '&doc_id=' +
+          encodeURIComponent(doc.id),
+        { method: 'POST' },
+      )
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null)
+        const info =
+          (payload && payload.error) || { kind: 'http', status: response.status, detail: 'HTTP ' + response.status }
+        const error = new Error(info.detail || 'HTTP ' + response.status)
+        error.info = info
+        throw error
+      }
+      const blob = await response.blob()
+      const disposition = response.headers.get('content-disposition') || ''
+      const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(disposition)
+      let fileName = String((doc && doc.name) || (doc && doc.id) || 'download')
+      if (match) {
+        try {
+          fileName = decodeURIComponent(match[1] || match[2] || fileName)
+        } catch (cause) {
+          /* keep the document name */
+        }
+      }
+      const objectUrl = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = fileName
+      anchor.rel = 'noopener'
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 4000)
     }
 
     const SECTIONS = [
@@ -5014,6 +5082,22 @@ window.__ModuleLoader__.load({
                 h(
                   'span',
                   { className: 'hrag-docrow-actions' },
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'hrag-btn hrag-btn-sm hrag-btn-outline',
+                      disabled: busy,
+                      onClick: (event) => {
+                        event.stopPropagation()
+                        setNotice(null)
+                        downloadDocumentFile(kbId, doc).catch((error) =>
+                          setNotice({ text: errorDetail(error), isError: true }),
+                        )
+                      },
+                    },
+                    t('doc.download'),
+                  ),
                   doc.status === 'failed' || degraded
                     ? h(
                         'button',
@@ -5311,6 +5395,10 @@ window.__ModuleLoader__.load({
         { d: 'M13.0107 7.79377C12.9505 7.89401 12.9205 7.94413 12.9205 7.99951C12.9205 8.0549 12.9505 8.10502 13.0106 8.20528L13.9849 9.83006C14.045 9.93029 14.0751 9.9804 14.0751 10.0358C14.0751 10.0911 14.045 10.1413 13.9849 10.2415L13.0037 11.8777C12.9468 11.9726 12.9184 12.0201 12.8725 12.0461C12.8267 12.072 12.7713 12.072 12.6607 12.072H10.6704C10.5598 12.072 10.5045 12.072 10.4586 12.098C10.4128 12.1239 10.3843 12.1714 10.3274 12.2662L9.33825 13.9142C9.28133 14.009 9.25287 14.0564 9.20703 14.0823C9.16118 14.1083 9.10588 14.1083 8.99529 14.1083H7.00486C6.89426 14.1083 6.83896 14.1083 6.79312 14.0823C6.74727 14.0564 6.71881 14.009 6.6619 13.9142L5.67273 12.2662C5.61581 12.1714 5.58735 12.1239 5.54151 12.098C5.49566 12.072 5.44036 12.072 5.32977 12.072H3.33945C3.2288 12.072 3.17347 12.072 3.12761 12.0461C3.08176 12.0201 3.0533 11.9726 2.9964 11.8777L2.0152 10.2415C1.9551 10.1413 1.92505 10.0911 1.92505 10.0358C1.92505 9.9804 1.9551 9.93029 2.0152 9.83006L2.98951 8.20528C3.04963 8.10502 3.07969 8.0549 3.07969 7.99951C3.07968 7.94413 3.04961 7.89401 2.98946 7.79377L2.01529 6.17011C1.95514 6.06987 1.92507 6.01975 1.92507 5.96437C1.92506 5.90899 1.95512 5.85886 2.01524 5.7586L2.9964 4.1224C3.0533 4.0275 3.08176 3.98005 3.12761 3.95408C3.17347 3.92811 3.2288 3.92811 3.33945 3.92811H5.32977C5.44036 3.92811 5.49566 3.92811 5.54151 3.90216C5.58735 3.87621 5.61581 3.82879 5.67273 3.73397L6.6619 2.08599C6.71881 1.99116 6.74727 1.94375 6.79312 1.9178C6.83896 1.89185 6.89426 1.89185 7.00486 1.89185H8.99529C9.10588 1.89185 9.16118 1.89185 9.20703 1.9178C9.25287 1.94375 9.28133 1.99116 9.33825 2.08599L10.3274 3.73397C10.3843 3.82879 10.4128 3.87621 10.4586 3.90216C10.5045 3.92811 10.5598 3.92811 10.6704 3.92811H12.6607C12.7713 3.92811 12.8267 3.92811 12.8725 3.95408C12.9184 3.98005 12.9468 4.0275 13.0037 4.1224L13.9849 5.7586C14.045 5.85886 14.0751 5.90899 14.0751 5.96437C14.0751 6.01975 14.045 6.06987 13.9849 6.17011L13.0107 7.79377Z' },
       ])
     }
+    function dshPlusIcon() {
+      return dshMenuIcon([{ d: 'M8 2V14' }, { d: 'M2 8H14' }])
+    }
+
     /** 知识库标题下拉的 chevron 与菜单选中勾（宿主原路径，Task 8 取证）。 */
     function dshChevronDownIcon() {
       return dshMenuIcon([
@@ -9592,6 +9680,10 @@ window.__ModuleLoader__.load({
       const [wikiCommand, setWikiCommand] = React.useState(null)
       const [wikiBusy, setWikiBusy] = React.useState(false)
       const currentKb = kbs.find((item) => String(item.id) === kbId) || null
+      const [createKbOpen, setCreateKbOpen] = React.useState(false)
+      const [createKbName, setCreateKbName] = React.useState('')
+      const [createKbDesc, setCreateKbDesc] = React.useState('')
+      const [createKbBusy, setCreateKbBusy] = React.useState(false)
       const reindexRunning =
         reindexBusy || (reindexState !== null && reindexState.in_progress === true)
       // 检索联动叠加（照工作台「在向量空间查看」）：召回触发 → 切投影分区并投影。
@@ -9609,7 +9701,13 @@ window.__ModuleLoader__.load({
           .then((rows) => {
             const list = Array.isArray(rows) ? rows : []
             setKbs(list)
-            setKbId((current) => current || String((list[0] && list[0].id) || ''))
+            setKbId((current) => {
+              const ids = list.map((kb) => String(kb.id))
+              if (ids.indexOf(String(current)) >= 0) return String(current)
+              const remembered = readLastKbId()
+              if (remembered && ids.indexOf(remembered) >= 0) return remembered
+              return String((list[0] && list[0].id) || '')
+            })
             setPhase(list.length === 0 ? 'empty' : 'ready')
           })
           .catch((error) => {
@@ -9642,6 +9740,11 @@ window.__ModuleLoader__.load({
         setOverlayRequest(null)
         setGraphOverlayRequest(null)
         setWikiDrawer(null)
+      }, [kbId])
+
+      // 上次打开库记忆（Task 5）：切换即记，载入优先恢复（失效回退首个）。
+      React.useEffect(() => {
+        if (kbId) writeLastKbId(kbId)
       }, [kbId])
 
       // 提示行自动消退（工作台 toast 语义：短确认；持久真值在列表与状态行）。
@@ -9683,11 +9786,31 @@ window.__ModuleLoader__.load({
         if (!kbId || uploading) return
         const files = Array.from(fileList || [])
         if (files.length === 0) return
+        // 白名单前置拦截（Task 5，照工作台 partitionFilesBySuffix 语义）：accept 只是
+        // 建议，用户可经「所有文件」绕过——被拒项先行提示、仅合规项入队。
+        const accepted = []
+        const rejectedNames = []
+        if (acceptedSuffixes && acceptedSuffixes.length > 0) {
+          const allowed = new Set(acceptedSuffixes.map((suffix) => String(suffix).toLowerCase()))
+          for (const file of files) {
+            const dot = file.name.lastIndexOf('.')
+            const suffix = dot <= 0 ? '' : file.name.slice(dot).toLowerCase()
+            if (allowed.has(suffix)) accepted.push(file)
+            else rejectedNames.push(file.name)
+          }
+        } else {
+          for (const file of files) accepted.push(file)
+        }
+        if (rejectedNames.length > 0) {
+          setBarNotice({ text: t('upload.rejected', { 0: rejectedNames.join(', ') }), isError: true })
+        } else {
+          setBarNotice(null)
+        }
+        if (accepted.length === 0) return
         setUploading(true)
-        setBarNotice(null)
         const results = []
         const runNext = (index) => {
-          if (index >= files.length) {
+          if (index >= accepted.length) {
             const ok = results.filter((entry) => entry.ok).length
             const failed = results.length - ok
             setUploading(false)
@@ -9712,7 +9835,7 @@ window.__ModuleLoader__.load({
             setRefreshToken((value) => value + 1)
             return
           }
-          callUpload(kbId, files[index])
+          callUpload(kbId, accepted[index])
             .then(() => {
               results.push({ ok: true })
               runNext(index + 1)
@@ -9774,6 +9897,27 @@ window.__ModuleLoader__.load({
           .catch((error) => {
             setKbDeleteBusy(false)
             setKbDeleteOpen(false)
+            setBarNotice({ text: errorDetail(error), isError: true })
+          })
+      }
+      const confirmCreateKb = () => {
+        const name = createKbName.trim()
+        if (!name || createKbBusy) return
+        setCreateKbBusy(true)
+        callOp('createKb', { name, description: createKbDesc.trim() })
+          .then((created) => {
+            setCreateKbBusy(false)
+            setCreateKbOpen(false)
+            setCreateKbName('')
+            setCreateKbDesc('')
+            if (created && created.id) {
+              setKbs((list) => list.concat([created]))
+              setKbId(String(created.id))
+            }
+          })
+          .catch((error) => {
+            setCreateKbBusy(false)
+            setCreateKbOpen(false)
             setBarNotice({ text: errorDetail(error), isError: true })
           })
       }
@@ -9841,20 +9985,38 @@ window.__ModuleLoader__.load({
                 h('span', { className: 'hrag-kbtrigger-chev' }, dshChevronDownIcon()),
               ),
               render: (close) =>
-                kbs.map((kb) =>
-                  h(
-                    DshMenuItem,
-                    {
-                      key: String(kb.id),
-                      selected: String(kb.id) === kbId,
-                      onSelect: () => {
-                        close()
-                        setKbId(String(kb.id))
+                kbs
+                  .map((kb) =>
+                    h(
+                      DshMenuItem,
+                      {
+                        key: String(kb.id),
+                        selected: String(kb.id) === kbId,
+                        onSelect: () => {
+                          close()
+                          setKbId(String(kb.id))
+                        },
                       },
-                    },
-                    String(kb.name || kb.id),
-                  ),
-                ),
+                      String(kb.name || kb.id),
+                    ),
+                  )
+                  .concat([
+                    h('div', { key: 'kb-menu-sep', className: 'hrag-mm-sep' }),
+                    h(
+                      DshMenuItem,
+                      {
+                        key: 'create-kb',
+                        icon: dshPlusIcon(),
+                        onSelect: () => {
+                          close()
+                          setCreateKbName('')
+                          setCreateKbDesc('')
+                          setCreateKbOpen(true)
+                        },
+                      },
+                      t('createKb.title'),
+                    ),
+                  ]),
             }),
             h(DshMenu, {
               title: t('menu.more'),
@@ -10199,6 +10361,73 @@ window.__ModuleLoader__.load({
                         onClick: confirmRename,
                       },
                       t('renameKb.save'),
+                    ),
+                  ),
+                ),
+              )
+            : null,
+          createKbOpen
+            ? h(
+                'div',
+                {
+                  className: 'hrag-overlay',
+                  onMouseDown: (event) => {
+                    if (event.target === event.currentTarget && !createKbBusy) setCreateKbOpen(false)
+                  },
+                },
+                h(
+                  'div',
+                  {
+                    className: 'hrag-dialog',
+                    role: 'dialog',
+                    'aria-modal': 'true',
+                    'aria-label': t('createKb.title'),
+                    onKeyDown: (event) => {
+                      if (event.key === 'Escape' && !createKbBusy) setCreateKbOpen(false)
+                    },
+                  },
+                  h('div', { className: 'hrag-dialog-title' }, t('createKb.title')),
+                  h('input', {
+                    className: 'hrag-input',
+                    value: createKbName,
+                    autoFocus: true,
+                    placeholder: t('createKb.namePlaceholder'),
+                    'aria-label': t('createKb.namePlaceholder'),
+                    onChange: (event) => setCreateKbName(event.target.value),
+                    onKeyDown: (event) => {
+                      if (event.key === 'Enter') confirmCreateKb()
+                    },
+                  }),
+                  h('textarea', {
+                    className: 'hrag-input hrag-ev-textarea',
+                    value: createKbDesc,
+                    rows: 3,
+                    placeholder: t('createKb.descPlaceholder'),
+                    'aria-label': t('createKb.descPlaceholder'),
+                    onChange: (event) => setCreateKbDesc(event.target.value),
+                  }),
+                  h(
+                    'div',
+                    { className: 'hrag-dialog-actions' },
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-btn hrag-btn-outline',
+                        disabled: createKbBusy,
+                        onClick: () => setCreateKbOpen(false),
+                      },
+                      t('doc.cancel'),
+                    ),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-btn hrag-btn-outline',
+                        disabled: !createKbName.trim() || createKbBusy,
+                        onClick: confirmCreateKb,
+                      },
+                      t('createKb.create'),
                     ),
                   ),
                 ),
