@@ -292,6 +292,9 @@
   - **图谱首帧闪烁**（他报「进入一瞬全图、随后变缩略」）：帧迹实证＝首帧预拟合（0.576）本正常，但力场收敛早期**重力坍缩**令瞬时包围盒缩小、autoFit 的 `rawFit≥1` 分支把视口放回 **zoom 1** 持续约 50–100ms（三次进入逐次复现：f2/f4 起跳、f12/f15 回落）；修＝**本代视口上限＝预拟合值**（只减不增），拟合抽成纯函数 `graphFitViewport` 与步进共用。取证法＝渲染层 localStorage 面包屑 → leveldb 磁盘读回（仓外，不入库）。
   - **召回结果渲染白屏**（他报「全屏＋召回 → 白屏」）：**宿主机理**——`dsh-client-locale` 的 `translate` 以 `name in params` 取插值（params 须对象），我方三处直传裸值（勾选框 `selectLabel` 的 aria/title＋保存条 `selectedCount`）⇒ `Cannot use 'in' operator to search for '0' in 't3-doc-b.md'`；**先落崩溃隔离护栏**（六个分区＋三个抽屉＋整壳各套错误边界：就地显示错误栈＋重试，不再整屏白）抓栈定案；修＝三处改 `{ 0: … }` 对象参数；**冒烟 `t` 桩改宿主同语义契约**（修前逐字复现、修后全绿——同类从此被冒烟拦）。
   - **召回节头版式**（他报「格式都是乱的」）：score_type/耗时/计数被塞进 26px 方形图标芯片（长文本居中溢出压住节名）；修＝新自动宽胶囊 `.hrag-textchip`，同类顺带＝切片抽屉「时间码」「页码 N」两处同改；命中行勾选框改正**悬停才现**（工作台同款；勾中/聚焦/有勾选常显）。
+- **随批缺陷修（10-15 验收轮实报·T3 尾巴 A 站两项；他复「测试过了」）**：
+  - **召回结果切走丢失**（他报「测试问题后跳转其他界面再返回，测试结果消失」；一问「是 bug 还是设计」）：**缺陷实锤**——工作台六 tab 全 `forceMount`（`middle-tabs.tsx:218-259`，切走从不卸载），插件只对 wiki/投影/图谱/评测做了 keep-alive，docs/召回漏配（条件渲染＝切走即卸载、组件内 query/result/选择集全丢）；修＝docs/召回转 keep-alive 槽（召回主修、文档顺带同源修；壳＋`.hrag-docs-slot`/`.hrag-recall-slot` 两条规则）。
+  - **两枚「查看」入口钮撤除**（他令「先去掉」）：召回工具栏「在向量空间查看」（工作台 P6 原生件，`recall-test-panel.tsx:488-510`）与「在知识图谱查看」（插件自研件——工作台图谱叠加仅 chat 侧产 trace，`chat-panel.tsx:378-387`）双双撤下；链路与图标保留休眠（照 ASR 探针先例，注释在 `client.js:3064`），再接入时原位补回。**有意偏离已登记**（审计 D 组）。
 - **门禁**：`node --check` 过；`client-load-check.mjs`（仓外冒烟）**19 项**全绿——含宿主语义 t 桩、HragBoundary 回退面渲染、`graphFitViewport` 数值自检（0.576/1/0.3 夹取与居中公式逐数对旧口径）、召回全形状/弹层/红块渲染；本批 client.js 单文件、host 半零改。
 
 ---
@@ -332,16 +335,16 @@
 > **裁定出口（逐条过；每裁一条 → spec 落一行）**：① 微小真 gap → 补 T3 收尾或并入既有对；② 成面 → spec §6 登记＋立新对／进待排；③ 不适用 → 销项留档。**spec 只在裁定时动**（「到位再立对」）。
 
 - [x] **A 页面壳与库列表**：A1 页面宿主与三栏壳（`app/workspace/knowledge/page.tsx`＋`panels-shell.tsx`）／A2 库列表与分段条（`kb-list-panel/kb-tab-strip`）／A3 库级 ⋯ 菜单（上传·更新百科·重建百科·重命名库·删除库）／A4 toast 体系（`kb-toast`）／A5 B′ 锚定件（`anchor-block-notice`＋`use-anchor-confirm`）／A6 局部件七枚（`run-after-menu-close`·`scrollable-textarea`·`file-type-badge`·`chunk-tick-rail`·`drawer-editor`·`drawer-icon`·`duplicate-upload-dialog`）——初判：A4/A5 已落、A2 变形、**A3 重命名/删除库＝未落候选**、A6 逐个待核。
-- [ ] **B 文档面**：B1 文档表（`document-panel`）／B2 失败详情面板（`doc-failure-panel`）／B3 core 四件（`document-stats/view`·`use-doc-table-prefs`·`doc-errors`·`path-status`）／B4 查重与白名单（`duplicate-*`＋`supported-formats`）——初判：B1 已落（含自刷）、白名单已落；**B2/B4 未落候选**、B3 待核。
-- [ ] **C 切片面**：C1 切片抽屉／C2 富切片卡（渲染/原始·实体展开·编辑·重抽·删除）／C3 删除预览——初判：C1/C3 已落；C2 只读+删除已落、编辑/重抽＝既定不进面板（待确认口径）。
-- [ ] **D 召回面**：D1 测试面板（三路·勾选锚定·存为考题·复现）／D2 **图谱通道迷你图**（`recall-graph-mini`）——初判：D1 已落；**D2 未落候选**（插件该段现为行列表）。
-- [ ] **E 百科面**：E1 百科组四件（tab/panel/entry-drawer/rebuild-dialog）／E2 卡片两件＋**抽屉体系**（`manual-card-*`·`core/card-drawers`）／E3 条目编辑弹层（`wiki-edit-dialog`）——初判：E1 已落；E2 卡片只读已落、抽屉体系＝未落候选；E3＝已登记另案。
-- [ ] **F 图谱面**：`graph-tab/canvas/graph-utils`——核销式抽查（十六轮账）。
-- [ ] **G 投影面**：`vector-tab/vector-canvas`——核销式抽查（十六轮账）。
-- [ ] **H 评测面**：`eval-*` 14 件＋`eval-run-status/trend.utils`——核销式抽查（Task 8 账）。
-- [ ] **I 对话侧**：`chat-panel`（库内对话：输入/模型/历史/附件）＋引用四件（`kb-assistant-content`·`kb-citation-sources`·`citation-mark`·`citations/*`·`rehype-citation-marks`）＋会话-库关联（`kb-threads`·`core/threads/*`）＋导入子菜单（`knowledge-base-import-submenu`）——口径复核（面板内置对话＝D 裁不做；其余按宿主面归类）。
+- [x] **B 文档面**：B1 文档表（`document-panel`）／B2 失败详情面板（`doc-failure-panel`）／B3 core 四件（`document-stats/view`·`use-doc-table-prefs`·`doc-errors`·`path-status`）／B4 查重与白名单（`duplicate-*`＋`supported-formats`）——初判：B1 已落（含自刷）、白名单已落；**B2 未落**、B3 待核、**B4 未落（10-14 已随菜单对 Task 5/8 落）**。10-15 走完，见下。
+- [x] **C 切片面**：C1 切片抽屉／C2 富切片卡（渲染/原始·实体展开·编辑·重抽·删除）／C3 删除预览——初判：C1/C3 已落；C2 只读+删除已落、编辑/重抽＝既定不进面板（待确认口径）。10-15 走完，见下。
+- [x] **D 召回面**：D1 测试面板（三路·勾选锚定·存为考题·复现）／D2 **图谱通道迷你图**（`recall-graph-mini`）——初判：D1 已落；**D2 未落候选**（插件该段现为行列表）。10-15 走完，见下（含两枚跳转钮撤除记录）。
+- [x] **E 百科面**：E1 百科组四件（tab/panel/entry-drawer/rebuild-dialog）／E2 卡片两件＋**抽屉体系**（`manual-card-*`·`core/card-drawers`）／E3 条目编辑弹层（`wiki-edit-dialog`）——初判：E1 已落；E2 卡片只读已落、抽屉体系＝未落候选；E3＝已登记另案。10-15 走完，见下。
+- [x] **F 图谱面**：`graph-tab/canvas/graph-utils`——核销式抽查（十六轮账）。10-15 走完，见下。
+- [x] **G 投影面**：`vector-tab/vector-canvas`——核销式抽查（十六轮账）。10-15 走完，见下。
+- [x] **H 评测面**：`eval-*` 14 件＋`eval-run-status/trend.utils`——核销式抽查（Task 8 账）。10-15 走完，见下。
+- [x] **I 对话侧**：`chat-panel`（库内对话：输入/模型/历史/附件）＋引用四件（`kb-assistant-content`·`kb-citation-sources`·`citation-mark`·`citations/*`·`rehype-citation-marks`）＋会话-库关联（`kb-threads`·`core/threads/*`）＋导入子菜单（`knowledge-base-import-submenu`）——口径复核（面板内置对话＝D 裁不做；其余按宿主面归类）。10-15 走完，见下。
 - [x] **J 设置面**：`settings/functional-models-view`＋`core/rag/*`——**10-14 裁定：并入「顶栏 ⋯ 菜单」批**（拍点 3 定乙·照工作台全量拆四批；「模型面归属」待排条随之转正）→ 执行为新对 [`2026-10-14-menu-model-settings`](../specs/2026-10-14-menu-model-settings-spec.md)（Task 1＝菜单重构＋设置面批 1 已编码待验收；批 2–4 未开）；批 2–4 的逐段清单落在该对 plan 的 Task 内，本审计节不再跟账；对话主模型治理＝该对 §7 非目标（宿主各自治理）。
-- [ ] **K 域外散件**：8 触及点（对话页/导出菜单/两处会话列表/运行状态附注/core threads×2/duplicate-flow）——逐点定归属（多为不适用销项）。
+- [x] **K 域外散件**：8 触及点（对话页/导出菜单/两处会话列表/运行状态附注/core threads×2/duplicate-flow）——逐点定归属（多为不适用销项）。10-15 走完，见下。
 
 **审计结果**（逐块回填：已落对照／变形清单／未落候选＋归属建议）：
 
@@ -356,6 +359,41 @@
 - **A 组小结**（走查账，明细见上）：已落 5 组；变形有意 5 处；未落候选 12 条＋伴随项 2（抽屉编辑器/图标）＋观感后调 1（scrollable-textarea）＋变形待裁 1（更新百科位置差）。
 - **A 组终裁（10-14 他拍）**：**甲档并入**——①建库入口／③文档下载／⑩白名单前置拦截＋「上次打开库记忆」→ 新对 [`Task 5`](2026-10-14-menu-model-settings-plan.md)（与菜单同面）；**乙档照建议登记**——②重复上传/④右键出题/⑪类型图标/⑫刻度轨＝另案、⑤docErrors/⑦tab 溢出/库排序拖拽＝后调（落新对 spec §6 缺口表，不执行）；⑧⑨ 与「更新百科位置」变形已随新对 Task 1 执行。**A 组至此收完**（走查→裁定→归档闭环）；B–K 组待续。
 - **A 组裁定（10-13 他令）**：变形待裁＋⑧⑨＋J 组一并落成**顶栏 ⋯ 菜单重构批**——选择库右侧加 DSH 同款 ⋯ 菜单：工作台库级菜单项落脚（上传/更新/重建百科、重命名/删除库）＋**功能模型设置并入**＋顶栏「刷新/上传/重建索引」三钮移入菜单（**重建索引落入功能模型设置界面**，工作台同构）；「模型面归属」随之从待排转正。**10-14 四拍定案、已立对**：[`2026-10-14-menu-model-settings-spec`](../specs/2026-10-14-menu-model-settings-spec.md)＋[`plan`](2026-10-14-menu-model-settings-plan.md)（Task 0 只读核实起）。
+
+**B 组（10-15，逐件走完）**：
+
+- **B1 文档表**（`document-panel.tsx` 1302 行）：**已落对照**——文档列表（名/状态点＋小字/索引中百分比/降级标记/切片数 null 显「—」）＋整行点开切片＋行内动作（下载/重试门控/删除）＋删除确认（级联）＋在飞自刷（3s 条件轮询，谓词同源）＋空/加载/错三态。**变形（有意）**：①表格＝列子集（无上传者/时间/大小列——面板空间）；②功能入口＝行内按钮 vs 工作台 ⋯＋右键双入口（功能等价、形态差）。**变形（待核·观感/文案）**：③失败原因**外露原始英文 error**——插件 `client.js:5388`（重试钮 title＝`doc.error` 原串）、`:5420`（状态 title 同）；工作台自 2026-08-30 产品化后**原始串全 UI 无出口（连悬停都不给）**，一律 `classifyDocError`→友好文案（`doc-errors.ts` 八类）——差在「外露」这一格（⑤ 已登记后调，此处补锚）；④状态列无 path_status 悬停分解（＝B3 本体）。
+- **B1 未落候选**：a) **搜索框**（名称过滤＋清空钮；`document-view.ts::filterDocuments`）b) **排序菜单**（createdAt/name/size/chunks×asc/desc；`sortDocuments`）c) **列体系**（上传者/时间/大小列＋per-kb 列偏好：显隐/时间绝对相对/KB·MB/全部显示；表头 chevron＋表头右键＋「列」总控——`use-doc-table-prefs.ts`）d) **选择集与批量**（复选框列/全选/右键选中/批量删除/批量出题——**批量版 spec §6 已裁不做**；批量出题＝④已登记）e) **拖拽探针/落区 overlay/九宫格空态**（`probeDraggedItems` 点亮/全拒降灰/落区横幅；九宫格＝⑪类型图标同族）f) **行 ⋯/右键菜单**（查看切片/下载/重试/删除双入口——形态差，可维持）。
+- **B2 失败详情面板**（`doc-failure-panel.tsx` 146＋`use-doc-failure-notifier.ts` 80）：**未落候选（初判确认）**。要点：底右卡（w-80/双行截断/悬停展开只认主体不认 ✕/头 ✕ 全关/逐条 ✕/可重试条目带重试钮/**不自动消退**）＋notifier 语义（仅入 failed 播报/首屏不补播/按 episode 去重/重试后再报/离 failed 撤条/上传即拒 `report()` 收编）。插件现状＝列表状态行＋Toast（拒项）——无专用失败卡。**归属建议**：与 ⑤（docErrors 文案）同族，可合成「文档失败呈现」小对。
+- **B3 core 五件**：`document-stats.ts`＝**变形**——插件有计数汇总行（`client.js:5341`「就绪 N · …」）；工作台底栏＝「文档 N · 切片 N · 总大小」＋右端**仅可动作态**（在飞/失败）计数彩点、总数走未过滤全集（`:1237-1264`）。`documentsRefetchInterval` 谓词＝**已落**（Task 5 补修照搬）。`formatBytes/Kb/Mb`＝未落（无大小列）。`document-view.ts`＝**未落**（a/b 本体）。`doc-errors.ts`＝**未落**（＝⑤ 后调）。`path-status.ts`＝**未落候选（新）**（六腿分解：asr/segment/caption 视频腿＋vector/graph/wiki；图谱中段百分比合入「图谱 索引中 87%」；wiki 带库级提示——插件零出口）。`use-doc-table-prefs.ts`＝**未落**（c 本体）。
+- **B4 查重与白名单**（`duplicate-check/duplicate-upload-flow/duplicate-upload-dialog`＋`supported-formats`）：**已落**（菜单对 Task 8 判同三件＋弹层；Task 5 白名单前置＋`supportedFormats` op）。**变形（小）**：白名单未取时——工作台用 `FALLBACK_SUPPORTED_SUFFIXES` 常量兜底照拦（`supported-formats.ts:7-27`）；插件「未取＝放行不拦」——窗口极窄，待裁/销项二选一。
+
+**C 组（10-15，逐件走完）**：
+
+- **C1 切片抽屉**（`chunk-drawer.tsx` 608 行）：**已落对照**——右抽全篇列表＋加载机制（首屏 20/≤300 自动全量/加载更多）＋focus 定位闪环（扩 limit）＋删除预览闸＋空/错态＋视频时间码芯片。**未落候选**：①**头部徽章族＋↑↓ 逐片跳转**（类型徽章/总数/当前 #N/上一下一——`:445-489`）②**刻度轨**（⑫已登记）③**视频镜头条＋播放器**（缩略图/顶部单例 `<video>`/seek 播放/播放头高亮/复制时间码——`:53-132`；插件只有时间码芯片）④抽屉内 3s 条件轮询（抽取 pending/重抽在飞——`:177-182`）⑤滚动位置感（1/3 带 active 跟随——插件无「当前 #K」徽章）。
+- **C2 富切片卡**（`chunk-card.tsx` 307 行）：**已落**＝正文全文直显＋#N＋heading_path＋页码＋时间码＋删除钮。**未落候选**：①**渲染/原始切换**（渲染态＝Markdown＋图片重写 `ChunkImage`；插件无渲染库——已登记「markdown/图片渲染后续观感项」，此处补锚）②**实体徽章**（cap 6＋+N 展开——`:223-243`）③**tokens 计数＋「已编辑」徽章**（`:249-264`）④**编辑**（Textarea＋保存/取消）与**重抽**（费用提示/在飞 spinner/每文档互斥/抽取 pending 联动）——④系 Task 0「冻结面外留档」（`chunks PATCH :419`／`re-extract :470`），**审计复核：维持或重裁**（工作台此二件有完整体验）。
+- **C3 删除预览**（`delete-preview-dialog.tsx` 104 行）：**已落**——三段（孤儿红/受影响黄/关系数）＋警示句＋取消/确认＋409 进框，逐项对齐。
+
+**D 组（10-15，逐件走完）**：
+
+- **D1 检索测试面板**（`recall-test-panel.tsx` 713 行）：**已落对照**——三路并列＋score_type 徽章＋耗时＋计数＋空路 message；命中行（#rank/名≤45%/首行摘要/p.N/分数）＋行点开抽屉（切片/wiki/卡分流）＋勾选锚定（vector/graph 跨路去重）＋存为考题底栏＋弹层（预期路径多选）＋复现预填＋embedding_mismatch 提示。**变形（小）**：①三路容器**可折叠**（点头部收起、余路吸高——`:219-221/558-577`）——插件无；②耗时＝**排名档色**（最快绿/中 lime/最慢橙——`:45-49`）——插件纯 ms 芯片；③存为考题栏＝**悬浮**（不占流不抖动）——插件行内入流（`:1855`）；④命中行右键＝勾选；⑤切片位次悬浮气泡（「切片 #K」`Tooltip`——`:147-151`）——插件无；⑥搜索框图标/成本提示 tooltip（微）。**未落候选**：①**wiki 行勾选锚定**（词条＝源切片整体进/出锚定集、manual 卡＝仅记路径不锚定、无源切片禁用——`:233-253/367-406`）——插件 wiki 行无勾选；②**图谱路 证据↔实体/关系 段控**（实体视图＝D2 迷你图，「徽章墙退役」——`:224-226`）——插件图谱段＝证据行列表。**已撤（有意偏离）**：「在向量空间查看」图标钮（工作台 P6 原生件——`:488-510`；插件已随 10-15 他令撤下、链路休眠）；「在知识图谱查看」＝插件自研件（工作台图谱叠加仅 chat 侧产 trace——`chat-panel.tsx:378-387`），同撤。
+- **D2 图谱迷你图**（`recall-graph-mini.tsx` 211 行）：**未落候选（初判确认）**——力导向子图（类型色/箭头/关系名标签/roam 拖拽/标签档位随 zoom 隐藏/节点 tooltip 带 description）。插件已有自研力场内核（图谱 tab）——小图可低成本移植。
+
+**E 组（10-15，逐件走完）**：
+
+- **E1 百科组四件**（`wiki-tab` 214／`wiki-panel` 607／`wiki-entry-drawer` 187／`wiki-rebuild-dialog` 47）：**已落对照**（Task 9 全量：双卡定高分屏/统一搜索/行解剖（勾选·标题·摘要·dirty·相对时间·⋯ 行菜单）/批量条/⋯ 维护菜单（更新·重建含确认）/条目抽屉（剥同名 H1＋源切片惰取展开＋404 态）/卡片抽屉（标签行＋徽章）/召回收口分流）。**变形**：①条目抽屉缺「在百科 tab 中查看」导航钮（`wiki-entry-drawer.tsx:99-109`——从召回打开后无「导航性动作」一键进管理视图）；②正文 pre-wrap（工作台 Markdown＋图片改写——已登记后续观感项，此处补锚）；③血缘展开＝简行（工作台＝rich ChunkCard 列表＋「N 个来源已删除」注记 `:174-178`——插件无删除注记）。**另**：工作台 ⋯ 含「新建抽屉/新建卡片」两项（`wiki-tab.tsx:154-169`）——插件无（归 E2）。
+- **E2 卡片两件＋抽屉体系**（`manual-card-panel` 1379＋`manual-card-drawer` 133＋`core/card-drawers` 348）：读档＝**已落**（列表行/抽屉/徽章）。**未落候选**：①**卡片 CRUD**（新建/编辑 title·content·tags·混搜开关/删除/逐行 Switch 混搜/批量删除——`ManualCardEditor`＋`useCreate/Update/DeleteManualCard`）②**抽屉体系**（localStorage 分组：命名＋12 图标＋12 色/标签行＋收起→下拉恢复/`DrawerEditor`/「移动到抽屉」菜单/批量移动/首页＝未分组、每卡至多一屉）③空态/计数。归属建议：合成「我的条目管理面」小对（E3 编辑档已登记另案——**创建/删除/混搜开关/分组**为新增候选待裁）。
+- **E3 条目编辑弹层**（`wiki-edit-dialog` 156）：**已登记另案（维持）**（spec §6 百科编辑档）。
+
+**F 组（10-15，核销式抽查）**：`graph-tab`（573）/`graph-canvas`/`graph-utils` 对照通过——搜索/colorBy/统计胶囊/guide/叠加徽标/实体抽屉＋切片链/跟随对话开关/主画布局部图（面包屑＋1·2 跳，`graph-tab.tsx:288-330`）。**两处有意偏离（均已有裁）**：①主画布局部图→移入实体抽屉「局部图」卡卡内直显（六轮定形·已裁）；②followChat 不做（面板无 chat，§6 登记）。
+
+**G 组（10-15，核销式抽查）**：`vector-tab`（641）/`vector-canvas` 对照通过（chips/2D3D/PCA·UMAP/重算/图例/叠加/十六轮视觉账）。**D5 精简（已记录·补锚）**：搜索框（`searchAll` `:400`）＋范围选择（`:412`）＋「更多选项」（`:520`）未实装；索引中提示未实装；3D 无平移（旋转＋缩放）。
+
+**H 组（10-15，核销式抽查）**：`eval-*` 14 件＋`eval-run-status/trend.utils` 对照通过（Task 8 账：三视图/运行分体钮/**完整档确认弹层**（`ev.fullRun.*` 已落）/banner/总览/L2 瓦片/趋势/题库/历史/两抽屉/合成审核/召回补面）。**精简项（Task 8 已记录）**：趋势无 dataZoom/历史无时长下拉/行菜单非右键/合成批量出头按钮/时间绝对式。
+
+**I 组（10-15，口径复核）**：对话侧件（`chat-panel`＋引用四件＋`kb-threads`＋导入子菜单）——**面板内置对话＝D 裁不做**（§6 登记）；引用四件＝对话消息渲染件、`kb-threads`＝库内会话关联、导入子菜单＝对话导出通道——全部随宿主对话面，**面板侧 N/A 销项**。
+
+**K 组（10-15，域外散件 8 触及点逐点定归属）**：①对话页（`agents/[agent_name]/chats/[thread_id]/page.tsx`：`kb_id` 注入 run context）②导出菜单（`export-trigger.tsx`＋`knowledge-base-import-submenu.tsx`：导入知识库＋成功 toast 带跳转）③④会话列表两处（`recent-chat-list.tsx` 的 `excludeKnowledgeThreads` 库间隔离／`workspace-nav-chat-list.tsx` 侧栏入口链接）⑤运行状态附注（`run-status-notice.tsx`：kb 线程一跳提示）⑥⑦core threads 两件（`activity.ts` 的 kb href／`utils.ts::pathOfKnowledgeThread`；伴随件 `import-to-knowledge-base.ts`＝导入执行器）⑧duplicate-flow 已随 B4 收编（菜单对 Task 8）。**结论：全部 N/A 销项**——皆 chat/导航/运行链路侧集成，面板内无对应面；「导入对话→KB」若将来要进面板＝新面另案。
 
 ---
 
