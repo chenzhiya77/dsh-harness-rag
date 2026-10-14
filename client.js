@@ -1421,6 +1421,8 @@ window.__ModuleLoader__.load({
           '.hrag-wk-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
           '.hrag-wk-drawer-body > * { flex-shrink: 0; }',
           '.hrag-wk-slot { flex-direction: column; min-height: 0; flex: 1; }',
+          '.hrag-docs-slot { flex-direction: column; min-height: 0; flex: 1; }',
+          '.hrag-recall-slot { flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-wk-canvas { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
           '.hrag-wk-sect { display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); }',
           '.hrag-wk-sect-open { flex: 1 1 0; min-height: 0; }',
@@ -3059,56 +3061,7 @@ window.__ModuleLoader__.load({
           },
           pending ? t('recall.running') : t('recall.run'),
         ),
-        result && onViewInVectorSpace
-          ? h(
-              'button',
-              {
-                type: 'button',
-                className: 'hrag-btn hrag-btn-outline hrag-btn-icon',
-                disabled: !(
-                  result.paths &&
-                  result.paths.vector &&
-                  result.paths.vector.hits &&
-                  result.paths.vector.hits.length > 0
-                ),
-                'aria-label': t('recall.viewInVectorSpace'),
-                title: t('recall.viewInVectorSpace'),
-                onClick: () => {
-                  const hits = (result.paths && result.paths.vector && result.paths.vector.hits) || []
-                  onViewInVectorSpace({
-                    text: result.query,
-                    hits: hits.map((hit) => ({ pointId: hit.chunk_id, score: hit.score })),
-                  })
-                },
-              },
-              vectorSpaceIcon(),
-            )
-          : null,
-        result && onViewInGraphSpace
-          ? h(
-              'button',
-              {
-                type: 'button',
-                className: 'hrag-btn hrag-btn-outline hrag-btn-icon',
-                disabled: !(
-                  result.paths &&
-                  result.paths.graph &&
-                  result.paths.graph.trace &&
-                  ((result.paths.graph.trace.seed_entities || []).length +
-                    (result.paths.graph.trace.expanded_nodes || []).length +
-                    (result.paths.graph.trace.evidence_entities || []).length) >
-                    0
-                ),
-                'aria-label': t('recall.viewInGraphSpace'),
-                title: t('recall.viewInGraphSpace'),
-                onClick: () => {
-                  const trace = (result.paths && result.paths.graph && result.paths.graph.trace) || null
-                  onViewInGraphSpace({ text: result.query, trace })
-                },
-              },
-              graphSpaceIcon(),
-            )
-          : null,
+        // 两枚「在向量空间 / 在知识图谱查看」入口钮已撤（10-15 他令先去掉）；链路与图标保留（照 ASR 探针休眠先例），再接入时在此排末尾补回。
       )
 
       let body
@@ -12061,43 +12014,41 @@ window.__ModuleLoader__.load({
               ),
             ),
           ),
-          section === 'docs'
-            ? h(
-                HragBoundary,
-                { t, name: t('shell.tab.docs') },
-                h(DocsView, {
-                  t,
-                  kbId,
-                  refreshToken,
-                  onOpenChunks: (doc) => setDrawer({ doc, focus: null }),
-                }),
-              )
-            : null,
-          section === 'recall'
-            ? h(
-                HragBoundary,
-                { t, name: t('shell.tab.recall') },
-                h(RecallView, {
-                t,
-                kbId,
-                prefill: recallPrefill,
-                onOpenWikiEntry: (entryId) => setWikiDrawer({ kind: 'entry', id: entryId }),
-                onOpenManualCard: (cardId) => setWikiDrawer({ kind: 'card', id: cardId }),
-                onOpenChunk: (chunkId, docName) => {
-                  const docId = String(chunkId).split('#')[0]
-                  setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
-                },
-                onViewInVectorSpace: (request) => {
-                  setOverlayRequest(Object.assign({}, request, { nonce: Date.now() }))
-                  setSection('vectors')
-                },
-                onViewInGraphSpace: (request) => {
-                  setGraphOverlayRequest(Object.assign({}, request, { nonce: Date.now() }))
-                  setSection('graph')
-                },
-              }),
-              )
-            : null,
+          // 文档视图 keep-alive（10-15 顺带同源修；照工作台六 tab forceMount）：切走不卸载。
+          h(
+            'div',
+            { className: 'hrag-docs-slot', style: { display: section === 'docs' ? 'flex' : 'none' } },
+            h(HragBoundary, { t, name: t('shell.tab.docs') }, h(DocsView, {
+              t,
+              kbId,
+              refreshToken,
+              onOpenChunks: (doc) => setDrawer({ doc, focus: null }),
+            })),
+          ),
+          // 召回视图 keep-alive（10-15 他报「切走回来结果消失」＝缺陷修正）：query/结果/选择集切走不丢。
+          h(
+            'div',
+            { className: 'hrag-recall-slot', style: { display: section === 'recall' ? 'flex' : 'none' } },
+            h(HragBoundary, { t, name: t('shell.tab.recall') }, h(RecallView, {
+              t,
+              kbId,
+              prefill: recallPrefill,
+              onOpenWikiEntry: (entryId) => setWikiDrawer({ kind: 'entry', id: entryId }),
+              onOpenManualCard: (cardId) => setWikiDrawer({ kind: 'card', id: cardId }),
+              onOpenChunk: (chunkId, docName) => {
+                const docId = String(chunkId).split('#')[0]
+                setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
+              },
+              onViewInVectorSpace: (request) => {
+                setOverlayRequest(Object.assign({}, request, { nonce: Date.now() }))
+                setSection('vectors')
+              },
+              onViewInGraphSpace: (request) => {
+                setGraphOverlayRequest(Object.assign({}, request, { nonce: Date.now() }))
+                setSection('graph')
+              },
+            })),
+          ),
           // 百科视图 keep-alive（同口径）：搜索/折叠/选择切走不丢；抽屉壳在面板级
           //（召回命中同样开它），本槽只承载双卡列表。
           h(
