@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-14-menu-model-settings-spec.md](../specs/2026-10-14-menu-model-settings-spec.md)（M1–M7 决定＋落点＋验收）
-**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；Task 2–4 未开；**Task 6 已立**（收口统换宿主件，10-14 裁）；**Task 7 已立**（面板内拖拽上传，Task 5 后执行，10-14 裁）。
+**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；Task 2–4 未开；**Task 6 已立**（收口统换宿主件，10-14 裁）；**Task 8 已立**（重复上传拦截 A②，10-14 裁：Task 2 之后）。
 **Parent:** T3 plan（[2026-10-12-t3-panel-plan.md](2026-10-12-t3-panel-plan.md)）「RAG 前端全域覆盖审计」A 组裁定行；步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（「模型面归属」条转正）。
 
 **Architecture:** 两件事——**① 顶栏 ⋯ 菜单**（`client.js` 顶栏段：`[裸粗体库名＋chevron 下拉][⋯ 裸钮靠右]`（v2/v3 终态）；菜单件＝`DshMenu`（宿主 `Menu.module.css` 真值），图标宿主原路径（路径级属性：Ellipsis `fill`／Edit `fill`+`stroke`／余 `stroke`）、缺件沿用工作台同款；行内「刷新/上传/重建索引」退役——重建索引落设置面；**六 tab 改对话头设计**）；**② 功能模型设置面**（面板内 Sheet；照工作台 `functional-models-view` 全量、四批落地：读取展示/重建索引入口/迁移状态 → 嵌入段 → 多模态段 → 解析/裁判/抽取段）。**数据缝不变**：host 半 `kb_proxy.ts` 薄代理补 op（createKb/renameKb/deleteKb/ragConfig 读写/migration/五探针/模型目录）；**deer-flow 零改动**。
@@ -21,9 +21,9 @@
 - 分支：插件仓（dsh-harness-rag）；每 Task 落地随手提交（英文 Conventional；deer-flow 零代码）。
 - **每 Task 的 `**实测**` 行必须回填**（探针输出/真跑结论/提交哈希）。
 - **插件侧验证**（同 T3 口径，有意不做单测）：host 半编译探针（仓外一次性）＋冒烟回归＋桌面端整重启真跑。
-- **scope fence（本对不做）**：对话主模型治理 · 模型目录增删编辑 · 评测域菜单皮肤统一（§6 登记）· 菜单次序微调（Task 1 复看）· **A 组审计乙档**（②重复上传/④右键出题/⑤docErrors/⑦tab 溢出/⑪类型图标/⑫刻度轨/库排序拖拽——10-14 裁决「照建议登记」→ spec §6，不执行）。
+- **scope fence（本对不做）**：对话主模型治理 · 模型目录增删编辑 · 评测域菜单皮肤统一（§6 登记）· 菜单次序微调（Task 1 复看）· **A 组审计乙档余项**（④右键出题/⑤docErrors/⑦tab 溢出/⑪类型图标/⑫刻度轨/库排序拖拽——10-14 裁决「照建议登记」→ spec §6，不执行；**②重复上传已提入本对 Task 8**）。
 
-**依赖顺序**：Task 0（只读核实）→ Task 1（菜单重构＋设置面批 1＝骨架/读取/重建索引/迁移）→ **Task 5（甲档小件批，10-14 并入）** → **Task 7（面板内拖拽上传，10-14 立）** → Task 2（嵌入段）→ Task 3（多模态段）→ Task 4（解析/裁判/抽取段＋收口）→ **Task 6（收口统一换件：菜单/图标/Toast→宿主原件＋一轮复验）**。Task 1 单独立验（菜单可先上真栈）；Task 5 与菜单同面、紧随 Task 1 验后即可做；Task 7 紧随 Task 5 验后执行（与 Task 6 无依赖：提示暂走现提示机制，Task 6 换 Toast 时自然覆盖）；Task 6 随 Task 4 收口执行（10-14 裁）。
+**依赖顺序**：Task 0（只读核实）→ Task 1（菜单重构＋设置面批 1＝骨架/读取/重建索引/迁移）→ **Task 5（甲档小件批，10-14 并入）** → **Task 7（面板内拖拽上传，10-14 立）** → Task 2（嵌入段）→ **Task 8（重复上传拦截 A②，10-14 裁：并入本对）** → Task 3（多模态段）→ Task 4（解析/裁判/抽取段＋收口）→ **Task 6（收口统一换件：菜单/图标/Toast→宿主原件＋一轮复验）**。Task 1 单独立验（菜单可先上真栈）；Task 5 与菜单同面、紧随 Task 1 验后即可做；Task 7 紧随 Task 5 验后执行（与 Task 6 无依赖：提示暂走现提示机制，Task 6 换 Toast 时自然覆盖）；Task 8 于 Task 2 之后；Task 6 随 Task 4 收口执行（10-14 裁）。
 
 ---
 
@@ -149,13 +149,31 @@
 > 动到的文件：`client.js`（面板根拖拽处理器＋复用现有上传链＋提示文案）。
 > **验收对应**：spec §6「面板拖拽」裁定行（遮罩不动、范围仅面板、C 口径）。
 
-- [ ] **主路径**：面板内容区根挂 `dragover`（仅当 `dataTransfer.types` 含 `Files`；`preventDefault`＋`dropEffect='copy'`＋`stopPropagation`）与 `drop`（`stopPropagation`＋`preventDefault`，取 `dataTransfer.files` → **直接复用现有上传链** `handleUpload`——白名单前置拦截等逐字同）；**不清 `dragenter`/`dragleave`**（宿主遮罩计数/显隐零变化）；目录项拒（`webkitGetAsEntry().isDirectory`，提示一条）。
-- [ ] **接不了处置（C 口径）**：没选库／上传中 → **吞掉 drop＋就地提示**（「知识库暂不可接收：请先创建知识库」／「上传中，请稍候」）；**不回落会话**（照宿主「接不了就吞、不转移目的地」惯例）。提示暂走现提示机制，Task 6 换 `Toast` 后自然覆盖。
-- [ ] **遮罩收尾**：吞 drop 后宿主自己的 `reset()` 不跑 → 补 `window.dispatchEvent(new Event('dragend'))` 走其既有清理口；真跑核「落下后遮罩即消」。
-- [ ] **范围**：仅面板内容区（全部 tab）；对话区/其他面板/窗口其余位置零改动（宿主默认＝对话附件）。
-- [ ] **冒烟＋真跑**：冒烟加结构项（处理器挂载）；真跑五条——拖到面板→传当前库；拖到对话区→仍为附件；拖到其他面板→默认；接不了（无库/上传中）→提示且不落会话；落下后遮罩正常消。
+- [x] **主路径**：面板内容区根挂 `dragover`（仅当 `dataTransfer.types` 含 `Files`；`preventDefault`＋`dropEffect='copy'`＋`stopPropagation`）与 `drop`（`stopPropagation`＋`preventDefault`，取 `dataTransfer.files` → **直接复用现有上传链** `handleUpload`——白名单前置拦截等逐字同）；**不清 `dragenter`/`dragleave`**（宿主遮罩计数/显隐零变化）；目录项拒（`webkitGetAsEntry().isDirectory`，提示一条）。
+- [x] **接不了处置（C 口径）**：没选库／上传中 → **吞掉 drop＋就地提示**（「知识库暂不可接收：请先创建知识库」／「上传中，请稍候」）；**不回落会话**（照宿主「接不了就吞、不转移目的地」惯例）。提示暂走现提示机制，Task 6 换 `Toast` 后自然覆盖。
+- [x] **遮罩收尾**：吞 drop 后宿主自己的 `reset()` 不跑 → 补 `window.dispatchEvent(new Event('dragend'))` 走其既有清理口；真跑核「落下后遮罩即消」。
+- [x] **范围**：仅面板内容区（全部 tab）；对话区/其他面板/窗口其余位置零改动（宿主默认＝对话附件）。
+- [x] **冒烟＋真跑**：冒烟结构项已以纯助手用例落（`isFileDrag`／`splitDroppedFiles`，目录不排队/无 items 回退/文本拖拽不拦）；真跑——面板投放与宿主默认面随测未见异常；④「上传中」按**未实操**记录（提交窗极短）。
 
-**实测**（Task 7，执行后回填）：
+**实测**（Task 7，2026-10-14；**全交付·真跑过**）：
+
+- **落码**：`isFileDrag`／`splitDroppedFiles` 两纯助手（模块级）＋`hrag-root` 挂 `onDragOver`／`onDrop`（仅 Files 类拖拽；`preventDefault`＋`stopPropagation`＋`dropEffect='copy'`；吞 drop 后补发 window `dragend` 走宿主 reset 口）；接不了＝吞掉＋提示（`upload.needKb`／`upload.busy`，不回落会话）；目录仅收文件（dirs-only 提示 `upload.dirSkipped`；混选时静默丢弃目录、文件照传）；`dragenter`/`dragleave` 不拦（遮罩计数零变化）。字典 zh/en 各三键。
+- **自检**：`node --check` 过；冒烟**全绿**（新用例 6 断言：目录计数不排队／无 items 回退／文本拖拽不拦／空 transfer 不拦）。
+- **真跑（过，10-14 他令落笔）**：①面板内投放→传当前库（测试痕迹＝库内三份同名 jpg）；②③⑤（对话区仍为附件／其他面板维持默认／遮罩落下即消）随测未见异常；**④「上传中」＝未实操记录**——小文件提交 <1s 即入「解析中」，窗太短无法复现（该守卫实际覆盖大文件 POST 期间）。附带发现：重复上传可传＝A② 已知缺口（工作台有哈希判同三件），已立 Task 8。
+
+---
+
+## Task 8 — 重复上传拦截（A②）（10-14 裁：并入本对，Task 2 之后）
+
+> 动到的文件：`client.js`（上传链前置判同＋弹层）；（host 半零改动——`deleteDocument` 已有）。
+> **验收对应**：spec §6「重复上传拦截（A②）」裁定行；照工作台三件移植（`duplicate-check`／`duplicate-upload-flow`／`duplicate-upload-dialog`）。
+
+- [ ] **判同**：上传前置（菜单/拖拽/选择器三入口同链）——先查同名（基名精确＋后缀大小写不敏感），命中才算 SHA-256（`crypto.subtle`）比文档清单 `content_hash`（清单带该字段，已实查）：同哈希＝identical（默认跳过／可留副本）、哈希不同或无哈希＝conflict（替换／并存）、无同名＝clean。判同数据＝当前库文档清单（取数方式落码时定：上传时惰取 `listDocuments` 或共享缓存）。
+- [ ] **弹层**：三动作选择照工作台（跳过／替换／并存；identical 另可留副本），多个重复**排队逐个决定**；文案照工作台 `duplicateUpload` 逐字移植。
+- [ ] **流程**：替换＝**先删后传**（顺序冻结——防后置级联冲掉新上传的派生状态）；并存＝自动改名 `name (2).ext`（已存在则递增）。
+- [ ] **门禁＋真跑**：冒烟（判同纯函数用例：同名同哈希／同名异哈希／无同名／无哈希）；真跑——同文件再传→弹层（默认跳过）；改内容同名→替换（列表只留新件）／并存（出现 `(2)`）。
+
+**实测**（Task 8，执行后回填）：
 
 ---
 
