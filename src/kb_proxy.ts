@@ -325,6 +325,59 @@ const forwardUpload = async (req: IncomingMessage, res: ServerResponse, config: 
   res.end(text)
 }
 
+/** Raw download relay: the browser POSTs kb/doc ids to the proxy route and the
+ * source bytes stream back with the upstream content-type and disposition
+ * (the JSON ops' envelope does not fit file bodies). Failures answer the JSON
+ * error envelope with the upstream status preserved. */
+const forwardDownload = async (req: IncomingMessage, res: ServerResponse, config: Config): Promise<void> => {
+  const url = new URL(req.url ?? '/', 'http://webServer')
+  const kbId = (url.searchParams.get('kb_id') ?? '').trim()
+  const docId = (url.searchParams.get('doc_id') ?? '').trim()
+  if (!kbId || !docId) {
+    sendJson(res, 400, { error: { kind: 'http', status: 400, detail: 'panel op requires "kb_id" and "doc_id"' } })
+    return
+  }
+  const base = config.backendUrl?.trim()
+  if (!base) {
+    sendJson(res, 503, { error: { kind: 'not_configured', detail: 'backendUrl is not configured (settings → harness-rag).' } })
+    return
+  }
+  const headers: Record<string, string> = {}
+  if (config.apiToken) headers.authorization = `Bearer ${config.apiToken}`
+  let upstream: Response
+  try {
+    upstream = await fetch(
+      new URL(`/api/knowledge-bases/${encodeURIComponent(kbId)}/documents/${encodeURIComponent(docId)}/source`, base),
+      { headers },
+    )
+  } catch (cause) {
+    sendJson(res, 502, { error: { kind: 'network', detail: `knowledge service unreachable: ${String(cause)}` } })
+    return
+  }
+  if (!upstream.ok) {
+    const text = await upstream.text()
+    let detail = text
+    try {
+      const parsed = JSON.parse(text)
+      if (parsed && typeof parsed.detail === 'string') detail = parsed.detail
+    } catch {
+      /* keep the raw text */
+    }
+    sendJson(res, upstream.status, { error: { kind: 'http', status: upstream.status, detail: `${upstream.status} ${detail}` } })
+    return
+  }
+  const bytes = Buffer.from(await upstream.arrayBuffer())
+  const outHeaders: Record<string, string | number> = {
+    'content-type': upstream.headers.get('content-type') ?? 'application/octet-stream',
+    'content-length': bytes.length,
+    'cache-control': 'no-store',
+  }
+  const disposition = upstream.headers.get('content-disposition')
+  if (disposition) outHeaders['content-disposition'] = disposition
+  res.writeHead(200, outHeaders)
+  res.end(bytes)
+}
+
 export function registerKbProxy(ctx: Context, config: Config): void {
   const ops = buildOps(config)
 
@@ -338,6 +391,10 @@ export function registerKbProxy(ctx: Context, config: Config): void {
       const opName = decodeURIComponent(pathname.slice(KB_PROXY_ROUTE.length + 1))
       if (opName === 'uploadDocument') {
         await forwardUpload(req, res, config)
+        return
+      }
+      if (opName === 'downloadDocument') {
+        await forwardDownload(req, res, config)
         return
       }
       const op = ops[opName]
