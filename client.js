@@ -569,6 +569,22 @@ window.__ModuleLoader__.load({
       'set.field.parseModelVersion': '模型版本',
       'set.field.qdrantUrl': 'Qdrant 地址',
       'set.field.mineruToken': 'MinerU 解析令牌',
+      'set.form.providerMineruCloud': 'MinerU 官方云',
+      'set.form.providerMineruLocal': '本地 MinerU 服务',
+      'set.form.parseTierAuto': '（由服务决定）',
+      'set.form.parseLanguageDefault': '（使用配置默认）',
+      'set.form.parseModelVersionDefault': '（使用配置默认）',
+      'set.form.lockedCloudOnly': '仅云 API 需要',
+      'set.form.lockedLocalOnly': '仅本地服务需要',
+      'set.form.groupServicesHint': '仅当 Qdrant / MinerU 不在默认位置时才需要修改。',
+      'set.form.groupEvaluationHint': '用于评估检索质量（ragas），与对话所选模型无关。留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。',
+      'set.form.extractModelHint': '用于从文档构建知识图谱的模型，建议选择参数规模小、成本低、输出稳定 JSON 的模型。留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。',
+      'set.form.wikiModelHint': '用于生成知识库百科条目的模型。留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。',
+      'set.form.synthesisModelHint': '用于从文档合成评测候选题的模型。留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。',
+      'set.form.parseBaseUrlHint': 'MinerU 云 API 留空时使用官方地址 https://mineru.net；本地 MinerU 服务必填——该服务不带鉴权，只应部署在内网。',
+      'set.form.parseTierHint': '档位由 MinerU 服务端定义：flash / basic 为轻量档，standard / advanced 需要服务端安装 torch；留空表示由服务端决定（服务端默认 standard）。',
+      'set.form.parseLanguageHint': 'MinerU 云 API 的文档语言包；ch 同时覆盖中英文。',
+      'set.form.parseModelVersionHint': 'MinerU 云 API 的模型版本；本部署默认发送 vlm。',
     }
     const en = {
       'tab.title': 'Knowledge Base',
@@ -1146,6 +1162,28 @@ window.__ModuleLoader__.load({
       'set.field.parseModelVersion': 'Model version',
       'set.field.qdrantUrl': 'Qdrant URL',
       'set.field.mineruToken': 'MinerU parsing token',
+      'set.form.providerMineruCloud': 'MinerU cloud API',
+      'set.form.providerMineruLocal': 'Local MinerU service',
+      'set.form.parseTierAuto': '(let the service decide)',
+      'set.form.parseLanguageDefault': '(use the configured default)',
+      'set.form.parseModelVersionDefault': '(use the configured default)',
+      'set.form.lockedCloudOnly': 'Cloud API only',
+      'set.form.lockedLocalOnly': 'Local service only',
+      'set.form.groupServicesHint': 'Only change these when Qdrant or MinerU is not at its default location.',
+      'set.form.groupEvaluationHint':
+        "Evaluates retrieval quality with ragas, independently of the chat model in use. Leaving it empty withdraws this row's override, so a value set for it in the configuration still applies; only when neither is set does the RAG default model take over.",
+      'set.form.extractModelHint':
+        "Builds the knowledge graph from documents. Prefer a model with a small parameter count, low cost and stable JSON output. Leaving it empty withdraws this row's override, so a value set for it in the configuration still applies; only when neither is set does the RAG default model take over.",
+      'set.form.wikiModelHint':
+        "Writes the knowledge-base wiki entries. Leaving it empty withdraws this row's override, so a value set for it in the configuration still applies; only when neither is set does the RAG default model take over.",
+      'set.form.synthesisModelHint':
+        "Synthesizes candidate evaluation questions from documents. Leaving it empty withdraws this row's override, so a value set for it in the configuration still applies; only when neither is set does the RAG default model take over.",
+      'set.form.parseBaseUrlHint':
+        'Empty means the official https://mineru.net for the cloud API; the local MinerU service needs it - that service ships without auth, so keep it internal.',
+      'set.form.parseTierHint':
+        'Tiers are defined by the MinerU service: flash / basic are light, while standard / advanced need torch installed on the service; empty means the service decides (its own default is standard).',
+      'set.form.parseLanguageHint': "The MinerU cloud API's document language pack; ch covers Chinese and English.",
+      'set.form.parseModelVersionHint': "The MinerU cloud API's model version; this deployment sends vlm by default.",
     }
 
     /** Panel data seam: every panel request is a POST of JSON parameters to
@@ -1568,6 +1606,8 @@ window.__ModuleLoader__.load({
           '@media (prefers-reduced-motion: reduce) { .hrag-drawer, .hrag-drawer-overlay { animation: none; } }',
           '.hrag-drawer-close { flex-shrink: 0; width: 26px; height: 26px; padding: 0; font-size: 13px; line-height: 1; }',
           '.hrag-drawer-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; }',
+          // 设置面头部不要划分线（10-15 他点名「功能模型设置下面」）——抽屉们的头线照旧。
+          '.hrag-modal .hrag-drawer-head { border-bottom: none; }',
           '.hrag-drawer-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; }',
           '.hrag-drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px; }',
           // ── 评测域（Task 8）──────────────────────────────────────────────
@@ -9748,48 +9788,6 @@ window.__ModuleLoader__.load({
       }
     }
 
-    /** 功能模型设置面·批 1（菜单批 Task 1，spec M4）：Sheet 骨架＋只读七组
-        主行＋重建索引入口（自顶栏移入，行为逐项一致）＋迁移状态行。批 2+ 逐组
-        换完整表单（工作台 functional-models-view 对照）。 */
-    /** 尚为只读的组（批 4 逐组转可编辑）；默认模型/检索（批 2）与多模态（批 3）已由表单接管。 */
-    const SET_GROUPS = [
-      {
-        title: 'set.group.extraction',
-        rows: [
-          ['extract_model', 'set.field.extractModel'],
-          ['wiki_model', 'set.field.wikiModel'],
-          ['synthesis_model', 'set.field.synthesisModel'],
-        ],
-      },
-      { title: 'set.group.evaluation', rows: [['judge_model', 'set.field.judgeModel']] },
-    ]
-
-    /** 可编辑的多模态组之后、保存之前仍只读的尾段组（批 4 转可编辑）。 */
-    const SET_TAIL_GROUPS = [
-      {
-        title: 'set.group.services',
-        rows: [
-          ['parse_provider', 'set.field.parseProvider'],
-          ['parse_base_url', 'set.field.parseBaseUrl'],
-          ['parse_tier', 'set.field.parseTier'],
-          ['parse_language', 'set.field.parseLanguage'],
-          ['parse_model_version', 'set.field.parseModelVersion'],
-          ['qdrant_url', 'set.field.qdrantUrl'],
-          ['mineru_api_token', 'set.field.mineruToken'],
-        ],
-      },
-    ]
-
-    function setValueAt(config, path) {
-      const parts = String(path).split('.')
-      let value = config
-      for (const part of parts) {
-        if (value == null || typeof value !== 'object') return null
-        value = value[part]
-      }
-      return value
-    }
-
     function ModelSettingsPanel({ t, kbId, onClose, reindexLine, reindexBusy, reindexRunning, onReindex }) {
       const configQ = useEvalCall(kbId, true, 'ragConfigGet', null)
       const migrationQ = useEvalCall(kbId, true, 'ragMigration', null, (payload) =>
@@ -10082,23 +10080,6 @@ window.__ModuleLoader__.load({
             : prev,
         )
 
-      const readonlyGroup = (group) =>
-        h(
-          'div',
-          { className: 'hrag-set-group', key: group.title },
-          h('div', { className: 'hrag-set-grouptitle' }, t(group.title)),
-          group.rows.map(([path, labelKey]) => {
-            const raw = setValueAt(config, path)
-            const text = raw === null || raw === undefined || raw === '' ? '—' : String(raw)
-            return h(
-              'div',
-              { className: 'hrag-set-row', key: path },
-              h('span', { className: 'hrag-set-label' }, t(labelKey)),
-              h('span', { className: 'hrag-set-value', title: text }, text),
-            )
-          }),
-        )
-
       const submitSave = () => {
         setSaveBusy(true)
         setSaveError(null)
@@ -10159,6 +10140,8 @@ window.__ModuleLoader__.load({
           'generic-rerank': 'providerGenericRerank',
           'tei-rerank': 'providerTeiRerank',
           'tei-sparse': 'providerTeiSparse',
+          'mineru-cloud': 'providerMineruCloud',
+          'mineru-local': 'providerMineruLocal',
         }
         return keys[id] ? t('set.form.' + keys[id]) : id
       }
@@ -10294,23 +10277,28 @@ window.__ModuleLoader__.load({
         )
       }
 
+      /** 模型引用选择器（工作台 modelReferenceOptions 口径）：无值＝（使用配置默认）、
+          孤儿值列尾；选「默认」即清空本行覆盖。 */
+      const referencePicker = (ariaLabel, field, current) =>
+        pickerControl(
+          ariaLabel,
+          current || RAG_MODEL_NONE,
+          ragModelReferenceOptions(models, current, t('set.form.defaultNone')).map((option) => option.value),
+          (option) => {
+            const found = ragModelReferenceOptions(models, current, t('set.form.defaultNone')).find(
+              (o) => o.value === option,
+            )
+            return found ? found.label : option
+          },
+          (next) => update(field, next === RAG_MODEL_NONE ? '' : next),
+        )
+
       const defaultModelGroup = view && values
         ? h(
         'div',
         { className: 'hrag-set-group' },
         h('div', { className: 'hrag-set-grouptitle', title: t('set.form.defaultHint') }, t('set.group.default')),
-        pickerControl(
-          t('set.field.defaultModel'),
-          values.default_model || RAG_MODEL_NONE,
-          ragModelReferenceOptions(models, values.default_model, t('set.form.defaultNone')).map((option) => option.value),
-          (value) => {
-            const found = ragModelReferenceOptions(models, values.default_model, t('set.form.defaultNone')).find(
-              (option) => option.value === value,
-            )
-            return found ? found.label : value
-          },
-          (next) => update('default_model', next === RAG_MODEL_NONE ? '' : next),
-        ),
+        referencePicker(t('set.field.defaultModel'), 'default_model', values.default_model),
       )
         : null
 
@@ -10502,6 +10490,131 @@ window.__ModuleLoader__.load({
         ),
         retrievalAdvanced,
       )
+        : null
+
+      const extractionGroup = view && values
+        ? h(
+            'div',
+            { className: 'hrag-set-group' },
+            h('div', { className: 'hrag-set-grouptitle', title: t('set.form.extractModelHint') }, t('set.group.extraction')),
+            fieldRow(t('set.field.extractModel'), referencePicker(t('set.field.extractModel'), 'extract_model', values.extract_model)),
+            fieldRow(t('set.field.wikiModel'), referencePicker(t('set.field.wikiModel'), 'wiki_model', values.wiki_model), {
+              info: t('set.form.wikiModelHint'),
+            }),
+          )
+        : null
+
+      const evaluationGroup = view && values
+        ? h(
+            'div',
+            { className: 'hrag-set-group' },
+            h('div', { className: 'hrag-set-grouptitle', title: t('set.form.groupEvaluationHint') }, t('set.group.evaluation')),
+            fieldRow(t('set.field.judgeModel'), referencePicker(t('set.field.judgeModel'), 'judge_model', values.judge_model)),
+            fieldRow(
+              t('set.field.synthesisModel'),
+              referencePicker(t('set.field.synthesisModel'), 'synthesis_model', values.synthesis_model),
+              { info: t('set.form.synthesisModelHint') },
+            ),
+          )
+        : null
+
+      const servicesGroup = view && values
+        ? h(
+            'div',
+            { className: 'hrag-set-group' },
+            h('div', { className: 'hrag-set-grouptitle', title: t('set.form.groupServicesHint') }, t('set.group.services')),
+            fieldRow(
+              t('set.field.qdrantUrl'),
+              h(HostInput, {
+                className: 'hrag-set-control',
+                spellCheck: false,
+                type: 'url',
+                value: values.qdrant_url,
+                'aria-label': t('set.field.qdrantUrl'),
+                onChange: (event) => update('qdrant_url', event.target.value),
+              }),
+            ),
+            fieldRow(
+              t('set.field.parseProvider'),
+              pickerControl(t('set.field.parseProvider'), values.parse_provider, RAG_PARSE_PROVIDER_OPTIONS, providerLabel, (next) =>
+                update('parse_provider', next),
+              ),
+              { info: t('set.form.parseBaseUrlHint') },
+            ),
+            values.parse_provider === 'mineru-local'
+              ? h(
+                  React.Fragment,
+                  null,
+                  fieldRow(
+                    t('set.field.parseBaseUrl'),
+                    h(HostInput, {
+                      className: 'hrag-set-control',
+                      spellCheck: false,
+                      value: values.parse_base_url,
+                      'aria-label': t('set.field.parseBaseUrl'),
+                      onChange: (event) => update('parse_base_url', event.target.value),
+                    }),
+                  ),
+                  fieldRow(
+                    t('set.field.parseTier'),
+                    pickerControl(
+                      t('set.field.parseTier'),
+                      values.parse_tier,
+                      RAG_PARSE_TIER_OPTIONS,
+                      (option) => (option === '' ? t('set.form.parseTierAuto') : option),
+                      (next) => update('parse_tier', next),
+                    ),
+                    { info: t('set.form.parseTierHint') },
+                  ),
+                  fieldRow(t('set.field.parseLanguage'), h('div', { className: 'hrag-set-locked' }, t('set.form.lockedCloudOnly'))),
+                  fieldRow(t('set.field.parseModelVersion'), h('div', { className: 'hrag-set-locked' }, t('set.form.lockedCloudOnly'))),
+                  fieldRow(t('set.field.mineruToken'), h('div', { className: 'hrag-set-locked' }, t('set.form.lockedCloudOnly'))),
+                )
+              : h(
+                  React.Fragment,
+                  null,
+                  fieldRow(
+                    t('set.field.parseBaseUrl'),
+                    h(HostInput, {
+                      className: 'hrag-set-control',
+                      spellCheck: false,
+                      value: values.parse_base_url,
+                      placeholder: 'https://mineru.net',
+                      'aria-label': t('set.field.parseBaseUrl'),
+                      onChange: (event) => update('parse_base_url', event.target.value),
+                    }),
+                  ),
+                  fieldRow(t('set.field.parseTier'), h('div', { className: 'hrag-set-locked' }, t('set.form.lockedLocalOnly'))),
+                  fieldRow(
+                    t('set.field.parseLanguage'),
+                    pickerControl(
+                      t('set.field.parseLanguage'),
+                      values.parse_language,
+                      RAG_PARSE_LANGUAGE_OPTIONS,
+                      (option) => (option === '' ? t('set.form.parseLanguageDefault') : option),
+                      (next) => update('parse_language', next),
+                    ),
+                    { info: t('set.form.parseLanguageHint') },
+                  ),
+                  fieldRow(
+                    t('set.field.parseModelVersion'),
+                    pickerControl(
+                      t('set.field.parseModelVersion'),
+                      values.parse_model_version,
+                      RAG_PARSE_VERSION_OPTIONS,
+                      (option) => (option === '' ? t('set.form.parseModelVersionDefault') : option),
+                      (next) => update('parse_model_version', next),
+                    ),
+                    { info: t('set.form.parseModelVersionHint') },
+                  ),
+                  fieldRow(
+                    t('set.field.mineruToken'),
+                    secretControl('mineru_api_token', values.mineru_api_token, t('set.field.mineruToken'), (next) =>
+                      update('mineru_api_token', next),
+                    ),
+                  ),
+                ),
+          )
         : null
 
       const asrProviderLabel = (id) => {
@@ -10796,9 +10909,10 @@ window.__ModuleLoader__.load({
                     null,
                     defaultModelGroup,
                     retrievalGroup,
-                    SET_GROUPS.map(readonlyGroup),
+                    extractionGroup,
+                    evaluationGroup,
                     multimodalGroup,
-                    SET_TAIL_GROUPS.map(readonlyGroup),
+                    servicesGroup,
                     saveRow,
                 ),
           ),
