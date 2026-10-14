@@ -193,4 +193,4 @@
 - [x] Task 1 三笔（10-14）：`7b5c73c` host 六 op／`884b422` client（顶栏重做＋设置面批 1＋三迭代）／`03da3ee` docs（Task 0/1 实测＋A 组终裁）。**全部未推**（仓暂无 remote）。
 - [x] Task 5 三笔（10-14）：`a72df3c` host（`downloadDocument` raw 中继）／`7652aad` client（建库弹层·下载·白名单前置·上次库记忆＋`upload.rejected` 裸参修复）／`3e95f9a` docs（Task 5 实测收官＋Task 6/7 立项＋§6 三行裁定登记）。**全部未推**（仓暂无 remote）。
 - [x] Task 7 两笔（10-14）：`c86a852` client（面板内拖拽：拦截/吞掉提示/目录拒/遮罩收尾）／`9e8786e` docs（Task 7 实测收官＋Task 8 立项＋§6 A② 改裁）。**全部未推**（仓暂无 remote）。
-- [x] Task 2 三笔（10-14）：`5fb0629` host（`ragConfigPut`＋四探针 op）／`93b9ecc` client（设置面批 2 全量＋形态改判〔面板内大弹窗〕＋三案修复〔白屏护栏/flex 压扁/弹窗自锚〕）／docs 本笔（Task 2 实测收官＋形态两轮改判记录）。**全部未推**（仓暂无 remote）。
+- [x] Task 2 三笔（10-14）：`5fb0629` host（`ragConfigPut`＋四探针 op）／`93b9ecc` client（设置面批 2 全量＋形态改判〔面板内大弹窗〕＋三案修复〔白屏护栏/flex 压扁/弹窗自锚〕）／`01d0de2` docs（Task 2 实测收官＋形态两轮改判记录）。**全部未推**（仓暂无 remote）。
