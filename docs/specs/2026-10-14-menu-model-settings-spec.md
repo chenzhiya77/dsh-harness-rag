@@ -1,6 +1,6 @@
 # 面板 ⋯ 菜单与功能模型设置 —— spec
 
-**Status:** 🟢 已裁（2026-10-14 四拍：①结构照拟稿、「刷新」改「刷新界面」、每项带图标／②皮肤＝DSH 真值 Menu／③设置面＝照工作台全量（拆批）／④立新对）；**执行中**——Task 0–1 已落地（三笔 `7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过，含三轮表现层迭代）；Task 5／2–4 未开（逐格记录见配套 plan）。
+**Status:** 🟢 已裁（2026-10-14 四拍：①结构照拟稿、「刷新」改「刷新界面」、每项带图标／②皮肤＝DSH 真值 Menu／③设置面＝照工作台全量（拆批）／④立新对）；**执行中**——Task 0–1 已落地（三笔 `7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过，含三轮表现层迭代）；**Task 5／7／2／8 已收官**（真跑过）；**Task 3 落码完毕（含表现层六轮），真跑待整重启复跑**；Task 4 未开（逐格记录见配套 plan）。
 **来源:** 10-13 他令——「选择库的右侧加上 deepseekharness 中同款的三点菜单：工作台库级菜单项落脚＋功能模型设置并入；行内『刷新/上传文档/重建索引』移入菜单（重建索引落入功能模型设置界面中）」。承接：T3 plan「RAG 前端全域覆盖审计」A 组裁定行＋步骤记录「模型面归属与分项目治理」条（待排→转正）。
 **配套 plan:** [../plans/2026-10-14-menu-model-settings-plan.md](../plans/2026-10-14-menu-model-settings-plan.md)（同批成对）。
 
@@ -58,13 +58,13 @@
 | --- | --- |
 | 批 1（随 Task 1） | 设置面骨架（**面板内大弹窗**——宿主设置同款形态收进 RAG 面板空间；10-14 两轮改判：原「面板内 Sheet」作废，设置面＝弹窗、内容面＝抽屉，且遮罩只盖面板〔他定「弹窗只放在 rag 的界面中」〕）＋**读取展示**（`GET /api/rag/config` 全景，值直显；模型名解析与选择器归批 2）＋**重建索引入口**（含在飞态/状态行，复用既有 `reindex`/`reindexStatus` op）＋**迁移状态**（`GET …/migration`） |
 | 批 2 | 默认模型组＋检索组：嵌入四问（env 徽章/覆盖警示/端点占位）＋维度（守卫＋探测点＋档位下拉）＋稀疏（源三选/外置四问/三守卫）＋重排＋高级区六项＋保存（`PUT …/config`）＋探测四枚（embedding/dimensions/connectivity/sparse）＋维度迁移弹层（`dimension-migration-dialog`） |
-| 批 3 | 多模态组：caption（`isCaptionCapable` 口径）＋ASR（provider/本地引擎/模型菜单/探针阻塞保存/`probe-asr`） |
+| 批 3 | 多模态组：caption（`isCaptionCapable` 口径；**无视觉提示＝与「（使用配置默认）」共用同一框**〔两态互斥）——简写「尚无视觉模型」/「No vision model」当该选项标签，不另起行；10-14 真跑勘误：取数源＝配置条目面 `listModelsConfig`，非解析目录面〕＋ASR（provider/本地引擎/模型菜单/探针阻塞保存/`probe-asr`）；**框内下拉（维度档位＋ASR 候选）＝工作台规格**：菜单等宽输入框（`anchor:'field'`）＋lucide `ChevronDown` size-4 opacity-50 触发器；**设置面全部下拉＝与 Model ID 同款选择器外观**（盒＋chevron＋菜单；选项与更新逻辑不变；10-14 他令两轮——先多模态两行、再默认模型/检索提供商/稀疏来源及提供商全数） |
 | 批 4 | 抽取组＋评测组（judge）＋服务组（parse：MinerU provider/tier/version/language/base_url＋`qdrant_url`）＋收口 |
 
 每批以工作台同段为逐句对照底本；文案键取工作台 `core/rag`＋设置视图现文案。
 
 ### M5 —— 数据缝（不变式）
-面板仍不直连后端：新增 host op（薄透传）：`createKb`／`renameKb`／`deleteKb`／`ragConfigGet`／`ragConfigPut`／`ragMigration`／`probeEmbedding`／`probeDimensions`／`probeConnectivity`／`probeAsr`／`probeSparse`（模型目录＝`GET /api/models`——Task 0 核已定名，`listModels` 读面已建）。凭证/基址仍只留 host 半。**deer-flow 零代码改动**。
+面板仍不直连后端：新增 host op（薄透传）：`createKb`／`renameKb`／`deleteKb`／`ragConfigGet`／`ragConfigPut`／`ragMigration`／`probeEmbedding`／`probeDimensions`／`probeConnectivity`／`probeAsr`／`probeSparse`（模型目录两读面：`listModels`＝`GET /api/models` 解析目录〔默认模型选择源〕；`listModelsConfig`＝`GET /api/models/config` 配置条目〔caption 视觉筛选源，带 `supports_vision` 声明〕——10-14 真跑勘误补建）。凭证/基址仍只留 host 半。**deer-flow 零代码改动**。
 
 ### M6 —— 管理动作带闸
 重命名＝单字段弹层；删除知识库＝确认框（**级联影响如实展示**，文案照工作台 `deleteKbConfirmTitle/Description`）；重建百科沿用既有共享确认弹窗——五闸口径不因移位而变。

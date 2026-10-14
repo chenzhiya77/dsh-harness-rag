@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-14-menu-model-settings-spec.md](../specs/2026-10-14-menu-model-settings-spec.md)（M1–M7 决定＋落点＋验收）
-**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；**Task 2 已收官**（真跑过，10-14）；**Task 8 已收官**（真跑过，10-14）；Task 3–4 未开；**Task 6 已立**（收口统换宿主件，10-14 裁）。
+**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；**Task 2 已收官**（真跑过，10-14）；**Task 8 已收官**（真跑过，10-14）；**Task 3 落码完毕（含表现层六轮），真跑待整重启复跑**；Task 4 未开；**Task 6 已立**（收口统换宿主件，10-14 裁）。
 **Parent:** T3 plan（[2026-10-12-t3-panel-plan.md](2026-10-12-t3-panel-plan.md)）「RAG 前端全域覆盖审计」A 组裁定行；步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（「模型面归属」条转正）。
 
 **Architecture:** 两件事——**① 顶栏 ⋯ 菜单**（`client.js` 顶栏段：`[裸粗体库名＋chevron 下拉][⋯ 裸钮靠右]`（v2/v3 终态）；菜单件＝`DshMenu`（宿主 `Menu.module.css` 真值），图标宿主原路径（路径级属性：Ellipsis `fill`／Edit `fill`+`stroke`／余 `stroke`）、缺件沿用工作台同款；行内「刷新/上传/重建索引」退役——重建索引落设置面；**六 tab 改对话头设计**）；**② 功能模型设置面**（面板内 Sheet；照工作台 `functional-models-view` 全量、四批落地：读取展示/重建索引入口/迁移状态 → 嵌入段 → 多模态段 → 解析/裁判/抽取段）。**数据缝不变**：host 半 `kb_proxy.ts` 薄代理补 op（createKb/renameKb/deleteKb/ragConfig 读写/migration/五探针/模型目录）；**deer-flow 零改动**。
@@ -98,12 +98,27 @@
 > 动到的文件：`client.js`（设置面多模态段）＋`src/kb_proxy.ts`（`probeAsr`）。
 > **验收对应**：spec §2 M4 批 3。
 
-- [ ] **caption 段**：可配项/模型选择（照工作台 `isCaptionCapable` 口径）；
-- [ ] **ASR 段**：引擎（本地引擎菜单）/模型/provider 切换口径＋`probe-asr`（含「先探针后保存」的阻塞语义照工作台）；
-- [ ] **host 半**：`probeAsr` op；
-- [ ] **真跑**：同库对照——改-存-读；ASR 探针一枚。
+- [x] **caption 段**：可配项/模型选择（照工作台 `isCaptionCapable` 口径）；
+- [x] **ASR 段**：引擎（本地引擎菜单）/模型/provider 切换口径＋`probe-asr`（含「先探针后保存」的阻塞语义照工作台）；
+- [x] **host 半**：`probeAsr` op；
+- [x] **真跑**：同库对照——改-存-读；ASR 段（引擎切换/锁定/候选菜单）真跑过（10-14 他复「过了」；含表现层六轮＋三续复跑）。
 
-**实测**（Task 3，执行后回填）：
+**实测**（Task 3，2026-10-14；编码＋自检就绪，**真跑待整重启**）：
+
+- **caption 段**：视觉筛选选择器——`ragIsCaptionCapable`（`supports_vision`）过滤后走 `ragModelReferenceOptions`（默认项＋display_name＋孤儿值）；无视觉条目时显示工作台同句提示。**取数源勘误（真跑同轮，他当场提问「当前没有模型声明了视觉吗」）**：caption 的合规源＝**配置条目面** `/api/models/config`（带声明能力）——解析后的目录面 `/api/models` 不带该字段；我首版接错源（用目录面）⇒ 全部滤空、列表只剩孤儿，被他一问戳破。实核本实例**4/5 声明视觉**（qwen3.8-flash／qwen3.7-flash／deepseek-flash／mimo-v2.6-flash＝true；deepseek-v4-flash＝false）。**修**＝host 补 `listModelsConfig` op＋caption/视觉判定改用 `managedModels`（照工作台 `useModelsConfig` 与 `useModels` 分源：目录面管默认模型选择、配置面管视觉筛选）。
+- **表现层一轮（10-14 他定）**：caption 的无视觉提示**不再另起一行**（太长太占地方）——**与「（使用配置默认）」共用同一个框**（两态互斥）：有视觉条目＝显示默认项文案；无＝把**简写提示**（「尚无视觉模型」/「No vision model」）当该选项标签，**框中与下拉同一处**；下方独立提示行与对应 CSS 均撤。
+- **ASR 段**（四行块照工作台）：主行「语音识别模型」＝`<optgroup>` 三组（本地引擎／通用协议／原生协议）；**切换即改值** `ragAsrModelForProviderSwitch`（whisper 名→funasr 首行、非 whisper 名→whisper 首行、funasr 开放集原样、服务档原样带过）；嵌套 Model ID＝自由填＋框内候选菜单（仅本地引擎；`ASR_MODEL_MENU`，占位＝菜单首行）；嵌套 API Key／接口地址＝服务档可编辑（厂商端点占位）／本地引擎两条锁定行「仅服务档需要」。
+- **探针照工作台零入口休眠**：host 补 `probeAsr` op（链路完整、无 UI）；`ragAsrProbeBlocksSave` 门接进保存阻塞链（verdict 无来源 ⇒ 恒不触发；兜底仍为保存期构造拒绝＋入库期 `asr=failed`）。
+- **结构**：多模态组从只读转可编辑（`SET_GROUPS` 拆前段＋`SET_TAIL_GROUPS`〔服务组〕；渲染序＝默认模型→检索→抽取/评测→**多模态**→服务→保存）。
+- **自检**：`node --check` 过；冒烟**全绿**——新增：面板多模态断言（视觉条目入列／非视觉滤出／声明在位时无提示／服务档不锁）＋**空表提示用例**（配置面无视觉条目 ⇒ 提示回归）＋**本地引擎锁定态渲染用例**（恰两条「仅服务档需要」）＋助手 7 断言（视觉过滤／孤儿／引擎切换四分支）；`probe-menu` 扩 **8/8**（`probeAsr`＋`listModelsConfig` 中继＋守卫）。
+- **回归防线首次实战**：本轮新常量 `asrModelHint`／`captionOptions` 又犯「首帧 `values=null` 无条件求值」——被白屏案新增的「未播种首帧」冒烟用例**当场拦下**，修＝补 `values` 守卫（同族第三例；该防线有效）。
+- **表现层二轮（10-14 他复跑点名两处，事后判为不完整）**：①ASR Model ID 箭钮 `pointer-events:auto`（`.hrag-set-tierbtn` 本体补；首修只补了包裹层，而 `pointer-events` 系继承属性、ASR 箭钮无包裹类 ⇒ 漏网）；②六个 `HostInput`（嵌入/重排/稀疏/ASR 的模型与地址）补 `spellCheck:false`（红波浪线）。**教训**：当轮命中验证页（`trail-repro.html`）没带真祖先链（无 transform）——过了但真机仍坏；**复现页必须用真结构全链**。
+- **表现层三轮（10-14 复跑「还是错误的」案破案，三根因定案）**：①**点击没效果＋滑条会动**——根因＝**`.hrag-set-trail` 的 `transform: translateY(-50%)` 成了固定位菜单（`.hrag-mm`）的包含块**：菜单被放到「trail 左上＋按钮视口坐标」的错位处，面板 `overflow:hidden` 裁掉 ⇒ 不可见；且菜单尺寸撑进滚动体（复现页实测：旧链菜单落 `[420,431]`〔应在按钮正下〕、`scrollWidth 249→527`、`clientHeight −15`＝横条现身——「上下/左右滑条会动」机制吻合）。**修＝trail 去 transform，改 `top:0;bottom:0` 拉伸＋flex 居中**（几何等价、不产生包含块；同页修复链实测菜单落 `[219,259]`＝按钮正下、滚动条零变化）。②**点的是带边框的壳**——ASR 的 `DshMenu` 漏传 `className`，外层按钮吃默认 `hrag-btn-outline` 描边（维度行传了 `hrag-set-tierwrap` 故无恙）；修＝补同款 `className`（另把 `tierwrap` 补按钮复位式样，免依赖宿主 preflight；候选菜单改 `align:'end'` 左向展开、留在面板内——工作台靠 Radix 碰撞回退才没伸出右缘，我们无回退）。③**嵌套行不对齐**——原缩进是整行 padding（标签/值列同推 +11）；工作台 `NESTED_GUTTER`（`ml-3 border-l pl-3`）**只作用于标题格**（标题文字 +25、值列 ±0）；修＝CSS 改 `.hrag-set-row-nested > .hrag-set-label`（复现页三组坐标实核：parent label 70/box 206、旧 nested 81/217、新 nested 82〔文字 95〕/206）。
+- **表现层四轮（10-14 复跑「对照图2 完善」三处）**：框内下拉照工作台（源码逐字核：`DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-0"`＋触发器 `<ChevronDown className="size-4 opacity-50" />`＋`pr-3`；维度与 ASR 两处同规格）——①**菜单等宽输入框、贴其左右缘开**：`DshMenu` 加 `anchor:'field'`（按 `.hrag-set-field` 整框测位＋取等宽；`.hrag-mm` 补 `box-sizing:border-box` 免 +8px 溢出）——原「按钮锚＋min-width 144」菜单右缘短一截且短于框宽；②**触发器 chevron 换工作台同款**（新 `lucideChevronDownIcon`＝16px・stroke2・opacity .5；维度/ASR 两处同换——原 DSH chevron 14px 描边 1）；③触发器右距 10→12px（工作台 `pr-3`）。**复现页实测**（修复链）：菜单宽 247＝框宽 247、左缘 206＝206、下沿间距 4px、滚动条零变化（右缘 1px 内＝亚像素舍入）。
+- **表现层五轮（10-14 复跑「Model ID 溢出容器」案破案）**：现象＝输入框右缘越过容器约 17px、chevron 却仍在字段缘内（＝**盒比字段宽**）。根因＝**盒模型混用**：宿主 `Input` 外壳是 `<span>`（页内无全局 border-box ⇒ content-box），我方 `width:100%` 被其 padding+border 顶出 +17px；原生 `select`/`input` 吃 **UA border-box** 所以 select 行无恙（引擎实测钉死：input content-box 335/300 溢出、select border-box 300/300 含住、同构 span 旧 317→新 300）。修＝`.hrag-set-control` 补 `box-sizing:border-box`（一处覆盖全部 8 处 HostInput＋primitives 缺件时的原生 input 回退）。**教训承接三轮**：复现页此前用裸 `input`（恰吃 UA border-box）——控件本身也是「真结构」的一部分。
+- **同类待核（登记，未目视复现）**：`.hrag-input` 家族走 `width:100%`＋padding 的两处原生 input（图搜索 `.hrag-graph-search .hrag-input`、评测搜索 `.hrag-ev-search`）——同型 content-box 隐患；其余 `.hrag-input` 为 `flex:1`（flex 分配含 padding，安全）。
+- **表现层六轮（10-14 他令「这两个下拉也改成 Model ID 同款·逻辑不变」）**：caption＋provider 两条原生 `<select>` 换**与 Model ID 同款的选择器外观**——`hrag-set-picker`＝宿主 Input 真值样式盒（l4 边/layer-1 底/32 高/8 左距/14px）＋右侧 workbench chevron（12px），**整盒即 DshMenu 触发钮**（`anchor:'field'` 菜单等宽同缘）。**选项与更新逻辑原样**：provider 三组→菜单组标签＋选中✓（切换即改值 `ragAsrModelForProviderSwitch` 照跑）；caption 两态标签照旧共用框、孤儿值照旧。**同轮续（他补令「默认模型、引用、稀疏来源三处也统一」）**：余下原生 `<select>` 全数换同款——默认模型组／检索两腿提供商（×2）／稀疏向量来源／稀疏提供商（external 嵌套）——抽共用件 `pickerControl`（签名照 selectControl；`disabledFor` 保留「仅稠密」禁选项＋后缀文案）；**`selectControl` 与 `.hrag-set-select` 全族退役**（零引用删除）。顺带修一条旧潜伏：高级区「外部未启用」四条锁定行的 map key 挂在 options 上不生效（本次首次渲染高级区现形）——key 改挂 Fragment。引擎实测：盒宽 300＝字段宽、chevron 右距 12.5px、长标签 ellipsis、height 32；冒烟补「高级区展开」两渲染用例（含 external 分支；五/六/七枚 picker 计数断言在案，无 key 警告）。**统一后复跑「都变短了」案**：根因＝`DshMenu` 自带 `.hrag-mm-wrap`（inline-flex・内容宽）——选择器把 DshMenu 直接挂在 field 下（区别于 Model ID 的 trail 用法），内容宽的壳令 `width:100%` 的钮回退为内容宽；修＝`.hrag-set-field > .hrag-mm-wrap { display:flex; width:100% }`（只命中「壳即 field 直子」的选择器用法；trail 内的 wrap 不触）。复现页（**这次带全真结构＝grid 行＋field＋mm-wrap 壳**）实测：无修 178px → 有修 284＝字段宽。**教训第三次同族**：复现必须带真组件自带壳层——前两次＝缺 transform 祖先、裸 input 代宿主件。**同轮续②（他复跑点名「按钮图标没有对齐其他输入框」）**：全部选择器换盒内 chevron（padding-right 12）后，**维度行的 chevron 还挂在 trail 的 28px 旧轴上**（唯一残留；他截图实测该行 chevron 距框缘 ≈30px、其余 ≈12px）——修＝该 trail 加 `style:{right:'12px'}`（照 ASR Model ID 行先例）；引擎复核两轴重合（trail 13＝picker 13＝12px＋0.5 边框）。**同轮续③（他令「这段提示去掉，太占位置」）**：高级区底部两段行内提示（`embeddingChangeWarning` 段＋`sparseBlockReason` 段）**撤除**——承接位＝**检索组标题 ⓘ**（`set.form.retrievalHint` 追加「更换向量模型/提供方/地址/稀疏来源后需重建索引」句，中英同步）＋**保存行**（存后服务端 `warning`、阻止原因原样照显）；`ragIsEmbeddingChange`＋`embeddingChanged`＋`.hrag-set-warn` 全链退役（零引用删除；工作台原为行内段、本条为有意分叉）。
+- **真跑（过，10-14 他复「过了」；含表现层六轮＋续① ② ③ 复跑）**：关面板重开——①多模态组可编辑：caption 列表应见四个声明视觉的模型（mimo 常驻；「尚无视觉模型」仅在配置面无声明时出现）；②ASR 切「funasr（本地）」→ Model ID 框内箭头**可点开候选菜单**（工作台同款 chevron、菜单与输入框等宽同缘、点击不带动滚动条）＋两条「仅服务档需要」，且 Model ID 输入框与其它框**右缘齐平**（不再越界）；切「dashscope（百炼）」→ 两行变可编辑、地址占位＝厂商端点；③改-存-读闭环与工作台同库对照；④嵌套行标题缩进＋值列与父行对齐；⑤框内无红波浪线；⑥设置面全部下拉＝Model ID 同款选择器（多模态两行＋默认模型＋两腿提供商＋稀疏来源/提供商；点开菜单选值，行为与改前一致）**且全部 chevron 同轴**（距框右缘 12px，含维度行的档位菜单）——全过。
 
 ---
 
