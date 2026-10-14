@@ -223,12 +223,16 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
     ragConfigGet: () => api(config, '/api/rag/config'),
     ragMigration: () => api(config, '/api/rag/config/migration'),
     listModels: () => api(config, '/api/models'),
+    // 配置条目面（带声明能力，如 supports_vision）——caption 选择器的合规源（照工作台 modelsConfig）。
+    listModelsConfig: () => api(config, '/api/models/config'),
     // ── 设置面批 2（Task 2）：RAG 配置保存 ＋ 四枚只读探针（探针是真实调用但零写入）──
     ragConfigPut: (args) => api(config, '/api/rag/config', { method: 'PUT', body: bodyOf(args) }),
     probeEmbedding: (args) => api(config, '/api/rag/config/probe-embedding', { method: 'POST', body: bodyOf(args) }),
     probeDimensions: (args) => api(config, '/api/rag/config/probe-dimensions', { method: 'POST', body: bodyOf(args) }),
     probeConnectivity: (args) => api(config, '/api/rag/config/probe-connectivity', { method: 'POST', body: bodyOf(args) }),
     probeSparse: (args) => api(config, '/api/rag/config/probe-sparse', { method: 'POST', body: bodyOf(args) }),
+    // 照工作台「零入口休眠」保持链路完整（探针 UI 已撤，判定与门留着）。
+    probeAsr: (args) => api(config, '/api/rag/config/probe-asr', { method: 'POST', body: bodyOf(args) }),
   }
 }
 
