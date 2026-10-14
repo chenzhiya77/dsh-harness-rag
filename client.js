@@ -448,6 +448,18 @@ window.__ModuleLoader__.load({
       'upload.needKb': '知识库暂不可接收：请先创建知识库',
       'upload.busy': '知识库暂不可接收：上传中，请稍候',
       'upload.dirSkipped': '已跳过文件夹（仅支持文件上传）',
+      'dup.identicalTitle': '内容完全一致',
+      'dup.identicalDescription': '「{0}」与库中已有文档内容完全相同，无需重复上传。',
+      'dup.conflictTitle': '同名文件已存在',
+      'dup.conflictDescription': '「{0}」与库中已有文档同名但内容不同。',
+      'dup.copyNamePreview': '保留两份将以上传为「{0}」。',
+      'dup.skipUpload': '跳过上传',
+      'dup.keepCopy': '仍上传副本',
+      'dup.keepBoth': '保留两份',
+      'dup.replaceOld': '替换旧文档',
+      'dup.skipped': '已跳过重复文件：{0}',
+      'dup.uploadedAsCopy': '已作为副本上传：{0}',
+      'dup.replaced': '已替换旧文档：{0}',
       'set.form.save': '保存',
       'set.form.saved': '功能模型配置已保存',
       'set.form.noChanges': '没有需要保存的改动',
@@ -980,6 +992,18 @@ window.__ModuleLoader__.load({
       'upload.needKb': 'The knowledge base cannot take files yet: create one first',
       'upload.busy': 'The knowledge base cannot take files yet: an upload is in progress',
       'upload.dirSkipped': 'Skipped folders (only files can be uploaded)',
+      'dup.identicalTitle': 'Identical content',
+      'dup.identicalDescription': '"{0}" is byte-identical to an existing document — no need to upload again.',
+      'dup.conflictTitle': 'Same-name file exists',
+      'dup.conflictDescription': '"{0}" shares its name with an existing document but the content differs.',
+      'dup.copyNamePreview': 'Keeping both uploads it as "{0}".',
+      'dup.skipUpload': 'Skip upload',
+      'dup.keepCopy': 'Upload copy anyway',
+      'dup.keepBoth': 'Keep both',
+      'dup.replaceOld': 'Replace old document',
+      'dup.skipped': 'Skipped duplicate file: {0}',
+      'dup.uploadedAsCopy': 'Uploaded as copy: {0}',
+      'dup.replaced': 'Replaced old document: {0}',
       'set.form.save': 'Save',
       'set.form.saved': 'Functional model configuration saved',
       'set.form.noChanges': 'No changes to save',
@@ -10791,6 +10815,134 @@ window.__ModuleLoader__.load({
       return { files: files, dirs: dirs }
     }
 
+    // ── 重复上传拦截（Task 8）：判同/改名/哈希，照工作台 duplicate-check 逐条移植 ──
+    function dupBaseName(filename) {
+      const name = String(filename)
+      const dot = name.lastIndexOf('.')
+      return dot <= 0 ? name : name.slice(0, dot)
+    }
+
+    function dupSuffix(filename) {
+      const name = String(filename)
+      const dot = name.lastIndexOf('.')
+      return dot <= 0 ? '' : name.slice(dot).toLowerCase()
+    }
+
+    /** 同名预检：基名精确（显示名不是归一化键），后缀大小写不敏感。 */
+    function dupFindByName(filename, documents) {
+      const wantedBase = dupBaseName(filename)
+      const wantedSuffix = dupSuffix(filename)
+      return documents.find(
+        (document) => dupBaseName(document.name) === wantedBase && dupSuffix(document.name) === wantedSuffix,
+      )
+    }
+
+    /** 同名命中后再看哈希：同哈希＝identical，异哈希或旧行无哈希（无法自证）＝conflict。 */
+    function dupVerdict(duplicate, fileHash) {
+      if (!duplicate) return { kind: 'clean' }
+      if (duplicate.content_hash != null && duplicate.content_hash === fileHash) {
+        return { kind: 'identical', doc: duplicate }
+      }
+      return { kind: 'conflict', doc: duplicate }
+    }
+
+    /** 分配不冲突的副本名：`name (2).ext` 递增；existingNames 含本批已分配的副本。 */
+    function dupNextCopyName(filename, existingNames) {
+      const base = dupBaseName(filename)
+      const suffix = dupSuffix(filename)
+      let counter = 2
+      let candidate = base + ' (' + String(counter) + ')' + suffix
+      while (existingNames.has(candidate)) {
+        counter += 1
+        candidate = base + ' (' + String(counter) + ')' + suffix
+      }
+      return candidate
+    }
+
+    /** 上传前判同用：SHA-256 hex（WebCrypto；非安全上下文会抛，调用方降级直传）。 */
+    async function dupComputeSha256(file) {
+      const buffer = await file.arrayBuffer()
+      const digest = await crypto.subtle.digest('SHA-256', buffer)
+      return Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('')
+    }
+
+    /** 重复上传确认弹层（Task 8）：形制照面板既有对话框，文案照工作台逐字。 */
+    function DuplicateUploadDialog({ t, pending, onResolve }) {
+      React.useEffect(() => {
+        if (!pending) return undefined
+        const onKey = (event) => {
+          if (event.key === 'Escape') onResolve('cancel')
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+      }, [pending, onResolve])
+      if (!pending) return null
+      const identical = pending.kind === 'identical'
+      return h(
+        'div',
+        {
+          className: 'hrag-overlay',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) onResolve('cancel')
+          },
+        },
+        h(
+          'div',
+          {
+            className: 'hrag-dialog',
+            role: 'dialog',
+            'aria-modal': 'true',
+            'aria-label': identical ? t('dup.identicalTitle') : t('dup.conflictTitle'),
+          },
+          h('div', { className: 'hrag-dialog-title' }, identical ? t('dup.identicalTitle') : t('dup.conflictTitle')),
+          h(
+            'div',
+            { className: 'hrag-dialog-body' },
+            identical
+              ? t('dup.identicalDescription', { 0: pending.fileName })
+              : t('dup.conflictDescription', { 0: pending.fileName }) +
+                  (pending.copyName ? ' ' + t('dup.copyNamePreview', { 0: pending.copyName }) : ''),
+          ),
+          h(
+            'div',
+            { className: 'hrag-dialog-actions' },
+            identical
+              ? [
+                  h(
+                    'button',
+                    { key: 'copy', type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => onResolve('copy') },
+                    t('dup.keepCopy'),
+                  ),
+                  h(
+                    'button',
+                    { key: 'skip', type: 'button', className: 'hrag-btn hrag-btn-primary', autoFocus: true, onClick: () => onResolve('skip') },
+                    t('dup.skipUpload'),
+                  ),
+                ]
+              : [
+                  h(
+                    'button',
+                    { key: 'cancel', type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => onResolve('cancel') },
+                    t('doc.cancel'),
+                  ),
+                  h(
+                    'button',
+                    { key: 'copy', type: 'button', className: 'hrag-btn hrag-btn-primary', onClick: () => onResolve('copy') },
+                    t('dup.keepBoth'),
+                  ),
+                  h(
+                    'button',
+                    { key: 'replace', type: 'button', className: 'hrag-btn hrag-btn-danger', onClick: () => onResolve('replace') },
+                    t('dup.replaceOld'),
+                  ),
+                ],
+          ),
+        ),
+      )
+    }
+
     function KnowledgePanel({ t }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -10804,6 +10956,7 @@ window.__ModuleLoader__.load({
       const [wikiDrawer, setWikiDrawer] = React.useState(null)
       const [uploading, setUploading] = React.useState(false)
       const [barNotice, setBarNotice] = React.useState(null)
+      const [pendingDuplicate, setPendingDuplicate] = React.useState(null)
       const [acceptedSuffixes, setAcceptedSuffixes] = React.useState(null)
       const [reindexOpen, setReindexOpen] = React.useState(false)
       const [reindexBusy, setReindexBusy] = React.useState(false)
@@ -10935,9 +11088,7 @@ window.__ModuleLoader__.load({
         if (acceptedSuffixes && acceptedSuffixes.length > 0) {
           const allowed = new Set(acceptedSuffixes.map((suffix) => String(suffix).toLowerCase()))
           for (const file of files) {
-            const dot = file.name.lastIndexOf('.')
-            const suffix = dot <= 0 ? '' : file.name.slice(dot).toLowerCase()
-            if (allowed.has(suffix)) accepted.push(file)
+            if (allowed.has(dupSuffix(file.name))) accepted.push(file)
             else rejectedNames.push(file.name)
           }
         } else {
@@ -10951,11 +11102,14 @@ window.__ModuleLoader__.load({
         if (accepted.length === 0) return
         setUploading(true)
         const results = []
-        const runNext = (index) => {
-          if (index >= accepted.length) {
-            const ok = results.filter((entry) => entry.ok).length
-            const failed = results.length - ok
-            setUploading(false)
+        const seenNames = new Set()
+        let knownDocs = null
+
+        const finish = () => {
+          const ok = results.filter((entry) => entry.ok).length
+          const failed = results.length - ok
+          setUploading(false)
+          if (results.length > 0) {
             if (failed === 0) {
               setBarNotice({ text: String(ok) + ' ' + t('upload.submittedUnit') })
             } else {
@@ -10974,20 +11128,98 @@ window.__ModuleLoader__.load({
                 isError: true,
               })
             }
-            setRefreshToken((value) => value + 1)
-            return
           }
-          callUpload(kbId, accepted[index])
+          setRefreshToken((value) => value + 1)
+        }
+
+        // 重复上传拦截（Task 8，照工作台 uploadFilesWithCheck）：逐文件先算哈希、对照
+        // 当前库清单判同；命中则弹层等决定——替换＝先删后传（顺序冻结）、并存＝改名上传。
+        // 清单取数失败或 WebCrypto 不可用（非安全上下文）都降级直传，不拦上传。
+        const doUpload = (file) => {
+          const entry = { ok: false, detail: '' }
+          results.push(entry)
+          return callUpload(kbId, file)
             .then(() => {
-              results.push({ ok: true })
-              runNext(index + 1)
+              entry.ok = true
             })
             .catch((error) => {
-              results.push({ ok: false, detail: errorDetail(error) })
-              runNext(index + 1)
+              entry.detail = errorDetail(error)
             })
         }
-        runNext(0)
+
+        const chooseDuplicateAction = (info) =>
+          new Promise((resolve) => {
+            setPendingDuplicate(
+              Object.assign({}, info, {
+                resolve: (chosen) => {
+                  setPendingDuplicate(null)
+                  resolve(chosen)
+                },
+              }),
+            )
+          })
+
+        const processFile = (file) =>
+          dupComputeSha256(file)
+            .catch(() => null)
+            .then((hash) => {
+              if (hash === null || knownDocs === null) return doUpload(file)
+              const verdict = dupVerdict(dupFindByName(file.name, knownDocs), hash)
+              if (verdict.kind === 'clean') return doUpload(file)
+              const copyName = dupNextCopyName(file.name, seenNames)
+              return chooseDuplicateAction({
+                fileName: file.name,
+                kind: verdict.kind,
+                doc: verdict.doc,
+                copyName: copyName,
+              }).then((action) => {
+                if (action === 'cancel') return undefined
+                if (action === 'skip') {
+                  setBarNotice({ text: t('dup.skipped', { 0: file.name }) })
+                  return undefined
+                }
+                if (action === 'replace') {
+                  return callOp('deleteDocument', { kb_id: kbId, doc_id: verdict.doc.id })
+                    .then(() => {
+                      // 先删后传：删成功才上传（后置级联不许冲掉新上传的派生状态）。
+                      if (knownDocs) {
+                        knownDocs = knownDocs.filter((doc) => doc.id !== verdict.doc.id)
+                        seenNames.delete(String(verdict.doc.name))
+                      }
+                      return doUpload(file).then(() => {
+                        setBarNotice({ text: t('dup.replaced', { 0: file.name }) })
+                      })
+                    })
+                    .catch((error) => {
+                      results.push({ ok: false, detail: errorDetail(error) })
+                    })
+                }
+                const copy = new File([file], copyName, { type: file.type })
+                return doUpload(copy).then(() => {
+                  seenNames.add(copyName)
+                  if (knownDocs) knownDocs.push({ id: '', name: copyName, content_hash: null })
+                  setBarNotice({ text: t('dup.uploadedAsCopy', { 0: copyName }) })
+                })
+              })
+            })
+
+        callOp('listDocuments', { kb_id: kbId })
+          .then((payload) => {
+            if (Array.isArray(payload)) {
+              knownDocs = payload.slice()
+              for (const doc of knownDocs) seenNames.add(String(doc.name))
+            }
+          })
+          .catch(() => {
+            knownDocs = null
+          })
+          .then(() => {
+            const runNext = (index) => {
+              if (index >= accepted.length) return finish()
+              processFile(accepted[index]).then(() => runNext(index + 1))
+            }
+            runNext(0)
+          })
       }
 
       // 面板内拖拽上传（Task 7）：落在面板上的文件归当前知识库。宿主手势是
@@ -11610,6 +11842,13 @@ window.__ModuleLoader__.load({
                 ),
               )
             : null,
+          h(DuplicateUploadDialog, {
+            t: t,
+            pending: pendingDuplicate,
+            onResolve: (action) => {
+              if (pendingDuplicate) pendingDuplicate.resolve(action)
+            },
+          }),
           kbDeleteOpen
             ? h(ConfirmDialog, {
                 t,
