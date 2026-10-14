@@ -56,7 +56,7 @@
 ### M4 —— 设置面范围与批次（**已拍：乙·全量拆批**）
 | 批 | 内容 |
 | --- | --- |
-| 批 1（随 Task 1） | 设置面骨架（面板内 Sheet，宽上限照既有抽屉定式）＋**读取展示**（`GET /api/rag/config` 全景，值直显；模型名解析与选择器归批 2）＋**重建索引入口**（含在飞态/状态行，复用既有 `reindex`/`reindexStatus` op）＋**迁移状态**（`GET …/migration`） |
+| 批 1（随 Task 1） | 设置面骨架（**面板内大弹窗**——宿主设置同款形态收进 RAG 面板空间；10-14 两轮改判：原「面板内 Sheet」作废，设置面＝弹窗、内容面＝抽屉，且遮罩只盖面板〔他定「弹窗只放在 rag 的界面中」〕）＋**读取展示**（`GET /api/rag/config` 全景，值直显；模型名解析与选择器归批 2）＋**重建索引入口**（含在飞态/状态行，复用既有 `reindex`/`reindexStatus` op）＋**迁移状态**（`GET …/migration`） |
 | 批 2 | 默认模型组＋检索组：嵌入四问（env 徽章/覆盖警示/端点占位）＋维度（守卫＋探测点＋档位下拉）＋稀疏（源三选/外置四问/三守卫）＋重排＋高级区六项＋保存（`PUT …/config`）＋探测四枚（embedding/dimensions/connectivity/sparse）＋维度迁移弹层（`dimension-migration-dialog`） |
 | 批 3 | 多模态组：caption（`isCaptionCapable` 口径）＋ASR（provider/本地引擎/模型菜单/探针阻塞保存/`probe-asr`） |
 | 批 4 | 抽取组＋评测组（judge）＋服务组（parse：MinerU provider/tier/version/language/base_url＋`qdrant_url`）＋收口 |

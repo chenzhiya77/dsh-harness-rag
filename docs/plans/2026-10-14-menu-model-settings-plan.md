@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-14-menu-model-settings-spec.md](../specs/2026-10-14-menu-model-settings-spec.md)（M1–M7 决定＋落点＋验收）
-**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；Task 2–4 未开；**Task 6 已立**（收口统换宿主件，10-14 裁）；**Task 8 已立**（重复上传拦截 A②，10-14 裁：Task 2 之后）。
+**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；**Task 2 已收官**（真跑过，10-14）；Task 3–4 未开；**Task 6 已立**（收口统换宿主件，10-14 裁）；**Task 8 已立**（重复上传拦截 A②，10-14 裁：Task 2 之后）。
 **Parent:** T3 plan（[2026-10-12-t3-panel-plan.md](2026-10-12-t3-panel-plan.md)）「RAG 前端全域覆盖审计」A 组裁定行；步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（「模型面归属」条转正）。
 
 **Architecture:** 两件事——**① 顶栏 ⋯ 菜单**（`client.js` 顶栏段：`[裸粗体库名＋chevron 下拉][⋯ 裸钮靠右]`（v2/v3 终态）；菜单件＝`DshMenu`（宿主 `Menu.module.css` 真值），图标宿主原路径（路径级属性：Ellipsis `fill`／Edit `fill`+`stroke`／余 `stroke`）、缺件沿用工作台同款；行内「刷新/上传/重建索引」退役——重建索引落设置面；**六 tab 改对话头设计**）；**② 功能模型设置面**（面板内 Sheet；照工作台 `functional-models-view` 全量、四批落地：读取展示/重建索引入口/迁移状态 → 嵌入段 → 多模态段 → 解析/裁判/抽取段）。**数据缝不变**：host 半 `kb_proxy.ts` 薄代理补 op（createKb/renameKb/deleteKb/ragConfig 读写/migration/五探针/模型目录）；**deer-flow 零改动**。
@@ -72,13 +72,24 @@
 > 动到的文件：`client.js`（设置面嵌入段）＋`src/kb_proxy.ts`（`ragConfigPut`/`probe*`）。
 > **验收对应**：spec §2 M4 批 2。
 
-- [ ] **表单**：provider/稀疏来源/维度（逐字段照工作台 `config-form` 口径——含选项表、禁用档、占位）；保存（`PUT config`）＋脏态/失败呈现；
-- [ ] **守卫**：维度变更提醒（`changesEmbeddingDimension` 语义）；稀疏未配/不支持档的保存阻塞（照工作台 `asrProbeBlocksSave` 同族的稀疏守卫）；
-- [ ] **探测**：`probe-embedding`/`probe-dimensions`/`probe-connectivity`/`probe-sparse` 的触发钮与结果呈现（照工作台）；
-- [ ] **host 半**：`ragConfigPut`＋四探针 op；
-- [ ] **真跑**：同库对照改-存-读闭环；探测各一枚。
+- [x] **表单**：provider/稀疏来源/维度（逐字段照工作台 `config-form` 口径——含选项表、禁用档、占位）；保存（`PUT config`）＋脏态/失败呈现；
+- [x] **守卫**：维度变更提醒（`changesEmbeddingDimension` 语义）；稀疏未配/不支持档的保存阻塞（照工作台 `asrProbeBlocksSave` 同族的稀疏守卫）；
+- [x] **探测**：`probe-embedding`/`probe-dimensions`/`probe-connectivity`/`probe-sparse` 的触发钮与结果呈现（照工作台）；
+- [x] **host 半**：`ragConfigPut`＋四探针 op；
+- [x] **真跑**：同库对照改-存-读闭环；探测各一枚。
 
-**实测**（Task 2，执行后回填）：
+**实测**（Task 2，2026-10-14；**全交付·真跑过**）：
+
+- **落码·host 半**：五 op（`ragConfigPut`＝PUT 全量替换＋`probeEmbedding`/`probeDimensions`/`probeConnectivity`/`probeSparse`＝POST 只读），统一 `bodyOf` 对象守卫（缺 body 400 不触后端）。
+- **落码·client 半**：纯逻辑层照 `config-form.ts` 逐条移植——`ragFormValuesFromConfig`／`ragBuildInput`（全字段携带规则：文件持有原样携带、掩码哨兵往返、清空 owned 选择＝`null`、config_file 字段不被冻结）／`ragHasChanges`／`ragChangesDimension`（按生效宽度，空白＝1024）／`ragIsEmbeddingChange`（整个提供方维度）／稀疏能力三态 `ragResolveSparseCapability`＋`ragSparseProviderOptionDisabled`／`ragShouldProbeSparseService`／各 probe 键族（结论跟取值走）／`ragModelReferenceOptions`（none＋display_name＋孤儿值）／`ragDimensionTiersFor`。表单 UI：默认模型组＝引用选择；检索组＝两腿块（通点标题钮＋四问：提供商／Model／API Key〔env 徽章骑字段内〕／接口地址〔占位＝capability `default_endpoint`〕）＋「高级设置（6 项）」折叠（维度〔框内状态点＋档位下拉；③型自动回填〕＋稀疏来源〔三选；「跟随向量模型」已知不支持时禁用并带因、状态「检测中…／未验证」骑字段〕＋external 四问嵌套〔服务探针状态骑地址字段〕或非 external 四条锁定行）＋两处红警示（换嵌入警示／稀疏阻塞，折叠外可见）＋保存行（脏态禁用：原因随行／保存后 warning 行）＋维改确认弹层（工作台文案逐字）。
+- **新写控件照裁直用宿主件**：`Input`（require 种子表基线包＋缺件回退原生元素；本批采用此一件——宿主无 Select，选择器维持原生样式）。
+- **探测（无手动钮，照工作台）**：稀疏能力／稀疏服务／维度三条自动探测（debounce 400ms、条件齐才发、按候选键只发一次）＋两腿连通点（点标题即发、按腿各一实例）；失败不弹错，就地成为行上状态（未验证／连不上／未探明）。
+- **自检**：`node --check` 过；冒烟**全绿**（面板批 2 渲染断言 12 条＋纯逻辑用例 11 断言）；`probe-menu` 扩至 **7/7**（五 op 逐条 method/path/body 中继＋缺 body 400 不触后端）。
+- **偏差登记**：①窄档腿标题也带连通点（工作台窄档不渲染该控件；插件恒窄档，为保四探测可达保留）；②行提示走 `title`（宿主 `Tooltip` 未引入——与面板现状一致，归收口轮统看）；③档位下拉用 `DshMenu`（工作台 Radix DropdownMenu）；④保存成功走行内文案（工作台 toast——Task 6 换 Toast 后可顺势）。
+- **真跑首轮（10-14）**：点「功能模型设置」→ **整窗白屏**（重启 DSH 方复）。**根因**＝表单三块（默认模型组／高级区／检索组）在渲染前无条件求值，首帧 `values` 为 `null`（播种在 effect）→ `legProps` 读 null 即抛；且设置面此前不在 `HragBoundary` 内，异常逃逸掀整棵树。**修复**＝三块改条件求值（`view && values ? … : null`）；**顺手加固**＝设置面纳入 `HragBoundary`（照三抽屉惯例）；冒烟加「未播种首帧」回归用例（`values=null` 必须只渲染加载行）。复跑全绿。
+- **真跑二轮（10-14）：「重建索引」卡「消失」案破案**——现象：面板顶部看不到该卡（新开/滚顶均无）。DevTools 三连探针：① `document.querySelector('.hrag-set-card')` 在 DOM（正文第一子项、`scrollTop:0`）；② **盒高仅 1px**（`cardBottom−cardTop=1`）；③ 子项完好（`kids:2, heights:[29,42]`，卡头/按钮俱在）＋ `Sources` 全局搜索确认**运行包含完整卡代码**。⇒ 根因＝设置面正文是 **flex 列滚动体**，`.hrag-set-card` 因 `overflow: hidden` 失去 flex 自动最小尺寸保护，内容总高（1092px）超出视口（697px）时被 flex 压到 1px、内容裁掉（批 1 内容未越界故潜伏）。**修＝`.hrag-set-body > * { flex-shrink: 0; }`**（保自然高度、交容器滚动）＋**同类审计**＝`hrag-wk-drawer-body` 同款守卫（其 sect 已有 `flex-shrink:0`，补子项级兜底）。此前「滚动过」「被宿主栏遮挡」两推断均作废，以探针输出为准。附带观察：DevTools 见 `/plugins/events` 持续 `ERR_FAILED`（桌面端页面插件事件流断连，非本插件；留意）。复跑冒烟全绿；真跑复验（重开面板顶部见卡）待他确认。
+- **形态改判（10-14 两轮，随修）**：一轮——他指「DSH 自己的设置就是长的」且形态＝居中大弹窗（截图实证）⇒ 原「面板内 Sheet」系内容面抽屉定式的惯性误用，改为**弹窗**；二轮——他定「**弹窗只放在 rag 的界面中**」⇒ 遮罩与弹窗收进 `absolute` 于面板根。**「只灰不见窗」两轮同一根因（本轮定案）**＝遮罩与面板体自抽屉时代起是 **Fragment 兄弟**（非父子），抽屉靠 `absolute` 自锚所以无恙；弹窗的 flex/居中/百分比高写法**以父容器为前提**，全落空——兄弟弹窗成了 `hrag-root`（relative＋flex 列）流里的普通项，被推到正文列尾滚出可视区。**修＝弹窗自锚**（`absolute; top/right/bottom/left: 16px; margin: 0 auto; width: min(600px, calc(100% - 32px))`——照抽屉配方，不依赖父容器）；本地复现页 `modal-repro.html` 改**真结构（兄弟）**后实测：`modal 589×688 @(17,17)、opacity 1、absolute` ✓（数字为准，截图曾误读）。**内容面**（切片/百科/续读）仍守 10-13「弹层只在所属空间内」裁决；spec M4 批 1 措辞同步改判。冒烟复跑全绿。
+- **真跑（过，10-14 他复「验收过了」）**：**面板内大弹窗形态**／表单可编辑＋保存闭环（同库对照读回）／四探测出结果（连通点／维度档位／稀疏状态／服务状态）／守卫两条（地址必填＋稀疏未配）——全过。三案随本轮真跑揪出并修复（白屏孤立、flex 压扁、弹窗自锚），分别记录于上两条与「形态改判」条。
 
 ---
 
@@ -182,3 +193,4 @@
 - [x] Task 1 三笔（10-14）：`7b5c73c` host 六 op／`884b422` client（顶栏重做＋设置面批 1＋三迭代）／`03da3ee` docs（Task 0/1 实测＋A 组终裁）。**全部未推**（仓暂无 remote）。
 - [x] Task 5 三笔（10-14）：`a72df3c` host（`downloadDocument` raw 中继）／`7652aad` client（建库弹层·下载·白名单前置·上次库记忆＋`upload.rejected` 裸参修复）／`3e95f9a` docs（Task 5 实测收官＋Task 6/7 立项＋§6 三行裁定登记）。**全部未推**（仓暂无 remote）。
 - [x] Task 7 两笔（10-14）：`c86a852` client（面板内拖拽：拦截/吞掉提示/目录拒/遮罩收尾）／`9e8786e` docs（Task 7 实测收官＋Task 8 立项＋§6 A② 改裁）。**全部未推**（仓暂无 remote）。
+- [x] Task 2 三笔（10-14）：`5fb0629` host（`ragConfigPut`＋四探针 op）／`93b9ecc` client（设置面批 2 全量＋形态改判〔面板内大弹窗〕＋三案修复〔白屏护栏/flex 压扁/弹窗自锚〕）／docs 本笔（Task 2 实测收官＋形态两轮改判记录）。**全部未推**（仓暂无 remote）。
