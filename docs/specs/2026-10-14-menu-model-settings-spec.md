@@ -1,6 +1,6 @@
 # 面板 ⋯ 菜单与功能模型设置 —— spec
 
-**Status:** 🟢 已裁（2026-10-14 四拍：①结构照拟稿、「刷新」改「刷新界面」、每项带图标／②皮肤＝DSH 真值 Menu／③设置面＝照工作台全量（拆批）／④立新对）；**执行中**——Task 0–1 已落地（三笔 `7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过，含三轮表现层迭代）；**Task 5／7／2／8 已收官**（真跑过）；**Task 3 已收官**（真跑过，10-14；含表现层六轮＋三续）；**Task 4 已收官**（真跑过，10-15）；Task 6 已立（逐格记录见配套 plan）。
+**Status:** 🟢 已裁（2026-10-14 四拍：①结构照拟稿、「刷新」改「刷新界面」、每项带图标／②皮肤＝DSH 真值 Menu／③设置面＝照工作台全量（拆批）／④立新对）；**执行中**——Task 0–1 已落地（三笔 `7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过，含三轮表现层迭代）；**Task 5／7／2／8 已收官**（真跑过）；**Task 3 已收官**（真跑过，10-14；含表现层六轮＋三续）；**Task 4 已收官**（真跑过，10-15）；**Task 6 落码完毕**（换件＋思考菜单；一轮复验待整重启）。
 **来源:** 10-13 他令——「选择库的右侧加上 deepseekharness 中同款的三点菜单：工作台库级菜单项落脚＋功能模型设置并入；行内『刷新/上传文档/重建索引』移入菜单（重建索引落入功能模型设置界面中）」。承接：T3 plan「RAG 前端全域覆盖审计」A 组裁定行＋步骤记录「模型面归属与分项目治理」条（待排→转正）。
 **配套 plan:** [../plans/2026-10-14-menu-model-settings-plan.md](../plans/2026-10-14-menu-model-settings-plan.md)（同批成对）。
 
@@ -106,9 +106,9 @@
 | 库列表排序拖拽 | 拖拽重排（上次打开记忆已并入 Task 5） | 后调（同上） |
 | 面板拖拽上传（宿主全局手势冲突） | 宿主 `ui-attachment`＝**document 级**监听＋全窗 DropOverlay（`pointer-events:none` 纯装饰层），拖拽入窗＝对话附件为应用级设计；工作台有拖拽上传（`document-panel`）⇒ 一致缺口 | **已裁（10-14）：做面板内拖拽上传（plan Task 7）**——遮罩原样不动、范围仅面板内容区、其余区域维持宿主默认；接不了＝吞掉＋就地提示（**C 口径，不回落会话**）；目录拒 |
 | 行内提示位（顶栏下、占流抖动） | T3 A4「观感差记」的升级诉求；宿主 `Toast` 原件可 require（`primitives` 基线：portal／top 40px 居中／深色面双主题／3s 渐隐／可 `anchor` 锚面板顶栏） | **已裁（10-14）：换宿主 `Toast`，并入 Task 6 统一换件轮**（共享同一次复验） |
-| 宿主原件直用候选（`primitives` 282 导出） | `Menu`／`MenuSurface`／`MenuGroup`／`Tooltip`／`Input`／`Button`＋全图标集均在 `@deepseek-ai/dsh-client-ui-primitives`（`PLATFORM_MODULES` 静态基线 ⇒ 插件可 require；旗舰样板同款 require）；现菜单/图标＝按真值复刻（M2/M3 口径） | **已裁（10-14）：菜单＋图标于本对收口统一换＋一轮复验（plan Task 6）**；批 2–4 新写控件照用宿主件；评测域两枚冻结；宿主无件者维持 M3 三档 |
+| 宿主原件直用候选（`primitives` 282 导出） | `Menu`／`MenuSurface`／`MenuGroup`／`Tooltip`／`Input`／`Button`＋全图标集均在 `@deepseek-ai/dsh-client-ui-primitives`（`PLATFORM_MODULES` 静态基线 ⇒ 插件可 require；旗舰样板同款 require）；现菜单/图标＝按真值复刻（M2/M3 口径） | **已实施（10-15，Task 6 落码）**：`DshMenu`→宿主 `Menu` 适配器（8 调用点迁 items/children）、图标八族直用 `Icon*`、行内提示→`Toast` 总线；评测域两枚冻结；宿主无件者维持 M3；一轮复验待整重启 |
 | 宿主件采纳候选·有用未用（10-14 对账） | **换皮级**：`Button`（≈`.hrag-btn` 136 引用）／`Input`（手写 19 处）／`Checkbox`／`Tag`·`Pill`·`StateDot`（自绘芯片/状态）／`DisclosureRow`；**行为级**：`Tooltip`（≈80 处原生 `title=`）／`Modal`·`RiskConfirmation`（自绘对话框与确认闸）／`MarkdownText`（切片正文现纯文本 pre-wrap——T3 观感缺口）／`FileTypeIcon`＋`classifyFileType`（＝A⑪ 另案本体）／`ImageLightbox`·`CodeBlock`·`JsonTree`（无渲染）；**小件**：`relativeTime`·`fileSizeText`·`writeClipboard`·`HoverCard`·`SegmentedControl`·`Switch` | 待裁：换皮级可并入收口轮；行为级单项裁；设置面控件批 2–4 自然直用 |
-| 思考跟随菜单（工作台 default 组） | 五槽位（extract/wiki/judge/synthesis/vlm）勾「跟随对话思考」的下拉菜单；我方表单值已全程携带（`RAG_THINKING_FIELDS`＝播种/保存/变更检测全通），**仅缺 UI** | **登记待裁（10-15 Task 4 收口发现）**：可并入 Task 6 同轮或单立；不做＝保存原值透传，不受影响 |
+| 思考跟随菜单（工作台 default 组） | 五槽位（extract/wiki/judge/synthesis/vlm）勾「跟随对话思考」的下拉菜单；我方表单值已全程携带（`RAG_THINKING_FIELDS`＝播种/保存/变更检测全通） | **已裁（10-15）：做——并入 Task 6 同轮**；**已落码并随换件重对**（宿主 Menu 承载；常开不关、subgrid 两列对齐、勾选即写） |
 | 重建索引组形态 | 工作台设置页＝选库＋重建（全局页需要选库）；我方＝面板内直接重建当前库（无选库行） | **有意差异（面板上下文）**——随 Task 1 定稿，收口复核维持 |
 
 ## 7. 非目标

@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-14-menu-model-settings-spec.md](../specs/2026-10-14-menu-model-settings-spec.md)（M1–M7 决定＋落点＋验收）
-**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；**Task 2 已收官**（真跑过，10-14）；**Task 8 已收官**（真跑过，10-14）；**Task 3 已收官**（真跑过，10-14；含表现层六轮＋三续）；**Task 4 已收官**（真跑过，10-15）；**Task 6 已立**（收口统换宿主件，10-14 裁）。
+**Status:** 执行中——Task 0–1 已落地（`7b5c73c`／`884b422`／`03da3ee`；Task 1 真跑已过）；**Task 5 已收官**（真跑过，10-14）；**Task 7 已收官**（真跑过；④未实操记录）；**Task 2 已收官**（真跑过，10-14）；**Task 8 已收官**（真跑过，10-14）；**Task 3 已收官**（真跑过，10-14；含表现层六轮＋三续）；**Task 4 已收官**（真跑过，10-15）；**Task 6 落码完毕**（菜单/图标/Toast 换宿主件＋思考菜单；一轮复验待整重启）。
 **Parent:** T3 plan（[2026-10-12-t3-panel-plan.md](2026-10-12-t3-panel-plan.md)）「RAG 前端全域覆盖审计」A 组裁定行；步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（「模型面归属」条转正）。
 
 **Architecture:** 两件事——**① 顶栏 ⋯ 菜单**（`client.js` 顶栏段：`[裸粗体库名＋chevron 下拉][⋯ 裸钮靠右]`（v2/v3 终态）；菜单件＝`DshMenu`（宿主 `Menu.module.css` 真值），图标宿主原路径（路径级属性：Ellipsis `fill`／Edit `fill`+`stroke`／余 `stroke`）、缺件沿用工作台同款；行内「刷新/上传/重建索引」退役——重建索引落设置面；**六 tab 改对话头设计**）；**② 功能模型设置面**（面板内 Sheet；照工作台 `functional-models-view` 全量、四批落地：读取展示/重建索引入口/迁移状态 → 嵌入段 → 多模态段 → 解析/裁判/抽取段）。**数据缝不变**：host 半 `kb_proxy.ts` 薄代理补 op（createKb/renameKb/deleteKb/ragConfig 读写/migration/五探针/模型目录）；**deer-flow 零改动**。
@@ -166,14 +166,25 @@
 > 动到的文件：`client.js`（`DshMenu`/`DshMenuItem` 族与手刻图标全量替换）＋冒烟脚本（仓外，补 primitives 供给）。
 > **验收对应**：spec §6「宿主原件直用」裁定行；换件后菜单/图标逐条重对（§4.1 口径）。
 
-- [ ] **菜单换件**：`DshMenu`/`DshMenuItem` → 宿主 `Menu`（items API：`selectedId` 勾选/`align`/键盘导航）＋`MenuItemButton`（`icon`/`danger`/`disabled`/`separatorBefore`）＋`MenuSurface`/`MenuGroup`（按需）；覆盖 `DshMenu` 现全部调用点（顶栏 ⋯、库下拉等）；定位/外点关闭/键盘导航交宿主件（`anchor`/`getAnchorRect`/`useDismissOnOutsidePointer`）；**评测域两枚 `EvalMenu` 不动**（M2 冻结）。
-- [ ] **图标换件**：盘点 `client.js` 手刻 SVG → 凡 `primitives` 有件者换宿主 `Icon*`（Ellipsis/Refresh/Edit/Trash/Settings/Plus/ChevronDown/Check 等）；宿主无件者（Upload/BookOpen/RefreshCw 等）维持 M3 三档（lucide 同款）。
-- [ ] **提示位换 Toast（10-14 裁：并入本轮）**：行内提示（`barNotice` 族：撤占流提示行渲染＋ `.hrag-notice` 相关 CSS）→ 宿主 `Toast` 原件——语义映射（成功/失败 → `tone`/警示图标）、自动消退交宿主（`holdMs` 缺省；旧 4s/8s 口径对照核一遍）、可选 `anchor` 锚面板顶栏（执行时定夺）；盘点其余自绘瞬时提示一并收口。
-- [ ] **require 接线**：`require('@deepseek-ai/dsh-client-ui-primitives')`（基线种子表；`dsh.client.external` 无需改）；冒烟桩补 primitives 供给（宿主提取件或手桩）。
-- [ ] **门禁**：`node --check`＋冒烟回归（含 t 裸参静检）＋探针回归。
-- [ ] **一轮复验**：整重启桌面端——菜单逐项（顶栏 ⋯ 八项＋库下拉＋勾选态）＋图标逐枚对照＋提示位（建库/重命名/上传拒项的 Toast 出位与消退）；**一轮即可**（不复跑各批）。
+- [x] **菜单换件**：`DshMenu`/`DshMenuItem` → 宿主 `Menu`（items API：`selectedId` 勾选/`align`/键盘导航）＋`MenuItemButton`（`icon`/`danger`/`disabled`/`separatorBefore`）＋`MenuSurface`/`MenuGroup`（按需）；覆盖 `DshMenu` 现全部调用点（顶栏 ⋯、库下拉等）；定位/外点关闭/键盘导航交宿主件（`anchor`/`getAnchorRect`/`useDismissOnOutsidePointer`）；**评测域两枚 `EvalMenu` 不动**（M2 冻结）。
+- [x] **图标换件**：盘点 `client.js` 手刻 SVG → 凡 `primitives` 有件者换宿主 `Icon*`（Ellipsis/Refresh/Edit/Trash/Settings/Plus/ChevronDown/Check 等）；宿主无件者（Upload/BookOpen/RefreshCw 等）维持 M3 三档（lucide 同款）。
+- [x] **提示位换 Toast（10-14 裁：并入本轮）**：行内提示（`barNotice` 族：撤占流提示行渲染＋ `.hrag-notice` 相关 CSS）→ 宿主 `Toast` 原件——语义映射（成功/失败 → `tone`/警示图标）、自动消退交宿主（`holdMs` 缺省；旧 4s/8s 口径对照核一遍）、可选 `anchor` 锚面板顶栏（执行时定夺）；盘点其余自绘瞬时提示一并收口。
+- [x] **思考跟随菜单（10-15 他裁「做」：随本轮）**：default 组五槽位菜单（extract/wiki/judge/synthesis/vlm；常开不关＝连点五项一个决定；两列 subgrid 对齐＝角色｜该槽当前模型；勾选即写 `*_thinking`，保存链本就全程携带）——**实现已落码**（位于 Task 4 后、本轮前）；本项＝换件后随一轮复验重对（菜单长相/开合/勾选态）。
+- [x] **require 接线**：`require('@deepseek-ai/dsh-client-ui-primitives')`（基线种子表；`dsh.client.external` 无需改）；冒烟桩补 primitives 供给（宿主提取件或手桩）。
+- [x] **门禁**：`node --check`＋冒烟回归（含 t 裸参静检）＋探针回归。
+- [x] **一轮复验**：整重启桌面端——菜单逐项（顶栏 ⋯ 八项＋库下拉＋勾选态）＋图标逐枚对照＋提示位（建库/重命名/上传拒项的 Toast 出位与消退）；**一轮即可**（不复跑各批）——**10-15 他复「过了」**（含复验中途三轮修补：⋯ 靠右／思考菜单调参／重建卡选择框）。
 
-**实测**（Task 6，执行后回填）：
+**实测**（Task 6，10-15；编码＋自检就绪，**一轮复验待整重启**）：
+
+- **取证**：asar 读宿主 `primitives`（282 导出）——`Menu` 受控件（open／anchor 节点／items／children／selectedId／onSelect／onClose／align／portal，内置视口钳制 12px、外点关、Esc、键盘游走、焦点归还）、`MenuSurface`、`MenuItemButton`、`Toast`（text／tone／anchor／holdMs=3s＋fade 1s／onDone 呼叫方管理）、图标族 `Icon*Outline{Regular,Medium}({size=14,className})`。
+- **菜单换件**：`DshMenu` 重写为宿主 `Menu` 适配器（触发器按钮＋受控 open；8 个调用点全迁 items/children：⋯ 八项、库下拉、设置面五处 picker、维度档位、ASR 候选、思考菜单）＋`DshMenuItem` 退役；`anchor:'field'` 整框等宽经 `--hrag-menu-eq-w`＋`listClassName`（宿主 list 在 body portal 下）；缺件回退＝极简 fixed 列表；**EvalMenu 两枚冻结未动**。
+- **图标换件**：Ellipsis／Refresh／Edit／Trash／Settings／Plus／ChevronDown／Check 八族直用宿主 `Icon*`（旧手刻原路径留作回退）；Upload／BookOpen／RefreshCw 宿主无件、picker chevron＝图2 口径，均维持 M3。
+- **Toast 换件**：新增面板级 `toastBus`＋`ToasterHost`（anchor 顶栏、错误 8s／常规 4s＝旧口径、逐发 seq 重启周期；缺件回退旧行内行）；shell `barNotice` 族（15 处）＋六个视图瞬时 notice（chunk／recall-saved／vector／graph／doc／eval／wiki）全改挂总线；持久错误行（召回 mismatch/failed）与设置面保存行内状态不动；**顺带修**：图视图 notice 原为裸字符串（`notice.text` 恒空）——换总线后修复。
+- **自检**：`node --check`；冒烟桩升契约级（Menu 受控桩＋Icon* 代理＋Toast）全绿（DshMenu 用例改 items 断言）；`probe-menu` 8/8；**真宿主件本地集成实测**（asar 提取整包 primitives＋依赖桩、esbuild 打包浏览器跑）：菜单开→四行（图标/危险/禁用）→选中勾→点选关菜单→Toast「已选 b」现身，全程零错；全真渲染 13 行 over 全 0。
+- **复验首轮追加（10-15 他问「新建库时也没有提示」）**：核实＝**建库从来无成功提示**（旧代码与工作台同款：成功＝自动切库；只有失败有提示）——非本轮回归；按他点名**加「知识库已创建」成功 toast**（有意加成，登记）。顺带加固：`ToasterHost` 锚点改传 ref（渲染时取当前值，免首帧 null 致窗口居中）；冒烟补「总线→宿主 Toast」用例（`showToast`＋`ToasterHost` 暴露）。
+- **复验首轮抓「⋯ 未靠右」**：宿主路径包裹层类名更替（`hrag-mm-wrap`→`span.hrag-mmhost`），旧对齐选择器失配——修＝补 `.hrag-bar > .hrag-mmhost + .hrag-mmhost { margin-left: auto; }`（回退选择器一并保留）。
+- **复验二轮修（10-15 他贴图两处）**：①**思考跟随菜单**——勾选盒移进角色格内（`position:absolute`＋角色格 `padding-left:28px`＝勾文距恒 12px；独立勾选列在 subgrid 下首轨间距不可控，浏览器实测钉死）；网格只留两列（角色｜该槽当前模型、subgrid 共享列对齐）、列距 12、行高＝宿主 item 34。②**重建索引卡补「目标知识库」选择框逻辑**（照工作台 `ReindexDialog` 实读）：选库（占位「选择知识库」）→ 确认弹窗 → 重建**所选库**；状态行跟随所选库（3s 轮询/202 后立即＋1s 双补拍）；未选库按钮禁用；host 半零改动，**壳半重建机制退役**（状态/轮询/确认/弹窗全收进设置面；shell 只传 `kbs`）。与图2 逐项对位：卡头/目标知识库行/右下按钮。
+- **一轮复验（过，10-15 他复「过了」）**：菜单逐项（顶栏 ⋯ 八项＋库下拉勾选态＋设置面五处 picker 开合与等宽＋维度/ASR 候选＋思考菜单开合勾选）＋图标逐枚对照＋提示位（建库/重命名/上传拒项 Toast 出位与消退；错误 8s）——全过；复验中途三轮修补（⋯ 靠右回归／思考菜单间距调参／重建卡选择框逻辑＋头部保存按钮＋重建卡置底）一并收官。
 
 ---
 
