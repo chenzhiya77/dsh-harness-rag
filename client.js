@@ -9,6 +9,16 @@ window.__ModuleLoader__.load({
     const React = require('react')
     const h = React.createElement
 
+    // 宿主设计系统（批 2 起新写控件直用宿主件）：种子表基线包，旗舰样板同款。
+    // require 失败回退原生元素——插件不该因宿主换一个名字就整个客户端半失效。
+    let hostPrimitives = null
+    try {
+      hostPrimitives = require('@deepseek-ai/dsh-client-ui-primitives')
+    } catch (cause) {
+      hostPrimitives = null
+    }
+    const HostInput = hostPrimitives && hostPrimitives.Input ? hostPrimitives.Input : 'input'
+
     const NS = 'harnessRag'
     // The host half's named route (src/kb_proxy.ts owns the other end).
     const PROXY_ROUTE = '/dsh-harness-rag/api'
@@ -438,7 +448,60 @@ window.__ModuleLoader__.load({
       'upload.needKb': '知识库暂不可接收：请先创建知识库',
       'upload.busy': '知识库暂不可接收：上传中，请稍候',
       'upload.dirSkipped': '已跳过文件夹（仅支持文件上传）',
-      'set.readonlyHint': '当前为只读展示；编辑与探测将在后续批次开放。',
+      'set.form.save': '保存',
+      'set.form.saved': '功能模型配置已保存',
+      'set.form.noChanges': '没有需要保存的改动',
+      'set.form.defaultHint': '用于图谱抽取、评测裁判、图片与视频配文未单独指定模型时的选择，不影响聊天主模型及其他功能；此项留空时使用配置中的 RAG 默认，配置也未指定则使用模型列表第一项。',
+      'set.form.defaultNone': '（使用配置默认）',
+      'set.form.retrievalHint': '检索时使用：向量模型与重排模型。',
+      'set.form.provider': '提供商',
+      'set.form.model': 'Model ID',
+      'set.form.apiKey': 'API Key',
+      'set.form.endpoint': '接口地址',
+      'set.form.embeddingApiKey': 'API Key（向量）',
+      'set.form.rerankApiKey': 'API Key（重排）',
+      'set.form.endpointHint': '必填。以下三种写法均可：主机名（https://host）、带 /v1 的 base（https://host/v1）或整段端点（https://host/v1/embeddings）；与固定段重复的一节不会重复拼接。',
+      'set.form.secretHint': '留空表示不再覆盖，改用环境变量。',
+      'set.form.secretFromEnvBadge': '环境变量已提供',
+      'set.form.embeddingChangeWarning': '更换向量模型、提供方、接口地址或稀疏来源后，已用旧配置入库的知识库需要重建索引，否则检索质量会下降。',
+      'set.form.endpointRequired': '请填写接口地址',
+      'set.form.advanced': '高级设置（6 项）',
+      'set.form.dimensionHint': '该项决定向量库的宽度（留空为 1024）。修改后将触发全库重建，且修改前后需使用同一模型。',
+      'set.form.dimensionProbeHint': '更改提供商 / Model / 地址后，会自动检测该模型支持的维度，无需手动发起。',
+      'set.form.dimensionProbing': '探测中…',
+      'set.form.dimensionUnprobed': '未探明',
+      'set.form.dimensionNoTiers': '未检测到常用档位，可手动填写；保存时将实发验证。',
+      'set.form.dimensionNativeHint': '该模型原生宽度为 {0} 维，可填写不大于它的任意值。',
+      'set.form.dimensionFixedHint': '该模型不接受维度参数，固定为 {0} 维。',
+      'set.form.dimensionTierHint': '已检测到的档位：',
+      'set.form.sparseSourceProvider': '跟随向量模型',
+      'set.form.sparseSourceExternal': '独立稀疏服务',
+      'set.form.sparseSourceBm25': '本地 BM25',
+      'set.form.sparseSourceHint': '百炼的向量模型单次调用同时返回稠密与稀疏向量；换成仅输出稠密向量的提供方后，这里必须改为「独立稀疏服务」或「本地 BM25」，否则该配置无法启用。',
+      'set.form.sparseProbeHint': '选中「跟随向量模型」将发起一次真实嵌入调用（只读、不保存），用于确认所选模型确能返回稀疏向量。',
+      'set.form.sparseProbing': '检测中…',
+      'set.form.sparseUnverified': '未验证',
+      'set.form.sparseProviderDenseOnly': '该向量模型只输出稠密向量',
+      'set.form.sparseProviderUnsupported': '当前选择的向量模型无法提供稀疏向量；请把「稀疏向量来源」改为「独立稀疏服务」或「本地 BM25」。',
+      'set.form.sparseServiceUnconfigured': '「独立稀疏服务」需要一个提供商（TEI 稀疏服务）——未选择时这份配置无法启用。',
+      'set.form.sparseProviderNone': '（未选择）',
+      'set.form.sparseModelHint': '该项会写入配置，但不会随请求发送：TEI 一个实例只服务一个模型，故请求中不带 model 字段。',
+      'set.form.sparseApiKeyLabel': '稀疏 API Key',
+      'set.form.sparseServiceUnreachable': '连不上',
+      'set.form.sparseServiceEmpty': '没返回词项',
+      'set.form.lockedExternalOnly': '仅「独立稀疏服务」时可用',
+      'set.form.legUntested': '尚未检测。点击标题可发起一次连通检测。',
+      'set.form.legProbing': '检测中…',
+      'set.form.legNeedsConfig': '请先填写提供商 / Model / 地址 / 钥匙',
+      'set.form.providerDashscope': '阿里百炼 (DashScope)',
+      'set.form.providerVolcengineArk': '火山方舟 (Ark)',
+      'set.form.providerOpenAIChat': 'OpenAI-compatible',
+      'set.form.providerGenericRerank': '通用重排 (Cohere / Jina 形状)',
+      'set.form.providerTeiRerank': 'TEI 重排',
+      'set.form.providerTeiSparse': 'TEI 稀疏服务',
+      'set.form.dimensionConfirmTitle': '修改维度将触发全库重建？',
+      'set.form.dimensionConfirmDescription': '新宽度通过重建生效：每个知识库的向量都会重新生成，期间检索仍使用旧向量。全部完成后才切换；中途失败则保持不变。',
+      'set.form.dimensionConfirmAction': '开始迁移',
       'set.loadFailed': '设置加载失败',
       'set.migrationRunning': '维度迁移中',
       'set.migrationSucceeded': '维度迁移已完成，新宽度已生效。',
@@ -917,7 +980,71 @@ window.__ModuleLoader__.load({
       'upload.needKb': 'The knowledge base cannot take files yet: create one first',
       'upload.busy': 'The knowledge base cannot take files yet: an upload is in progress',
       'upload.dirSkipped': 'Skipped folders (only files can be uploaded)',
-      'set.readonlyHint': 'Read-only view; editing and probes arrive in later batches.',
+      'set.form.save': 'Save',
+      'set.form.saved': 'Functional model configuration saved',
+      'set.form.noChanges': 'No changes to save',
+      'set.form.defaultHint':
+        'Used when graph extraction, evaluation judging, image captioning or video captioning has no separate model selection. It does not affect chat models or other features. Leave this unset to inherit the configured RAG default, or the first model in the list if none is configured.',
+      'set.form.defaultNone': '(config default)',
+      'set.form.retrievalHint': 'Used at retrieval time: the embedding model and the rerank model.',
+      'set.form.provider': 'Provider',
+      'set.form.model': 'Model ID',
+      'set.form.apiKey': 'API key',
+      'set.form.endpoint': 'Endpoint',
+      'set.form.embeddingApiKey': 'API key (embedding)',
+      'set.form.rerankApiKey': 'API key (rerank)',
+      'set.form.endpointHint':
+        'Required. Any of the three forms is accepted: the host (https://host), a base ending in /v1 (https://host/v1), or the full endpoint (https://host/v1/embeddings); a segment already covered by the leg\u2019s fixed path is never joined twice.',
+      'set.form.secretHint': 'Leaving it blank stops the override and falls back to the environment variable.',
+      'set.form.secretFromEnvBadge': 'From env',
+      'set.form.embeddingChangeWarning':
+        'Changing the embedding model, provider, endpoint or sparse source requires re-indexing the knowledge bases already ingested with the previous one, or their retrieval quality will degrade.',
+      'set.form.endpointRequired': 'Enter the endpoint address',
+      'set.form.advanced': 'Advanced settings (6)',
+      'set.form.dimensionHint':
+        'This field sets the vector library\u2019s width (blank means 1024). Changing it triggers a full rebuild, and both sides of the change must use the same model.',
+      'set.form.dimensionProbeHint':
+        'Editing the provider / model / endpoint probes the widths the model supports; no manual step is needed.',
+      'set.form.dimensionProbing': 'Probing\u2026',
+      'set.form.dimensionUnprobed': 'Unknown',
+      'set.form.dimensionNoTiers': 'No common tier was detected. Enter a value manually; saving verifies it for real.',
+      'set.form.dimensionNativeHint': 'This model is natively {0} wide; any value up to it is accepted.',
+      'set.form.dimensionFixedHint': 'This model ignores the dimension parameter; it is fixed at {0} wide.',
+      'set.form.dimensionTierHint': 'Detected tiers:',
+      'set.form.sparseSourceProvider': 'Follow the embedding model',
+      'set.form.sparseSourceExternal': 'A separate sparse service',
+      'set.form.sparseSourceBm25': 'Local BM25',
+      'set.form.sparseSourceHint':
+        'A Bailian embedding model returns both the dense and the sparse half in one call. After switching to a dense-only provider, set this to the separate sparse service or local BM25, or the configuration cannot be enabled.',
+      'set.form.sparseProbeHint':
+        'Selecting \u201cFollow the embedding model\u201d makes one real embedding call (read-only, nothing is saved) to confirm the model actually returns the sparse half.',
+      'set.form.sparseProbing': 'Checking\u2026',
+      'set.form.sparseUnverified': 'Unverified',
+      'set.form.sparseProviderDenseOnly': 'this embedding model emits dense vectors only',
+      'set.form.sparseProviderUnsupported':
+        'The selected embedding model cannot supply the sparse half. Set the sparse source to a separate sparse service or local BM25.',
+      'set.form.sparseServiceUnconfigured':
+        'A separate sparse service needs its provider chosen (TEI sparse service) \u2014 without one this configuration cannot be enabled.',
+      'set.form.sparseProviderNone': '(not chosen)',
+      'set.form.sparseModelHint':
+        'The value is stored in the configuration but is never sent with a request: a TEI instance serves one model, so the request carries no model field.',
+      'set.form.sparseApiKeyLabel': 'Sparse API key',
+      'set.form.sparseServiceUnreachable': 'unreachable',
+      'set.form.sparseServiceEmpty': 'no terms returned',
+      'set.form.lockedExternalOnly': 'Only when using a separate sparse service',
+      'set.form.legUntested': 'Not tested yet. Click the heading to run a connectivity check.',
+      'set.form.legProbing': 'Testing\u2026',
+      'set.form.legNeedsConfig': 'Fill in provider / model / endpoint / key first',
+      'set.form.providerDashscope': 'Aliyun Bailian (DashScope)',
+      'set.form.providerVolcengineArk': 'Volcengine Ark',
+      'set.form.providerOpenAIChat': 'OpenAI-compatible',
+      'set.form.providerGenericRerank': 'Generic rerank (Cohere / Jina shape)',
+      'set.form.providerTeiRerank': 'TEI rerank',
+      'set.form.providerTeiSparse': 'TEI sparse service',
+      'set.form.dimensionConfirmTitle': 'Changing the width rebuilds every library?',
+      'set.form.dimensionConfirmDescription':
+        'The new width takes effect through a rebuild: every library\u2019s vectors are regenerated while search keeps using the old ones. The switch happens only after all of it is complete; a failure leaves everything unchanged.',
+      'set.form.dimensionConfirmAction': 'Start migration',
       'set.loadFailed': 'Failed to load the settings',
       'set.migrationRunning': 'Dimension migration in progress',
       'set.migrationSucceeded': 'Dimension migration finished; the new width is in effect.',
@@ -1173,6 +1300,7 @@ window.__ModuleLoader__.load({
           '.hrag-wk-drawer .hrag-drawer-overlay { z-index: 56; }',
           '.hrag-wk-drawer .hrag-drawer { z-index: 57; }',
           '.hrag-wk-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
+          '.hrag-wk-drawer-body > * { flex-shrink: 0; }',
           '.hrag-wk-slot { flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-wk-canvas { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
           '.hrag-wk-sect { display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); }',
@@ -1230,8 +1358,12 @@ window.__ModuleLoader__.load({
           '.hrag-mm-item-danger { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-mm-item-danger:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-danger); }',
           '.hrag-mm-sep { height: 0.5px; background: var(--dsw-alias-border-l2); margin: 3px 2px; }',
+          '.hrag-mm-label { padding: 4px 8px 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
           '.hrag-mm-icon { display: inline-flex; flex-shrink: 0; color: inherit; }',
           '.hrag-set-body { display: flex; flex-direction: column; gap: 10px; }',
+          // 滚动体是 flex 列时，子项必须禁缩——否则带 overflow:hidden 的卡（自动最小
+          // 尺寸保护被摘）会在内容超出视口时被压成 1px（10-14 重建索引卡"消失"案）。
+          '.hrag-set-body > * { flex-shrink: 0; }',
           '.hrag-set-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-set-migration { padding: 6px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
           '.hrag-set-migration-failed { color: var(--dsw-alias-label-error); border-color: color-mix(in srgb, var(--dsw-alias-label-error) 40%, transparent); }',
@@ -1243,6 +1375,31 @@ window.__ModuleLoader__.load({
           '.hrag-set-row { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 8px; font-size: 12px; line-height: 20px; }',
           '.hrag-set-label { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-set-value { color: var(--dsw-alias-label-primary); word-break: break-word; }',
+          '.hrag-set-select { width: 100%; min-width: 0; height: 32px; padding: 0 26px 0 8px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; }',
+          '.hrag-set-select:focus { outline: none; border-color: var(--dsw-alias-state-business-primary); }',
+          '.hrag-set-control { width: 100%; min-width: 0; }',
+          '.hrag-set-field { position: relative; width: 100%; min-width: 0; }',
+          '.hrag-set-trail { position: absolute; top: 50%; right: 28px; transform: translateY(-50%); pointer-events: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-set-role { display: flex; align-items: center; margin: 6px 0 2px; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; cursor: pointer; }',
+          '.hrag-set-role:disabled { color: var(--dsw-alias-label-secondary); cursor: default; }',
+          '.hrag-set-dot { display: inline-block; width: 8px; height: 8px; margin-left: 7px; border-radius: 999px; background: rgba(128, 128, 128, 0.45); }',
+          '.hrag-set-dot-probing { animation: hrag-dot-pulse 1.2s ease-in-out infinite; }',
+          '.hrag-set-dot-ok { background: #10b981; }',
+          '.hrag-set-dot-bad, .hrag-set-dot-bad-dimension, .hrag-set-dot-bad-half { background: #f59e0b; }',
+          '@keyframes hrag-dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }',
+          '.hrag-set-row-nested { padding-left: 10px; border-left: 1px solid var(--dsw-alias-border-l2); }',
+          '.hrag-set-locked { display: flex; align-items: center; min-height: 32px; padding: 0 10px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); background: rgba(128, 128, 128, 0.08); color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-set-adv { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; cursor: pointer; }',
+          '.hrag-set-adv:hover { color: var(--dsw-alias-label-secondary); }',
+          '.hrag-set-adv-chev { display: inline-flex; transform: rotate(-90deg); transition: transform 0.15s ease; }',
+          '.hrag-set-adv-chev-open { transform: rotate(0deg); }',
+          '.hrag-set-warn { margin: 6px 0 0; color: var(--dsw-alias-label-error); font-size: 12px; line-height: 18px; }',
+          '.hrag-set-saverow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }',
+          '.hrag-set-savehint { color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-set-saveerr { color: var(--dsw-alias-label-error); font-size: 12px; }',
+          '.hrag-set-savewarn { color: var(--dsw-alias-label-secondary); font-size: 12px; }',
+          '.hrag-secret-wrap { position: relative; width: 100%; min-width: 0; }',
+          '.hrag-secret-badge { position: absolute; top: 50%; left: 10px; transform: translateY(-50%); pointer-events: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-graph-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
           '.hrag-gchips { display: flex; flex-wrap: wrap; gap: 6px; }',
           '.hrag-gchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 11px; }',
@@ -1316,6 +1473,11 @@ window.__ModuleLoader__.load({
           '@keyframes hrag-slide-in { from { transform: translateX(24px); opacity: 0.6; } to { transform: translateX(0); opacity: 1; } }',
           '.hrag-drawer-overlay { position: absolute; inset: 0; z-index: 70; background: var(--dsw-alias-bg-mask-1); animation: hrag-fade-in 160ms ease; }',
           '.hrag-drawer { position: absolute; top: 0; right: 0; bottom: 0; z-index: 71; width: min(576px, calc(100% - 48px)); display: flex; flex-direction: column; background: var(--dsw-alias-bg-base); border-left: 0.5px solid var(--dsw-alias-border-l3); box-shadow: var(--dsw-elevation-panel); animation: hrag-slide-in 160ms ease; }',
+          // 设置面＝弹窗（宿主设置同款形态，限在 RAG 面板空间内）。遮罩与面板体是
+          // **兄弟**（Fragment 相邻），故弹窗必须自锚——flex/居中类写法只有父子结构
+          // 才生效（10-14「只灰不见窗」两轮根因：兄弟弹窗落进正文列尾滚出可视区）。
+          '.hrag-modal-overlay { position: absolute; inset: 0; z-index: 70; padding: 16px; background: var(--dsw-alias-bg-mask-1); animation: hrag-fade-in 160ms ease; }',
+          '.hrag-modal { position: absolute; top: 16px; bottom: 16px; left: 16px; right: 16px; margin: 0 auto; width: min(600px, calc(100% - 32px)); max-width: 100%; z-index: 71; display: flex; flex-direction: column; overflow: hidden; background: var(--dsw-alias-bg-base); border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-panel); box-shadow: var(--dsw-elevation-panel); animation: hrag-fade-in 160ms ease; }',
           '@media (prefers-reduced-motion: reduce) { .hrag-drawer, .hrag-drawer-overlay { animation: none; } }',
           '.hrag-drawer-close { flex-shrink: 0; width: 26px; height: 26px; padding: 0; font-size: 13px; line-height: 1; }',
           '.hrag-drawer-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; }',
@@ -9486,24 +9648,8 @@ window.__ModuleLoader__.load({
     /** 功能模型设置面·批 1（菜单批 Task 1，spec M4）：Sheet 骨架＋只读七组
         主行＋重建索引入口（自顶栏移入，行为逐项一致）＋迁移状态行。批 2+ 逐组
         换完整表单（工作台 functional-models-view 对照）。 */
+    /** 尚为只读的组（批 3/4 逐组转可编辑）；默认模型与检索组已由批 2 表单接管。 */
     const SET_GROUPS = [
-      { title: 'set.group.default', rows: [['default_model', 'set.field.defaultModel']] },
-      {
-        title: 'set.group.retrieval',
-        rows: [
-          ['embedding_provider', 'set.field.embeddingProvider'],
-          ['embedding_model', 'set.field.embeddingModel'],
-          ['embedding_dimension', 'set.field.dimension'],
-          ['embedding_base_url', 'set.field.embeddingBaseUrl'],
-          ['embedding_sparse_source', 'set.field.sparseSource'],
-          ['sparse_provider', 'set.field.sparseProvider'],
-          ['sparse_model', 'set.field.sparseModel'],
-          ['sparse_base_url', 'set.field.sparseBaseUrl'],
-          ['rerank_provider', 'set.field.rerankProvider'],
-          ['rerank_model', 'set.field.rerankModel'],
-          ['rerank_base_url', 'set.field.rerankBaseUrl'],
-        ],
-      },
       {
         title: 'set.group.extraction',
         rows: [
@@ -9551,10 +9697,310 @@ window.__ModuleLoader__.load({
       const migrationQ = useEvalCall(kbId, true, 'ragMigration', null, (payload) =>
         Boolean(payload && payload.state === 'running'),
       )
-      const config = configQ.data && configQ.data.config ? configQ.data.config : {}
+      const modelsQ = useEvalCall(kbId, true, 'listModels', null)
+      const view = configQ.data && typeof configQ.data === 'object' ? configQ.data : null
+      const models = modelsQ.data && Array.isArray(modelsQ.data.models) ? modelsQ.data.models : []
+      const config = view && view.config ? view.config : {}
       const migration =
         (migrationQ.data && typeof migrationQ.data === 'object' ? migrationQ.data : null) ||
-        (configQ.data && configQ.data.migration ? configQ.data.migration : null)
+        (view && view.migration ? view.migration : null)
+
+      const [values, setValues] = React.useState(null)
+      const [saveBusy, setSaveBusy] = React.useState(false)
+      const [saveError, setSaveError] = React.useState(null)
+      const [saveWarning, setSaveWarning] = React.useState(null)
+      const [savedNotice, setSavedNotice] = React.useState(false)
+      const [dimensionConfirmOpen, setDimensionConfirmOpen] = React.useState(false)
+      const [advancedOpen, setAdvancedOpen] = React.useState(false)
+      // 探针结论各自跟着取值键走（Task 2）：编辑后旧结论即失效，绝不张冠李戴。
+      const [capabilityProbe, setCapabilityProbe] = React.useState(null)
+      const [serviceProbe, setServiceProbe] = React.useState(null)
+      const [dimensionProbe, setDimensionProbe] = React.useState(null)
+      const [embeddingProbe, setEmbeddingProbe] = React.useState(null)
+      const [rerankProbe, setRerankProbe] = React.useState(null)
+      const [probeBusy, setProbeBusy] = React.useState({})
+      const requestedRef = React.useRef({ capability: null, service: null, dimension: null })
+
+      // 表单只在首次取到配置时播种：保存后刷新视图不回填表单——迁移在飞时视图里的
+      // 宽度仍是旧值，回填会把用户刚选的目标宽度改回去。
+      React.useEffect(() => {
+        if (!view || values !== null) return
+        setValues(ragFormValuesFromConfig(view))
+      }, [view, values])
+
+      // 设置面＝全窗大弹窗（照宿主设置形态）：Esc 关闭。
+      React.useEffect(() => {
+        const onKey = (event) => {
+          if (event.key === 'Escape') onClose()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+      }, [onClose])
+
+      const probeFailure = (kind, key, detail) => {
+        if (kind === 'capability') return { key: key, status: 'unverifiable', detail: detail }
+        if (kind === 'service') return { key: key, status: 'unreachable', detail: detail }
+        if (kind === 'dimension') {
+          return { key: key, status: 'unreachable', type: null, native: null, values: [], candidates: [], detail: detail }
+        }
+        return { key: key, status: 'unreachable', detail: detail, measured_dimension: null }
+      }
+
+      const applyProbe = (kind, verdict) => {
+        if (kind === 'capability') setCapabilityProbe(verdict)
+        else if (kind === 'service') setServiceProbe(verdict)
+        else if (kind === 'dimension') setDimensionProbe(verdict)
+        else if (kind === 'embedding') setEmbeddingProbe(verdict)
+        else setRerankProbe(verdict)
+      }
+
+      /** 探针是真实调用（只读、零写入）；失败不弹错，就地成为行上状态。 */
+      const runProbe = (kind, key, op, params) => {
+        setProbeBusy((prev) => Object.assign({}, prev, { [kind]: key }))
+        callOp(op, params)
+          .then((data) => applyProbe(kind, Object.assign({ key: key }, data || {})))
+          .catch((error) => applyProbe(kind, probeFailure(kind, key, errorDetail(error))))
+          .then(() => {
+            setProbeBusy((prev) => (prev[kind] === key ? Object.assign({}, prev, { [kind]: null }) : prev))
+          })
+      }
+
+      // ── 三条自动探测（改动即问、防抖、按候选键只发一次）＋定宽回填 ──
+      const embeddingKeyPresent = Boolean(view && view.sources && view.sources.embedding_api_key !== 'unset')
+      const rerankKeyPresent = Boolean(view && view.sources && view.sources.rerank_api_key !== 'unset')
+
+      React.useEffect(() => {
+        if (!view || !values) return undefined
+        const applies =
+          values.embedding_sparse_source === 'provider' &&
+          values.embedding_model.trim() !== '' &&
+          view.sources &&
+          view.sources.embedding_api_key !== 'unset' &&
+          Array.isArray(view.embedding_providers) &&
+          view.embedding_providers.some(
+            (entry) => entry && entry.provider_id === values.embedding_provider && entry.emits_sparse,
+          )
+        if (!applies) return undefined
+        const key = ragSparseProbeKey(values)
+        if (requestedRef.current.capability === key) return undefined
+        const timer = window.setTimeout(() => {
+          requestedRef.current.capability = key
+          runProbe('capability', key, 'probeEmbedding', {
+            body: {
+              embedding_provider: values.embedding_provider,
+              embedding_model: values.embedding_model.trim(),
+              embedding_base_url: values.embedding_base_url.trim() || null,
+              embedding_api_key: values.embedding_api_key.trim() || null,
+            },
+          })
+        }, RAG_PROBE_DEBOUNCE_MS)
+        return () => window.clearTimeout(timer)
+      }, [view, values])
+
+      React.useEffect(() => {
+        if (!view || !values) return undefined
+        if (!ragShouldProbeSparseService(values)) return undefined
+        const hasKey =
+          values.sparse_api_key.trim() !== '' ||
+          Boolean(view.sources && view.sources.sparse_api_key !== 'unset')
+        const key = ragSparseServiceProbeKey(values, hasKey)
+        if (requestedRef.current.service === key) return undefined
+        const timer = window.setTimeout(() => {
+          requestedRef.current.service = key
+          runProbe('service', key, 'probeSparse', {
+            body: {
+              sparse_provider: values.sparse_provider,
+              sparse_base_url: values.sparse_base_url.trim() || null,
+              sparse_api_key: values.sparse_api_key.trim() || null,
+            },
+          })
+        }, RAG_PROBE_DEBOUNCE_MS)
+        return () => window.clearTimeout(timer)
+      }, [view, values])
+
+      React.useEffect(() => {
+        if (!view || !values) return undefined
+        const applies =
+          values.embedding_model.trim() !== '' &&
+          values.embedding_base_url.trim() !== '' &&
+          Boolean(view.sources && view.sources.embedding_api_key !== 'unset')
+        if (!applies) return undefined
+        const key = ragDimensionProbeKey(values)
+        if (requestedRef.current.dimension === key) return undefined
+        const timer = window.setTimeout(() => {
+          requestedRef.current.dimension = key
+          runProbe('dimension', key, 'probeDimensions', {
+            body: {
+              embedding_provider: values.embedding_provider,
+              embedding_model: values.embedding_model.trim(),
+              embedding_base_url: values.embedding_base_url.trim() || null,
+              embedding_api_key: null,
+            },
+          })
+        }, RAG_PROBE_DEBOUNCE_MS)
+        return () => window.clearTimeout(timer)
+      }, [view, values])
+
+      // ③ 型（不吃维度参数）只有唯一可取值 ⇒ 必须把值填进表单，留空会把用户锁在保存门外。
+      React.useEffect(() => {
+        if (!values || !dimensionProbe) return
+        if (dimensionProbe.key !== ragDimensionProbeKey(values)) return
+        if (dimensionProbe.type !== 'fixed' || dimensionProbe.native == null) return
+        const native = String(dimensionProbe.native)
+        setValues((prev) =>
+          prev && prev.embedding_dimension !== native
+            ? Object.assign({}, prev, { embedding_dimension: native })
+            : prev,
+        )
+      }, [values, dimensionProbe])
+
+      const payload = view && values ? ragBuildInput(values, view) : {}
+      const hasChanges = Boolean(view && values && ragHasChanges(values, view))
+      const embeddingChanged = Boolean(view && values && ragIsEmbeddingChange(values, view))
+      const sparseCapability = values
+        ? ragResolveSparseCapability(values, view ? view.embedding_providers : null, capabilityProbe)
+        : 'unknown'
+      const sparseUnsupported = values
+        ? ragSparseSourceUnsupported(values, view ? view.embedding_providers : null, capabilityProbe)
+        : false
+      const sparseBlockReason = sparseUnsupported
+        ? t('set.form.sparseProviderUnsupported')
+        : values && ragSparseServiceUnconfigured(values)
+          ? t('set.form.sparseServiceUnconfigured')
+          : null
+      const endpointRequiredReason =
+        values && (!values.embedding_base_url.trim() || !values.rerank_base_url.trim())
+          ? t('set.form.endpointRequired')
+          : null
+      const saveBlockReason = sparseBlockReason || endpointRequiredReason || null
+      const sparseUnverified = Boolean(
+        values &&
+          values.embedding_sparse_source === 'provider' &&
+          capabilityProbe &&
+          capabilityProbe.key === ragSparseProbeKey(values) &&
+          capabilityProbe.status === 'unverifiable',
+      )
+      const serviceHasKey = values
+        ? values.sparse_api_key.trim() !== '' ||
+          Boolean(view && view.sources && view.sources.sparse_api_key !== 'unset')
+        : false
+      const serviceVerdict = values
+        ? ragSparseServiceVerdictFor(values, serviceHasKey, serviceProbe)
+        : null
+      const serviceStatus = probeBusy.service
+        ? { text: t('set.form.sparseProbing'), error: false }
+        : serviceVerdict && serviceVerdict.status === 'unreachable'
+          ? { text: t('set.form.sparseServiceUnreachable'), error: true }
+          : serviceVerdict && serviceVerdict.status === 'empty'
+            ? { text: t('set.form.sparseServiceEmpty'), error: true }
+            : null
+      const dimensionKey = values ? ragDimensionProbeKey(values) : ''
+      const dimensionVerdict =
+        dimensionProbe && dimensionProbe.key === dimensionKey ? dimensionProbe : null
+      const dimensionProbing = Boolean(values && probeBusy.dimension === dimensionKey)
+      const dimensionState = dimensionProbing
+        ? { state: 'probing', reason: t('set.form.dimensionProbing') }
+        : dimensionVerdict === null
+          ? null
+          : dimensionVerdict.status === 'unreachable'
+            ? { state: 'unprobed', reason: t('set.form.dimensionUnprobed') + '：' + String(dimensionVerdict.detail || '') }
+            : dimensionVerdict.type === 'tiered' &&
+                Array.isArray(dimensionVerdict.values) &&
+                dimensionVerdict.values.length === 0
+              ? { state: 'no-tiers', reason: t('set.form.dimensionNoTiers') }
+              : null
+      const dimensionTiers = ragDimensionTiersFor(dimensionVerdict)
+      const dimensionFixed = Boolean(
+        dimensionVerdict && dimensionVerdict.type === 'fixed' && dimensionVerdict.native != null,
+      )
+
+      /** 一条腿的连通点：坐标齐了才可点；结论只认「点过的那一发」。 */
+      const legProps = (leg) => {
+        const provider = leg === 'embedding' ? values.embedding_provider : values.rerank_provider
+        const model = (leg === 'embedding' ? values.embedding_model : values.rerank_model).trim()
+        const baseUrl = (leg === 'embedding' ? values.embedding_base_url : values.rerank_base_url).trim()
+        const hasKey = leg === 'embedding' ? embeddingKeyPresent : rerankKeyPresent
+        const ready = model !== '' && baseUrl !== '' && hasKey
+        const key = ragConnectivityProbeKey(leg, values, hasKey)
+        const raw = leg === 'embedding' ? embeddingProbe : rerankProbe
+        const verdict = raw && raw.key === key ? raw : null
+        const probing = probeBusy[leg] === key
+        const status = probing
+          ? 'probing'
+          : !ready || !verdict
+            ? 'untested'
+            : verdict.status === 'ok'
+              ? 'ok'
+              : verdict.status === 'dimension_unavailable'
+                ? 'bad-dimension'
+                : verdict.status === 'half_missing'
+                  ? 'bad-half'
+                  : 'bad'
+        const reason = probing
+          ? t('set.form.legProbing')
+          : !ready
+            ? t('set.form.legNeedsConfig')
+            : verdict
+              ? String(verdict.detail || '')
+              : t('set.form.legUntested')
+        return {
+          label: leg === 'embedding' ? t('set.field.embeddingModel') : t('set.field.rerankModel'),
+          status: status,
+          reason: reason,
+          disabled: !ready || probing,
+          onProbe: () => {
+            const rawDimension = values.embedding_dimension.trim()
+            runProbe(leg, key, 'probeConnectivity', {
+              body: {
+                leg: leg,
+                provider: provider,
+                model: model,
+                base_url: baseUrl || null,
+                api_key: null,
+                embedding_dimension:
+                  leg === 'embedding' && rawDimension !== '' ? Number(rawDimension) : null,
+              },
+            })
+          },
+        }
+      }
+
+      const update = (key, value) =>
+        setValues((prev) => (prev ? Object.assign({}, prev, { [key]: value }) : prev))
+
+      const submitSave = () => {
+        setSaveBusy(true)
+        setSaveError(null)
+        callOp('ragConfigPut', { body: payload })
+          .then((saved) => {
+            setSaveBusy(false)
+            setSavedNotice(true)
+            window.setTimeout(() => setSavedNotice(false), 4000)
+            setSaveWarning(saved && typeof saved.warning === 'string' ? saved.warning : null)
+            const pending = saved ? saved.migration : null
+            if (pending && pending.state === 'running' && pending.target_dimension != null) {
+              setValues((prev) =>
+                prev
+                  ? Object.assign({}, prev, { embedding_dimension: String(pending.target_dimension) })
+                  : prev,
+              )
+            }
+            configQ.refresh()
+          })
+          .catch((error) => {
+            setSaveBusy(false)
+            setSaveError(errorDetail(error))
+          })
+      }
+
+      const handleSave = () => {
+        if (!view || !values || !hasChanges) return
+        if (ragChangesDimension(values, view)) {
+          setDimensionConfirmOpen(true)
+          return
+        }
+        submitSave()
+      }
 
       let migrationLine = null
       if (migration && migration.state === 'running') {
@@ -9574,18 +10020,359 @@ window.__ModuleLoader__.load({
         migrationLine = h('div', { className: 'hrag-set-migration' }, t('set.migrationSucceeded'))
       }
 
+      const providerLabel = (id) => {
+        const keys = {
+          dashscope: 'providerDashscope',
+          'volcengine-ark': 'providerVolcengineArk',
+          'openai-compatible': 'providerOpenAIChat',
+          'generic-rerank': 'providerGenericRerank',
+          'tei-rerank': 'providerTeiRerank',
+          'tei-sparse': 'providerTeiSparse',
+        }
+        return keys[id] ? t('set.form.' + keys[id]) : id
+      }
+
+      const fieldRow = (label, control, options) =>
+        h(
+          'div',
+          { className: options && options.nested ? 'hrag-set-row hrag-set-row-nested' : 'hrag-set-row' },
+          h('span', { className: 'hrag-set-label', title: options ? options.info : undefined }, label),
+          control,
+        )
+
+      const selectControl = (ariaLabel, value, options, labels, onChange) =>
+        h(
+          'select',
+          { className: 'hrag-set-select', 'aria-label': ariaLabel, value: value, onChange: (event) => onChange(event.target.value) },
+          options.map((option) => h('option', { key: option, value: option }, labels(option))),
+        )
+
+      const secretControl = (secretField, value, ariaLabel, onChange) =>
+        h(
+          'div',
+          { className: 'hrag-secret-wrap' },
+          h(HostInput, {
+            className: 'hrag-set-control',
+            type: 'password',
+            value: value,
+            'aria-label': ariaLabel,
+            title: t('set.form.secretHint'),
+            onChange: (event) => onChange(event.target.value),
+          }),
+          view && view.sources && view.sources[secretField] === 'env' && value === ''
+            ? h('span', { className: 'hrag-secret-badge' }, t('set.form.secretFromEnvBadge'))
+            : null,
+        )
+
+      const legBlock = (leg) => {
+        const info = legProps(leg)
+        const embedding = leg === 'embedding'
+        return h(
+          React.Fragment,
+          { key: leg },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'hrag-set-role',
+              disabled: info.disabled,
+              title: info.reason,
+              'aria-label': info.label + ' · ' + info.reason,
+              onClick: info.onProbe,
+            },
+            info.label,
+            h('span', { className: 'hrag-set-dot hrag-set-dot-' + info.status }),
+          ),
+          fieldRow(
+            t('set.form.provider'),
+            selectControl(
+              embedding ? t('set.field.embeddingProvider') : t('set.field.rerankProvider'),
+              embedding ? values.embedding_provider : values.rerank_provider,
+              embedding ? RAG_EMBEDDING_PROVIDER_OPTIONS : RAG_RERANK_PROVIDER_OPTIONS,
+              providerLabel,
+              (next) => update(embedding ? 'embedding_provider' : 'rerank_provider', next),
+            ),
+          ),
+          fieldRow(
+            t('set.form.model'),
+            h(HostInput, {
+              className: 'hrag-set-control',
+              value: embedding ? values.embedding_model : values.rerank_model,
+              'aria-label': info.label,
+              onChange: (event) => update(embedding ? 'embedding_model' : 'rerank_model', event.target.value),
+            }),
+          ),
+          fieldRow(
+            t('set.form.apiKey'),
+            secretControl(
+              embedding ? 'embedding_api_key' : 'rerank_api_key',
+              embedding ? values.embedding_api_key : values.rerank_api_key,
+              embedding ? t('set.form.embeddingApiKey') : t('set.form.rerankApiKey'),
+              (next) => update(embedding ? 'embedding_api_key' : 'rerank_api_key', next),
+            ),
+          ),
+          fieldRow(
+            t('set.form.endpoint'),
+            h(HostInput, {
+              className: 'hrag-set-control',
+              value: embedding ? values.embedding_base_url : values.rerank_base_url,
+              placeholder: ragEndpointPlaceholderFor(
+                view ? (embedding ? view.embedding_providers : view.rerank_providers) : null,
+                embedding ? values.embedding_provider : values.rerank_provider,
+              ),
+              'aria-label': embedding ? t('set.field.embeddingBaseUrl') : t('set.field.rerankBaseUrl'),
+              onChange: (event) => update(embedding ? 'embedding_base_url' : 'rerank_base_url', event.target.value),
+            }),
+            embedding ? { info: t('set.form.endpointHint') } : undefined,
+          ),
+        )
+      }
+
+      const defaultModelGroup = view && values
+        ? h(
+        'div',
+        { className: 'hrag-set-group' },
+        h('div', { className: 'hrag-set-grouptitle', title: t('set.form.defaultHint') }, t('set.group.default')),
+        selectControl(
+          t('set.field.defaultModel'),
+          values.default_model || RAG_MODEL_NONE,
+          ragModelReferenceOptions(models, values.default_model, t('set.form.defaultNone')).map((option) => option.value),
+          (value) => {
+            const found = ragModelReferenceOptions(models, values.default_model, t('set.form.defaultNone')).find(
+              (option) => option.value === value,
+            )
+            return found ? found.label : value
+          },
+          (next) => update('default_model', next === RAG_MODEL_NONE ? '' : next),
+        ),
+      )
+        : null
+
+      const retrievalAdvanced = advancedOpen && view && values
+        ? h(
+            React.Fragment,
+            null,
+            fieldRow(
+              t('set.field.dimension'),
+              h(
+                'div',
+                { className: 'hrag-set-field' },
+                h(HostInput, {
+                  className: 'hrag-set-control',
+                  inputMode: 'numeric',
+                  value: values.embedding_dimension,
+                  readOnly: dimensionFixed,
+                  placeholder:
+                    dimensionVerdict && dimensionVerdict.native != null ? String(dimensionVerdict.native) : undefined,
+                  'aria-label': t('set.field.dimension'),
+                  onChange: (event) => update('embedding_dimension', event.target.value),
+                }),
+                h(
+                  'span',
+                  { className: 'hrag-set-trail' },
+                  dimensionState
+                    ? h('span', { className: 'hrag-set-dot hrag-set-dot-' + (dimensionState.state === 'probing' ? 'probing' : 'untested'), title: dimensionState.reason })
+                    : null,
+                  dimensionTiers.length > 0
+                    ? h(DshMenu, {
+                        title: t('set.form.dimensionTierHint'),
+                        align: 'end',
+                        className: 'hrag-set-tierwrap',
+                        trigger: h(
+                          'button',
+                          { type: 'button', className: 'hrag-set-tierbtn', 'aria-label': t('set.form.dimensionTierHint') },
+                          dshChevronDownIcon(),
+                        ),
+                        render: (close) => [
+                          dimensionVerdict && dimensionVerdict.native != null
+                            ? h('div', { key: 'native', className: 'hrag-mm-label' }, t('set.form.dimensionNativeHint', { 0: dimensionVerdict.native }))
+                            : null,
+                          h('div', { key: 'sep', className: 'hrag-mm-sep' }),
+                          h('div', { key: 'label', className: 'hrag-mm-label' }, t('set.form.dimensionTierHint')),
+                          dimensionTiers.map((width) =>
+                            h(
+                              DshMenuItem,
+                              { key: String(width), onSelect: () => { close(); update('embedding_dimension', String(width)) } },
+                              String(width),
+                            ),
+                          ),
+                        ],
+                      })
+                    : null,
+                ),
+              ),
+              {
+                info: [
+                  t('set.form.dimensionHint'),
+                  t('set.form.dimensionProbeHint'),
+                  dimensionFixed ? t('set.form.dimensionFixedHint', { 0: dimensionVerdict.native }) : null,
+                ]
+                  .filter(Boolean)
+                  .join(' '),
+              },
+            ),
+            fieldRow(
+              t('set.field.sparseSource'),
+              h(
+                'div',
+                { className: 'hrag-set-field' },
+                h(
+                  'select',
+                  {
+                    className: 'hrag-set-select',
+                    'aria-label': t('set.field.sparseSource'),
+                    value: values.embedding_sparse_source,
+                    onChange: (event) => update('embedding_sparse_source', event.target.value),
+                  },
+                  [
+                    ['provider', t('set.form.sparseSourceProvider')],
+                    ['external', t('set.form.sparseSourceExternal')],
+                    ['bm25', t('set.form.sparseSourceBm25')],
+                  ].map(([value, label]) => {
+                    const disabled = value === 'provider' && ragSparseProviderOptionDisabled(sparseCapability)
+                    return h(
+                      'option',
+                      { key: value, value: value, disabled: disabled },
+                      disabled ? label + ' · ' + t('set.form.sparseProviderDenseOnly') : label,
+                    )
+                  }),
+                ),
+                probeBusy.capability
+                  ? h('span', { className: 'hrag-set-trail' }, t('set.form.sparseProbing'))
+                  : sparseUnverified
+                    ? h('span', { className: 'hrag-set-trail' }, t('set.form.sparseUnverified'))
+                    : null,
+              ),
+              { info: t('set.form.sparseSourceHint') + ' ' + t('set.form.sparseProbeHint') },
+            ),
+            values.embedding_sparse_source === 'external'
+              ? h(
+                  React.Fragment,
+                  null,
+                  fieldRow(
+                    t('set.form.provider'),
+                    selectControl(
+                      t('set.field.sparseProvider'),
+                      values.sparse_provider,
+                      RAG_SPARSE_PROVIDER_OPTIONS,
+                      (id) => (id === '' ? t('set.form.sparseProviderNone') : providerLabel(id)),
+                      (next) => update('sparse_provider', next),
+                    ),
+                    { nested: true },
+                  ),
+                  fieldRow(
+                    t('set.form.model'),
+                    h(HostInput, {
+                      className: 'hrag-set-control',
+                      value: values.sparse_model,
+                      'aria-label': t('set.field.sparseModel'),
+                      onChange: (event) => update('sparse_model', event.target.value),
+                    }),
+                    { nested: true, info: t('set.form.sparseModelHint') },
+                  ),
+                  fieldRow(
+                    t('set.form.apiKey'),
+                    secretControl('sparse_api_key', values.sparse_api_key, t('set.form.sparseApiKeyLabel'), (next) =>
+                      update('sparse_api_key', next),
+                    ),
+                    { nested: true },
+                  ),
+                  fieldRow(
+                    t('set.form.endpoint'),
+                    h(
+                      'div',
+                      { className: 'hrag-set-field' },
+                      h(HostInput, {
+                        className: 'hrag-set-control',
+                        value: values.sparse_base_url,
+                        'aria-label': t('set.field.sparseBaseUrl'),
+                        onChange: (event) => update('sparse_base_url', event.target.value),
+                      }),
+                      serviceStatus
+                        ? h(
+                            'span',
+                            { className: 'hrag-set-trail' + (serviceStatus.error ? ' hrag-set-saveerr' : '') },
+                            serviceStatus.text,
+                          )
+                        : null,
+                    ),
+                    { nested: true },
+                  ),
+                )
+              : h(
+                  React.Fragment,
+                  null,
+                  [t('set.form.provider'), t('set.form.model'), t('set.form.apiKey'), t('set.form.endpoint')].map((label) =>
+                    fieldRow(
+                      label,
+                      h('div', { className: 'hrag-set-locked' }, t('set.form.lockedExternalOnly')),
+                      { nested: true, key: label },
+                    ),
+                  ),
+                ),
+          )
+        : null
+
+      const retrievalGroup = view && values
+        ? h(
+        'div',
+        { className: 'hrag-set-group' },
+        h('div', { className: 'hrag-set-grouptitle', title: t('set.form.retrievalHint') }, t('set.group.retrieval')),
+        legBlock('embedding'),
+        legBlock('rerank'),
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'hrag-set-adv',
+            'aria-expanded': advancedOpen,
+            onClick: () => setAdvancedOpen((prev) => !prev),
+          },
+          h('span', { className: 'hrag-set-adv-chev' + (advancedOpen ? ' hrag-set-adv-chev-open' : '') }, dshChevronDownIcon()),
+          t('set.form.advanced'),
+        ),
+        retrievalAdvanced,
+        embeddingChanged
+          ? h('p', { className: 'hrag-set-warn', role: 'alert' }, t('set.form.embeddingChangeWarning'))
+          : null,
+        sparseBlockReason ? h('p', { className: 'hrag-set-warn', role: 'alert' }, sparseBlockReason) : null,
+      )
+        : null
+
+      const saveRow = h(
+        'div',
+        { className: 'hrag-set-saverow' },
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'hrag-btn hrag-btn-outline hrag-btn-sm',
+            disabled: !hasChanges || saveBusy || Boolean(saveBlockReason),
+            title: saveBlockReason || (!hasChanges ? t('set.form.noChanges') : undefined),
+            onClick: handleSave,
+          },
+          t('set.form.save'),
+        ),
+        saveError
+          ? h('span', { className: 'hrag-set-saveerr' }, saveError)
+          : savedNotice
+            ? h('span', { className: 'hrag-set-savehint' }, t('set.form.saved'))
+            : h('span', { className: 'hrag-set-savehint' }, saveBlockReason || t('set.form.noChanges')),
+        saveWarning ? h('span', { className: 'hrag-set-savewarn', role: 'status' }, saveWarning) : null,
+      )
+
       return h(
         React.Fragment,
         null,
         h('div', {
-          className: 'hrag-drawer-overlay',
+          className: 'hrag-modal-overlay',
           onMouseDown: (event) => {
             if (event.target === event.currentTarget) onClose()
           },
         }),
         h(
           'div',
-          { className: 'hrag-drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('menu.modelSettings') },
+          { className: 'hrag-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('menu.modelSettings') },
           h(
             'div',
             { className: 'hrag-drawer-head' },
@@ -9606,7 +10393,6 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'hrag-drawer-body hrag-set-body' },
-            h('p', { className: 'hrag-set-hint' }, t('set.readonlyHint')),
             migrationLine,
             h(
               'div',
@@ -9631,9 +10417,14 @@ window.__ModuleLoader__.load({
             ),
             configQ.failure
               ? h('div', { className: 'hrag-ev-hint hrag-ev-hint-error hrag-wk-inset' }, t('set.loadFailed'))
-              : configQ.data === null
+              : !view || !values
                 ? h('div', { className: 'hrag-ev-hint hrag-wk-inset' }, t('wk.loading'))
-                : SET_GROUPS.map((group) =>
+                : h(
+                    React.Fragment,
+                    null,
+                    defaultModelGroup,
+                    retrievalGroup,
+                    SET_GROUPS.map((group) =>
                     h(
                       'div',
                       { className: 'hrag-set-group', key: group.title },
@@ -9650,9 +10441,325 @@ window.__ModuleLoader__.load({
                       }),
                     ),
                   ),
+                  saveRow,
+                ),
           ),
         ),
+        dimensionConfirmOpen
+          ? h(ConfirmDialog, {
+              t: t,
+              title: t('set.form.dimensionConfirmTitle'),
+              description: t('set.form.dimensionConfirmDescription'),
+              busy: saveBusy,
+              danger: false,
+              cancelKey: 'doc.cancel',
+              confirmKey: 'set.form.dimensionConfirmAction',
+              onCancel: () => setDimensionConfirmOpen(false),
+              onConfirm: () => {
+                setDimensionConfirmOpen(false)
+                submitSave()
+              },
+            })
+          : null,
       )
+    }
+
+    // ── 设置面批 2（Task 2）：功能模型表单纯逻辑，照工作台 core/rag/config-form.ts 逐条移植 ──
+    const RAG_MASKED_SECRET = '********'
+    const RAG_MODEL_NONE = '__none__'
+    const RAG_DEFAULT_DIMENSION = 1024
+    const RAG_ENDPOINT_PLACEHOLDER_FALLBACK = 'https://api.example.com/v1'
+    const RAG_PROBE_DEBOUNCE_MS = 400
+    const RAG_EMBEDDING_PROVIDER_OPTIONS = ['dashscope', 'volcengine-ark', 'openai-compatible']
+    const RAG_SPARSE_SOURCE_OPTIONS = ['provider', 'external', 'bm25']
+    const RAG_SPARSE_PROVIDER_OPTIONS = ['', 'tei-sparse']
+    const RAG_RERANK_PROVIDER_OPTIONS = ['dashscope', 'generic-rerank', 'tei-rerank']
+    const RAG_ASR_PROVIDER_OPTIONS = ['funasr', 'whisper', 'openai-audio', 'dashscope']
+    const RAG_PARSE_PROVIDER_OPTIONS = ['mineru-cloud', 'mineru-local']
+    const RAG_PARSE_TIER_OPTIONS = ['', 'flash', 'basic', 'standard', 'advanced']
+    const RAG_PARSE_LANGUAGE_OPTIONS = [
+      '', 'ch', 'ch_server', 'en', 'japan', 'korean', 'chinese_cht', 'ta', 'te', 'ka',
+      'el', 'th', 'latin', 'arabic', 'cyrillic', 'east_slavic', 'devanagari',
+    ]
+    const RAG_PARSE_VERSION_OPTIONS = ['', 'pipeline', 'vlm']
+    const RAG_TEXT_FIELDS = [
+      'qdrant_url', 'embedding_model', 'rerank_model', 'vlm_model', 'extract_model',
+      'judge_model', 'default_model', 'wiki_model', 'synthesis_model', 'embedding_base_url',
+      'sparse_base_url', 'sparse_model', 'rerank_base_url', 'parse_base_url', 'asr_base_url',
+    ]
+    const RAG_SECRET_FIELDS = ['embedding_api_key', 'rerank_api_key', 'mineru_api_token', 'sparse_api_key', 'asr_api_key']
+    const RAG_NUMERIC_FIELDS = ['embedding_dimension']
+    const RAG_SELECT_FIELDS = [
+      'embedding_provider', 'embedding_sparse_source', 'sparse_provider', 'rerank_provider',
+      'parse_provider', 'parse_tier', 'parse_language', 'parse_model_version',
+    ]
+    const RAG_THINKING_FIELDS = ['extract_thinking', 'wiki_thinking', 'judge_thinking', 'synthesis_thinking', 'vlm_thinking']
+
+    function ragAsEnum(value, options, fallback) {
+      return typeof value === 'string' && options.indexOf(value) !== -1 ? value : fallback
+    }
+
+    /** 生效视图 → 表单值；存量密钥保持掩码原样（输入框显示「已设置」）。 */
+    function ragFormValuesFromConfig(view) {
+      const config = view && view.config && typeof view.config === 'object' ? view.config : {}
+      const video = config.video && typeof config.video === 'object' ? config.video : {}
+      const values = {
+        qdrant_url: String(config.qdrant_url || ''),
+        embedding_model: String(config.embedding_model || ''),
+        embedding_api_key: String(config.embedding_api_key || ''),
+        rerank_model: String(config.rerank_model || ''),
+        rerank_api_key: String(config.rerank_api_key || ''),
+        vlm_model: String(config.vlm_model || ''),
+        extract_model: String(config.extract_model || ''),
+        judge_model: String(config.judge_model || ''),
+        default_model: String(config.default_model || ''),
+        wiki_model: String(config.wiki_model || ''),
+        synthesis_model: String(config.synthesis_model || ''),
+        mineru_api_token: String(config.mineru_api_token || ''),
+        embedding_provider: ragAsEnum(config.embedding_provider, RAG_EMBEDDING_PROVIDER_OPTIONS, 'dashscope'),
+        embedding_base_url: String(config.embedding_base_url || ''),
+        embedding_dimension: config.embedding_dimension == null ? '' : String(config.embedding_dimension),
+        embedding_sparse_source: ragAsEnum(config.embedding_sparse_source, RAG_SPARSE_SOURCE_OPTIONS, 'provider'),
+        sparse_provider: ragAsEnum(config.sparse_provider, RAG_SPARSE_PROVIDER_OPTIONS, ''),
+        sparse_base_url: String(config.sparse_base_url || ''),
+        sparse_model: String(config.sparse_model || ''),
+        sparse_api_key: String(config.sparse_api_key || ''),
+        rerank_provider: ragAsEnum(config.rerank_provider, RAG_RERANK_PROVIDER_OPTIONS, 'dashscope'),
+        rerank_base_url: String(config.rerank_base_url || ''),
+        parse_provider: ragAsEnum(config.parse_provider, RAG_PARSE_PROVIDER_OPTIONS, 'mineru-cloud'),
+        parse_base_url: String(config.parse_base_url || ''),
+        parse_tier: ragAsEnum(config.parse_tier, RAG_PARSE_TIER_OPTIONS, ''),
+        parse_language: ragAsEnum(config.parse_language, RAG_PARSE_LANGUAGE_OPTIONS, ''),
+        parse_model_version: ragAsEnum(config.parse_model_version, RAG_PARSE_VERSION_OPTIONS, ''),
+        asr_base_url: String(config.asr_base_url || ''),
+        asr_api_key: String(config.asr_api_key || ''),
+        video: {
+          asr_provider: ragAsEnum(video.asr_provider, RAG_ASR_PROVIDER_OPTIONS, 'funasr'),
+          asr_model: String(video.asr_model || ''),
+        },
+      }
+      for (const key of RAG_THINKING_FIELDS) values[key] = Boolean(config[key])
+      return values
+    }
+
+    function ragLoaded(view, key) {
+      const value = view && view.config ? view.config[key] : null
+      return typeof value === 'string' ? value : ''
+    }
+
+    function ragLoadedNumber(view, key) {
+      const value = view && view.config ? view.config[key] : null
+      return typeof value === 'number' ? String(value) : ''
+    }
+
+    /** 该字段是否由配置文件（ui 覆盖）持有——决定「原样携带」还是「显式清除」。 */
+    function ragOwned(view, key) {
+      return Boolean(view && view.sources && view.sources[key] === 'ui')
+    }
+
+    /** PUT 全量替换：文件持有的字段原样携带，只有真正编辑过的字段才改写。 */
+    function ragBuildInput(values, view) {
+      const input = {}
+      for (const key of RAG_TEXT_FIELDS) {
+        const next = values[key].trim()
+        const previous = ragLoaded(view, key)
+        if (next === previous) {
+          if (next !== '' && ragOwned(view, key)) input[key] = next
+          continue
+        }
+        if (next !== '' || ragOwned(view, key)) input[key] = next
+      }
+      for (const key of RAG_NUMERIC_FIELDS) {
+        const raw = values[key].trim()
+        const previous = ragLoadedNumber(view, key)
+        if (raw === previous) {
+          if (raw !== '' && ragOwned(view, key)) input[key] = Number(raw)
+          continue
+        }
+        if (raw === '') {
+          if (ragOwned(view, key)) input[key] = null
+          continue
+        }
+        const parsed = Number(raw)
+        if (!Number.isInteger(parsed) || parsed <= 0) continue
+        input[key] = parsed
+      }
+      for (const key of RAG_SECRET_FIELDS) {
+        const next = values[key].trim()
+        if (next === RAG_MASKED_SECRET) {
+          if (ragOwned(view, key)) input[key] = RAG_MASKED_SECRET
+          continue
+        }
+        if (next === '') {
+          if (ragOwned(view, key)) input[key] = ''
+          continue
+        }
+        input[key] = next
+      }
+      for (const key of RAG_SELECT_FIELDS) {
+        const next = values[key]
+        const previous = ragLoaded(view, key)
+        if (next === previous) {
+          if (next !== '' && ragOwned(view, key)) input[key] = next
+          continue
+        }
+        if (next !== '' || ragOwned(view, key)) input[key] = next === '' ? null : next
+      }
+      for (const key of RAG_THINKING_FIELDS) {
+        const next = values[key]
+        const previous = Boolean(view && view.config ? view.config[key] : false)
+        if (next === previous) {
+          if (ragOwned(view, key)) input[key] = next
+          continue
+        }
+        input[key] = next
+      }
+      const video = {}
+      const loadedVideo = view && view.config && view.config.video ? view.config.video : {}
+      const nextModel = values.video.asr_model.trim()
+      const previousModel = typeof loadedVideo.asr_model === 'string' ? loadedVideo.asr_model : ''
+      if (nextModel === previousModel) {
+        if (nextModel !== '' && ragOwned(view, 'video.asr_model')) video.asr_model = nextModel
+      } else if (nextModel !== '' || ragOwned(view, 'video.asr_model')) {
+        video.asr_model = nextModel
+      }
+      const provider = ragAsEnum(values.video.asr_provider, RAG_ASR_PROVIDER_OPTIONS, 'funasr')
+      const loadedProvider = ragAsEnum(loadedVideo.asr_provider, RAG_ASR_PROVIDER_OPTIONS, 'funasr')
+      if (provider !== loadedProvider || ragOwned(view, 'video.asr_provider')) video.asr_provider = provider
+      if (Object.keys(video).length > 0) input.video = video
+      return input
+    }
+
+    /** 是否真编辑过（携带不算编辑）：没有改动时保存保持禁用。 */
+    function ragHasChanges(values, view) {
+      const seeded = ragFormValuesFromConfig(view)
+      const edited = (a, b) => String(a).trim() !== String(b).trim()
+      if (RAG_TEXT_FIELDS.some((key) => edited(values[key], seeded[key]))) return true
+      if (RAG_NUMERIC_FIELDS.some((key) => edited(values[key], seeded[key]))) return true
+      if (RAG_SECRET_FIELDS.some((key) => edited(values[key], seeded[key]))) return true
+      if (RAG_SELECT_FIELDS.some((key) => values[key] !== seeded[key])) return true
+      if (RAG_THINKING_FIELDS.some((key) => values[key] !== seeded[key])) return true
+      return edited(values.video.asr_provider, seeded.video.asr_provider) ||
+        edited(values.video.asr_model, seeded.video.asr_model)
+    }
+
+    function ragEffectiveDimension(raw) {
+      const parsed = Number.parseInt(typeof raw === 'number' ? String(raw) : String(raw == null ? '' : raw).trim(), 10)
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : RAG_DEFAULT_DIMENSION
+    }
+
+    /** 宽度按「生效值」比对：把空字段写成 1024 不算改动，而清掉声明算。 */
+    function ragChangesDimension(values, view) {
+      return ragEffectiveDimension(values.embedding_dimension) !==
+        ragEffectiveDimension(view && view.config ? view.config.embedding_dimension : null)
+    }
+
+    /** 整个提供方维度都算：换 provider / 地址 / 稀疏来源同样改变已有向量。 */
+    function ragIsEmbeddingChange(values, view) {
+      const seeded = ragFormValuesFromConfig(view)
+      return (
+        values.embedding_model.trim() !== seeded.embedding_model.trim() ||
+        values.embedding_provider !== seeded.embedding_provider ||
+        values.embedding_base_url.trim() !== seeded.embedding_base_url.trim() ||
+        values.embedding_dimension.trim() !== seeded.embedding_dimension.trim() ||
+        values.embedding_sparse_source !== seeded.embedding_sparse_source
+      )
+    }
+
+    /** 结论跟着取值走：编辑后旧结论即失效（键不含稀疏来源本身——它是要问的问题）。 */
+    function ragSparseProbeKey(values) {
+      return [values.embedding_provider, values.embedding_model.trim(), values.embedding_base_url.trim()].join('|')
+    }
+
+    /** allowlist 定方言、探针定模型；未证实一律 unknown（不拦不锁）。 */
+    function ragResolveSparseCapability(values, providers, probe) {
+      const capability = Array.isArray(providers)
+        ? providers.find((entry) => entry && entry.provider_id === values.embedding_provider)
+        : null
+      if (capability && capability.emits_sparse === false) return 'unsupported'
+      if (!probe || probe.key !== ragSparseProbeKey(values)) return 'unknown'
+      if (probe.status === 'supported') return 'supported'
+      if (probe.status === 'unsupported') return 'unsupported'
+      return 'unknown'
+    }
+
+    /** 由表单当前的 provider 判定（一切换就即时告警，不等保存）。 */
+    function ragSparseSourceUnsupported(values, providers, probe) {
+      if (values.embedding_sparse_source !== 'provider') return false
+      return ragResolveSparseCapability(values, providers, probe) === 'unsupported'
+    }
+
+    function ragSparseProviderOptionDisabled(capability) {
+      return capability === 'unsupported'
+    }
+
+    /** external 但没选具体提供方——运行时明确拒绝的组合，编辑期即拦。 */
+    function ragSparseServiceUnconfigured(values) {
+      return values.embedding_sparse_source === 'external' && values.sparse_provider === ''
+    }
+
+    function ragShouldProbeSparseService(values) {
+      return (
+        values.embedding_sparse_source === 'external' &&
+        values.sparse_provider !== '' &&
+        values.sparse_base_url.trim() !== ''
+      )
+    }
+
+    function ragSparseServiceProbeKey(values, hasKey) {
+      return [values.sparse_provider, values.sparse_base_url.trim(), hasKey ? 'key' : 'nokey'].join('|')
+    }
+
+    function ragSparseServiceVerdictFor(values, hasKey, probe) {
+      if (!probe) return null
+      return probe.key === ragSparseServiceProbeKey(values, hasKey) ? probe : null
+    }
+
+    /** 维度结论的取值坐标（宽度本身不在键里——它是要问的问题）。 */
+    function ragDimensionProbeKey(values) {
+      return [values.embedding_provider, values.embedding_model.trim(), values.embedding_base_url.trim()].join('|')
+    }
+
+    /** 一条腿连通结论的坐标：向量腿带上生效宽度（换了宽度就是新问题）。 */
+    function ragConnectivityProbeKey(leg, values, hasKey) {
+      const coordinates = leg === 'embedding'
+        ? [values.embedding_provider, values.embedding_model.trim(), values.embedding_base_url.trim(), values.embedding_dimension.trim()]
+        : [values.rerank_provider, values.rerank_model.trim(), values.rerank_base_url.trim()]
+      return [leg].concat(coordinates, [hasKey ? 'key' : 'nokey']).join('|')
+    }
+
+    /** 端点占位＝能力块的 vendor 地址；没有就用兜底示例（永远是灰提示、不是值）。 */
+    function ragEndpointPlaceholderFor(providers, providerId) {
+      const entry = Array.isArray(providers)
+        ? providers.find((item) => item && item.provider_id === providerId)
+        : null
+      return (entry && entry.default_endpoint) || RAG_ENDPOINT_PLACEHOLDER_FALLBACK
+    }
+
+    /** 模型引用选项：显式「不设」项＋已配置模型（显示名优先）＋存量孤儿值。 */
+    function ragModelReferenceOptions(models, current, noneLabel) {
+      const options = [{ value: RAG_MODEL_NONE, label: noneLabel }]
+      for (const model of models) {
+        if (!model || typeof model.name !== 'string') continue
+        const display = typeof model.display_name === 'string' ? model.display_name.trim() : ''
+        options.push({ value: model.name, label: display !== '' ? display : model.name })
+      }
+      if (current && !options.some((option) => option.value === current)) {
+        options.push({ value: current, label: current })
+      }
+      return options
+    }
+
+    /** 档位快捷项：① 型＝探到的有效档；② 型＝≤ 原生的候选；③ 型没有档位区。 */
+    function ragDimensionTiersFor(verdict) {
+      if (!verdict || verdict.status !== 'ok') return []
+      if (verdict.type === 'tiered') return Array.isArray(verdict.values) ? verdict.values : []
+      if (verdict.type === 'range' && verdict.native != null) {
+        return Array.isArray(verdict.candidates)
+          ? verdict.candidates.filter((width) => width <= verdict.native)
+          : []
+      }
+      return []
     }
 
     // Text drags inside the panel must stay untouched — only file drags are ours.
@@ -10533,18 +11640,22 @@ window.__ModuleLoader__.load({
               })
             : null,
           settingsOpen
-            ? h(ModelSettingsPanel, {
-                t,
-                kbId,
-                onClose: () => setSettingsOpen(false),
-                reindexLine,
-                reindexBusy,
-                reindexRunning,
-                onReindex: () => {
-                  setReindexError(null)
-                  setReindexOpen(true)
-                },
-              })
+            ? h(
+                HragBoundary,
+                { t, name: t('menu.modelSettings') },
+                h(ModelSettingsPanel, {
+                  t,
+                  kbId,
+                  onClose: () => setSettingsOpen(false),
+                  reindexLine,
+                  reindexBusy,
+                  reindexRunning,
+                  onReindex: () => {
+                    setReindexError(null)
+                    setReindexOpen(true)
+                  },
+                }),
+              )
             : null,
         ),
       )
