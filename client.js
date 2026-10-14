@@ -435,6 +435,9 @@ window.__ModuleLoader__.load({
       'createKb.create': '创建',
       'doc.download': '下载',
       'upload.rejected': '已跳过不支持的文件：{0}',
+      'upload.needKb': '知识库暂不可接收：请先创建知识库',
+      'upload.busy': '知识库暂不可接收：上传中，请稍候',
+      'upload.dirSkipped': '已跳过文件夹（仅支持文件上传）',
       'set.readonlyHint': '当前为只读展示；编辑与探测将在后续批次开放。',
       'set.loadFailed': '设置加载失败',
       'set.migrationRunning': '维度迁移中',
@@ -911,6 +914,9 @@ window.__ModuleLoader__.load({
       'createKb.create': 'Create',
       'doc.download': 'Download',
       'upload.rejected': 'Skipped unsupported files: {0}',
+      'upload.needKb': 'The knowledge base cannot take files yet: create one first',
+      'upload.busy': 'The knowledge base cannot take files yet: an upload is in progress',
+      'upload.dirSkipped': 'Skipped folders (only files can be uploaded)',
       'set.readonlyHint': 'Read-only view; editing and probes arrive in later batches.',
       'set.loadFailed': 'Failed to load the settings',
       'set.migrationRunning': 'Dimension migration in progress',
@@ -9649,6 +9655,35 @@ window.__ModuleLoader__.load({
       )
     }
 
+    // Text drags inside the panel must stay untouched — only file drags are ours.
+    function isFileDrag(transfer) {
+      const types = transfer ? transfer.types : null
+      if (!types) return false
+      return Array.prototype.indexOf.call(types, 'Files') !== -1
+    }
+
+    function splitDroppedFiles(transfer) {
+      const files = []
+      let dirs = 0
+      const items = transfer && transfer.items ? transfer.items : null
+      if (items && items.length) {
+        for (let index = 0; index < items.length; index += 1) {
+          const item = items[index]
+          if (!item || item.kind !== 'file') continue
+          const entry = typeof item.webkitGetAsEntry === 'function' ? item.webkitGetAsEntry() : null
+          if (entry && entry.isDirectory) {
+            dirs += 1
+            continue
+          }
+          const file = typeof item.getAsFile === 'function' ? item.getAsFile() : null
+          if (file) files.push(file)
+        }
+      } else if (transfer && transfer.files) {
+        for (let index = 0; index < transfer.files.length; index += 1) files.push(transfer.files[index])
+      }
+      return { files: files, dirs: dirs }
+    }
+
     function KnowledgePanel({ t }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -9846,6 +9881,41 @@ window.__ModuleLoader__.load({
             })
         }
         runNext(0)
+      }
+
+      // 面板内拖拽上传（Task 7）：落在面板上的文件归当前知识库。宿主手势是
+      // document 级冒泡监听，这里的 stopPropagation 让 drop 不进会话附件；
+      // dragenter/dragleave 不拦，宿主全窗遮罩的计数与显隐零变化。
+      const panelDragOver = (event) => {
+        if (!isFileDrag(event.dataTransfer)) return
+        event.preventDefault()
+        event.stopPropagation()
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+      }
+      const panelDrop = (event) => {
+        if (!isFileDrag(event.dataTransfer)) return
+        event.preventDefault()
+        event.stopPropagation()
+        // 吞掉 drop 后宿主自己的 reset 不会跑，补发 dragend 走它的既有清理口。
+        try {
+          window.dispatchEvent(new Event('dragend'))
+        } catch (cause) {
+          /* best effort */
+        }
+        if (!kbId) {
+          setBarNotice({ text: t('upload.needKb'), isError: true })
+          return
+        }
+        if (uploading) {
+          setBarNotice({ text: t('upload.busy'), isError: true })
+          return
+        }
+        const split = splitDroppedFiles(event.dataTransfer)
+        if (split.dirs > 0 && split.files.length === 0) {
+          setBarNotice({ text: t('upload.dirSkipped'), isError: true })
+          return
+        }
+        if (split.files.length > 0) handleUpload(split.files)
       }
 
       const confirmReindex = () => {
@@ -10257,7 +10327,7 @@ window.__ModuleLoader__.load({
         h(Styles),
         h(
           'div',
-          { className: 'hrag-root' },
+          { className: 'hrag-root', onDragOver: panelDragOver, onDrop: panelDrop },
           h(HragBoundary, { t, name: t('tab.title') }, content),
           drawer
             ? h(
