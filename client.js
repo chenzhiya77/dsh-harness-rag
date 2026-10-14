@@ -18,6 +18,10 @@ window.__ModuleLoader__.load({
       hostPrimitives = null
     }
     const HostInput = hostPrimitives && hostPrimitives.Input ? hostPrimitives.Input : 'input'
+    // Task 6：菜单/图标/Toast 直用宿主件（缺件才回退——图标回退＝既有手刻路径，菜单回退＝极简列表）。
+    const HostMenu = hostPrimitives && hostPrimitives.Menu ? hostPrimitives.Menu : null
+    const HostToast = hostPrimitives && hostPrimitives.Toast ? hostPrimitives.Toast : null
+    const hostIcon = (name) => (hostPrimitives && hostPrimitives[name] ? hostPrimitives[name] : null)
 
     const NS = 'harnessRag'
     // The host half's named route (src/kb_proxy.ts owns the other end).
@@ -47,6 +51,8 @@ window.__ModuleLoader__.load({
       'reindex.lastSucceeded': '上次重建已完成。',
       'reindex.lastFailed': '上次重建失败，详见服务端日志。',
       'reindex.failed': '重建失败',
+      'reindex.kbLabel': '目标知识库',
+      'reindex.kbPlaceholder': '选择知识库',
       'shell.kbLabel': '知识库',
       'shell.tab.docs': '文档',
       'shell.tab.recall': '召回',
@@ -440,6 +446,7 @@ window.__ModuleLoader__.load({
       'deleteKb.title': '删除知识库？',
       'deleteKb.desc': '将同时删除全部文档、切片、向量、图谱与百科条目，且不可恢复。',
       'createKb.title': '新建知识库',
+      'createKb.created': '知识库已创建',
       'createKb.namePlaceholder': '知识库名称',
       'createKb.descPlaceholder': '描述（可选）',
       'createKb.create': '创建',
@@ -465,6 +472,9 @@ window.__ModuleLoader__.load({
       'set.form.noChanges': '没有需要保存的改动',
       'set.form.defaultHint': '用于图谱抽取、评测裁判、图片与视频配文未单独指定模型时的选择，不影响聊天主模型及其他功能；此项留空时使用配置中的 RAG 默认，配置也未指定则使用模型列表第一项。',
       'set.form.defaultNone': '（使用配置默认）',
+      'set.form.thinkingMenuLabel': '思考跟随对话模型',
+      'set.form.thinkingMenuState': '思考跟随对话模型（已选 {0} 项）',
+      'set.form.thinkingMenuStateNone': '思考跟随对话模型（未选择）',
       'set.form.retrievalHint': '检索时使用：向量模型与重排模型。更换向量模型、提供方、接口地址或稀疏来源后，已用旧配置入库的知识库需要重建索引，否则检索质量会下降。',
       'set.form.provider': '提供商',
       'set.form.model': 'Model ID',
@@ -610,6 +620,8 @@ window.__ModuleLoader__.load({
       'reindex.lastSucceeded': 'Last rebuild finished.',
       'reindex.lastFailed': 'Last rebuild failed — see the server logs.',
       'reindex.failed': 'Rebuild failed',
+      'reindex.kbLabel': 'Target library',
+      'reindex.kbPlaceholder': 'Choose a library',
       'shell.kbLabel': 'Knowledge base',
       'shell.tab.docs': 'Documents',
       'shell.tab.recall': 'Recall',
@@ -1018,6 +1030,7 @@ window.__ModuleLoader__.load({
       'deleteKb.desc':
         'All documents, chunks, vectors, graph data and wiki entries will be cascade-deleted. This cannot be undone.',
       'createKb.title': 'New knowledge base',
+      'createKb.created': 'Knowledge base created',
       'createKb.namePlaceholder': 'Knowledge base name',
       'createKb.descPlaceholder': 'Description (optional)',
       'createKb.create': 'Create',
@@ -1044,6 +1057,9 @@ window.__ModuleLoader__.load({
       'set.form.defaultHint':
         'Used when graph extraction, evaluation judging, image captioning or video captioning has no separate model selection. It does not affect chat models or other features. Leave this unset to inherit the configured RAG default, or the first model in the list if none is configured.',
       'set.form.defaultNone': '(config default)',
+      'set.form.thinkingMenuLabel': 'Thinking follows the chat model',
+      'set.form.thinkingMenuState': 'Thinking follows the chat model ({0} selected)',
+      'set.form.thinkingMenuStateNone': 'Thinking follows the chat model (none selected)',
       'set.form.retrievalHint': 'Used at retrieval time: the embedding model and the rerank model. Changing the embedding model, provider, endpoint or sparse source requires re-indexing the knowledge bases already ingested with the previous one, or their retrieval quality will degrade.',
       'set.form.provider': 'Provider',
       'set.form.model': 'Model ID',
@@ -1322,13 +1338,14 @@ window.__ModuleLoader__.load({
           '.hrag-kbtrigger-chev { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-iconbare { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
           '.hrag-iconbare:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
-          '.hrag-mm-check { margin-left: auto; display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-secondary); }',
           '.hrag-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 0 12px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
           '.hrag-btn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-btn:active:not(:disabled) { background: var(--dsw-alias-interactive-bg-active); }',
           '.hrag-btn:disabled { cursor: not-allowed; opacity: 0.4; }',
           '.hrag-btn:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
           '.hrag-btn-outline { border: 0.5px solid var(--dsw-alias-border-l3); }',
+          '.hrag-btn-primary { background: var(--dsw-alias-button-primary-fill, var(--dsw-alias-label-primary)); color: var(--dsw-alias-label-primary-foreground, #fff); }',
+          '.hrag-btn-primary:hover:not(:disabled) { opacity: 0.9; }',
           '.hrag-tabs { position: relative; display: flex; flex-wrap: wrap; gap: 0 36px; border-bottom: 0.5px solid var(--dsw-alias-border-l3); }',
           '.hrag-tab { position: relative; padding: 0 0 9px; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 13px; font-weight: 500; line-height: 16px; font-family: inherit; cursor: pointer; }',
           '.hrag-tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 2px; background: transparent; }',
@@ -1451,18 +1468,31 @@ window.__ModuleLoader__.load({
           '.hrag-crash-hint { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 1.6; }',
           '.hrag-crash-pre { margin: 0; max-height: 220px; overflow: auto; padding: 8px; border-radius: 6px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-secondary); font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }',
           '.hrag-mm-wrap { position: relative; display: inline-flex; }',
+          // ⋯ 靠右：宿主路径包裹层＝span.hrag-mmhost（缺件回退用 wrap）——两个选择器都留。
           '.hrag-bar > .hrag-mm-wrap + .hrag-mm-wrap { margin-left: auto; }',
+          '.hrag-bar > .hrag-mmhost + .hrag-mmhost { margin-left: auto; }',
           '.hrag-mm-backdrop { position: fixed; inset: 0; z-index: 40; }',
+          // 宿主 Menu（Task 6）：触发器包层。field 直用时整框占满（宿主 root 为 inline-flex 会收内容宽——
+          // 宽链＝mmhost(flex,100%) > 宿主 root(flex:1) > 按钮(width:100%)）；trail/顶栏内不套此规则。
+          '.hrag-set-field > .hrag-mmhost { display: flex; width: 100%; }',
+          '.hrag-set-field > .hrag-mmhost > span { flex: 1 1 auto; min-width: 0; display: flex; }',
+          // 框内下拉等宽（Task 6）：宿主 list 在 body portal 下——宽经根变量传入（box-sizing 已在宿主件内）。
+          '.hrag-mm-eqw { width: var(--hrag-menu-eq-w) !important; max-width: var(--hrag-menu-eq-w) !important; }',
           // box-sizing：框内下拉走等宽内联 width（anchor:'field'）——不设 border-box 会超出 8px（padding）。
           '.hrag-mm { position: fixed; z-index: 41; box-sizing: border-box; min-width: 144px; padding: 4px; border: none; border-radius: var(--dsw-radius-lg); background: var(--dsw-menu-surface-fill, var(--dsw-alias-bg-layer-1)); backdrop-filter: var(--dsw-menu-backdrop-filter); -webkit-backdrop-filter: var(--dsw-menu-backdrop-filter); box-shadow: var(--dsw-elevation-prominent); }',
           '.hrag-mm-item { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 34px; padding: 6px 8px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-family: inherit; text-align: left; cursor: pointer; }',
           '.hrag-mm-item:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-mm-item:disabled { opacity: 0.5; cursor: not-allowed; }',
-          '.hrag-mm-item-danger { color: var(--dsw-alias-state-error-primary); }',
-          '.hrag-mm-item-danger:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-danger); }',
-          '.hrag-mm-sep { height: 0.5px; background: var(--dsw-alias-border-l2); margin: 3px 2px; }',
-          '.hrag-mm-label { padding: 4px 8px 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
-          '.hrag-mm-icon { display: inline-flex; flex-shrink: 0; color: inherit; }',
+          // 思考跟随菜单行（10-15 他复跑调参）：勾选盒**移进角色格内**（绝对定位＋28px 头距＝勾文距 12px）——
+          // 网格只留两列（角色｜该槽当前模型，subgrid 共享列＝逐行对齐）；独立勾选列在 subgrid 下
+          // 首轨间距不可控（浏览器实测钉死）。行高＝宿主 item 34px。
+          '.hrag-mm-tgrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 12px; row-gap: 0; }',
+          '.hrag-mm-checkrow { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; column-gap: 12px; row-gap: 0; }',
+          '.hrag-mm-tcheck { position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; box-sizing: border-box; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 5px; color: var(--dsw-alias-label-primary-foreground); }',
+          '.hrag-mm-tcheck-on { background: var(--dsw-alias-state-business-primary); border-color: var(--dsw-alias-state-business-primary); }',
+          '.hrag-mm-trole { position: relative; padding-left: 28px; white-space: nowrap; }',
+          '.hrag-mm-tmodel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-set-thinkingwrap { margin-top: 8px; }',
           '.hrag-set-body { display: flex; flex-direction: column; gap: 10px; }',
           // 滚动体是 flex 列时，子项必须禁缩——否则带 overflow:hidden 的卡（自动最小
           // 尺寸保护被摘）会在内容超出视口时被压成 1px（10-14 重建索引卡"消失"案）。
@@ -1981,6 +2011,44 @@ window.__ModuleLoader__.load({
      * Errors get a longer read. */
     const NOTICE_DISMISS_MS = 4000
     const NOTICE_DISMISS_ERROR_MS = 8000
+
+    /** 瞬时提示总线（Task 6）：任一视图 `showToast(text, { error })` → 面板级 ToasterHost
+        挂载宿主 `Toast`（portal、逐发 seq 重启周期；错误 8s／常规 4s＝旧口径）。缺件回退
+        旧行内行（挂在顶栏行内，位置同旧 barNotice 行）。 */
+    const toastBus = {
+      current: null,
+      listeners: new Set(),
+      show(text, options) {
+        this.current = { text: text, options: options || {}, seq: (this.current ? this.current.seq + 1 : 1) }
+        this.listeners.forEach((fn) => fn(this.current))
+      },
+    }
+    const showToast = (text, options) => toastBus.show(text, options)
+    function ToasterHost({ anchorRef }) {
+      const [item, setItem] = React.useState(toastBus.current)
+      React.useEffect(() => {
+        const fn = (value) => setItem(value)
+        toastBus.listeners.add(fn)
+        return () => {
+          toastBus.listeners.delete(fn)
+        }
+      }, [])
+      if (!item) return null
+      const isError = !!(item.options && item.options.error)
+      if (!HostToast) {
+        return h('div', { className: isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice', role: 'status' }, item.text)
+      }
+      const ErrorIcon = hostIcon('IconCloseCircleOutlineRegular')
+      return h(HostToast, {
+        key: item.seq,
+        text: item.text,
+        tone: isError ? undefined : 'success',
+        icon: isError && ErrorIcon ? h(ErrorIcon, {}) : undefined,
+        anchor: (anchorRef && anchorRef.current) || undefined,
+        holdMs: isError ? NOTICE_DISMISS_ERROR_MS : NOTICE_DISMISS_MS,
+        onDone: () => setItem((current) => (current && current.seq === item.seq ? null : current)),
+      })
+    }
 
     // ── 向量投影（Task 6）────────────────────────────────────────────────────
     // 四类固定色（Material 400，工作台 2026-08-17 用户拍板）＋形状双编码；
@@ -2623,7 +2691,6 @@ window.__ModuleLoader__.load({
       const [total, setTotal] = React.useState(0)
       const [limit, setLimit] = React.useState(CHUNK_PAGE_SIZE)
       const [failure, setFailure] = React.useState(null)
-      const [notice, setNotice] = React.useState(null)
       const [flashId, setFlashId] = React.useState(null)
       const [previewOpen, setPreviewOpen] = React.useState(false)
       const [preview, setPreview] = React.useState(null)
@@ -2664,7 +2731,6 @@ window.__ModuleLoader__.load({
         setItems([])
         setTotal(0)
         setLimit(CHUNK_PAGE_SIZE)
-        setNotice(null)
       }, [kbId, docId])
 
       // Escape closes the drawer (the preview dialog owns Escape while open).
@@ -2703,7 +2769,6 @@ window.__ModuleLoader__.load({
       }, [focusChunkId, phase, items, total, limit, flashId])
 
       const startDelete = (chunk) => {
-        setNotice(null)
         setDialogError(null)
         setPreview(null)
         setPreviewTarget(chunk)
@@ -2728,7 +2793,7 @@ window.__ModuleLoader__.load({
           .then(() => {
             setBusy(false)
             setPreviewOpen(false)
-            setNotice({ text: t('chunk.deleteSuccess') })
+            showToast(t('chunk.deleteSuccess'))
             load()
           })
           .catch((error) => {
@@ -2844,9 +2909,6 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'hrag-drawer-body' },
-            notice
-              ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
-              : null,
             body,
           ),
         ),
@@ -2934,14 +2996,12 @@ window.__ModuleLoader__.load({
       // 「存为考题」（Task 8 补面，照工作台 §7.1）：命中行勾选 → 底部动作条。
       const [selectedChunks, setSelectedChunks] = React.useState(() => new Map())
       const [saveOpen, setSaveOpen] = React.useState(false)
-      const [savedNotice, setSavedNotice] = React.useState(null)
 
       React.useEffect(() => {
         setResult(null)
         setFailure(null)
         setSelectedChunks(new Map())
         setSaveOpen(false)
-        setSavedNotice(null)
       }, [kbId])
 
       // ↗ 复现预填（评测题库/详情 → 召回面板，§7.2）。
@@ -3200,7 +3260,6 @@ window.__ModuleLoader__.load({
         null,
         bar,
         failure ? h('div', { className: 'hrag-notice hrag-notice-error' }, t('recall.failed') + '：' + errorDetail(failure)) : null,
-        savedNotice ? h('div', { className: 'hrag-notice' }, savedNotice) : null,
         body,
         // 「存为考题」动作条（照工作台 §7.1 底栏）：勾选才出现；计数＋主钮。
         selectedList.length > 0
@@ -3230,8 +3289,7 @@ window.__ModuleLoader__.load({
           selectionCount: selectedList.length,
           onSaved: () => {
             setSelectedChunks(new Map())
-            setSavedNotice(t('recall.saveAs.savedToast'))
-            window.setTimeout(() => setSavedNotice(null), NOTICE_DISMISS_MS)
+            showToast(t('recall.saveAs.savedToast'))
           },
         }),
       )
@@ -3881,7 +3939,6 @@ window.__ModuleLoader__.load({
       const [phase, setPhase] = React.useState('idle')
       const [projection, setProjection] = React.useState(null)
       const [failure, setFailure] = React.useState(null)
-      const [notice, setNotice] = React.useState(null)
       const [recomputing, setRecomputing] = React.useState(false)
       const [hiddenTypes, setHiddenTypes] = React.useState({})
       const [activeOverlay, setActiveOverlay] = React.useState(null)
@@ -3895,15 +3952,6 @@ window.__ModuleLoader__.load({
         setFailure(null)
         setActiveOverlay(null)
       }, [kbId])
-
-      React.useEffect(() => {
-        if (!notice) return
-        const timer = window.setTimeout(
-          () => setNotice(null),
-          notice.isError ? NOTICE_DISMISS_ERROR_MS : NOTICE_DISMISS_MS,
-        )
-        return () => window.clearTimeout(timer)
-      }, [notice])
 
       const load = React.useCallback(() => {
         setPhase((current) => (current === 'ready' ? 'ready' : 'loading'))
@@ -3951,7 +3999,7 @@ window.__ModuleLoader__.load({
           })
           .catch((error) => {
             setRecomputing(false)
-            setNotice({ text: errorDetail(error), isError: true })
+            showToast(errorDetail(error), { error: true })
           })
       }
 
@@ -3977,7 +4025,7 @@ window.__ModuleLoader__.load({
         const isNew = overlayNonceRef.current !== overlayRequest
         if (isNew) overlayNonceRef.current = overlayRequest
         if (algo !== 'pca') {
-          if (isNew) setNotice({ text: t('vec.overlayPcaOnly') })
+          if (isNew) showToast(t('vec.overlayPcaOnly'))
           return
         }
         let cancelled = false
@@ -3994,7 +4042,7 @@ window.__ModuleLoader__.load({
             const latest = projectionRef.current
             if (!result || !latest || result.fingerprint !== latest.fingerprint) {
               setActiveOverlay(null)
-              setNotice({ text: t('vec.overlayStale') })
+              showToast(t('vec.overlayStale'))
               return
             }
             setActiveOverlay({
@@ -4004,7 +4052,7 @@ window.__ModuleLoader__.load({
             })
           })
           .catch(() => {
-            if (!cancelled) setNotice({ text: t('vec.overlayFailed') })
+            if (!cancelled) showToast(t('vec.overlayFailed'))
           })
         return () => {
           cancelled = true
@@ -4194,9 +4242,6 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'hrag-vec' },
         bar,
-        notice
-          ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
-          : null,
         body,
       )
     }
@@ -4812,7 +4857,6 @@ window.__ModuleLoader__.load({
       const [selected, setSelected] = React.useState(null)
       const [positions, setPositions] = React.useState(null)
       const [docNames, setDocNames] = React.useState(null)
-      const [notice, setNotice] = React.useState(null)
       const [activeOverlay, setActiveOverlay] = React.useState(null)
       // LOD 渲染档位（画布上报；guide 档显示右上角引导提示）。
       const [renderTier, setRenderTier] = React.useState('full')
@@ -4854,12 +4898,6 @@ window.__ModuleLoader__.load({
         setRenderTier('full')
         overlayNonceRef.current = null
       }, [kbId])
-
-      React.useEffect(() => {
-        if (!notice) return
-        const timer = window.setTimeout(() => setNotice(null), NOTICE_DISMISS_MS)
-        return () => window.clearTimeout(timer)
-      }, [notice])
 
       const load = React.useCallback(() => {
         setPhase((current) => (current === 'ready' ? 'ready' : 'loading'))
@@ -4905,7 +4943,7 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         if (activeOverlay && graphFp && activeOverlay.fingerprint !== graphFp) {
           setActiveOverlay(null)
-          setNotice(t('graph.overlayStale'))
+          showToast(t('graph.overlayStale'))
         }
       }, [graphFp, activeOverlay, t])
 
@@ -4915,7 +4953,7 @@ window.__ModuleLoader__.load({
         if (!needle || !graph) return
         const hit = graph.nodes.find((node) => String(node.id).toLowerCase().includes(needle))
         if (!hit) {
-          setNotice(t('graph.searchNoMatch'))
+          showToast(t('graph.searchNoMatch'))
           return
         }
         // 定位档可达性（照工作台 isNodeRenderedAtZoom）：熔断档（>2000）里长尾实体
@@ -4926,7 +4964,7 @@ window.__ModuleLoader__.load({
           graphRenderTierForZoom(GRAPH_FOCUS_ZOOM, graph.nodes.length),
         )
         if (kept !== null && !kept.has(hit.id)) {
-          setNotice(t('graph.focusHidden'))
+          showToast(t('graph.focusHidden'))
           return
         }
         setFocusNode({ id: hit.id, token: Date.now() })
@@ -5240,9 +5278,6 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'hrag-graph' },
         bar,
-        notice
-          ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
-          : null,
         body,
         entityDrawer,
       )
@@ -5254,7 +5289,6 @@ window.__ModuleLoader__.load({
       const [phase, setPhase] = React.useState('loading')
       const [docs, setDocs] = React.useState([])
       const [failure, setFailure] = React.useState(null)
-      const [notice, setNotice] = React.useState(null)
       const [deleteTarget, setDeleteTarget] = React.useState(null)
       const [dialogError, setDialogError] = React.useState(null)
       const [busy, setBusy] = React.useState(false)
@@ -5301,17 +5335,16 @@ window.__ModuleLoader__.load({
       }, [docs, poll])
 
       const retry = (doc) => {
-        setNotice(null)
         setBusy(true)
         callOp('retryDocument', { kb_id: kbId, doc_id: doc.id })
           .then(() => {
             setBusy(false)
-            setNotice({ text: t('doc.retrySubmitted') })
+            showToast(t('doc.retrySubmitted'))
             load()
           })
           .catch((error) => {
             setBusy(false)
-            setNotice({ text: errorDetail(error), isError: true })
+            showToast(errorDetail(error), { error: true })
           })
       }
 
@@ -5385,9 +5418,8 @@ window.__ModuleLoader__.load({
                       disabled: busy,
                       onClick: (event) => {
                         event.stopPropagation()
-                        setNotice(null)
                         downloadDocumentFile(kbId, doc).catch((error) =>
-                          setNotice({ text: errorDetail(error), isError: true }),
+                          showToast(errorDetail(error), { error: true }),
                         )
                       },
                     },
@@ -5451,9 +5483,6 @@ window.__ModuleLoader__.load({
       return h(
         React.Fragment,
         null,
-        notice
-          ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
-          : null,
         body,
         deleteTarget
           ? h(ConfirmDialog, {
@@ -5656,55 +5685,54 @@ window.__ModuleLoader__.load({
         ),
       )
     }
-    function dshEllipsisIcon() {
-      return dshMenuIcon([
+    /** Task 6：图标直用宿主件（缺件回退手刻路径——旧真值原路径保留为回退面）。 */
+    const dshIconOr = (name, fallback) => {
+      const Icon = hostIcon(name)
+      return () => (Icon ? h(Icon, {}) : fallback())
+    }
+    const dshEllipsisIcon = dshIconOr('IconEllipsisOutlineRegular', () =>
+      dshMenuIcon([
         { d: 'M3 9C3.55228 9 4 8.55228 4 8C4 7.44772 3.55228 7 3 7C2.44772 7 2 7.44772 2 8C2 8.55228 2.44772 9 3 9Z', fill: true },
         { d: 'M8 9C8.55228 9 9 8.55228 9 8C9 7.44772 8.55228 7 8 7C7.44772 7 7 7.44772 7 8C7 8.55228 7.44772 9 8 9Z', fill: true },
         { d: 'M13 9C13.5523 9 14 8.55228 14 8C14 7.44772 13.5523 7 13 7C12.4477 7 12 7.44772 12 8C12 8.55228 12.4477 9 13 9Z', fill: true },
-      ])
-    }
-    function dshRefreshIcon() {
-      return dshMenuIcon([
+      ]),
+    )
+    const dshRefreshIcon = dshIconOr('IconRefreshOutlineRegular', () =>
+      dshMenuIcon([
         { d: 'M14.5001 8C14.5 9.28552 14.1188 10.5422 13.4045 11.611C12.6903 12.6799 11.6752 13.5129 10.4875 14.0049C9.29982 14.4968 7.99295 14.6255 6.73212 14.3747C5.4713 14.124 4.31314 13.505 3.4041 12.596C2.49514 11.687 1.87614 10.5288 1.62537 9.26798C1.37459 8.00716 1.50331 6.70028 1.99525 5.51261C2.48719 4.32494 3.32025 3.30981 4.3891 2.59557C5.45795 1.88134 6.71458 1.50008 8.0001 1.5C9.9001 1.5 11.7001 2.3 13.0001 3.6L14.5001 5.1' },
         { d: 'M14.4999 1.5V5.1H10.8999' },
-      ])
-    }
-    function dshEditIcon() {
-      return dshMenuIcon([
+      ]),
+    )
+    const dshEditIcon = dshIconOr('IconEditOutlineRegular', () =>
+      dshMenuIcon([
         { d: 'M8.85596 2.69971H4.19971C3.37141 2.69971 2.69992 3.37146 2.69971 4.19971V11.8003C2.69992 12.6285 3.37141 13.3003 4.19971 13.3003H11.8003C12.6283 13.2999 13.3001 12.6283 13.3003 11.8003V7.89893H14.3003V11.8003C14.3001 13.1806 13.1806 14.2999 11.8003 14.3003H4.19971C2.81913 14.3003 1.69992 13.1808 1.69971 11.8003V4.19971C1.69992 2.81918 2.81913 1.69971 4.19971 1.69971H8.85596V2.69971Z', fill: true },
         { d: 'M7.7849 8.23878L13.888 2.13574' },
-      ])
-    }
-    function dshTrashIcon() {
-      return dshMenuIcon([
+      ]),
+    )
+    const dshTrashIcon = dshIconOr('IconTrashOutlineRegular', () =>
+      dshMenuIcon([
         { d: 'M1.28149 3.88831H14.7187' },
         { d: 'M5.41602 3.88833V2.47962C5.41602 2.29282 5.52492 2.11366 5.71876 1.98157C5.9126 1.84948 6.17551 1.77527 6.44964 1.77527H9.55053C9.82466 1.77527 10.0876 1.84948 10.2814 1.98157C10.4753 2.11366 10.5842 2.29282 10.5842 2.47962V3.88833' },
         { d: 'M2.57349 3.88831L3.19366 13.2943C3.21937 13.5502 3.33952 13.7872 3.53065 13.9593C3.72178 14.1313 3.97016 14.2259 4.22729 14.2246H11.7728C12.0299 14.2259 12.2783 14.1313 12.4694 13.9593C12.6605 13.7872 12.7807 13.5502 12.8064 13.2943L13.4266 3.88831' },
         { d: 'M6.44946 6.98926V11.1238' },
         { d: 'M9.55054 6.98926V11.1238' },
-      ])
-    }
-    function dshSettingsIcon() {
-      return dshMenuIcon([
+      ]),
+    )
+    const dshSettingsIcon = dshIconOr('IconSettingsOutlineRegular', () =>
+      dshMenuIcon([
         { d: 'M8 9.75012C8.9665 9.75012 9.75 8.96662 9.75 8.00012C9.75 7.03362 8.9665 6.25012 8 6.25012C7.0335 6.25012 6.25 7.03362 6.25 8.00012C6.25 8.96662 7.0335 9.75012 8 9.75012Z' },
         { d: 'M13.0107 7.79377C12.9505 7.89401 12.9205 7.94413 12.9205 7.99951C12.9205 8.0549 12.9505 8.10502 13.0106 8.20528L13.9849 9.83006C14.045 9.93029 14.0751 9.9804 14.0751 10.0358C14.0751 10.0911 14.045 10.1413 13.9849 10.2415L13.0037 11.8777C12.9468 11.9726 12.9184 12.0201 12.8725 12.0461C12.8267 12.072 12.7713 12.072 12.6607 12.072H10.6704C10.5598 12.072 10.5045 12.072 10.4586 12.098C10.4128 12.1239 10.3843 12.1714 10.3274 12.2662L9.33825 13.9142C9.28133 14.009 9.25287 14.0564 9.20703 14.0823C9.16118 14.1083 9.10588 14.1083 8.99529 14.1083H7.00486C6.89426 14.1083 6.83896 14.1083 6.79312 14.0823C6.74727 14.0564 6.71881 14.009 6.6619 13.9142L5.67273 12.2662C5.61581 12.1714 5.58735 12.1239 5.54151 12.098C5.49566 12.072 5.44036 12.072 5.32977 12.072H3.33945C3.2288 12.072 3.17347 12.072 3.12761 12.0461C3.08176 12.0201 3.0533 11.9726 2.9964 11.8777L2.0152 10.2415C1.9551 10.1413 1.92505 10.0911 1.92505 10.0358C1.92505 9.9804 1.9551 9.93029 2.0152 9.83006L2.98951 8.20528C3.04963 8.10502 3.07969 8.0549 3.07969 7.99951C3.07968 7.94413 3.04961 7.89401 2.98946 7.79377L2.01529 6.17011C1.95514 6.06987 1.92507 6.01975 1.92507 5.96437C1.92506 5.90899 1.95512 5.85886 2.01524 5.7586L2.9964 4.1224C3.0533 4.0275 3.08176 3.98005 3.12761 3.95408C3.17347 3.92811 3.2288 3.92811 3.33945 3.92811H5.32977C5.44036 3.92811 5.49566 3.92811 5.54151 3.90216C5.58735 3.87621 5.61581 3.82879 5.67273 3.73397L6.6619 2.08599C6.71881 1.99116 6.74727 1.94375 6.79312 1.9178C6.83896 1.89185 6.89426 1.89185 7.00486 1.89185H8.99529C9.10588 1.89185 9.16118 1.89185 9.20703 1.9178C9.25287 1.94375 9.28133 1.99116 9.33825 2.08599L10.3274 3.73397C10.3843 3.82879 10.4128 3.87621 10.4586 3.90216C10.5045 3.92811 10.5598 3.92811 10.6704 3.92811H12.6607C12.7713 3.92811 12.8267 3.92811 12.8725 3.95408C12.9184 3.98005 12.9468 4.0275 13.0037 4.1224L13.9849 5.7586C14.045 5.85886 14.0751 5.90899 14.0751 5.96437C14.0751 6.01975 14.045 6.06987 13.9849 6.17011L13.0107 7.79377Z' },
-      ])
-    }
-    function dshPlusIcon() {
-      return dshMenuIcon([{ d: 'M8 2V14' }, { d: 'M2 8H14' }])
-    }
+      ]),
+    )
+    const dshPlusIcon = dshIconOr('IconPlusOutlineRegular', () => dshMenuIcon([{ d: 'M8 2V14' }, { d: 'M2 8H14' }]))
 
-    /** 知识库标题下拉的 chevron 与菜单选中勾（宿主原路径，Task 8 取证）。 */
-    function dshChevronDownIcon() {
-      return dshMenuIcon([
-        { d: 'M4 6L7.29289 9.29289C7.68342 9.68342 8.31658 9.68342 8.70711 9.29289L12 6' },
-      ])
-    }
-    function dshCheckIcon() {
-      return dshMenuIcon([
-        { d: 'M2.25 8.5L5.49732 11.7473C5.90519 12.1552 6.57263 12.1344 6.95426 11.7018L13.75 4' },
-      ])
-    }
+    /** 知识库标题下拉的 chevron 与菜单选中勾——Task 6 起直用宿主件（旧原路径为回退）。 */
+    const dshChevronDownIcon = dshIconOr('IconChevronDownOutlineRegular', () =>
+      dshMenuIcon([{ d: 'M4 6L7.29289 9.29289C7.68342 9.68342 8.31658 9.68342 8.70711 9.29289L12 6' }]),
+    )
+    const dshCheckIcon = dshIconOr('IconCheckOutlineRegular', () =>
+      dshMenuIcon([{ d: 'M2.25 8.5L5.49732 11.7473C5.90519 12.1552 6.57263 12.1344 6.95426 11.7018L13.75 4' }]),
+    )
 
     /** 菜单图标：工作台同款（lucide 24 视窗・stroke 2・圆头——宿主无对应件档，
         spec M3「相同语言」）。 */
@@ -5744,94 +5772,110 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** DSH 真值菜单（菜单批 Task 1，spec M2）：面板/行/危险色/分隔全照宿主
-        Menu.module.css；fixed 测位（同 EvalMenu 配方：开拍测位、下方不足朝上、
-        背板点收）。与评测域 EvalMenu 互不复用（隔离由 spec M2 注钉）。
-        `anchor: 'field'`＝按所属 `.hrag-set-field`（整框）测位并取等宽——
-        工作台框内下拉口径（`w-(--radix-dropdown-menu-trigger-width)`＋对齐输入框）。 */
-    function DshMenu({ title, trigger, align, className, anchor, render }) {
+    /** 宿主菜单件（Task 6）：薄适配——触发器按钮＋受控 open＋宿主 `Menu`（定位/视口钳制/
+        外点关闭/键盘导航/焦点归还全交宿主，portal 视口层）。调用面＝items/children/
+        selectedId/onSelect（onSelect 后自动收起＝旧行为）。`anchor:'field'`＝整框等宽
+        （宿主 list 在 body portal 下——宽经根变量 `--hrag-menu-eq-w` 传入）。缺件回退＝
+        极简 fixed 列表（无键盘导航；保证不因宿主换名整体失效）。 */
+    function DshMenu({ title, trigger, align, className, anchor, items, children, selectedId, onSelect, footer }) {
       const [open, setOpen] = React.useState(false)
-      const [pos, setPos] = React.useState(null)
       const btnRef = React.useRef(null)
+      const close = () => setOpen(false)
       const toggle = () => {
         if (open) {
           setOpen(false)
           return
         }
-        const el = btnRef.current
-        if (el) {
-          const anchorEl = anchor === 'field' && el.closest ? el.closest('.hrag-set-field') || el : el
-          const rect = anchorEl.getBoundingClientRect()
-          const spaceBelow = window.innerHeight - rect.bottom
-          const openUp = spaceBelow < 200 && rect.top > spaceBelow
-          setPos({
-            top: openUp ? null : rect.bottom + 4,
-            bottom: openUp ? window.innerHeight - rect.top + 4 : null,
-            left: rect.left,
-            right: window.innerWidth - rect.right,
-            width: anchor === 'field' ? rect.width : null,
-          })
+        if (anchor === 'field' && btnRef.current && btnRef.current.closest) {
+          const fieldEl = btnRef.current.closest('.hrag-set-field')
+          if (fieldEl) {
+            const rect = fieldEl.getBoundingClientRect()
+            document.documentElement.style.setProperty('--hrag-menu-eq-w', Math.round(rect.width) + 'px')
+          }
         }
         setOpen(true)
       }
+      const anchorButton = h(
+        'button',
+        {
+          type: 'button',
+          ref: btnRef,
+          className: className || 'hrag-btn hrag-btn-outline hrag-btn-icon',
+          'aria-label': title,
+          title,
+          'aria-haspopup': 'menu',
+          'aria-expanded': open,
+          onClick: toggle,
+        },
+        trigger,
+      )
+      if (HostMenu) {
+        return h(
+          'span',
+          { className: 'hrag-mmhost' },
+          h(HostMenu, {
+            open,
+            anchor: anchorButton,
+            items: items || [],
+            children,
+            selectedId,
+            onSelect: (id) => {
+              setOpen(false)
+              if (onSelect) onSelect(id)
+            },
+            onClose: close,
+            align: align === 'end' ? 'end' : 'start',
+            portal: true,
+            listClassName: anchor === 'field' ? 'hrag-mm-eqw' : undefined,
+            footer,
+          }),
+        )
+      }
+      const rect = btnRef.current ? btnRef.current.getBoundingClientRect() : null
       return h(
         'div',
         { className: 'hrag-mm-wrap' },
-        h(
-          'button',
-          {
-            type: 'button',
-            ref: btnRef,
-            className: className || 'hrag-btn hrag-btn-outline hrag-btn-icon',
-            'aria-label': title,
-            title,
-            'aria-haspopup': 'menu',
-            'aria-expanded': open,
-            onClick: toggle,
-          },
-          trigger,
-        ),
+        anchorButton,
         open
           ? h(
               React.Fragment,
               null,
-              h('div', { className: 'hrag-mm-backdrop', onMouseDown: () => setOpen(false) }),
+              h('div', { className: 'hrag-mm-backdrop', onMouseDown: close }),
               h(
                 'div',
                 {
                   className: 'hrag-mm',
                   role: 'menu',
-                  style: pos
+                  style: rect
                     ? {
-                        top: pos.top !== null ? pos.top + 'px' : 'auto',
-                        bottom: pos.bottom !== null ? pos.bottom + 'px' : 'auto',
-                        left: align === 'end' ? 'auto' : pos.left + 'px',
-                        right: align === 'end' ? pos.right + 'px' : 'auto',
-                        width: pos.width ? pos.width + 'px' : undefined,
+                        top: rect.bottom + 4 + 'px',
+                        left: align === 'end' ? 'auto' : rect.left + 'px',
+                        right: align === 'end' ? window.innerWidth - rect.right + 'px' : 'auto',
                       }
                     : undefined,
                 },
-                render(() => setOpen(false)),
+                (items || [])
+                  .filter((entry) => !entry || !entry.type)
+                  .map((entry) =>
+                    h(
+                      'button',
+                      {
+                        key: entry.id,
+                        type: 'button',
+                        className: 'hrag-mm-item',
+                        disabled: entry.disabled,
+                        onClick: () => {
+                          close()
+                          if (onSelect) onSelect(entry.id)
+                        },
+                      },
+                      entry.label,
+                    ),
+                  ),
+                children,
               ),
             )
           : null,
-      )
-    }
-
-    /** DSH 真值菜单行：34px 行高・13px・图标槽。 */
-    function DshMenuItem({ danger, disabled, selected, icon, onSelect, children }) {
-      return h(
-        'button',
-        {
-          type: 'button',
-          role: 'menuitem',
-          className: 'hrag-mm-item' + (danger ? ' hrag-mm-item-danger' : ''),
-          disabled,
-          onClick: () => onSelect && onSelect(),
-        },
-        icon ? h('span', { className: 'hrag-mm-icon' }, icon) : null,
-        children,
-        selected ? h('span', { className: 'hrag-mm-check' }, dshCheckIcon()) : null,
       )
     }
 
@@ -5896,7 +5940,6 @@ window.__ModuleLoader__.load({
       const [tier, setTier] = React.useState('l1')
       const [runTier, setRunTier] = React.useState(null)
       const [drawerRunId, setDrawerRunId] = React.useState(null)
-      const [notice, setNotice] = React.useState(null)
       const [bankAddOpen, setBankAddOpen] = React.useState(false)
       const [bankSynthOpen, setBankSynthOpen] = React.useState(false)
       const [bankSearch, setBankSearch] = React.useState('')
@@ -5915,19 +5958,9 @@ window.__ModuleLoader__.load({
         setBankSynthOpen(false)
         setBankSearch('')
         setBankSelected(new Set())
-        setNotice(null)
       }, [kbId])
 
-      React.useEffect(() => {
-        if (!notice) return undefined
-        const timer = window.setTimeout(
-          () => setNotice(null),
-          notice.isError ? NOTICE_DISMISS_ERROR_MS : NOTICE_DISMISS_MS,
-        )
-        return () => window.clearTimeout(timer)
-      }, [notice])
-
-      const notify = React.useCallback((text, isError) => setNotice({ text, isError: Boolean(isError) }), [])
+      const notify = React.useCallback((text, isError) => showToast(text, { error: Boolean(isError) }), [])
 
       const runsQ = useEvalRunsQuery(kbId, enabled)
       const overviewQ = useEvalCall(kbId, enabled, 'evalRunLatest')
@@ -6183,9 +6216,6 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'hrag-ev' },
         toolbar,
-        notice
-          ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
-          : null,
         body,
         h(EvalRunDrawer, { t, tk, kbId, runId: drawerRunId, onClose: () => setDrawerRunId(null), notify }),
         fullRunOpen
@@ -8925,7 +8955,6 @@ window.__ModuleLoader__.load({
     function WikiView({ t, kbId, enabled, onOpenEntry, onOpenCard, command, onBusyChange }) {
       const tk = (key, ...args) => evText(t(key), args)
       const [query, setQuery] = React.useState('')
-      const [notice, setNotice] = React.useState(null)
       const [entriesCollapsed, setEntriesCollapsed] = React.useState(false)
       const [cardsCollapsed, setCardsCollapsed] = React.useState(false)
       const [selectedIds, setSelectedIds] = React.useState(() => new Set())
@@ -8939,22 +8968,13 @@ window.__ModuleLoader__.load({
 
       React.useEffect(() => {
         setQuery('')
-        setNotice(null)
         setSelectedIds(new Set())
         setDeleteTargets(null)
         setRegeneratingIds([])
         manualRunRef.current = false
       }, [kbId])
 
-      React.useEffect(() => {
-        if (!notice) return undefined
-        const timer = window.setTimeout(
-          () => setNotice(null),
-          notice.isError ? NOTICE_DISMISS_ERROR_MS : NOTICE_DISMISS_MS,
-        )
-        return () => window.clearTimeout(timer)
-      }, [notice])
-      const notify = (text, isError) => setNotice({ text, isError: Boolean(isError) })
+      const notify = (text, isError) => showToast(text, { error: Boolean(isError) })
 
       const entriesQ = useEvalCall(kbId, enabled, 'listWikiEntries', null, (payload) =>
         Boolean(payload && (payload.generation === 'generating' || Date.now() < pollUntilRef.current)),
@@ -9362,9 +9382,6 @@ window.__ModuleLoader__.load({
             }),
           ),
         ),
-        notice
-          ? h('div', { className: notice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, notice.text)
-          : null,
         h(
           'div',
           { className: 'hrag-wk-canvas' },
@@ -9788,7 +9805,7 @@ window.__ModuleLoader__.load({
       }
     }
 
-    function ModelSettingsPanel({ t, kbId, onClose, reindexLine, reindexBusy, reindexRunning, onReindex }) {
+    function ModelSettingsPanel({ t, kbId, kbs, onClose }) {
       const configQ = useEvalCall(kbId, true, 'ragConfigGet', null)
       const migrationQ = useEvalCall(kbId, true, 'ragMigration', null, (payload) =>
         Boolean(payload && payload.state === 'running'),
@@ -9812,6 +9829,76 @@ window.__ModuleLoader__.load({
       const [saveWarning, setSaveWarning] = React.useState(null)
       const [savedNotice, setSavedNotice] = React.useState(false)
       const [dimensionConfirmOpen, setDimensionConfirmOpen] = React.useState(false)
+      // Rebuild-index card (10-15: add the target-library picker, per the workbench
+      // ReindexDialog): pick a library -> confirm -> rebuild that one; the status line
+      // follows the picked library (3s poll while in flight, immediate + 1s re-sample).
+      const [reindexKbId, setReindexKbId] = React.useState('')
+      const [reindexBusy, setReindexBusy] = React.useState(false)
+      const [reindexError, setReindexError] = React.useState(null)
+      const [reindexState, setReindexState] = React.useState(null)
+      const [reindexKick, setReindexKick] = React.useState(0)
+      const [reindexConfirmOpen, setReindexConfirmOpen] = React.useState(false)
+      const reindexRunning = reindexBusy || (reindexState !== null && reindexState.in_progress === true)
+      React.useEffect(() => {
+        if (!reindexKbId) return undefined
+        let cancelled = false
+        let timer = null
+        const tick = () => {
+          callOp('reindexStatus', { kb_id: reindexKbId })
+            .then((data) => {
+              if (cancelled) return
+              const state = data && typeof data === 'object' ? data : null
+              setReindexState(state)
+              if (state && state.in_progress === true) timer = window.setTimeout(tick, PIPELINE_POLL_MS)
+            })
+            .catch(() => {
+              if (!cancelled) setReindexState(null)
+            })
+        }
+        tick()
+        return () => {
+          cancelled = true
+          if (timer !== null) window.clearTimeout(timer)
+        }
+      }, [reindexKbId, reindexBusy, reindexRunning, reindexKick])
+      const confirmReindex = () => {
+        if (!reindexKbId) return
+        setReindexBusy(true)
+        setReindexError(null)
+        callOp('reindex', { kb_id: reindexKbId })
+          .then((data) => {
+            setReindexBusy(false)
+            setReindexConfirmOpen(false)
+            const status = data && data.status
+            showToast(status === 'already_running' ? t('reindex.alreadyRunning') : t('reindex.enqueued'))
+            setReindexKick((value) => value + 1)
+            window.setTimeout(() => setReindexKick((value) => value + 1), 1000)
+          })
+          .catch((error) => {
+            setReindexBusy(false)
+            setReindexError(errorDetail(error))
+          })
+      }
+      let reindexLine = null
+      if (reindexRunning) {
+        const progress = reindexState && reindexState.progress
+        reindexLine = progress
+          ? t('reindex.running') +
+            ' ' + String(progress.documents_done) + '/' + String(progress.documents_total) +
+            ' \u00b7 ' + t('reindex.chunksWritten') +
+            ' ' +
+            String(
+              (progress.chunks_indexed || 0) +
+                (progress.entities_indexed || 0) +
+                (progress.wiki_entries_indexed || 0) +
+                (progress.cards_indexed || 0),
+            )
+          : t('reindex.running')
+      } else if (reindexState && reindexState.last_run === 'succeeded') {
+        reindexLine = t('reindex.lastSucceeded')
+      } else if (reindexState && reindexState.last_run === 'failed') {
+        reindexLine = t('reindex.lastFailed')
+      }
       const [advancedOpen, setAdvancedOpen] = React.useState(false)
       // 探针结论各自跟着取值键走（Task 2）：编辑后旧结论即失效，绝不张冠李戴。
       const [capabilityProbe, setCapabilityProbe] = React.useState(null)
@@ -10173,24 +10260,16 @@ window.__ModuleLoader__.load({
               h('span', { className: 'hrag-set-picker-label' }, labels(value)),
               lucideChevronDownIcon(),
             ),
-            render: (close) => [
-              h('div', { key: 'label', className: 'hrag-mm-label' }, ariaLabel),
-              options.map((option) =>
-                h(
-                  DshMenuItem,
-                  {
-                    key: String(option) === '' ? 'none' : String(option),
-                    disabled: disabledFor ? disabledFor(option) : false,
-                    selected: option === value,
-                    onSelect: () => {
-                      close()
-                      onChange(option)
-                    },
-                  },
-                  labels(option),
-                ),
-              ),
+            items: [
+              { type: 'label', id: 'label', text: ariaLabel },
+              ...options.map((option, index) => ({
+                id: String(index),
+                label: labels(option),
+                disabled: disabledFor ? disabledFor(option) : false,
+              })),
             ],
+            selectedId: options.indexOf(value) >= 0 ? String(options.indexOf(value)) : undefined,
+            onSelect: (id) => onChange(options[Number(id)]),
           }),
         )
 
@@ -10293,12 +10372,89 @@ window.__ModuleLoader__.load({
           (next) => update(field, next === RAG_MODEL_NONE ? '' : next),
         )
 
+      /** 思考跟随菜单（工作台 default 组，spec §6 登记后他裁「做」）：五槽位（抽取/百科/
+          裁判/合成/VLM）勾选；菜单常开不关（连点五项＝一个决定）、两列对齐（角色｜该槽位
+          当前指向的模型）；勾选即写 `*_thinking`（保存链早已全程携带）。 */
+      const thinkingRows = values
+        ? [
+            ['extract_thinking', 'set.field.extractModel', 'extract_model'],
+            ['wiki_thinking', 'set.field.wikiModel', 'wiki_model'],
+            ['judge_thinking', 'set.field.judgeModel', 'judge_model'],
+            ['synthesis_thinking', 'set.field.synthesisModel', 'synthesis_model'],
+            ['vlm_thinking', 'set.field.captionModel', 'vlm_model'],
+          ].map(([key, labelKey, modelField]) => {
+            const modelValue = values[modelField]
+            const options =
+              modelField === 'vlm_model'
+                ? ragVisionReferenceOptions(managedModels, modelValue, t('set.form.defaultNone'))
+                : ragModelReferenceOptions(models, modelValue, t('set.form.defaultNone'))
+            const found = options.find((option) => option.value === (modelValue || RAG_MODEL_NONE))
+            return {
+              key: key,
+              label: t(labelKey),
+              modelLabel: found ? found.label : modelValue || t('set.form.defaultNone'),
+              checked: Boolean(values[key]),
+            }
+          })
+        : []
+      const thinkingCount = thinkingRows.filter((row) => row.checked).length
+      const thinkingMenu = values
+        ? h(
+            'div',
+            { className: 'hrag-set-field hrag-set-thinkingwrap' },
+            h(DshMenu, {
+              title: t('set.form.thinkingMenuLabel'),
+              align: 'start',
+              anchor: 'field',
+              className: 'hrag-set-picker',
+              trigger: h(
+                React.Fragment,
+                null,
+                h(
+                  'span',
+                  { className: 'hrag-set-picker-label' },
+                  thinkingCount > 0
+                    ? t('set.form.thinkingMenuState', { 0: thinkingCount })
+                    : t('set.form.thinkingMenuStateNone'),
+                ),
+                lucideChevronDownIcon(),
+              ),
+              children: h(
+                'div',
+                { className: 'hrag-mm-tgrid' },
+                thinkingRows.map((row) =>
+                  h(
+                    'button',
+                    {
+                      key: row.key,
+                      type: 'button',
+                      role: 'menuitemcheckbox',
+                      'aria-checked': row.checked,
+                      'aria-label': row.label + ' · ' + row.modelLabel,
+                      className: 'hrag-mm-item hrag-mm-checkrow',
+                      onClick: () => update(row.key, !row.checked),
+                    },
+                    h(
+                      'span',
+                      { className: 'hrag-mm-trole' },
+                      h('span', { className: 'hrag-mm-tcheck' + (row.checked ? ' hrag-mm-tcheck-on' : '') }, row.checked ? dshCheckIcon() : null),
+                      row.label,
+                    ),
+                    h('span', { className: 'hrag-mm-tmodel', title: row.modelLabel }, row.modelLabel),
+                  ),
+                ),
+              ),
+            }),
+          )
+        : null
+
       const defaultModelGroup = view && values
         ? h(
         'div',
         { className: 'hrag-set-group' },
         h('div', { className: 'hrag-set-grouptitle', title: t('set.form.defaultHint') }, t('set.group.default')),
         referencePicker(t('set.field.defaultModel'), 'default_model', values.default_model),
+        thinkingMenu,
       )
         : null
 
@@ -10339,20 +10495,16 @@ window.__ModuleLoader__.load({
                           { type: 'button', className: 'hrag-set-tierbtn', 'aria-label': t('set.form.dimensionTierHint') },
                           lucideChevronDownIcon(),
                         ),
-                        render: (close) => [
-                          dimensionVerdict && dimensionVerdict.native != null
-                            ? h('div', { key: 'native', className: 'hrag-mm-label' }, t('set.form.dimensionNativeHint', { 0: dimensionVerdict.native }))
-                            : null,
-                          h('div', { key: 'sep', className: 'hrag-mm-sep' }),
-                          h('div', { key: 'label', className: 'hrag-mm-label' }, t('set.form.dimensionTierHint')),
-                          dimensionTiers.map((width) =>
-                            h(
-                              DshMenuItem,
-                              { key: String(width), onSelect: () => { close(); update('embedding_dimension', String(width)) } },
-                              String(width),
-                            ),
-                          ),
+                        items: [
+                          ...(dimensionVerdict && dimensionVerdict.native != null
+                            ? [{ type: 'label', id: 'native', text: t('set.form.dimensionNativeHint', { 0: dimensionVerdict.native }) }]
+                            : []),
+                          { type: 'separator', id: 'sep' },
+                          { type: 'label', id: 'label', text: t('set.form.dimensionTierHint') },
+                          ...dimensionTiers.map((width) => ({ id: String(width), label: String(width) })),
                         ],
+                        selectedId: String(values.embedding_dimension),
+                        onSelect: (id) => update('embedding_dimension', String(id)),
                       })
                     : null,
                 ),
@@ -10668,23 +10820,21 @@ window.__ModuleLoader__.load({
                     h('span', { className: 'hrag-set-picker-label' }, captionLabel(values.vlm_model || RAG_MODEL_NONE)),
                     lucideChevronDownIcon(),
                   ),
-                  render: (close) => [
-                    h('div', { key: 'label', className: 'hrag-mm-label' }, t('set.field.captionModel')),
-                    captionOptions.map((option) =>
-                      h(
-                        DshMenuItem,
-                        {
-                          key: option.value,
-                          selected: option.value === (values.vlm_model || RAG_MODEL_NONE),
-                          onSelect: () => {
-                            close()
-                            update('vlm_model', option.value === RAG_MODEL_NONE ? '' : option.value)
-                          },
-                        },
-                        captionLabel(option.value),
-                      ),
-                    ),
+                  items: [
+                    { type: 'label', id: 'label', text: t('set.field.captionModel') },
+                    ...captionOptions.map((option, index) => ({
+                      id: String(index),
+                      label: captionLabel(option.value),
+                    })),
                   ],
+                  selectedId:
+                    captionOptions.findIndex((option) => option.value === (values.vlm_model || RAG_MODEL_NONE)) >= 0
+                      ? String(captionOptions.findIndex((option) => option.value === (values.vlm_model || RAG_MODEL_NONE)))
+                      : undefined,
+                  onSelect: (id) => {
+                    const option = captionOptions[Number(id)]
+                    if (option) update('vlm_model', option.value === RAG_MODEL_NONE ? '' : option.value)
+                  },
                 }),
               ),
               { info: t('set.form.captionHint') },
@@ -10705,31 +10855,16 @@ window.__ModuleLoader__.load({
                     h('span', { className: 'hrag-set-picker-label' }, asrProviderLabel(values.video.asr_provider)),
                     lucideChevronDownIcon(),
                   ),
-                  render: (close) => {
-                    const rows = []
-                    RAG_ASR_PROVIDER_GROUPS.forEach((group) => {
-                      rows.push(h('div', { key: 'g-' + group.labelKey, className: 'hrag-mm-label' }, t(group.labelKey)))
-                      group.ids.forEach((id) =>
-                        rows.push(
-                          h(
-                            DshMenuItem,
-                            {
-                              key: id,
-                              selected: id === values.video.asr_provider,
-                              onSelect: () => {
-                                close()
-                                updateVideo('asr_provider', id)
-                                // 切换即改值：另一引擎跑不了的名字换成目标首行（服务档名字是服务侧的、原样带过）。
-                                const kept = ragAsrModelForProviderSwitch(id, values.video.asr_model)
-                                if (kept !== values.video.asr_model) updateVideo('asr_model', kept)
-                              },
-                            },
-                            asrProviderLabel(id),
-                          ),
-                        ),
-                      )
-                    })
-                    return rows
+                  items: RAG_ASR_PROVIDER_GROUPS.flatMap((group) => [
+                    { type: 'label', id: 'g-' + group.labelKey, text: t(group.labelKey) },
+                    ...group.ids.map((id) => ({ id: id, label: asrProviderLabel(id) })),
+                  ]),
+                  selectedId: values.video.asr_provider,
+                  onSelect: (id) => {
+                    updateVideo('asr_provider', id)
+                    // 切换即改值：另一引擎跑不了的名字换成目标首行（服务档名字是服务侧的、原样带过）。
+                    const kept = ragAsrModelForProviderSwitch(id, values.video.asr_model)
+                    if (kept !== values.video.asr_model) updateVideo('asr_model', kept)
                   },
                 }),
               ),
@@ -10769,22 +10904,12 @@ window.__ModuleLoader__.load({
                           },
                           lucideChevronDownIcon(),
                         ),
-                        render: (close) => [
-                          h('div', { key: 'label', className: 'hrag-mm-label' }, t('set.form.asrModelCandidates')),
-                          RAG_ASR_MODEL_MENU[values.video.asr_provider].map((name) =>
-                            h(
-                              DshMenuItem,
-                              {
-                                key: name,
-                                onSelect: () => {
-                                  close()
-                                  updateVideo('asr_model', name)
-                                },
-                              },
-                              name,
-                            ),
-                          ),
+                        items: [
+                          { type: 'label', id: 'label', text: t('set.form.asrModelCandidates') },
+                          ...RAG_ASR_MODEL_MENU[values.video.asr_provider].map((name) => ({ id: name, label: name })),
                         ],
+                        selectedId: values.video.asr_model,
+                        onSelect: (id) => updateVideo('asr_model', id),
                       }),
                     ),
               ),
@@ -10824,20 +10949,22 @@ window.__ModuleLoader__.load({
           )
         : null
 
-      const saveRow = h(
+      // Save button in the header (10-15, DSH settings shape: actions on the title row);
+      // the status line stays at the form tail.
+      const saveButton = h(
+        'button',
+        {
+          type: 'button',
+          className: 'hrag-btn hrag-btn-primary hrag-btn-sm',
+          disabled: !hasChanges || saveBusy || Boolean(saveBlockReason),
+          title: saveBlockReason || (!hasChanges ? t('set.form.noChanges') : undefined),
+          onClick: handleSave,
+        },
+        t('set.form.save'),
+      )
+      const saveStatus = h(
         'div',
         { className: 'hrag-set-saverow' },
-        h(
-          'button',
-          {
-            type: 'button',
-            className: 'hrag-btn hrag-btn-outline hrag-btn-sm',
-            disabled: !hasChanges || saveBusy || Boolean(saveBlockReason),
-            title: saveBlockReason || (!hasChanges ? t('set.form.noChanges') : undefined),
-            onClick: handleSave,
-          },
-          t('set.form.save'),
-        ),
         saveError
           ? h('span', { className: 'hrag-set-saveerr' }, saveError)
           : savedNotice
@@ -10863,43 +10990,24 @@ window.__ModuleLoader__.load({
             { className: 'hrag-drawer-head' },
             h('span', { className: 'hrag-wk-secticon' }, dshSettingsIcon()),
             h('span', { className: 'hrag-drawer-title' }, t('menu.modelSettings')),
+            view && values ? h('span', { style: { marginLeft: 'auto' } }) : null,
+            view && values ? saveButton : null,
             h(
               'button',
               {
                 type: 'button',
-                className: 'hrag-btn hrag-btn-outline hrag-drawer-close',
+                className: 'hrag-iconbare',
                 'aria-label': t('chunk.close'),
                 title: t('chunk.close'),
                 onClick: onClose,
               },
-              '✕',
+              hostIcon('IconCloseOutlineRegular') ? h(hostIcon('IconCloseOutlineRegular'), {}) : '✕',
             ),
           ),
           h(
             'div',
             { className: 'hrag-drawer-body hrag-set-body' },
             migrationLine,
-            h(
-              'div',
-              { className: 'hrag-set-card' },
-              h('div', { className: 'hrag-set-cardhead' }, t('reindex.button')),
-              h(
-                'div',
-                { className: 'hrag-set-cardbody' },
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'hrag-btn hrag-btn-outline hrag-btn-sm',
-                    disabled: reindexBusy || reindexRunning,
-                    title: t('reindex.button'),
-                    onClick: onReindex,
-                  },
-                  t('reindex.button'),
-                ),
-                reindexLine ? h('div', { className: 'hrag-reindex-status' }, reindexLine) : null,
-              ),
-            ),
             configQ.failure
               ? h('div', { className: 'hrag-ev-hint hrag-ev-hint-error hrag-wk-inset' }, t('set.loadFailed'))
               : !view || !values
@@ -10913,7 +11021,57 @@ window.__ModuleLoader__.load({
                     evaluationGroup,
                     multimodalGroup,
                     servicesGroup,
-                    saveRow,
+                    saveStatus,
+            h(
+              'div',
+              { className: 'hrag-set-card' },
+              h('div', { className: 'hrag-set-cardhead' }, t('reindex.button')),
+              h(
+                'div',
+                { className: 'hrag-set-cardbody' },
+                h(
+                  'div',
+                  { style: { width: '100%' } },
+                  fieldRow(
+                    t('reindex.kbLabel'),
+                    pickerControl(
+                      t('reindex.kbLabel'),
+                      reindexKbId,
+                      (kbs || []).map((kb) => String(kb.id)),
+                      (id) => {
+                        if (!id) return t('reindex.kbPlaceholder')
+                        const kb = (kbs || []).find((item) => String(item.id) === id)
+                        return kb ? String(kb.name || kb.id) : id
+                      },
+                      (next) => {
+                        setReindexError(null)
+                        setReindexState(null)
+                        setReindexKbId(next)
+                      },
+                    ),
+                  ),
+                ),
+                h(
+                  'div',
+                  { className: 'hrag-set-saverow', style: { width: '100%', justifyContent: 'flex-end' } },
+                  reindexLine ? h('span', { className: 'hrag-reindex-status' }, reindexLine) : null,
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'hrag-btn hrag-btn-outline hrag-btn-sm',
+                      disabled: !reindexKbId || reindexBusy || reindexRunning,
+                      title: t('reindex.button'),
+                      onClick: () => {
+                        setReindexError(null)
+                        setReindexConfirmOpen(true)
+                      },
+                    },
+                    t('reindex.button'),
+                  ),
+                ),
+              ),
+            ),
                 ),
           ),
         ),
@@ -10931,6 +11089,19 @@ window.__ModuleLoader__.load({
                 setDimensionConfirmOpen(false)
                 submitSave()
               },
+            })
+          : null,
+        reindexConfirmOpen
+          ? h(ConfirmDialog, {
+              t,
+              title: t('reindex.confirmTitle'),
+              description: t('reindex.confirmDescription'),
+              error: reindexError,
+              busy: reindexBusy,
+              cancelKey: 'doc.cancel',
+              confirmKey: 'reindex.confirmAction',
+              onCancel: () => setReindexConfirmOpen(false),
+              onConfirm: confirmReindex,
             })
           : null,
       )
@@ -11436,16 +11607,9 @@ window.__ModuleLoader__.load({
       // 在面板根（同 ChunkDrawer 层位，z 帧 56/57 垫在续读抽屉下）。
       const [wikiDrawer, setWikiDrawer] = React.useState(null)
       const [uploading, setUploading] = React.useState(false)
-      const [barNotice, setBarNotice] = React.useState(null)
+      const toastAnchorRef = React.useRef(null)
       const [pendingDuplicate, setPendingDuplicate] = React.useState(null)
       const [acceptedSuffixes, setAcceptedSuffixes] = React.useState(null)
-      const [reindexOpen, setReindexOpen] = React.useState(false)
-      const [reindexBusy, setReindexBusy] = React.useState(false)
-      const [reindexError, setReindexError] = React.useState(null)
-      // 重建状态（照工作台 useReindexStatus＋isReindexRunning）：在飞由端点
-      // 派生（reindexBusy＝点击→首次轮询的缝隙），空闲示上次结果行。
-      const [reindexState, setReindexState] = React.useState(null)
-      const [reindexKick, setReindexKick] = React.useState(0)
       // 菜单批 Task 1：库级 ⋯ 菜单状态——重命名弹层/删除确认/设置面/百科指令线。
       const [menuRenameOpen, setMenuRenameOpen] = React.useState(false)
       const [renameValue, setRenameValue] = React.useState('')
@@ -11460,8 +11624,6 @@ window.__ModuleLoader__.load({
       const [createKbName, setCreateKbName] = React.useState('')
       const [createKbDesc, setCreateKbDesc] = React.useState('')
       const [createKbBusy, setCreateKbBusy] = React.useState(false)
-      const reindexRunning =
-        reindexBusy || (reindexState !== null && reindexState.in_progress === true)
       // 检索联动叠加（照工作台「在向量空间查看」）：召回触发 → 切投影分区并投影。
       const [overlayRequest, setOverlayRequest] = React.useState(null)
       // 复现预填（评测 → 召回，§7.2）：{query, nonce}——切分区并预填检索框。
@@ -11511,8 +11673,6 @@ window.__ModuleLoader__.load({
 
       // 切库清残留：旧库的提示行与重建状态不得跨库留存。
       React.useEffect(() => {
-        setBarNotice(null)
-        setReindexState(null)
         setOverlayRequest(null)
         setGraphOverlayRequest(null)
         setWikiDrawer(null)
@@ -11522,41 +11682,6 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         if (kbId) writeLastKbId(kbId)
       }, [kbId])
-
-      // 提示行自动消退（工作台 toast 语义：短确认；持久真值在列表与状态行）。
-      React.useEffect(() => {
-        if (!barNotice) return
-        const timer = window.setTimeout(
-          () => setBarNotice(null),
-          barNotice.isError ? NOTICE_DISMISS_ERROR_MS : NOTICE_DISMISS_MS,
-        )
-        return () => window.clearTimeout(timer)
-      }, [barNotice])
-
-      // 重建状态取样（照工作台 useReindexStatus：in_progress 时 3s 轮询，
-      // 空闲停拍；reindexKick 复刻「202 后立即＋1s 二次失效」的点击缝隙补拍）。
-      React.useEffect(() => {
-        if (phase !== 'ready' || !kbId) return
-        let cancelled = false
-        let timer = null
-        const tick = () => {
-          callOp('reindexStatus', { kb_id: kbId })
-            .then((data) => {
-              if (cancelled) return
-              const state = data && typeof data === 'object' ? data : null
-              setReindexState(state)
-              if (state && state.in_progress === true) timer = window.setTimeout(tick, PIPELINE_POLL_MS)
-            })
-            .catch(() => {
-              if (!cancelled) setReindexState(null)
-            })
-        }
-        tick()
-        return () => {
-          cancelled = true
-          if (timer !== null) window.clearTimeout(timer)
-        }
-      }, [phase, kbId, reindexBusy, reindexRunning, reindexKick])
 
       const handleUpload = (fileList) => {
         if (!kbId || uploading) return
@@ -11576,9 +11701,7 @@ window.__ModuleLoader__.load({
           for (const file of files) accepted.push(file)
         }
         if (rejectedNames.length > 0) {
-          setBarNotice({ text: t('upload.rejected', { 0: rejectedNames.join(', ') }), isError: true })
-        } else {
-          setBarNotice(null)
+          showToast(t('upload.rejected', { 0: rejectedNames.join(', ') }), { error: true })
         }
         if (accepted.length === 0) return
         setUploading(true)
@@ -11592,12 +11715,11 @@ window.__ModuleLoader__.load({
           setUploading(false)
           if (results.length > 0) {
             if (failed === 0) {
-              setBarNotice({ text: String(ok) + ' ' + t('upload.submittedUnit') })
+              showToast(String(ok) + ' ' + t('upload.submittedUnit'))
             } else {
               const firstFailure = results.find((entry) => !entry.ok)
-              setBarNotice({
-                text:
-                  String(ok) +
+              showToast(
+                String(ok) +
                   ' ' +
                   t('upload.submittedUnit') +
                   ' · ' +
@@ -11606,8 +11728,8 @@ window.__ModuleLoader__.load({
                   t('upload.failedUnit') +
                   '：' +
                   firstFailure.detail,
-                isError: true,
-              })
+                { error: true },
+              )
             }
           }
           setRefreshToken((value) => value + 1)
@@ -11656,7 +11778,7 @@ window.__ModuleLoader__.load({
               }).then((action) => {
                 if (action === 'cancel') return undefined
                 if (action === 'skip') {
-                  setBarNotice({ text: t('dup.skipped', { 0: file.name }) })
+                  showToast(t('dup.skipped', { 0: file.name }))
                   return undefined
                 }
                 if (action === 'replace') {
@@ -11668,7 +11790,7 @@ window.__ModuleLoader__.load({
                         seenNames.delete(String(verdict.doc.name))
                       }
                       return doUpload(file).then(() => {
-                        setBarNotice({ text: t('dup.replaced', { 0: file.name }) })
+                        showToast(t('dup.replaced', { 0: file.name }))
                       })
                     })
                     .catch((error) => {
@@ -11679,7 +11801,7 @@ window.__ModuleLoader__.load({
                 return doUpload(copy).then(() => {
                   seenNames.add(copyName)
                   if (knownDocs) knownDocs.push({ id: '', name: copyName, content_hash: null })
-                  setBarNotice({ text: t('dup.uploadedAsCopy', { 0: copyName }) })
+                  showToast(t('dup.uploadedAsCopy', { 0: copyName }))
                 })
               })
             })
@@ -11723,38 +11845,19 @@ window.__ModuleLoader__.load({
           /* best effort */
         }
         if (!kbId) {
-          setBarNotice({ text: t('upload.needKb'), isError: true })
+          showToast(t('upload.needKb'), { error: true })
           return
         }
         if (uploading) {
-          setBarNotice({ text: t('upload.busy'), isError: true })
+          showToast(t('upload.busy'), { error: true })
           return
         }
         const split = splitDroppedFiles(event.dataTransfer)
         if (split.dirs > 0 && split.files.length === 0) {
-          setBarNotice({ text: t('upload.dirSkipped'), isError: true })
+          showToast(t('upload.dirSkipped'), { error: true })
           return
         }
         if (split.files.length > 0) handleUpload(split.files)
-      }
-
-      const confirmReindex = () => {
-        setReindexBusy(true)
-        setReindexError(null)
-        callOp('reindex', { kb_id: kbId })
-          .then((data) => {
-            setReindexBusy(false)
-            setReindexOpen(false)
-            const status = data && data.status
-            setBarNotice({ text: status === 'already_running' ? t('reindex.alreadyRunning') : t('reindex.enqueued') })
-            // 202 先于后台标志翻位返回：立即＋1s 二次取样（照工作台双重失效）。
-            setReindexKick((value) => value + 1)
-            window.setTimeout(() => setReindexKick((value) => value + 1), 1000)
-          })
-          .catch((error) => {
-            setReindexBusy(false)
-            setReindexError(errorDetail(error))
-          })
       }
 
       const openRename = () => {
@@ -11769,9 +11872,9 @@ window.__ModuleLoader__.load({
           .then(() => {
             setMenuRenameOpen(false)
             setKbs((list) => list.map((item) => (String(item.id) === kbId ? Object.assign({}, item, { name }) : item)))
-            setBarNotice({ text: t('renameKb.done') })
+            showToast(t('renameKb.done'))
           })
-          .catch((error) => setBarNotice({ text: errorDetail(error), isError: true }))
+          .catch((error) => showToast(errorDetail(error), { error: true }))
       }
       const confirmDeleteKb = () => {
         if (!kbId) return
@@ -11787,7 +11890,7 @@ window.__ModuleLoader__.load({
           .catch((error) => {
             setKbDeleteBusy(false)
             setKbDeleteOpen(false)
-            setBarNotice({ text: errorDetail(error), isError: true })
+            showToast(errorDetail(error), { error: true })
           })
       }
       const confirmCreateKb = () => {
@@ -11804,34 +11907,13 @@ window.__ModuleLoader__.load({
               setKbs((list) => list.concat([created]))
               setKbId(String(created.id))
             }
+            showToast(t('createKb.created'))
           })
           .catch((error) => {
             setCreateKbBusy(false)
             setCreateKbOpen(false)
-            setBarNotice({ text: errorDetail(error), isError: true })
+            showToast(errorDetail(error), { error: true })
           })
-      }
-
-      // 重建状态行（照工作台 functional-models-view 的三态文本）。
-      let reindexLine = null
-      if (reindexRunning) {
-        const progress = reindexState && reindexState.progress
-        reindexLine = progress
-          ? t('reindex.running') +
-            ' ' + String(progress.documents_done) + '/' + String(progress.documents_total) +
-            ' · ' + t('reindex.chunksWritten') +
-            ' ' +
-            String(
-              (progress.chunks_indexed || 0) +
-                (progress.entities_indexed || 0) +
-                (progress.wiki_entries_indexed || 0) +
-                (progress.cards_indexed || 0),
-            )
-          : t('reindex.running')
-      } else if (reindexState && reindexState.last_run === 'succeeded') {
-        reindexLine = t('reindex.lastSucceeded')
-      } else if (reindexState && reindexState.last_run === 'failed') {
-        reindexLine = t('reindex.lastFailed')
       }
 
       let content
@@ -11859,7 +11941,7 @@ window.__ModuleLoader__.load({
           { className: 'hrag-shell' },
           h(
             'div',
-            { className: 'hrag-bar' },
+            { className: 'hrag-bar', ref: toastAnchorRef },
             h(DshMenu, {
               title: t('shell.kbLabel'),
               align: 'start',
@@ -11874,142 +11956,81 @@ window.__ModuleLoader__.load({
                 ),
                 h('span', { className: 'hrag-kbtrigger-chev' }, dshChevronDownIcon()),
               ),
-              render: (close) =>
-                kbs
-                  .map((kb) =>
-                    h(
-                      DshMenuItem,
-                      {
-                        key: String(kb.id),
-                        selected: String(kb.id) === kbId,
-                        onSelect: () => {
-                          close()
-                          setKbId(String(kb.id))
-                        },
-                      },
-                      String(kb.name || kb.id),
-                    ),
-                  )
-                  .concat([
-                    h('div', { key: 'kb-menu-sep', className: 'hrag-mm-sep' }),
-                    h(
-                      DshMenuItem,
-                      {
-                        key: 'create-kb',
-                        icon: dshPlusIcon(),
-                        onSelect: () => {
-                          close()
-                          setCreateKbName('')
-                          setCreateKbDesc('')
-                          setCreateKbOpen(true)
-                        },
-                      },
-                      t('createKb.title'),
-                    ),
-                  ]),
+              items: [
+                ...kbs.map((kb) => ({ id: String(kb.id), label: String(kb.name || kb.id) })),
+                { type: 'separator', id: 'kb-menu-sep' },
+                { id: 'create-kb', label: t('createKb.title'), icon: dshPlusIcon() },
+              ],
+              selectedId: kbId,
+              onSelect: (id) => {
+                if (id === 'create-kb') {
+                  setCreateKbName('')
+                  setCreateKbDesc('')
+                  setCreateKbOpen(true)
+                  return
+                }
+                setKbId(id)
+              },
             }),
             h(DshMenu, {
               title: t('menu.more'),
               align: 'end',
               className: 'hrag-iconbare',
               trigger: dshEllipsisIcon(),
-              render: (close) => [
-                h(
-                  DshMenuItem,
-                  {
-                    key: 'upload',
-                    icon: lucideUploadIcon(),
-                    disabled: uploading,
-                    onSelect: () => {
-                      close()
-                      const input = fileInputRef.current
-                      if (input) input.click()
-                    },
-                  },
-                  uploading ? t('menu.uploading') : t('menu.upload'),
-                ),
-                h(
-                  DshMenuItem,
-                  {
-                    key: 'refresh',
-                    icon: dshRefreshIcon(),
-                    onSelect: () => {
-                      close()
-                      load()
-                      setRefreshToken((value) => value + 1)
-                    },
-                  },
-                  t('menu.refreshUi'),
-                ),
-                h('div', { key: 'sep-1', className: 'hrag-mm-sep' }),
-                h(
-                  DshMenuItem,
-                  {
-                    key: 'update-wiki',
-                    icon: wikiBusy ? h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }) : lucideBookOpenIcon(),
-                    disabled: wikiBusy,
-                    onSelect: () => {
-                      close()
-                      setWikiCommand({ mode: 'incremental', nonce: Date.now() })
-                      setSection('wiki')
-                    },
-                  },
-                  wikiBusy ? t('wk.updating') : t('wk.updateWiki'),
-                ),
-                h(
-                  DshMenuItem,
-                  {
-                    key: 'rebuild-wiki',
-                    icon: lucideRefreshCwIcon(),
-                    disabled: wikiBusy,
-                    onSelect: () => {
-                      close()
-                      setShellRebuildOpen(true)
-                    },
-                  },
-                  t('wk.rebuildWiki'),
-                ),
-                h('div', { key: 'sep-2', className: 'hrag-mm-sep' }),
-                h(
-                  DshMenuItem,
-                  {
-                    key: 'rename',
-                    icon: dshEditIcon(),
-                    onSelect: () => {
-                      close()
-                      openRename()
-                    },
-                  },
-                  t('menu.renameKb'),
-                ),
-                h(
-                  DshMenuItem,
-                  {
-                    key: 'delete',
-                    danger: true,
-                    icon: dshTrashIcon(),
-                    onSelect: () => {
-                      close()
-                      setKbDeleteOpen(true)
-                    },
-                  },
-                  t('menu.deleteKb'),
-                ),
-                h('div', { key: 'sep-3', className: 'hrag-mm-sep' }),
-                h(
-                  DshMenuItem,
-                  {
-                    key: 'settings',
-                    icon: dshSettingsIcon(),
-                    onSelect: () => {
-                      close()
-                      setSettingsOpen(true)
-                    },
-                  },
-                  t('menu.modelSettings'),
-                ),
+              items: [
+                {
+                  id: 'upload',
+                  label: uploading ? t('menu.uploading') : t('menu.upload'),
+                  icon: lucideUploadIcon(),
+                  disabled: uploading,
+                },
+                { id: 'refresh', label: t('menu.refreshUi'), icon: dshRefreshIcon() },
+                { type: 'separator', id: 'sep-1' },
+                {
+                  id: 'update-wiki',
+                  label: wikiBusy ? t('wk.updating') : t('wk.updateWiki'),
+                  icon: wikiBusy ? h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }) : lucideBookOpenIcon(),
+                  disabled: wikiBusy,
+                },
+                { id: 'rebuild-wiki', label: t('wk.rebuildWiki'), icon: lucideRefreshCwIcon(), disabled: wikiBusy },
+                { type: 'separator', id: 'sep-2' },
+                { id: 'rename', label: t('menu.renameKb'), icon: dshEditIcon() },
+                { id: 'delete', label: t('menu.deleteKb'), danger: true, icon: dshTrashIcon() },
+                { type: 'separator', id: 'sep-3' },
+                { id: 'settings', label: t('menu.modelSettings'), icon: dshSettingsIcon() },
               ],
+              onSelect: (id) => {
+                if (id === 'upload') {
+                  const input = fileInputRef.current
+                  if (input) input.click()
+                  return
+                }
+                if (id === 'refresh') {
+                  load()
+                  setRefreshToken((value) => value + 1)
+                  return
+                }
+                if (id === 'update-wiki') {
+                  setWikiCommand({ mode: 'incremental', nonce: Date.now() })
+                  setSection('wiki')
+                  return
+                }
+                if (id === 'rebuild-wiki') {
+                  setShellRebuildOpen(true)
+                  return
+                }
+                if (id === 'rename') {
+                  openRename()
+                  return
+                }
+                if (id === 'delete') {
+                  setKbDeleteOpen(true)
+                  return
+                }
+                if (id === 'settings') setSettingsOpen(true)
+              },
             }),
+            h(ToasterHost, { anchorRef: toastAnchorRef }),
           ),
           h('input', {
             type: 'file',
@@ -12022,9 +12043,6 @@ window.__ModuleLoader__.load({
               event.target.value = ''
             },
           }),
-          barNotice
-            ? h('div', { className: barNotice.isError ? 'hrag-notice hrag-notice-error' : 'hrag-notice' }, barNotice.text)
-            : null,
           h(
             'div',
             { className: 'hrag-tabs', role: 'tablist' },
@@ -12190,19 +12208,6 @@ window.__ModuleLoader__.load({
                 }),
                 )
             : null,
-          reindexOpen
-            ? h(ConfirmDialog, {
-                t,
-                title: t('reindex.confirmTitle'),
-                description: t('reindex.confirmDescription'),
-                error: reindexError,
-                busy: reindexBusy,
-                cancelKey: 'doc.cancel',
-                confirmKey: 'reindex.confirmAction',
-                onCancel: () => setReindexOpen(false),
-                onConfirm: confirmReindex,
-              })
-            : null,
           menuRenameOpen
             ? h(
                 'div',
@@ -12367,13 +12372,7 @@ window.__ModuleLoader__.load({
                   t,
                   kbId,
                   onClose: () => setSettingsOpen(false),
-                  reindexLine,
-                  reindexBusy,
-                  reindexRunning,
-                  onReindex: () => {
-                    setReindexError(null)
-                    setReindexOpen(true)
-                  },
+                  kbs,
                 }),
               )
             : null,
