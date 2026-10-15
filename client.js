@@ -62,6 +62,16 @@ window.__ModuleLoader__.load({
       'shell.viewPending': '此分区实装中',
       'doc.loading': '正在加载文档…',
       'doc.empty': '暂无文档',
+      'doc.search': '搜索文档…',
+      'doc.searchClear': '清空搜索',
+      'doc.noMatch': '没有匹配的文档',
+      'doc.sort': '排序方式',
+      'doc.sortCreatedAt': '上传时间',
+      'doc.sortName': '名称',
+      'doc.sortSize': '大小',
+      'doc.sortChunks': '切片数',
+      'doc.sortAsc': '升序',
+      'doc.sortDesc': '降序',
       'doc.listFailed': '文档列表加载失败',
       'doc.status.uploaded': '待解析',
       'doc.status.parsing': '解析中',
@@ -643,6 +653,16 @@ window.__ModuleLoader__.load({
       'shell.viewPending': 'This section is under construction',
       'doc.loading': 'Loading documents…',
       'doc.empty': 'No documents yet',
+      'doc.search': 'Search documents…',
+      'doc.searchClear': 'Clear search',
+      'doc.noMatch': 'No documents match',
+      'doc.sort': 'Sort documents',
+      'doc.sortCreatedAt': 'Upload time',
+      'doc.sortName': 'Name',
+      'doc.sortSize': 'Size',
+      'doc.sortChunks': 'Chunks',
+      'doc.sortAsc': 'Ascending',
+      'doc.sortDesc': 'Descending',
       'doc.listFailed': 'Failed to load documents',
       'doc.status.uploaded': 'Uploaded',
       'doc.status.parsing': 'Parsing',
@@ -1446,6 +1466,16 @@ window.__ModuleLoader__.load({
           '.hrag-state-error .hrag-state-title { color: var(--dsw-alias-label-error); }',
           '.hrag-docs { display: flex; flex-direction: column; }',
           '.hrag-docsum { padding: 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          // 文档工具栏（小件批 Task 1，照工作台 h-11 行）：搜索＝宿主 Input 前置
+          // 图标（icon 属性，控件照宿主真值）；清空钮绝对定位右缘、检索词非空才渲染；
+          // 排序＝28px 图标钮（hrag-iconbare）挂宿主 Menu。
+          '.hrag-docbar { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; flex-shrink: 0; }',
+          '.hrag-docsearch { position: relative; flex: 1; min-width: 0; display: flex; }',
+          '.hrag-docsearch .hrag-docsearch-field { flex: 1; min-width: 0; }',
+          '.hrag-docsearch input { padding-right: 24px; }',
+          '.hrag-docsearch-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
+          '.hrag-docsearch-clear:hover { color: var(--dsw-alias-label-primary); }',
+          '.hrag-docnomatch { padding: 32px 16px; text-align: center; color: var(--dsw-alias-label-tertiary); font-size: 13px; }',
           '.hrag-docrow { display: flex; flex-direction: column; gap: 4px; padding: 8px 2px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); min-width: 0; }',
           '.hrag-docrow:last-child { border-bottom: none; }',
           '.hrag-docrow-main { display: flex; align-items: center; gap: 8px; min-width: 0; cursor: pointer; }',
@@ -5785,6 +5815,34 @@ window.__ModuleLoader__.load({
 
     /** 文档面板：列表＋行内动作（重试只对 failed/降级出现；删除走级联确认）。
         照工作台词汇；随 kb 或壳刷新重载。 */
+    // ── 文档工具栏（小件批 Task 1，照工作台 `document-view.ts`）：过滤＝trim＋小写
+    // 包含（纯客户端——清单端点本就返回全量）；排序＝四键，null 恒沉底不随方向
+    // （chunk_count 未定态不参与排名），字符串 localeCompare、数字差。
+    const DOC_SORT_DEFAULT = { key: 'created_at', direction: 'desc' }
+    const DOC_SORT_OPTIONS = [
+      { key: 'created_at', labelKey: 'doc.sortCreatedAt' },
+      { key: 'name', labelKey: 'doc.sortName' },
+      { key: 'size_bytes', labelKey: 'doc.sortSize' },
+      { key: 'chunk_count', labelKey: 'doc.sortChunks' },
+    ]
+    function docsFilter(list, query) {
+      const needle = String(query || '').trim().toLowerCase()
+      if (!needle) return list
+      return list.filter((doc) => String(doc.name || '').toLowerCase().includes(needle))
+    }
+    function docsSort(list, key, direction) {
+      const sign = direction === 'asc' ? 1 : -1
+      return list.slice().sort((a, b) => {
+        const av = a[key]
+        const bv = b[key]
+        if (av == null && bv == null) return 0
+        if (av == null) return 1
+        if (bv == null) return -1
+        if (typeof av === 'string' && typeof bv === 'string') return sign * av.localeCompare(bv)
+        return sign * (Number(av) - Number(bv))
+      })
+    }
+
     function DocsView({ t, kbId, refreshToken, onOpenChunks }) {
       const [phase, setPhase] = React.useState('loading')
       const [docs, setDocs] = React.useState([])
@@ -5793,6 +5851,9 @@ window.__ModuleLoader__.load({
       const [dialogError, setDialogError] = React.useState(null)
       const [busy, setBusy] = React.useState(false)
       const [ctxMenu, setCtxMenu] = React.useState(null)
+      // 工具栏（小件批 Task 1）：检索词/排序均为会话态（照工作台 useState，不持久）。
+      const [query, setQuery] = React.useState('')
+      const [sort, setSort] = React.useState(DOC_SORT_DEFAULT)
 
       const load = React.useCallback(() => {
         setPhase('loading')
@@ -5891,14 +5952,79 @@ window.__ModuleLoader__.load({
         const summary = Object.keys(counts)
           .map((key) => (DOC_STATUS_KEYS[key] ? t(DOC_STATUS_KEYS[key]) : key) + ' ' + counts[key])
           .join(' · ')
+        const visibleDocs = docsSort(docsFilter(docs, query), sort.key, sort.direction)
         body = h(
           'div',
           null,
+          h(
+            'div',
+            { className: 'hrag-docbar' },
+            h(
+              'div',
+              { className: 'hrag-docsearch' },
+              h(HostInput, {
+                className: 'hrag-docsearch-field',
+                type: 'text',
+                // icon 仅宿主 Input 接受（回退到原生 input 时传元素会落成非法属性）。
+                icon: hostPrimitives && hostPrimitives.Input ? dshSearchIcon() : undefined,
+                value: query,
+                placeholder: t('doc.search'),
+                'aria-label': t('doc.search'),
+                onChange: (event) => setQuery(event.target.value),
+              }),
+              query
+                ? h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'hrag-docsearch-clear',
+                      'aria-label': t('doc.searchClear'),
+                      title: t('doc.searchClear'),
+                      onClick: () => setQuery(''),
+                    },
+                    hostIcon('IconCloseOutlineRegular') ? h(hostIcon('IconCloseOutlineRegular'), {}) : '✕',
+                  )
+                : null,
+            ),
+            h(DshMenu, {
+              title: t('doc.sort'),
+              align: 'end',
+              className: 'hrag-iconbare',
+              trigger: dshChevronsUpDownIcon(),
+              items: [
+                { type: 'label', id: 'sort-label', text: t('doc.sort') },
+                ...DOC_SORT_OPTIONS.map((option) => ({
+                  id: 'sort-key-' + option.key,
+                  label: t(option.labelKey),
+                  icon: sort.key === option.key ? dshCheckIcon() : null,
+                })),
+                { type: 'separator', id: 'sort-sep' },
+                ...[
+                  { id: 'sort-dir-asc', label: t('doc.sortAsc'), direction: 'asc' },
+                  { id: 'sort-dir-desc', label: t('doc.sortDesc'), direction: 'desc' },
+                ].map((entry) => ({
+                  id: entry.id,
+                  label: entry.label,
+                  icon: sort.direction === entry.direction ? dshCheckIcon() : null,
+                })),
+              ],
+              onSelect: (id) => {
+                if (id.indexOf('sort-key-') === 0) {
+                  setSort((current) => ({ ...current, key: id.slice('sort-key-'.length) }))
+                } else if (id.indexOf('sort-dir-') === 0) {
+                  const direction = id.slice('sort-dir-'.length)
+                  setSort((current) => ({ ...current, direction }))
+                }
+              },
+            }),
+          ),
           h('div', { className: 'hrag-docsum' }, summary),
           h(
             'div',
             { className: 'hrag-docs' },
-            docs.map((doc) => {
+            visibleDocs.length === 0
+              ? h('div', { className: 'hrag-docnomatch' }, t('doc.noMatch'))
+              : visibleDocs.map((doc) => {
             const degraded = isDegraded(doc)
             const statusKey = DOC_STATUS_KEYS[doc.status]
             let meta = statusKey ? t(statusKey) : String(doc.status)
@@ -6259,6 +6385,19 @@ window.__ModuleLoader__.load({
     )
     const dshCheckIcon = dshIconOr('IconCheckOutlineRegular', () =>
       dshMenuIcon([{ d: 'M2.25 8.5L5.49732 11.7473C5.90519 12.1552 6.57263 12.1344 6.95426 11.7018L13.75 4' }]),
+    )
+    /** 文档工具栏图标（小件批 Task 1）：搜索/双箭头排序（回退路径＝宿主 primitives 提取真值）。 */
+    const dshSearchIcon = dshIconOr('IconSearchOutlineRegular', () =>
+      dshMenuIcon([
+        { d: 'M6.58727 11.8586C9.55061 11.8586 11.9529 9.45637 11.9529 6.49304C11.9529 3.5297 9.55061 1.12744 6.58727 1.12744C3.62394 1.12744 1.22168 3.5297 1.22168 6.49304C1.22168 9.45637 3.62394 11.8586 6.58727 11.8586Z' },
+        { d: 'M10.2991 10.3933L14.7783 14.8725' },
+      ]),
+    )
+    const dshChevronsUpDownIcon = dshIconOr('IconChevronsUpDownOutlineRegular', () =>
+      dshMenuIcon([
+        { d: 'M5.1 6L8 3.1L10.9 6' },
+        { d: 'M5.1 10L8 12.9L10.9 10' },
+      ]),
     )
 
     /** 菜单图标：工作台同款（lucide 24 视窗・stroke 2・圆头——宿主无对应件档，
