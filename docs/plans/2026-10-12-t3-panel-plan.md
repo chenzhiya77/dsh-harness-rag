@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-12-t3-panel-spec.md](../specs/2026-10-12-t3-panel-spec.md)（问题＋D1–D6 决定＋接口契约＋验收）
-**Status:** 执行中 · 已提交未推（D1–D6 已拍 2026-10-12：D1 全做 / D2 甲 / D3 甲 / D4 乙 / D5 全保留（**10-13 复查补记：百科原枚举漏格，已补入**）/ D6 延后；**Task 0–10 已落地**——逐格实测见本文件（Task 7/8 真跑 10-15 全过；Task 9/10 真跑 10-13 全过）；Task 11–12 未开始）；编码起于 Task 1（Task 0 为只读核实）。
+**Status:** 执行中 · 已提交未推（D1–D6 已拍 2026-10-12：D1 全做 / D2 甲 / D3 甲 / D4 乙 / D5 全保留（**10-13 复查补记：百科原枚举漏格，已补入**）/ D6 延后；**Task 0–10 已落地**——逐格实测见本文件（Task 7/8 真跑 10-15 全过；Task 9/10 真跑 10-13 全过）；**Task 11 进行中**（10-15：我方侧核毕＋C 站跳片修复他复「过了」；余 §4.1 走查尾、§4.2 对照裁定）；Task 12 未开始）；编码起于 Task 1（Task 0 为只读核实）。
 **Parent:** [2026-10-11-equivalence-freeze-plan.md](2026-10-11-equivalence-freeze-plan.md)（T2 冻结对——本对复用其数据缝口径、验收惯例与「有意不做插件侧单测」声明）· 步骤记录：[2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（全线索进度与决策；全勾后回写 T3 行）。
 
 **Architecture:** 三件事 —— **① 面板本体**（`client.js` 占位串 → 真壳；单文件内分区承载各视图：库·文档｜切片｜百科｜召回｜投影｜图谱｜评测）；**② host 半薄代理**（`kb_proxy` 组：面板动作一函数一个、透传既有 `api()` ＋错误规范化；面板侧不持 base URL/凭证——D3 甲）；**③ locale 词条**（面板面全部进 `locale/{zh,en}.json`）。**deer-flow 零改动**——工作台只作功能与形态对照、代码不搬；可视化（投影/图谱/评测）在 DSH 内新写（D5）。
@@ -307,17 +307,21 @@
 
 ## Task 11 — 真栈验收（spec §4 全文）
 
-> 动到的文件：无代码（真栈实测＋取证归档）。
+> 动到的文件：`client.js`（随批缺陷修一笔 `83fabb1`）＋ 本 plan。
 > **验收对应**：spec §4.1–§4.7 逐项。
 
 - [ ] **一条龙**（§4.1）：开面板→建库（或选库）→上传→查切片→续读→删除切片（预览流）→召回测试→删除文档→重建索引→百科→投影→图谱→评测视图；截图取证；
 - [ ] **对照工作台**（§4.2）：召回/切片/百科/投影/图谱各抽一题同库对照；
-- [ ] **五闸**（§4.3）：删除确认/删除预览/重试门控/重建确认/重建百科逐项过；
-- [ ] **数据缝**（§4.4）：devtools 抽查面板请求全经 host 代理（页面无 base URL/凭证）；
-- [ ] **deer-flow 零改动**（§4.5）：`git diff` 仅文档；
-- [ ] **i18n**（§4.6）：面板词条全走 locale（扫描无硬编码串）。
+- [x] **五闸**（§4.3）：删除确认/删除预览/重试门控/重建确认/重建百科逐项过；
+- [x] **数据缝**（§4.4）：devtools 抽查面板请求全经 host 代理（页面无 base URL/凭证）；
+- [x] **deer-flow 零改动**（§4.5）：`git diff` 仅文档；
+- [x] **i18n**（§4.6）：面板词条全走 locale（扫描无硬编码串）。
 
-**实测**（Task 11，执行后回填）：
+**实测**（Task 11，10-15 进行中回填）：
+
+- **我方侧核毕（10-15）**：§4.3 五闸随各 Task 真跑轮逐项过（删除确认／删除预览／重试门控／重建索引／重建百科）；§4.4 数据缝——面板请求三处 fetch（`callOp`／`callUpload`／`downloadDocumentFile`）全经 host 命名路由 `PROXY_ROUTE`，页面零 base URL 零凭证；§4.5 deer-flow 仓零代码改动（工作区无 T3 笔，仅他自改 README＋未跟踪文档；另未推 `372b2f4b0` 已登记跟进）；§4.6 CJK 扫描唯一命中＝`'ragas 未安装'` 协议常量（前缀匹配后端 skip reason，工作台同款）；§4.7 门禁电池全绿（菜单 8/8、t5 6/6、t6 5/5、t7 7/7、t8 5/5、t9 11/11、wiki 8/8、冒烟 33→34、`node --check`）。
+- **随批缺陷修（10-15 验收轮实报·C 站跳片回跳；他复「过了」）**：**缺陷实锤（照工作台对照定判）**——检索跳片后视图被锁死：focus effect 的防重入守卫用 `flashId` 状态，而闪高亮的 1.2s 清除定时器清掉的正是该状态 ⇒ 守卫失效、effect 重跑→重新 `scrollIntoView`＋重设定时器，**每 1.2s 拉回一次、无限循环**；工作台＝`focusedIdRef` ref 守卫（`chunk-drawer.tsx:286-311`，`flashIndex` 不进 deps），移植时错译成状态守卫。修＝照工作台口径：ref 守卫＋deps 去 `flashId`（`83fabb1`）。验证＝RED/GREEN 探针（修复前 `scrollIntoView` 落点 89/1306/2520/3726ms 恒 1.2s 一轮；修复后仅 91ms 一次、闪后不复燃）＋冒烟新增回归项「ChunkDrawer focus hand-off」（33→34 项全绿）。
+- **待收尾**：§4.1 一条龙剩余面（他手点继续走）；§4.2 对照方式二选一（起工作台实机对照 vs 沿用「同端点数据＋文案逐字」记录）。
 
 ---
 
