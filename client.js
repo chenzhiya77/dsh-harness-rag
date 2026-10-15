@@ -2701,6 +2701,9 @@ window.__ModuleLoader__.load({
       const [dialogError, setDialogError] = React.useState(null)
       const rowRefs = React.useRef({})
       const hasDataRef = React.useRef(false)
+      // Focus hand-off guard (workbench focusedIdRef parity): marks the focus
+      // id as handled so the flash timeout cannot re-trigger the jump.
+      const focusedIdRef = React.useRef(null)
 
       const docId = doc ? doc.id : null
 
@@ -2752,23 +2755,26 @@ window.__ModuleLoader__.load({
       }, [total])
 
       // Focus hand-off (recall row -> this pane): expand the limit until the
-      // target chunk is loaded, then flash-highlight it.
+      // target chunk is loaded, then flash-highlight it. The guard must be the
+      // persistent ref, not flash state — the flash timeout's own setState
+      // re-runs this effect, and a state guard re-arms it every 1.2s, yanking
+      // the reader back to the chunk (2026-10-15 实报).
       React.useEffect(() => {
         if (!focusChunkId || phase !== 'ready') return
+        if (focusedIdRef.current === focusChunkId) return
         const position = items.findIndex((chunk) => chunk.chunk_id === focusChunkId)
         if (position >= 0) {
-          if (flashId !== focusChunkId) {
-            setFlashId(focusChunkId)
-            const node = rowRefs.current[focusChunkId]
-            if (node && typeof node.scrollIntoView === 'function') {
-              node.scrollIntoView({ block: 'center', behavior: 'smooth' })
-            }
-            window.setTimeout(() => setFlashId((value) => (value === focusChunkId ? null : value)), 1200)
+          focusedIdRef.current = focusChunkId
+          setFlashId(focusChunkId)
+          const node = rowRefs.current[focusChunkId]
+          if (node && typeof node.scrollIntoView === 'function') {
+            node.scrollIntoView({ block: 'center', behavior: 'smooth' })
           }
+          window.setTimeout(() => setFlashId((value) => (value === focusChunkId ? null : value)), 1200)
         } else if (items.length < total && limit < total) {
           setLimit((value) => Math.min(total, value + CHUNK_PAGE_SIZE))
         }
-      }, [focusChunkId, phase, items, total, limit, flashId])
+      }, [focusChunkId, phase, items, total, limit])
 
       const startDelete = (chunk) => {
         setDialogError(null)
