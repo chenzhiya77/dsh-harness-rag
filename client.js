@@ -55,6 +55,7 @@ window.__ModuleLoader__.load({
       'reindex.kbPlaceholder': '选择知识库',
       'shell.kbLabel': '知识库',
       'shell.tab.docs': '文档',
+      'shell.tabs.more': '更多标签页',
       'shell.tab.recall': '召回',
       'shell.tab.vectors': '投影',
       'shell.tab.graph': '图谱',
@@ -635,6 +636,7 @@ window.__ModuleLoader__.load({
       'reindex.kbPlaceholder': 'Choose a library',
       'shell.kbLabel': 'Knowledge base',
       'shell.tab.docs': 'Documents',
+      'shell.tabs.more': 'More tabs',
       'shell.tab.recall': 'Recall',
       'shell.tab.vectors': 'Projection',
       'shell.tab.graph': 'Graph',
@@ -1369,8 +1371,27 @@ window.__ModuleLoader__.load({
           '.hrag-btn-outline { border: 0.5px solid var(--dsw-alias-border-l3); }',
           '.hrag-btn-primary { background: var(--dsw-alias-button-primary-fill, var(--dsw-alias-label-primary)); color: var(--dsw-alias-label-primary-foreground, #fff); }',
           '.hrag-btn-primary:hover:not(:disabled) { opacity: 0.9; }',
-          '.hrag-tabs { position: relative; display: flex; flex-wrap: wrap; gap: 0 36px; border-bottom: 0.5px solid var(--dsw-alias-border-l3); }',
-          '.hrag-tab { position: relative; padding: 0 0 9px; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 13px; font-weight: 500; line-height: 16px; font-family: inherit; cursor: pointer; }',
+          // tab 行溢出降级（A⑦，照工作台 tab-strip）：平铺行收进滚动容器（滚动
+          // 条藏起、遮罩是唯一溢出暗示）；底缘发丝线改走 inset 阴影——滚动容器会
+          // 裁 padding 盒，加 1px 下垫后激活下划线（bottom:-1px）仍压在发丝线上，
+          // 与改造前逐位同观感（border-bottom 会被下垫推到下划线之外）。
+          '.hrag-tabswrap { position: relative; }',
+          // 遮罩宿主包裹层（DshMenu 两径）：贴 tabswrap 右缘 40px 全高。宿主
+          // Menu 的原生根 span（relative/inline-flex）会把遮罩的包含块抢到 0×0
+          // 上并留出行盒——定死为静态块（照 .hrag-set-field 结构化覆写先例）。
+          '.hrag-tabswrap > .hrag-mmhost, .hrag-tabswrap > .hrag-mm-wrap { position: absolute; top: 0; right: 0; bottom: 0; width: 40px; }',
+          '.hrag-tabswrap > .hrag-mmhost > span { position: static; display: block; }',
+          '.hrag-tabs { display: flex; overflow-x: auto; padding-bottom: 1px; scrollbar-width: none; box-shadow: inset 0 -0.5px 0 var(--dsw-alias-border-l3); }',
+          '.hrag-tabs::-webkit-scrollbar { display: none; }',
+          '.hrag-tabs-list { display: flex; gap: 0 36px; flex-shrink: 0; }',
+          // 尾垫＝遮罩宽：没有它滚动到不了有效可见区落点（照工作台）。
+          '.hrag-tabs-tail { width: 40px; flex-shrink: 0; }',
+          '.hrag-tabs-mask { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding: 0 4px 0 0; border: none; background: linear-gradient(to left, color-mix(in srgb, var(--dsw-alias-bg-base) 70%, transparent) 25%, transparent); color: var(--dsw-alias-label-secondary); cursor: pointer; }',
+          '.hrag-tabs-mask:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          // 箭头只在悬停/聚焦时现身（照工作台 2026-09-28 裁定）——平时只留渐隐遮罩本体。
+          '.hrag-tabs-mask-chev { display: inline-flex; opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-tabs-mask:hover .hrag-tabs-mask-chev, .hrag-tabs-mask:focus-visible .hrag-tabs-mask-chev { opacity: 1; }',
+          '.hrag-tab { position: relative; flex-shrink: 0; padding: 0 0 9px; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 13px; font-weight: 500; line-height: 16px; font-family: inherit; cursor: pointer; }',
           '.hrag-tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 2px; background: transparent; }',
           ".hrag-tab[aria-selected='true'] { color: var(--dsw-alias-state-business-primary); }",
           ".hrag-tab[aria-selected='true']::after { background: var(--dsw-alias-state-business-primary); }",
@@ -12097,6 +12118,116 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** tab 行折叠边界（纯函数，冒烟钉；照工作台 tab-strip.utils）：未滚动态下
+        「完整放得下」的前缀留平铺侧、其余进下拉——边界只随宽度变、滚动永不改它。
+        itemEnds[i] = 第 i 枚 tab 的 offsetLeft + offsetWidth（天然含间隔）。 */
+    const TABS_MASK_WIDTH = 40
+
+    function computeFoldCount(containerWidth, itemEnds, maskWidth) {
+      const overflow = itemEnds.some((end) => end > containerWidth)
+      const effective = overflow ? containerWidth - maskWidth : containerWidth
+      let count = 0
+      for (const end of itemEnds) {
+        if (end > effective) break
+        count += 1
+      }
+      return count
+    }
+
+    /** tab 行溢出降级（A⑦）：宽档＝原平铺（零行为变化）；窄档＝放不下的 tab
+        折入右缘遮罩下拉（固定折点——下拉成员只随宽度变、滚动永不改），激活项
+        滚入有效可见区（栏宽−遮罩宽，避右缘遮罩）＋尾垫。六枚 tab 永在行内 DOM。 */
+    function TabsStrip({ t, section, onSelect }) {
+      const scrollRef = React.useRef(null)
+      const [foldCount, setFoldCount] = React.useState(SECTIONS.length)
+      const [overflowing, setOverflowing] = React.useState(false)
+
+      const measure = React.useCallback(() => {
+        const element = scrollRef.current
+        if (!element) return
+        const ends = Array.from(element.querySelectorAll('.hrag-tab')).map(
+          (node) => node.offsetLeft + node.offsetWidth,
+        )
+        const width = element.clientWidth
+        const nextFold = computeFoldCount(width, ends, TABS_MASK_WIDTH)
+        // 遮罩条件＝有 tab 放不完整（⟺ 下拉非空）。不用 scrollWidth：尾垫会把它撑大。
+        const nextOverflow = ends.some((end) => end > width)
+        setFoldCount((prev) => (prev === nextFold ? prev : nextFold))
+        setOverflowing((prev) => (prev === nextOverflow ? prev : nextOverflow))
+      }, [])
+
+      // 每次渲染后量一次（换语言等标签宽变化而容器没变时也兜住）；RO 兜拖宽。
+      React.useLayoutEffect(() => {
+        measure()
+      })
+      React.useEffect(() => {
+        const element = scrollRef.current
+        if (!element || typeof ResizeObserver === 'undefined') return undefined
+        const observer = new ResizeObserver(() => measure())
+        observer.observe(element)
+        return () => observer.disconnect()
+      }, [measure])
+
+      // 激活项滚入有效可见区——含从下拉切回的同一路径（activeTab 变化即滚）。
+      React.useEffect(() => {
+        const element = scrollRef.current
+        if (!element) return
+        const active = element.querySelector('.hrag-tab[aria-selected="true"]')
+        if (!active) return
+        const viewWidth =
+          element.clientWidth - (element.scrollWidth > element.clientWidth ? TABS_MASK_WIDTH : 0)
+        const start = active.offsetLeft
+        const end = start + active.offsetWidth
+        if (start < element.scrollLeft) {
+          element.scrollLeft = start
+        } else if (end > element.scrollLeft + viewWidth) {
+          element.scrollLeft = end - viewWidth
+        }
+      }, [section])
+
+      return h(
+        'div',
+        { className: 'hrag-tabswrap' },
+        h(
+          'div',
+          { className: 'hrag-tabs', role: 'tablist', ref: scrollRef },
+          h(
+            'div',
+            { className: 'hrag-tabs-list', role: 'presentation' },
+            SECTIONS.map((entry) =>
+              h(
+                'button',
+                {
+                  key: entry.id,
+                  type: 'button',
+                  role: 'tab',
+                  'aria-selected': section === entry.id,
+                  className: 'hrag-tab',
+                  onClick: () => onSelect(entry.id),
+                },
+                t(entry.label),
+              ),
+            ),
+          ),
+          overflowing ? h('div', { className: 'hrag-tabs-tail', 'aria-hidden': 'true' }) : null,
+        ),
+        overflowing
+          ? h(DshMenu, {
+              title: t('shell.tabs.more'),
+              align: 'end',
+              className: 'hrag-tabs-mask',
+              trigger: h('span', { className: 'hrag-tabs-mask-chev' }, dshChevronDownIcon()),
+              items: SECTIONS.slice(foldCount).map((entry) => ({
+                id: entry.id,
+                label: t(entry.label),
+              })),
+              selectedId: section,
+              onSelect: (id) => onSelect(id),
+            })
+          : null,
+      )
+    }
+
     function KnowledgePanel({ t }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -12545,24 +12676,7 @@ window.__ModuleLoader__.load({
               event.target.value = ''
             },
           }),
-          h(
-            'div',
-            { className: 'hrag-tabs', role: 'tablist' },
-            SECTIONS.map((entry) =>
-              h(
-                'button',
-                {
-                  key: entry.id,
-                  type: 'button',
-                  role: 'tab',
-                  'aria-selected': section === entry.id,
-                  className: 'hrag-tab',
-                  onClick: () => setSection(entry.id),
-                },
-                t(entry.label),
-              ),
-            ),
-          ),
+          h(TabsStrip, { t, section, onSelect: (id) => setSection(id) }),
           // 文档视图 keep-alive（10-15 顺带同源修；照工作台六 tab forceMount）：切走不卸载。
           h(
             'div',
