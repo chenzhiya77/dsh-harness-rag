@@ -21,11 +21,12 @@ window.__ModuleLoader__.load({
     // Task 6：菜单/图标/Toast 直用宿主件（缺件才回退——图标回退＝既有手刻路径，菜单回退＝极简列表）。
     const HostMenu = hostPrimitives && hostPrimitives.Menu ? hostPrimitives.Menu : null
     const HostToast = hostPrimitives && hostPrimitives.Toast ? hostPrimitives.Toast : null
+    const HostTooltip = hostPrimitives && hostPrimitives.Tooltip ? hostPrimitives.Tooltip : null
     const hostIcon = (name) => (hostPrimitives && hostPrimitives[name] ? hostPrimitives[name] : null)
-
     // 转圈件＝宿主 StateDot(ongoing)：自带旋转/相位同步/reduced-motion；自绘 CSS 环（粗边方头）退役；缺件＝不渲染。
     const HostStateDot = hostIcon('StateDot')
     const stateDot = (size) => (HostStateDot ? h(HostStateDot, { state: 'ongoing', size, className: 'hrag-statedot' }) : null)
+
     const NS = 'harnessRag'
     // The host half's named route (src/kb_proxy.ts owns the other end).
     const PROXY_ROUTE = '/dsh-harness-rag/api'
@@ -67,6 +68,21 @@ window.__ModuleLoader__.load({
       'doc.empty': '上传或拖拽文件开始构建索引',
       'doc.dropToUpload': '释放以上传到当前知识库',
       'doc.dropUnsupported': '该格式暂不支持',
+      // 状态六腿悬停分解（小件批 Task 4，照工作台 pathStatus 字典逐字）。
+      'doc.path.asr': '语音',
+      'doc.path.segment': '分镜',
+      'doc.path.caption': '配文',
+      'doc.path.vector': '向量',
+      'doc.path.graph': '图谱',
+      'doc.path.wiki': '百科',
+      'doc.path.libraryHint': '（库级）',
+      'doc.path.state.pending': '待处理',
+      'doc.path.state.indexing': '索引中',
+      'doc.path.state.done': '已完成',
+      'doc.path.state.degraded': '部分降级',
+      'doc.path.state.failed': '失败',
+      'doc.path.state.generating': '生成中',
+      'doc.path.state.ready': '已生成',
       'doc.search': '搜索文档…',
       'doc.searchClear': '清空搜索',
       'doc.noMatch': '没有匹配的文档',
@@ -660,6 +676,20 @@ window.__ModuleLoader__.load({
       'doc.empty': 'Upload or drop files to build the index',
       'doc.dropToUpload': 'Drop to upload into this knowledge base',
       'doc.dropUnsupported': "This format isn't supported yet",
+      'doc.path.asr': 'Speech',
+      'doc.path.segment': 'Shots',
+      'doc.path.caption': 'Caption',
+      'doc.path.vector': 'Vector',
+      'doc.path.graph': 'Graph',
+      'doc.path.wiki': 'Wiki',
+      'doc.path.libraryHint': ' (library-wide)',
+      'doc.path.state.pending': 'Pending',
+      'doc.path.state.indexing': 'Indexing',
+      'doc.path.state.done': 'Done',
+      'doc.path.state.degraded': 'Degraded',
+      'doc.path.state.failed': 'Failed',
+      'doc.path.state.generating': 'Generating',
+      'doc.path.state.ready': 'Ready',
       'doc.search': 'Search documents…',
       'doc.searchClear': 'Clear search',
       'doc.noMatch': 'No documents match',
@@ -1509,6 +1539,12 @@ window.__ModuleLoader__.load({
           '.hrag-btn-sm { height: 26px; padding: 0 8px; font-size: 12px; border-radius: var(--dsw-radius-sm); }',
           '.hrag-docrow-meta { display: flex; align-items: center; gap: 8px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
           '.hrag-docrow-status-failed { color: var(--dsw-alias-label-error); }',
+          // 六腿分解（小件批 Task 4）：宿主 Tooltip 暗泡内两列小行（腿名淡、状态全彩；
+          // degraded 着琥珀——泡内暗底取 amber-500 档，工作台 text-amber-600/dark:500 同族）。
+          '.hrag-pathst { display: flex; flex-direction: column; gap: 4px; }',
+          '.hrag-pathst-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 12px; line-height: 18px; }',
+          '.hrag-pathst-name { opacity: 0.75; }',
+          '.hrag-pathst-degraded { color: var(--dsw-static-amber-500); }',
           '.hrag-notice { padding: 6px 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; word-break: break-word; }',
           '.hrag-notice-error { color: var(--dsw-alias-label-error); }',
           '.hrag-reindex-status { padding: 0 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
@@ -1950,6 +1986,8 @@ window.__ModuleLoader__.load({
           '.hrag-ev-review-static { font-weight: 600; color: inherit; }',
           '.hrag-ev-reviewlist { min-height: 0; flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; }',
           '.hrag-ev-spin-text { display: inline-flex; align-items: center; gap: 4px; }',
+          // StateDot 覆盖：宿主件固定 label-tertiary（中性点设计）；语义色语境随容器色（贴工作台 currentColor 口径）。
+          '.hrag-statedot { color: inherit; }',
           '.hrag-ev-linkbtn { border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11px; cursor: pointer; padding: 0 2px; text-decoration: underline; font-family: inherit; }',
           '.hrag-ev-linkbtn:disabled { opacity: 0.5; cursor: not-allowed; }',
           '.hrag-ev-cand { display: flex; flex-direction: column; gap: 6px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); padding: 8px 10px; }',
@@ -1986,8 +2024,6 @@ window.__ModuleLoader__.load({
           '.hrag-ev-editactions { display: flex; gap: 8px; margin-top: 4px; }',
           '.hrag-ev-loadmore { align-self: flex-start; margin-top: 2px; }',
           '.hrag-ev-doclist { max-height: 190px; overflow-y: auto; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-sm); padding: 4px; display: flex; flex-direction: column; gap: 2px; }',
-          // StateDot 覆盖：宿主件固定 label-tertiary（中性点设计）；语义色语境随容器色（贴工作台 currentColor 口径）。
-          '.hrag-statedot { color: inherit; }',
           '.hrag-ev-doclist-empty { margin: 4px 6px; font-size: 11px; }',
           '.hrag-ev-docrow { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; cursor: pointer; }',
           '.hrag-ev-docrow:hover { background: var(--dsw-alias-interactive-bg-hover); }',
@@ -5905,6 +5941,88 @@ window.__ModuleLoader__.load({
       )
     }
 
+    // ── 状态六腿悬停分解（小件批 Task 4，照工作台 `path-status.ts` 逐条）：视频
+    // 预处理腿（asr/segment/caption）按 payload 有无键前置，检索腿 vector/graph/wiki
+    // 恒在；图谱「索引中」合入进度百分比（「图谱 索引中 87%」不再另处重复）；
+    // `path_status` 空＝null（legacy 行不出悬停，兼容契约同工作台）。
+    const DOC_PATH_KEYS = {
+      asr: 'doc.path.asr',
+      segment: 'doc.path.segment',
+      caption: 'doc.path.caption',
+      vector: 'doc.path.vector',
+      graph: 'doc.path.graph',
+      wiki: 'doc.path.wiki',
+    }
+    const DOC_PATH_STATE_KEYS = {
+      pending: 'doc.path.state.pending',
+      indexing: 'doc.path.state.indexing',
+      done: 'doc.path.state.done',
+      degraded: 'doc.path.state.degraded',
+      failed: 'doc.path.state.failed',
+      generating: 'doc.path.state.generating',
+      ready: 'doc.path.state.ready',
+    }
+
+    function pathStatusLines(doc) {
+      const status = doc.path_status
+      if (!status) return null
+      const indexingGraph = doc.status === 'indexing' && status.graph === 'indexing'
+      const lines = []
+      for (const leg of ['asr', 'segment', 'caption']) {
+        if (status[leg] !== undefined) lines.push({ path: leg, state: status[leg] })
+      }
+      lines.push({ path: 'vector', state: status.vector })
+      lines.push({
+        path: 'graph',
+        state: status.graph,
+        percent: indexingGraph ? doc.progress_percent : undefined,
+      })
+      lines.push({ path: 'wiki', state: status.wiki })
+      return lines
+    }
+
+    function docPathStateLabel(t, state) {
+      const key = DOC_PATH_STATE_KEYS[state]
+      return key ? t(key) : String(state)
+    }
+
+    /** 无宿主 Tooltip 时铺平成原生 title 文本（缺件回退面）。 */
+    function docPathLineText(t, line) {
+      const name = t(DOC_PATH_KEYS[line.path]) + (line.path === 'wiki' ? t('doc.path.libraryHint') : '')
+      const state = docPathStateLabel(t, line.state) + (line.percent !== undefined ? ' ' + line.percent + '%' : '')
+      return name + '：' + state
+    }
+
+    /** 分解卡（照工作台 `PathStatusBreakdown`）：左腿名（wiki 带库级提示）/右状态
+        文案；degraded 着琥珀（按状态而非腿着色——图谱腿 degraded 与视频腿同处理）。 */
+    function PathStatusBreakdown({ t, doc }) {
+      const lines = pathStatusLines(doc)
+      if (!lines) return null
+      return h(
+        'div',
+        { className: 'hrag-pathst', 'data-testid': 'path-status-breakdown' },
+        lines.map((line) =>
+          h(
+            'div',
+            { className: 'hrag-pathst-row', key: line.path, 'data-path': line.path },
+            h(
+              'span',
+              { className: 'hrag-pathst-name' },
+              t(DOC_PATH_KEYS[line.path]) + (line.path === 'wiki' ? t('doc.path.libraryHint') : ''),
+            ),
+            h(
+              'span',
+              {
+                className: line.state === 'degraded' ? 'hrag-pathst-state hrag-pathst-degraded' : 'hrag-pathst-state',
+                'data-state': line.state,
+              },
+              docPathStateLabel(t, line.state) + (line.percent !== undefined ? ' ' + line.percent + '%' : ''),
+            ),
+          ),
+        ),
+      )
+    }
+
     function DocsView({ t, kbId, refreshToken, onOpenChunks, dragProbe, setDocsEmpty }) {
       const [phase, setPhase] = React.useState('loading')
       const [docs, setDocs] = React.useState([])
@@ -6102,6 +6220,32 @@ window.__ModuleLoader__.load({
             let meta = statusKey ? t(statusKey) : String(doc.status)
             if (doc.status === 'indexing') meta += ' ' + String(doc.progress_percent) + '%'
             if (degraded) meta += ' · ' + t('doc.degraded')
+            // 状态悬停（小件批 Task 4，照工作台）：failed 行不出分解（工作台用重试卡
+            // 顶替）；其余有 path_status 的行挂宿主 Tooltip——分类错误文案让位给分解
+            // （错误 copy 仍挂在重试钮 title 上，D2 口径不破）。无宿主 Tooltip 时
+            // 铺平为原生 title（缺件回退面）。
+            const statusClass = doc.status === 'failed' ? 'hrag-docrow-status hrag-docrow-status-failed' : 'hrag-docrow-status'
+            const pathLines = doc.status === 'failed' ? null : pathStatusLines(doc)
+            let statusNode
+            if (!pathLines) {
+              statusNode = h(
+                'span',
+                { className: statusClass, title: doc.error ? t('doc.err.' + classifyDocError(doc.error)) : undefined },
+                meta,
+              )
+            } else if (HostTooltip) {
+              statusNode = h(
+                HostTooltip,
+                { label: h(PathStatusBreakdown, { t, doc }), side: 'top', delayMs: 150, portal: true },
+                h('span', { className: statusClass }, meta),
+              )
+            } else {
+              statusNode = h(
+                'span',
+                { className: statusClass, title: pathLines.map((line) => docPathLineText(t, line)).join('\n') },
+                meta,
+              )
+            }
             return h(
               'div',
               { className: 'hrag-docrow', key: String(doc.id) },
@@ -6173,14 +6317,7 @@ window.__ModuleLoader__.load({
               h(
                 'div',
                 { className: 'hrag-docrow-meta' },
-                h(
-                  'span',
-                  {
-                    className: doc.status === 'failed' ? 'hrag-docrow-status hrag-docrow-status-failed' : 'hrag-docrow-status',
-                    title: doc.error ? t('doc.err.' + classifyDocError(doc.error)) : undefined,
-                  },
-                  meta,
-                ),
+                statusNode,
                 h(
                   'span',
                   { className: 'hrag-docrow-chunks' },
