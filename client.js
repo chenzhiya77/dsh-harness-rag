@@ -23,6 +23,9 @@ window.__ModuleLoader__.load({
     const HostToast = hostPrimitives && hostPrimitives.Toast ? hostPrimitives.Toast : null
     const hostIcon = (name) => (hostPrimitives && hostPrimitives[name] ? hostPrimitives[name] : null)
 
+    // 转圈件＝宿主 StateDot(ongoing)：自带旋转/相位同步/reduced-motion；自绘 CSS 环（粗边方头）退役；缺件＝不渲染。
+    const HostStateDot = hostIcon('StateDot')
+    const stateDot = (size) => (HostStateDot ? h(HostStateDot, { state: 'ongoing', size, className: 'hrag-statedot' }) : null)
     const NS = 'harnessRag'
     // The host half's named route (src/kb_proxy.ts owns the other end).
     const PROXY_ROUTE = '/dsh-harness-rag/api'
@@ -1816,7 +1819,6 @@ window.__ModuleLoader__.load({
           '.hrag-ev-chev { height: 26px; padding: 0 6px; font-size: 11px; border-radius: 0 var(--dsw-radius-sm) var(--dsw-radius-sm) 0; border: none; border-left: 0.5px solid color-mix(in srgb, var(--dsw-alias-label-primary) 10%, transparent); white-space: nowrap; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }',
           '.hrag-ev-chev:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
           '.hrag-ev-chev-armed { color: var(--dsw-alias-label-error); }',
-          '.hrag-ev-spinner { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid currentColor; border-top-color: transparent; display: inline-block; animation: hrag-rotate 800ms linear infinite; }',
           '.hrag-ev-scroll { display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1; overflow-y: auto; padding-right: 2px; }',
           '.hrag-ev-card { background: var(--dsw-alias-bg-layer-1); border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; flex-shrink: 0; }',
           '.hrag-ev-cardhead { display: flex; align-items: center; gap: 6px; padding: 6px 10px; color: var(--dsw-alias-label-secondary); font-size: 12px; min-width: 0; }',
@@ -1984,6 +1986,8 @@ window.__ModuleLoader__.load({
           '.hrag-ev-editactions { display: flex; gap: 8px; margin-top: 4px; }',
           '.hrag-ev-loadmore { align-self: flex-start; margin-top: 2px; }',
           '.hrag-ev-doclist { max-height: 190px; overflow-y: auto; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-sm); padding: 4px; display: flex; flex-direction: column; gap: 2px; }',
+          // StateDot 覆盖：宿主件固定 label-tertiary（中性点设计）；语义色语境随容器色（贴工作台 currentColor 口径）。
+          '.hrag-statedot { color: inherit; }',
           '.hrag-ev-doclist-empty { margin: 4px 6px; font-size: 11px; }',
           '.hrag-ev-docrow { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; cursor: pointer; }',
           '.hrag-ev-docrow:hover { background: var(--dsw-alias-interactive-bg-hover); }',
@@ -6843,7 +6847,7 @@ window.__ModuleLoader__.load({
               disabled: running,
               onClick: () => requestRun(tier),
             },
-            running ? h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }) : null,
+            running ? stateDot(16) : null,
             runButtonLabel,
           ),
           running
@@ -9943,7 +9947,7 @@ window.__ModuleLoader__.load({
               ? h(
                   'span',
                   { className: 'hrag-ev-badge hrag-ev-badge-amber hrag-ev-spin-text' },
-                  h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }),
+                  stateDot(14),
                   tk('wk.updating'),
                 )
               : null,
@@ -10004,7 +10008,7 @@ window.__ModuleLoader__.load({
                                   (rowBusy ? ' hrag-ev-spin-text' : ''),
                               },
                               rowBusy
-                                ? h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' })
+                                ? stateDot(14)
                                 : h('span', { className: 'hrag-wk-dirtydot' }),
                               rowBusy ? tk('wk.updating') : tk('wk.dirty'),
                             )
@@ -10134,7 +10138,7 @@ window.__ModuleLoader__.load({
                     ? h(
                         'span',
                         { className: 'hrag-ev-spin-text' },
-                        h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }),
+                        stateDot(16),
                         tk('wk.updating'),
                       )
                     : h(React.Fragment, null, wikiBookIcon(), tk('wk.updateWiki')),
@@ -13085,7 +13089,7 @@ window.__ModuleLoader__.load({
                 {
                   id: 'update-wiki',
                   label: wikiBusy ? t('wk.updating') : t('wk.updateWiki'),
-                  icon: wikiBusy ? h('span', { className: 'hrag-ev-spinner', 'aria-hidden': 'true' }) : lucideBookOpenIcon(),
+                  icon: wikiBusy ? stateDot(16) || lucideBookOpenIcon() : lucideBookOpenIcon(),
                   disabled: wikiBusy,
                 },
                 { id: 'rebuild-wiki', label: t('wk.rebuildWiki'), icon: lucideRefreshCwIcon(), disabled: wikiBusy },
