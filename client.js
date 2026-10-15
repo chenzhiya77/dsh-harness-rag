@@ -6703,8 +6703,16 @@ window.__ModuleLoader__.load({
         const ctx = canvas.getContext('2d')
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         ctx.clearRect(0, 0, width, height)
-        const dark = isDarkTheme()
-        const ink = (alpha) => (dark ? 'rgba(235,238,245,' + alpha + ')' : 'rgba(60,60,60,' + alpha + ')')
+        // 描边/文字色＝继承文本色（本插件画布族既定口径：读 computed style；
+        // 宿主无 next-themes 的 .dark 钩子，工作台 isDarkTheme 不能照抄——
+        // 2026-10-15 崩溃修复：此前逐字移植遗留未定义引用，评测渲染必炸）。
+        const inkColor = getComputedStyle(wrap).color || '#3c3c3c'
+        const inkMatch = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(inkColor)
+        const ink = (alpha) =>
+          inkMatch ? 'rgba(' + inkMatch[1] + ',' + inkMatch[2] + ',' + inkMatch[3] + ',' + alpha + ')' : inkColor
+        // 衬底色＝页面底色（L2 空心点中心；照投影画布衬底先例）。
+        const bodyBg = typeof document === 'undefined' ? '' : getComputedStyle(document.body).backgroundColor
+        const bgFill = bodyBg && bodyBg !== 'transparent' && bodyBg !== 'rgba(0, 0, 0, 0)' ? bodyBg : '#ffffff'
         const padL = 46
         const padR = 16
         const padT = 18
@@ -6811,7 +6819,7 @@ window.__ModuleLoader__.load({
               ctx.fillStyle = metric.color
               ctx.fill()
             } else {
-              ctx.fillStyle = dark ? '#202127' : '#ffffff'
+              ctx.fillStyle = bgFill
               ctx.fill()
               ctx.strokeStyle = metric.color
               ctx.lineWidth = 1.4
@@ -7190,6 +7198,8 @@ window.__ModuleLoader__.load({
       const [deleteTargets, setDeleteTargets] = React.useState(null)
       const [busy, setBusy] = React.useState(false)
       const [docTitles, setDocTitles] = React.useState(null)
+      // 合成触发信号（照工作台触发后失效合成缓存）：递增即唤醒审核停靠重拉。
+      const [synthWake, setSynthWake] = React.useState(0)
 
       React.useEffect(() => {
         setDrawerQuestionId(null)
@@ -7528,7 +7538,16 @@ window.__ModuleLoader__.load({
               ),
             )
           : null,
-        h(EvalSynthReview, { t, tk, kbId, enabled, notify, docTitle }),
+        h(EvalSynthReview, {
+          t,
+          tk,
+          kbId,
+          enabled,
+          notify,
+          docTitle,
+          wake: synthWake,
+          onBankChanged: () => questionsQ.refresh(),
+        }),
         h(EvalAddQuestionDialog, {
           t,
           tk,
@@ -7545,6 +7564,7 @@ window.__ModuleLoader__.load({
           open: synthOpen,
           onClose: () => onSynthOpenChange(false),
           notify,
+          onTriggered: () => setSynthWake((value) => value + 1),
         }),
         h(EvalQuestionDrawer, {
           t,
@@ -7742,8 +7762,12 @@ window.__ModuleLoader__.load({
     }
 
     /** 合成考题弹层（照工作台）：已索引文档多选（勾选序即提交序）＋候选题数
-        （1–10，默认 5）→ 202 幂等；enqueued 关窗，already_running 留窗。 */
-    function EvalSynthDialog({ t, tk, kbId, open, onClose, notify }) {
+        （1–10，默认 5）→ 202 幂等；enqueued 关窗，already_running 留窗。
+        触发成功（不论 enqueued/already_running）经 onTriggered 唤醒审核停靠
+        ——照工作台 useTriggerSynthesis.onSuccess 失效合成缓存（其注释记载
+        「旧缓存 in_progress=false 会让轮询永不启动（触发后审核面板不现）」，
+        2026-09-02 实测发现；插件 2026-10-15 补上同一环）。 */
+    function EvalSynthDialog({ t, tk, kbId, open, onClose, notify, onTriggered }) {
       const [docIds, setDocIds] = React.useState([])
       const [count, setCount] = React.useState(5)
       const [docs, setDocs] = React.useState(null)
@@ -7778,6 +7802,7 @@ window.__ModuleLoader__.load({
           .then((response) => {
             notify(tk('ev.syn.generating'))
             if (response && response.status === 'enqueued') onClose()
+            if (onTriggered) onTriggered()
           })
           .catch((error) => notify(errorDetail(error), true))
           .finally(() => setBusy(false))
@@ -7861,11 +7886,17 @@ window.__ModuleLoader__.load({
 
     /** 候选题审核停靠（照工作台底部常驻容器）：无候选＝单行头（空态/生成中）；
         有候选＝展开与表格分高，卡内采纳/忽略（B′ 逐候选红块）＋头部批量动作；
-        in_progress 时 3s 轮询（useEvalCall pollWhile）。 */
-    function EvalSynthReview({ t, tk, kbId, enabled, notify, docTitle }) {
+        in_progress 时 3s 轮询（useEvalCall pollWhile）。wake（弹层触发信号）
+        ＝工作台「触发后失效合成缓存」的等价物（见 EvalSynthDialog 头注）；
+        onBankChanged 随采纳/忽略回调＝工作台 accept/reject hook 双失效题库
+        （「新题即时可见」；2026-10-15 补，此前采纳后须切 tab 才见新题）。 */
+    function EvalSynthReview({ t, tk, kbId, enabled, notify, docTitle, wake, onBankChanged }) {
       const statusQ = useEvalCall(kbId, enabled, 'synthesisStatus', null, (payload) =>
         Boolean(payload && payload.in_progress),
       )
+      React.useEffect(() => {
+        if (wake > 0) statusQ.refresh()
+      }, [wake]) // eslint-disable-line react-hooks/exhaustive-deps
       const [collapsed, setCollapsed] = React.useState(false)
       const [busyId, setBusyId] = React.useState(null)
       const anchor = useAnchorBlocks()
@@ -7884,6 +7915,7 @@ window.__ModuleLoader__.load({
             if (accepted) {
               notify(tk('ev.questions.addedToast'))
               statusQ.refresh()
+              if (onBankChanged) onBankChanged()
             }
           })
           .catch((error) => notify(errorDetail(error), true))
@@ -7897,6 +7929,7 @@ window.__ModuleLoader__.load({
             if (accepted) {
               notify(tk('ev.questions.addedToast'))
               statusQ.refresh()
+              if (onBankChanged) onBankChanged()
             }
           })
           .catch((error) => notify(errorDetail(error), true))
@@ -7908,6 +7941,8 @@ window.__ModuleLoader__.load({
           .then(() => {
             anchor.clear(candidateId)
             statusQ.refresh()
+            // 忽略只动暂存；题库一并重拉（口径统一，代价一次空刷——照工作台）。
+            if (onBankChanged) onBankChanged()
           })
           .catch((error) => notify(errorDetail(error), true))
           .finally(() => setBusyId(null))
@@ -7922,6 +7957,7 @@ window.__ModuleLoader__.load({
           if (accepted) notify(tk('ev.questions.addedToast'))
           else notify(tk('ev.syn.acceptFailed'), true)
           statusQ.refresh()
+          if (accepted && onBankChanged) onBankChanged()
         })
       }
       const handleRejectAll = () => {
@@ -7929,7 +7965,10 @@ window.__ModuleLoader__.load({
           candidates.map((candidate) =>
             callOp('rejectSynthesis', { kb_id: kbId, candidate_id: candidate.candidate_id }),
           ),
-        ).then(() => statusQ.refresh())
+        ).then(() => {
+          statusQ.refresh()
+          if (onBankChanged) onBankChanged()
+        })
       }
       const docIds = data && Array.isArray(data.doc_ids) ? data.doc_ids : []
       const docsLine =
