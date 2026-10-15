@@ -1297,6 +1297,45 @@ window.__ModuleLoader__.load({
         /* best effort */
       }
     }
+    // ── 库排序拖拽（照工作台 `kb-order.ts`）：localStorage 本地序——存量按用户序
+    // 在前、新库尾随服务端序；越界/失效/坏值静默回退（排序是锦上添花，不值班崩溃）。
+    const KB_ORDER_KEY = 'hrag-kb-order'
+    function readKbOrderIds() {
+      try {
+        const raw = window.localStorage.getItem(KB_ORDER_KEY)
+        const parsed = raw ? JSON.parse(raw) : null
+        return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : []
+      } catch (cause) {
+        return []
+      }
+    }
+    function writeKbOrderIds(ids) {
+      try {
+        window.localStorage.setItem(KB_ORDER_KEY, JSON.stringify(ids))
+      } catch (cause) {
+        /* best effort */
+      }
+    }
+    /** 服务端序 + 本地序合成（照工作台 useKbLocalOrder.ordered）。 */
+    function kbOrderApply(storedIds, list) {
+      if (!storedIds || storedIds.length === 0) return list
+      const rank = new Map(storedIds.map((id, index) => [id, index]))
+      const known = list
+        .filter((kb) => rank.has(String(kb.id)))
+        .sort((a, b) => rank.get(String(a.id)) - rank.get(String(b.id)))
+      const fresh = list.filter((kb) => !rank.has(String(kb.id)))
+      return [...known, ...fresh]
+    }
+    /** source 拼入 target 槽位（照工作台 commitMove）；无效 id/同位＝原样返回。 */
+    function kbOrderCommit(ids, sourceId, targetId) {
+      if (sourceId === targetId) return ids
+      const from = ids.indexOf(sourceId)
+      const to = ids.indexOf(targetId)
+      if (from === -1 || to === -1) return ids
+      const next = ids.slice()
+      next.splice(to, 0, ...next.splice(from, 1))
+      return next
+    }
     /** 文档源文件名优取 Content-Disposition（FileResponse 的 filename=）。 */
     async function downloadDocumentFile(kbId, doc) {
       const response = await fetch(
@@ -1360,6 +1399,10 @@ window.__ModuleLoader__.load({
           '.hrag-kbtrigger { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-width: 0; padding: 2px 4px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }',
           '.hrag-kbtrigger:hover { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-kbtrigger-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          // 库下拉拖拽排序（库排序拖拽件）：拖拽源＝行 label 内自绘 span（宿主行件
+          // 不动）——空闲态无光标改色（行是点击目标，照工作台），拖拽中显 grabbing。
+          '.hrag-kbdrag { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-kbdrag-dragging { cursor: grabbing; }',
           '.hrag-kbtrigger-chev { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-iconbare { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
           '.hrag-iconbare:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
@@ -12228,6 +12271,67 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 库下拉拖拽排序（库排序拖拽件，D3 甲；spike `kb-drag-spike.html` 实证）：拖拽源
+        ＝行 label 内自绘 draggable span（宿主菜单件不动）；跨行即挪槽（sortable 口径，
+        照工作台 kb-list-panel），drop 只落地；窗口级 dragover 委托——宿主行钮无 id
+        属性，行身份读自源 span 的 `data-kbid`（elementFromPoint → closest 行钮）。
+        拖拽中宿主菜单不关（外点 pointerdown 才关；spike 实证）。 */
+    function useKbDragReorder(onMove) {
+      const [dragId, setDragId] = React.useState(null)
+      const overRef = React.useRef(null)
+
+      React.useEffect(() => {
+        if (!dragId) return undefined
+        const finish = () => {
+          setDragId(null)
+          overRef.current = null
+        }
+        const onDragOver = (event) => {
+          event.preventDefault()
+          if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+          const node = document.elementFromPoint(event.clientX, event.clientY)
+          const row = node && node.closest ? node.closest('button') : null
+          const holder = row ? row.querySelector('[data-kbid]') : null
+          const targetId = holder ? holder.getAttribute('data-kbid') : null
+          if (!targetId || targetId === dragId || targetId === overRef.current) return
+          overRef.current = targetId
+          onMove(dragId, targetId)
+        }
+        const onDrop = (event) => {
+          event.preventDefault()
+          finish()
+        }
+        window.addEventListener('dragover', onDragOver)
+        window.addEventListener('drop', onDrop)
+        window.addEventListener('dragend', finish)
+        return () => {
+          window.removeEventListener('dragover', onDragOver)
+          window.removeEventListener('drop', onDrop)
+          window.removeEventListener('dragend', finish)
+        }
+      }, [dragId, onMove])
+
+      const dragLabel = (id, name) =>
+        h(
+          'span',
+          {
+            className: 'hrag-kbdrag' + (dragId === id ? ' hrag-kbdrag-dragging' : ''),
+            draggable: true,
+            'data-kbid': id,
+            onDragStart: (event) => {
+              if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'move'
+                event.dataTransfer.setData('text/plain', id)
+              }
+              overRef.current = null
+              setDragId(id)
+            },
+          },
+          name,
+        )
+      return dragLabel
+    }
+
     function KnowledgePanel({ t }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -12264,6 +12368,22 @@ window.__ModuleLoader__.load({
       // 图谱联动叠加（Task 7「在图谱中查看」）：召回触发 → 切图谱分区并高亮路径。
       const [graphOverlayRequest, setGraphOverlayRequest] = React.useState(null)
       const fileInputRef = React.useRef(null)
+      // 库排序拖拽：本地序 → 下拉库序；跨行挪槽即持久（照工作台 kb-order）。
+      const [kbOrder, setKbOrder] = React.useState(() => readKbOrderIds())
+      const kbOrderRef = React.useRef(kbOrder)
+      kbOrderRef.current = kbOrder
+      const kbsRef = React.useRef(kbs)
+      kbsRef.current = kbs
+      const orderedKbs = kbOrderApply(kbOrder, kbs)
+      const commitKbMove = React.useCallback((sourceId, targetId) => {
+        const current = kbOrderApply(kbOrderRef.current, kbsRef.current).map((kb) => String(kb.id))
+        const next = kbOrderCommit(current, sourceId, targetId)
+        if (next === current) return
+        kbOrderRef.current = next
+        writeKbOrderIds(next)
+        setKbOrder(next)
+      }, [])
+      const kbDragLabel = useKbDragReorder(commitKbMove)
 
       const load = React.useCallback(() => {
         setPhase('loading')
@@ -12590,7 +12710,10 @@ window.__ModuleLoader__.load({
                 h('span', { className: 'hrag-kbtrigger-chev' }, dshChevronDownIcon()),
               ),
               items: [
-                ...kbs.map((kb) => ({ id: String(kb.id), label: String(kb.name || kb.id) })),
+                ...orderedKbs.map((kb) => {
+                  const id = String(kb.id)
+                  return { id, label: kbDragLabel(id, String(kb.name || kb.id)) }
+                }),
                 { type: 'separator', id: 'kb-menu-sep' },
                 { id: 'create-kb', label: t('createKb.title'), icon: dshPlusIcon() },
               ],
