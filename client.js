@@ -131,6 +131,9 @@ window.__ModuleLoader__.load({
       'chunk.close': '关闭',
       'chunk.tickAria': '切片',
       'chunk.notLoaded': '未加载',
+      'chunk.current': '当前',
+      'chunk.prevChunk': '上一切片',
+      'chunk.nextChunk': '下一切片',
       'chunk.deletePreviewTitle': '删除预览',
       'chunk.orphanedEntities': '将失格删除的实体',
       'chunk.affectedEntities': '将受影响的实体',
@@ -739,6 +742,9 @@ window.__ModuleLoader__.load({
       'chunk.close': 'Close',
       'chunk.tickAria': 'Chunk',
       'chunk.notLoaded': 'Not loaded',
+      'chunk.current': 'current',
+      'chunk.prevChunk': 'Previous chunk',
+      'chunk.nextChunk': 'Next chunk',
       'chunk.deletePreviewTitle': 'Delete Preview',
       'chunk.orphanedEntities': 'Entities to be orphaned',
       'chunk.affectedEntities': 'Entities to be affected',
@@ -1836,6 +1842,14 @@ window.__ModuleLoader__.load({
           // 设置面头部不要划分线（10-15 他点名「功能模型设置下面」）——抽屉们的头线照旧。
           '.hrag-modal .hrag-drawer-head { border-bottom: none; }',
           '.hrag-drawer-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; }',
+          // 抽屉头部徽章族＋↑↓（小件批 Task 5，照工作台 chunk-drawer 头行）：类型徽章
+          // 20px＝S 档下限；徽章＝textchip 词汇（软底变体承「切片预览」类标）；跳片钮
+          // 26px＝与关闭钮同格（幽灵底、悬停亮、边界禁）。
+          '.hrag-drawer-ftype { flex-shrink: 0; width: 20px; height: 20px; }',
+          '.hrag-headbadge-soft { border-color: transparent; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); }',
+          '.hrag-drawer-nav { display: flex; flex-shrink: 0; gap: 2px; }',
+          '.hrag-drawer-navbtn { flex-shrink: 0; width: 26px; height: 26px; padding: 0; color: var(--dsw-alias-label-secondary); }',
+          '.hrag-drawer-navbtn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
           '.hrag-drawer-panel { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }',
           '.hrag-drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px; }',
           // ── 评测域（Task 8）──────────────────────────────────────────────
@@ -2342,6 +2356,9 @@ window.__ModuleLoader__.load({
 
     const CHUNK_PAGE_SIZE = 20
     const CHUNK_FULL_LOAD_CAP = 300
+    /** 抽屉抽取轮询节拍（照工作台 chunk-drawer refetchInterval 3000）：仅当
+        任一切片仍在抽取（extract_status==='pending'）时武装。 */
+    const CHUNK_POLL_MS = 3000
     /** Poll cadence for the documents list and the reindex status — the
      * workbench's library pipelines share this 3s cadence. */
     const PIPELINE_POLL_MS = 3000
@@ -3225,7 +3242,9 @@ window.__ModuleLoader__.load({
             setPhase(list.length === 0 ? 'empty' : 'ready')
           })
           .catch((error) => {
-            hasDataRef.current = false
+            // 后台刷新（轮询/refreshToken 重载）失败保留旧数据——react-query
+            // refetch 语义；无数据时才落到错误整页（初始加载失败面不变）。
+            if (hasDataRef.current) return
             setFailure(error)
             setPhase('error')
           })
@@ -3234,6 +3253,15 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         load()
       }, [load, refreshToken])
+
+      // 抽取进行中条件轮询（照工作台 refetchInterval）：pending 存在即武装
+      // 3s 轮询，全落定自动停（谓词变化才换 interval，节拍不被每次回包重置）。
+      const pendingExtract = hasPendingExtraction(items)
+      React.useEffect(() => {
+        if (phase !== 'ready' || !pendingExtract) return undefined
+        const timer = window.setInterval(load, CHUNK_POLL_MS)
+        return () => window.clearInterval(timer)
+      }, [phase, pendingExtract, load])
 
       // Doc switch resets the pane (first page again).
       React.useEffect(() => {
@@ -3282,6 +3310,8 @@ window.__ModuleLoader__.load({
         const position = items.findIndex((chunk) => chunk.chunk_id === focusChunkId)
         if (position >= 0) {
           focusedIdRef.current = focusChunkId
+          // 头部「当前 #K」同步置位：smooth 滚动落定前先显示正确位次（照工作台）。
+          setActiveIndex(position)
           flashAndCenter(focusChunkId)
         } else if (items.length < total && limit < total) {
           setLimit((value) => Math.min(total, value + CHUNK_PAGE_SIZE))
@@ -3465,8 +3495,52 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'hrag-drawer-head' },
+            // 头部徽章族＋↑↓（小件批 Task 5，照工作台 chunk-drawer 头行）：类型徽章／
+            // 切片数／「当前 #K」（total>0）＋逐片跳转钮（边界禁；跳片走 jumpTo 通路，
+            // 未加载目标先扩 limit 由 pending effect 续跳）。
+            h(FileTypeBadge, { fileName: String(doc.name), className: 'hrag-drawer-ftype' }),
             h('span', { className: 'hrag-drawer-title', title: String(doc.name) }, String(doc.name)),
-            total > 0 ? h('span', { className: 'hrag-docrow-chunks' }, String(total) + ' ' + t('chunk.unit')) : null,
+            h('span', { className: 'hrag-textchip hrag-headbadge-soft' }, t('chunk.drawerTitle')),
+            h(
+              'span',
+              { className: 'hrag-textchip', style: { fontVariantNumeric: 'tabular-nums' } },
+              String(total) + ' ' + t('chunk.unit'),
+            ),
+            total > 0
+              ? h(
+                  'span',
+                  { className: 'hrag-textchip', style: { fontVariantNumeric: 'tabular-nums' } },
+                  t('chunk.current') + ' #' + String(activeIndex + 1),
+                )
+              : null,
+            h(
+              'div',
+              { className: 'hrag-drawer-nav' },
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-btn hrag-drawer-navbtn',
+                  'aria-label': t('chunk.prevChunk'),
+                  title: t('chunk.prevChunk'),
+                  disabled: activeIndex <= 0,
+                  onClick: () => jumpTo(activeIndex - 1),
+                },
+                dshChevronUpIcon(),
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-btn hrag-drawer-navbtn',
+                  'aria-label': t('chunk.nextChunk'),
+                  title: t('chunk.nextChunk'),
+                  disabled: activeIndex >= total - 1,
+                  onClick: () => jumpTo(activeIndex + 1),
+                },
+                dshChevronDownIcon(),
+              ),
+            ),
             h(
               'button',
               {
@@ -3514,6 +3588,12 @@ window.__ModuleLoader__.load({
      * an em dash; the label string itself is computed server-side per request. */
     function formatScore(score) {
       return score == null ? '—' : Number(score).toFixed(3)
+    }
+
+    /** 抽取出力判定（照工作台 chunk-drawer refetchInterval 谓词）：任一切片
+        仍在抽取即为真——插件无重抽在飞源（②档裁减项）。 */
+    function hasPendingExtraction(items) {
+      return (Array.isArray(items) ? items : []).some((chunk) => chunk && chunk.extract_status === 'pending')
     }
 
     /** First non-empty line of the chunk text (the workbench's row preview). */
@@ -6588,7 +6668,11 @@ window.__ModuleLoader__.load({
       dshMenuIcon([{ d: 'M8 1.6L9.65 6.35L14.4 8L9.65 9.65L8 14.4L6.35 9.65L1.6 8L6.35 6.35Z' }]),
     )
 
-    /** 知识库标题下拉的 chevron 与菜单选中勾——Task 6 起直用宿主件（旧原路径为回退）。 */
+    /** 知识库标题下拉的 chevron 与菜单选中勾——Task 6 起直用宿主件（旧原路径为回退）；
+        小件批 Task 5 起上/下 chevron 还供抽屉逐片跳转钮（回退＝下行镜像）。 */
+    const dshChevronUpIcon = dshIconOr('IconChevronUpOutlineRegular', () =>
+      dshMenuIcon([{ d: 'M4 10L7.29289 6.70711C7.68342 6.31658 8.31658 6.31658 8.70711 6.70711L12 10' }]),
+    )
     const dshChevronDownIcon = dshIconOr('IconChevronDownOutlineRegular', () =>
       dshMenuIcon([{ d: 'M4 6L7.29289 9.29289C7.68342 9.68342 8.31658 9.68342 8.70711 9.29289L12 6' }]),
     )
