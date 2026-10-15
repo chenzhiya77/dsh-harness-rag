@@ -61,7 +61,9 @@ window.__ModuleLoader__.load({
       'shell.tab.graph': '图谱',
       'shell.viewPending': '此分区实装中',
       'doc.loading': '正在加载文档…',
-      'doc.empty': '暂无文档',
+      'doc.empty': '上传或拖拽文件开始构建索引',
+      'doc.dropToUpload': '释放以上传到当前知识库',
+      'doc.dropUnsupported': '该格式暂不支持',
       'doc.search': '搜索文档…',
       'doc.searchClear': '清空搜索',
       'doc.noMatch': '没有匹配的文档',
@@ -652,7 +654,9 @@ window.__ModuleLoader__.load({
       'shell.tab.graph': 'Graph',
       'shell.viewPending': 'This section is under construction',
       'doc.loading': 'Loading documents…',
-      'doc.empty': 'No documents yet',
+      'doc.empty': 'Upload or drop files to build the index',
+      'doc.dropToUpload': 'Drop to upload into this knowledge base',
+      'doc.dropUnsupported': "This format isn't supported yet",
       'doc.search': 'Search documents…',
       'doc.searchClear': 'Clear search',
       'doc.noMatch': 'No documents match',
@@ -1476,6 +1480,22 @@ window.__ModuleLoader__.load({
           '.hrag-docsearch-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
           '.hrag-docsearch-clear:hover { color: var(--dsw-alias-label-primary); }',
           '.hrag-docnomatch { padding: 32px 16px; text-align: center; color: var(--dsw-alias-label-tertiary); font-size: 13px; }',
+          // 拖拽反馈（小件批 Task 2，照工作台）：根拖入＝淡灰底；空态九宫格里
+          // 可落类放大点亮、其余降灰（全拒＝整体降灰）；放置层＝虚线框/70% 实底
+          // 双态（空库留框让九宫格透出，非空库实底居中胶囊）。
+          '.hrag-root-drag { background: color-mix(in srgb, var(--dsw-alias-interactive-bg-hover) 50%, transparent); }',
+          '.hrag-docempty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 40px 16px; text-align: center; }',
+          '.hrag-docempty-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 12px; }',
+          '.hrag-docempty-badge { width: 32px; height: 32px; cursor: default; transition: all 150ms; opacity: 0.6; }',
+          '.hrag-docempty-badge:hover:not(.hrag-docempty-dim):not(.hrag-docempty-lit) { transform: translateY(-4px); opacity: 1; }',
+          '.hrag-docempty-lit { transform: scale(1.25); opacity: 1; }',
+          '.hrag-docempty-dim { opacity: 0.25; }',
+          '.hrag-docempty-copy { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 14px; line-height: 22px; }',
+          '.hrag-dropframe { pointer-events: none; position: absolute; inset: 8px; z-index: 10; border: 2px dashed var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-lg); }',
+          '.hrag-dropframe-hint { position: absolute; left: 0; right: 0; bottom: 12px; margin: 0; display: flex; justify-content: center; }',
+          '.hrag-droppill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 999px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; font-weight: 500; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }',
+          '.hrag-dropdim { pointer-events: none; position: absolute; inset: 8px; z-index: 20; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-lg); background: color-mix(in srgb, var(--dsw-alias-bg-base) 70%, transparent); }',
+          '.hrag-dropdim-hint { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--dsw-alias-label-secondary); font-size: 14px; line-height: 22px; font-weight: 500; }',
           '.hrag-docrow { display: flex; flex-direction: column; gap: 4px; padding: 8px 2px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); min-width: 0; }',
           '.hrag-docrow:last-child { border-bottom: none; }',
           '.hrag-docrow-main { display: flex; align-items: center; gap: 8px; min-width: 0; cursor: pointer; }',
@@ -5843,7 +5863,45 @@ window.__ModuleLoader__.load({
       })
     }
 
-    function DocsView({ t, kbId, refreshToken, onOpenChunks }) {
+    // 文档空态（小件批 Task 2，照工作台 EmptyDocumentsState）：降调九宫格＋一句
+    // 短文案；九格同时是「这些格式都欢迎」的安静提示——`readme` 无后缀落 unknown
+    // 软收尾。拖入双态：可落类放大点亮、其余降灰（全拒＝整体降灰）。
+    const DOC_EMPTY_SAMPLES = [
+      'report.pdf',
+      'notes.docx',
+      'data.xlsx',
+      'deck.pptx',
+      'app.py',
+      'photo.png',
+      'video.mp4',
+      'bundle.zip',
+      'readme',
+    ]
+
+    function DocsEmptyState({ t, probe }) {
+      const lit = probe ? probe.litKinds : []
+      const dimAll = probe !== null && !probe.anyAccepted
+      return h(
+        'div',
+        { className: 'hrag-docempty' },
+        h(
+          'div',
+          { className: 'hrag-docempty-grid', 'data-testid': 'empty-doc-icons' },
+          DOC_EMPTY_SAMPLES.map((name) => {
+            const isLit = lit.indexOf(fileTypeKind(name)) !== -1
+            const state = probe === null ? '' : dimAll || !isLit ? ' hrag-docempty-dim' : ' hrag-docempty-lit'
+            return h(FileTypeBadge, {
+              key: name,
+              fileName: name,
+              className: 'hrag-docempty-badge' + state,
+            })
+          }),
+        ),
+        h('p', { className: 'hrag-docempty-copy' }, t('doc.empty')),
+      )
+    }
+
+    function DocsView({ t, kbId, refreshToken, onOpenChunks, dragProbe, setDocsEmpty }) {
       const [phase, setPhase] = React.useState('loading')
       const [docs, setDocs] = React.useState([])
       const [failure, setFailure] = React.useState(null)
@@ -5896,6 +5954,12 @@ window.__ModuleLoader__.load({
         return () => window.clearInterval(timer)
       }, [docs, poll])
 
+      // 空态上报（小件批 Task 2）：拖拽放置层双态取此——非就绪（空/载/错，
+      // 区域无列表）用虚线框（让九宫格透出），就绪（列表在场）用 70% 实底。
+      React.useEffect(() => {
+        if (setDocsEmpty) setDocsEmpty(phase !== 'ready')
+      }, [phase, setDocsEmpty])
+
       // A④ 快捷出题（照工作台 page.tsx:452-466）：单篇 count=1、合并进暂存审核；
       // 工作台 enqueued=success／already_running=info 两档同文案，插件总线无 info 档、合一。
       const generateQuestion = (doc) => {
@@ -5933,6 +5997,71 @@ window.__ModuleLoader__.load({
           })
       }
 
+      // 工具行（小件批 Task 2，照工作台 h-11 稳定容器常驻）：空态与就绪态共用；
+      // 加载/错误态维持全屏状态页（插件既有词汇）。
+      const docbar = h(
+        'div',
+        { className: 'hrag-docbar' },
+        h(
+          'div',
+          { className: 'hrag-docsearch' },
+          h(HostInput, {
+            className: 'hrag-docsearch-field',
+            type: 'text',
+            // icon 仅宿主 Input 接受（回退到原生 input 时传元素会落成非法属性）。
+            icon: hostPrimitives && hostPrimitives.Input ? dshSearchIcon() : undefined,
+            value: query,
+            placeholder: t('doc.search'),
+            'aria-label': t('doc.search'),
+            onChange: (event) => setQuery(event.target.value),
+          }),
+          query
+            ? h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-docsearch-clear',
+                  'aria-label': t('doc.searchClear'),
+                  title: t('doc.searchClear'),
+                  onClick: () => setQuery(''),
+                },
+                hostIcon('IconCloseOutlineRegular') ? h(hostIcon('IconCloseOutlineRegular'), {}) : '✕',
+              )
+            : null,
+        ),
+        h(DshMenu, {
+          title: t('doc.sort'),
+          align: 'end',
+          className: 'hrag-iconbare',
+          trigger: dshChevronsUpDownIcon(),
+          items: [
+            { type: 'label', id: 'sort-label', text: t('doc.sort') },
+            ...DOC_SORT_OPTIONS.map((option) => ({
+              id: 'sort-key-' + option.key,
+              label: t(option.labelKey),
+              icon: sort.key === option.key ? dshCheckIcon() : null,
+            })),
+            { type: 'separator', id: 'sort-sep' },
+            ...[
+              { id: 'sort-dir-asc', label: t('doc.sortAsc'), direction: 'asc' },
+              { id: 'sort-dir-desc', label: t('doc.sortDesc'), direction: 'desc' },
+            ].map((entry) => ({
+              id: entry.id,
+              label: entry.label,
+              icon: sort.direction === entry.direction ? dshCheckIcon() : null,
+            })),
+          ],
+          onSelect: (id) => {
+            if (id.indexOf('sort-key-') === 0) {
+              setSort((current) => ({ ...current, key: id.slice('sort-key-'.length) }))
+            } else if (id.indexOf('sort-dir-') === 0) {
+              const direction = id.slice('sort-dir-'.length)
+              setSort((current) => ({ ...current, direction }))
+            }
+          },
+        }),
+      )
+
       let body
       if (phase === 'loading') {
         body = h('div', { className: 'hrag-pane' }, t('doc.loading'))
@@ -5945,7 +6074,7 @@ window.__ModuleLoader__.load({
           h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.retry')),
         )
       } else if (phase === 'empty') {
-        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('doc.empty')))
+        body = h('div', null, docbar, h(DocsEmptyState, { t, probe: dragProbe || null }))
       } else {
         const counts = {}
         for (const doc of docs) counts[doc.status] = (counts[doc.status] || 0) + 1
@@ -5956,68 +6085,7 @@ window.__ModuleLoader__.load({
         body = h(
           'div',
           null,
-          h(
-            'div',
-            { className: 'hrag-docbar' },
-            h(
-              'div',
-              { className: 'hrag-docsearch' },
-              h(HostInput, {
-                className: 'hrag-docsearch-field',
-                type: 'text',
-                // icon 仅宿主 Input 接受（回退到原生 input 时传元素会落成非法属性）。
-                icon: hostPrimitives && hostPrimitives.Input ? dshSearchIcon() : undefined,
-                value: query,
-                placeholder: t('doc.search'),
-                'aria-label': t('doc.search'),
-                onChange: (event) => setQuery(event.target.value),
-              }),
-              query
-                ? h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'hrag-docsearch-clear',
-                      'aria-label': t('doc.searchClear'),
-                      title: t('doc.searchClear'),
-                      onClick: () => setQuery(''),
-                    },
-                    hostIcon('IconCloseOutlineRegular') ? h(hostIcon('IconCloseOutlineRegular'), {}) : '✕',
-                  )
-                : null,
-            ),
-            h(DshMenu, {
-              title: t('doc.sort'),
-              align: 'end',
-              className: 'hrag-iconbare',
-              trigger: dshChevronsUpDownIcon(),
-              items: [
-                { type: 'label', id: 'sort-label', text: t('doc.sort') },
-                ...DOC_SORT_OPTIONS.map((option) => ({
-                  id: 'sort-key-' + option.key,
-                  label: t(option.labelKey),
-                  icon: sort.key === option.key ? dshCheckIcon() : null,
-                })),
-                { type: 'separator', id: 'sort-sep' },
-                ...[
-                  { id: 'sort-dir-asc', label: t('doc.sortAsc'), direction: 'asc' },
-                  { id: 'sort-dir-desc', label: t('doc.sortDesc'), direction: 'desc' },
-                ].map((entry) => ({
-                  id: entry.id,
-                  label: entry.label,
-                  icon: sort.direction === entry.direction ? dshCheckIcon() : null,
-                })),
-              ],
-              onSelect: (id) => {
-                if (id.indexOf('sort-key-') === 0) {
-                  setSort((current) => ({ ...current, key: id.slice('sort-key-'.length) }))
-                } else if (id.indexOf('sort-dir-') === 0) {
-                  const direction = id.slice('sort-dir-'.length)
-                  setSort((current) => ({ ...current, direction }))
-                }
-              },
-            }),
-          ),
+          docbar,
           h('div', { className: 'hrag-docsum' }, summary),
           h(
             'div',
@@ -12150,6 +12218,112 @@ window.__ModuleLoader__.load({
       return Array.prototype.indexOf.call(types, 'Files') !== -1
     }
 
+    // ── 拖拽类型探针（小件批 Task 2，照工作台 `file-type-badge.tsx` 逐条移植）：
+    // dragover 的 items 带各文件 MIME（永不暴露内容），落前判定可落/全拒，驱动
+    // 空态九宫格点亮与横幅文案。未知 MIME 计拒（点亮了又拒比不亮更糟）。
+    const DRAG_MIME_SPECS = [
+      { kind: 'pdf', mimes: ['application/pdf'], suffixes: ['.pdf'] },
+      {
+        kind: 'word',
+        mimes: [
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/vnd.apple.pages',
+          'application/rtf',
+          'text/plain',
+        ],
+        suffixes: ['.doc', '.docx', '.wps', '.pages', '.rtf', '.txt'],
+      },
+      {
+        kind: 'sheet',
+        mimes: [
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'text/csv',
+          'text/tab-separated-values',
+          'application/vnd.apple.numbers',
+        ],
+        suffixes: ['.xls', '.xlsx', '.csv', '.tsv', '.numbers', '.et'],
+      },
+      {
+        kind: 'ppt',
+        mimes: [
+          'application/vnd.ms-powerpoint',
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          'application/vnd.apple.keynote',
+        ],
+        suffixes: ['.ppt', '.pptx', '.key', '.dps'],
+      },
+      {
+        kind: 'code',
+        mimes: [
+          'text/markdown',
+          'text/x-markdown',
+          'application/json',
+          'application/xml',
+          'text/xml',
+          'text/yaml',
+          'text/x-yaml',
+          'text/x-python',
+          'application/javascript',
+          'text/javascript',
+          'application/sql',
+        ],
+        suffixes: ['.md', '.markdown', '.json', '.yaml', '.xml', '.py', '.js', '.sql'],
+      },
+      {
+        kind: 'archive',
+        mimes: [
+          'application/zip',
+          'application/x-rar-compressed',
+          'application/x-7z-compressed',
+          'application/x-tar',
+          'application/gzip',
+        ],
+        suffixes: ['.zip', '.rar', '.7z', '.tar', '.gz'],
+      },
+    ]
+
+    function dragSpecForMime(mime) {
+      if (!mime) return null
+      const direct = DRAG_MIME_SPECS.find((spec) => spec.mimes.indexOf(mime) !== -1)
+      if (direct) return direct
+      if (mime.indexOf('image/') === 0) {
+        return { kind: 'image', mimes: [], suffixes: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp'] }
+      }
+      if (mime.indexOf('audio/') === 0 || mime.indexOf('video/') === 0) {
+        return { kind: 'media', mimes: [], suffixes: ['.mp4', '.mov', '.avi', '.mkv', '.mp3', '.wav'] }
+      }
+      return null
+    }
+
+    /** DataTransferItemList（或测试夹具）→ 可落判词；非 file 项（拖文本/链接）忽略。 */
+    function probeDraggedItems(items, supportedSuffixes) {
+      const allowed = (supportedSuffixes || []).map((suffix) => String(suffix).toLowerCase())
+      const lit = []
+      let anyAccepted = false
+      let anyRejected = false
+      const list = items ? Array.from(items) : []
+      for (const item of list) {
+        if (!item || item.kind !== 'file') continue
+        const spec = dragSpecForMime(item.type)
+        const accepted = spec ? spec.suffixes.some((suffix) => allowed.indexOf(suffix) !== -1) : false
+        if (accepted && spec) {
+          if (lit.indexOf(spec.kind) === -1) lit.push(spec.kind)
+          anyAccepted = true
+        } else {
+          anyRejected = true
+        }
+      }
+      return { litKinds: lit, anyAccepted: anyAccepted, anyRejected: anyRejected }
+    }
+
+    /** 判词指纹——dragover 高频，只有变化才重渲（照工作台 `probeSignature`）。 */
+    function probeSignature(probe) {
+      if (!probe) return ''
+      return probe.litKinds.join(',') + '|' + (probe.anyAccepted ? 1 : 0) + '|' + (probe.anyRejected ? 1 : 0)
+    }
+
     function splitDroppedFiles(transfer) {
       const files = []
       let dirs = 0
@@ -12486,6 +12660,12 @@ window.__ModuleLoader__.load({
       const toastAnchorRef = React.useRef(null)
       const [pendingDuplicate, setPendingDuplicate] = React.useState(null)
       const [acceptedSuffixes, setAcceptedSuffixes] = React.useState(null)
+      // 拖拽反馈（小件批 Task 2）：根拖入态＋判词（指纹去重，dragover 高频只重渲
+      // 变化）＋文档空态上报（放置层双态用；先按空库＝虚线框的安全默认）。
+      const [dragActive, setDragActive] = React.useState(false)
+      const [dragProbe, setDragProbe] = React.useState(null)
+      const [docsEmpty, setDocsEmpty] = React.useState(true)
+      const probeKeyRef = React.useRef('')
       // 菜单批 Task 1：库级 ⋯ 菜单状态——重命名弹层/删除确认/设置面/百科指令线。
       const [menuRenameOpen, setMenuRenameOpen] = React.useState(false)
       const [renameValue, setRenameValue] = React.useState('')
@@ -12725,11 +12905,32 @@ window.__ModuleLoader__.load({
         event.preventDefault()
         event.stopPropagation()
         if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+        // 判词探针（小件批 Task 2）：dragover 每次鼠标移动都触发——指纹不变不重渲。
+        setDragActive(true)
+        const probe = probeDraggedItems(event.dataTransfer.items, acceptedSuffixes || [])
+        const verdict = probe.anyAccepted || probe.anyRejected ? probe : null
+        const key = probeSignature(verdict)
+        if (key !== probeKeyRef.current) {
+          probeKeyRef.current = key
+          setDragProbe(verdict)
+        }
+      }
+      // 只有真正离开面板才复位——在子元素间穿梭时子元素会向根冒泡 dragleave，
+      // 照单全收会与 dragover 逐帧震荡（遮罩与九宫格闪烁）。宿主计数不受影响
+      // （不 stopPropagation，照 Task 7 注释）。
+      const panelDragLeave = (event) => {
+        if (event.currentTarget.contains(event.relatedTarget)) return
+        setDragActive(false)
+        probeKeyRef.current = ''
+        setDragProbe(null)
       }
       const panelDrop = (event) => {
         if (!isFileDrag(event.dataTransfer)) return
         event.preventDefault()
         event.stopPropagation()
+        setDragActive(false)
+        probeKeyRef.current = ''
+        setDragProbe(null)
         // 吞掉 drop 后宿主自己的 reset 不会跑，补发 dragend 走它的既有清理口。
         try {
           window.dispatchEvent(new Event('dragend'))
@@ -12948,6 +13149,8 @@ window.__ModuleLoader__.load({
               kbId,
               refreshToken,
               onOpenChunks: (doc) => setDrawer({ doc, focus: null }),
+              dragProbe,
+              setDocsEmpty,
             })),
           ),
           // 召回视图 keep-alive（10-15 他报「切走回来结果消失」＝缺陷修正）：query/结果/选择集切走不丢。
@@ -13035,14 +13238,46 @@ window.__ModuleLoader__.load({
         )
       }
 
+      // 拖拽反馈只在可落时亮（有库且面板就绪；无库落下＝先建库 toast，不亮）。
+      const dragFeedbackOn = dragActive && phase === 'ready' && Boolean(kbId)
+
       return h(
         React.Fragment,
         null,
         h(Styles),
         h(
           'div',
-          { className: 'hrag-root', onDragOver: panelDragOver, onDrop: panelDrop },
+          {
+            className: 'hrag-root' + (dragFeedbackOn ? ' hrag-root-drag' : ''),
+            onDragOver: panelDragOver,
+            onDragLeave: panelDragLeave,
+            onDrop: panelDrop,
+          },
           h(HragBoundary, { t, name: t('tab.title') }, content),
+          // 放置层（小件批 Task 2，照工作台双态）：空库＝虚线框＋底缘胶囊（全拒换
+          // 「该格式暂不支持」），让九宫格判词透出；非空库＝70% 实底＋居中胶囊。
+          dragFeedbackOn
+            ? docsEmpty
+              ? h(
+                  'div',
+                  { className: 'hrag-dropframe', 'data-testid': 'document-drop-overlay' },
+                  h(
+                    'p',
+                    { className: 'hrag-dropframe-hint' },
+                    h(
+                      'span',
+                      { className: 'hrag-droppill' },
+                      lucideUploadIcon(),
+                      dragProbe && dragProbe.anyRejected && !dragProbe.anyAccepted ? t('doc.dropUnsupported') : t('doc.dropToUpload'),
+                    ),
+                  ),
+                )
+              : h(
+                  'div',
+                  { className: 'hrag-dropdim', 'data-testid': 'document-drop-overlay' },
+                  h('p', { className: 'hrag-dropdim-hint' }, lucideUploadIcon(), t('doc.dropToUpload')),
+                )
+            : null,
           drawer
             ? h(
                 HragBoundary,
