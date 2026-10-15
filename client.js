@@ -73,6 +73,15 @@ window.__ModuleLoader__.load({
       'doc.retry': '重试',
       'doc.retrySubmitted': '已提交重试',
       'doc.degradedRetryHint': '部分产物未成功，可重试补齐',
+      'doc.generateQuestion': '生成考题',
+      'doc.err.empty': '文件内容为空',
+      'doc.err.unsupported': '不支持的文件类型',
+      'doc.err.retryLimit': '解析服务多次重试仍失败，请检查文件是否损坏或稍后重试',
+      'doc.err.serviceUnconfigured': '文档解析服务未配置，请联系管理员',
+      'doc.err.timeout': '解析超时，请重试',
+      'doc.err.indexIncomplete': '文档索引不完整，部分切片未能入库，请重试',
+      'doc.err.noIndexableContent': '文档没有可索引的内容，请检查文件内容',
+      'doc.err.unknown': '处理失败，请重试',
       'doc.delete': '删除',
       'doc.deleteTitle': '删除文档？',
       'doc.deleteDescription': '将级联清理该文档的切片、向量与图谱贡献，且不可恢复。',
@@ -642,6 +651,16 @@ window.__ModuleLoader__.load({
       'doc.retry': 'Retry',
       'doc.retrySubmitted': 'Retry submitted',
       'doc.degradedRetryHint': 'Some outputs did not succeed — retry to complete them',
+      'doc.generateQuestion': 'Generate question',
+      'doc.err.empty': 'The file is empty',
+      'doc.err.unsupported': 'Unsupported file type',
+      'doc.err.retryLimit':
+        'The parsing service failed after several retries — check the file for corruption or try again later',
+      'doc.err.serviceUnconfigured': 'The document parsing service is not configured — contact your admin',
+      'doc.err.timeout': 'Parsing timed out — please retry',
+      'doc.err.indexIncomplete': 'The document index is incomplete — some chunks were not indexed; please retry',
+      'doc.err.noIndexableContent': 'The document had no indexable content — check the file and retry',
+      'doc.err.unknown': 'Processing failed — please retry',
       'doc.delete': 'Delete',
       'doc.deleteTitle': 'Delete this document?',
       'doc.deleteDescription': 'Its chunks, vectors and graph contributions will be cascade-deleted. This cannot be undone.',
@@ -1363,6 +1382,8 @@ window.__ModuleLoader__.load({
           '.hrag-docrow:last-child { border-bottom: none; }',
           '.hrag-docrow-main { display: flex; align-items: center; gap: 8px; min-width: 0; cursor: pointer; }',
           '.hrag-docrow-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; }',
+          // 20px＝九枚的 S 档下限（16px 折角细节糊成发丝，工作台同款）
+          '.hrag-docrow-ftype { flex-shrink: 0; width: 20px; height: 20px; }',
           '.hrag-docrow-actions { display: flex; gap: 4px; flex-shrink: 0; }',
           '.hrag-btn-sm { height: 26px; padding: 0 8px; font-size: 12px; border-radius: var(--dsw-radius-sm); }',
           '.hrag-docrow-meta { display: flex; align-items: center; gap: 8px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
@@ -1858,9 +1879,25 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** Failure display: the service's own detail, else the Error text. */
+    /** Failure display: the service's own detail, else the Error text. The host
+     * wraps upstream failures as "{status} {body}" (src/http.ts) — unwrap the
+     * body's `detail` so the panel reads like the workbench's error surface (a
+     * clean sentence, no envelope); anything unparseable stays as-is. */
     function errorDetail(error) {
-      return (error && error.info && error.info.detail) || String(error)
+      const info = error && error.info
+      const detail = (info && info.detail) || String(error)
+      if (info && info.kind === 'http') {
+        const match = /^\d{3}\s+(\{[\s\S]*\})$/.exec(detail)
+        if (match) {
+          try {
+            const body = JSON.parse(match[1])
+            if (body && typeof body.detail === 'string' && body.detail) return body.detail
+          } catch (cause) {
+            // truncated / non-JSON body: keep the original envelope
+          }
+        }
+      }
+      return detail
     }
 
     const DOC_STATUS_KEYS = {
@@ -1876,6 +1913,130 @@ window.__ModuleLoader__.load({
      * degraded — the workbench's document-level retry gate. */
     function isDegraded(doc) {
       return doc.status === 'ready' && Object.values(doc.path_status || {}).some((state) => state === 'degraded')
+    }
+
+    /** 照工作台右键门槛（`document-panel.tsx:1174`「仅就绪文档可选」）：非就绪
+     * 文档出题必被后端 409 挡（`SynthesisDocNotReady`，无切片可合成）。 */
+    function canGenerateQuestion(doc) {
+      return Boolean(doc) && doc.status === 'ready'
+    }
+
+    /** 文档失败分类（照工作台 `doc-errors.ts` 逐条移植：模式序、大小写不敏感
+     * substring；两枚中文终态串优位——它们才是 failed 的直接解释）。 */
+    function classifyDocError(error) {
+      const text = String(error == null ? '' : error).toLowerCase()
+      if (text.includes('向量索引不完整')) return 'indexIncomplete'
+      if (text.includes('无可索引内容')) return 'noIndexableContent'
+      if (text.includes('file is empty')) return 'empty'
+      if (text.includes('unsupported file type')) return 'unsupported'
+      if (text.includes('retry limit reached')) return 'retryLimit'
+      if (text.includes('mineru_api_token')) return 'serviceUnconfigured'
+      if (text.includes('timed out') || text.includes('timeout')) return 'timeout'
+      return 'unknown'
+    }
+
+    /** 文件后缀规范化（照工作台 `supported-formats.ts` fileSuffix：小写虚线后缀，
+     * 点文件与无点返回空串）。 */
+    function fileSuffix(name) {
+      const text = String(name)
+      const dot = text.lastIndexOf('.')
+      return dot <= 0 ? '' : text.slice(dot).toLowerCase()
+    }
+
+    /** 后缀 → 徽章类（照工作台 `file-type-badge.tsx` KIND_BY_SUFFIX 逐条移植）。
+     * 未接受解析的类别（压缩包/音视频/多数图片）也照映射——解析支持后图标即亮。 */
+    const KIND_BY_SUFFIX = {
+      // 文档 #2563EB
+      '.doc': 'word', '.docx': 'word', '.wps': 'word', '.pages': 'word', '.rtf': 'word', '.txt': 'word',
+      // 表格 #16A34A
+      '.xls': 'sheet', '.xlsx': 'sheet', '.csv': 'sheet', '.tsv': 'sheet', '.numbers': 'sheet', '.et': 'sheet',
+      // 演示 #F97316
+      '.ppt': 'ppt', '.pptx': 'ppt', '.key': 'ppt', '.dps': 'ppt',
+      // PDF #DC2626
+      '.pdf': 'pdf',
+      // 代码与数据 #0891B2 — Markdown 归此类，不与 .docx 共用蓝色文档图标
+      '.md': 'code', '.markdown': 'code', '.json': 'code', '.yaml': 'code', '.xml': 'code', '.py': 'code', '.js': 'code', '.sql': 'code',
+      // 图片 #8B5CF6
+      '.jpg': 'image', '.jpeg': 'image', '.png': 'image', '.gif': 'image', '.webp': 'image', '.svg': 'image', '.bmp': 'image',
+      // 音视频 #EC4899
+      '.mp4': 'media', '.mov': 'media', '.avi': 'media', '.mkv': 'media', '.mp3': 'media', '.wav': 'media',
+      // 压缩包 #B45309
+      '.zip': 'archive', '.rar': 'archive', '.7z': 'archive', '.tar': 'archive', '.gz': 'archive',
+    }
+
+    /** 文件名 → 徽章类；未映射后缀与无后缀名走 unknown 兜底。 */
+    function fileTypeKind(fileName) {
+      return KIND_BY_SUFFIX[fileSuffix(fileName)] || 'unknown'
+    }
+
+    /** 文档行类型徽章（10-15 D1 更裁乙：照工作台 `file-type-badge.tsx` 整件移植）
+     * ——几何＝Ardot「56 网格」母版原样（含逐节点 transform，重导出可对照），色族
+     * 按设计稿、后缀映射＝上表；形状载类型、颜色载族，徽章不渲染文字。改色或挪
+     * 后缀先改设计稿（它是权威）再同步此处。 */
+    const FT_SHEET_D = 'M7 0L28 0L39.6667 11.6667L39.6667 39.6667C39.6667 43.54 36.54 46.6667 32.6667 46.6667L7 46.6667C3.1267 46.6667 0 43.54 0 39.6667L0 7C0 3.1267 3.1267 0 7 0Z'
+    const FT_FOLD_D = 'M0 0L11.6667 11.6667L0 11.6667L0 0Z'
+
+    /** 折角页骨架——九枚里七枚共用。 */
+    function ftSheet(fold, shell) {
+      return [
+        h('path', { key: 'sheet', d: FT_SHEET_D, fill: shell, transform: 'matrix(1 0 0 1 4.66667 4.66667)' }),
+        h('path', { key: 'fold', d: FT_FOLD_D, fill: fold, transform: 'matrix(1 0 0 1 32.6667 4.66667)' }),
+      ]
+    }
+
+    const FT_ICON_BY_KIND = {
+      pdf: ftSheet('#B91C1C', '#DC2626').concat([
+        // 字母 P，Sarasa Gothic SC Bold 24 已在画布转成轮廓
+        h('path', { key: 'p', d: 'M1.584 21L1.584 3.528L8.4 3.528Q10.392 3.528 11.784 4.296Q13.176 5.04 13.896 6.384Q14.64 7.704 14.64 9.432Q14.64 11.16 13.896 12.48Q13.152 13.8 11.736 14.544Q10.32 15.288 8.304 15.288L5.16 15.288L5.16 21L1.584 21M5.16 12.408L7.728 12.408Q9.384 12.408 10.152 11.592Q10.944 10.752 10.944 9.432Q10.944 8.112 10.152 7.32Q9.384 6.504 7.728 6.504L5.16 6.504L5.16 12.408Z', fill: '#FFF', transform: 'matrix(1 0 0 1 17 24)' }),
+      ]),
+      word: ftSheet('#1E40AF', '#2563EB').concat([
+        h('rect', { key: 'l1', fill: '#FFF', height: 3.9667, rx: 1.9833, width: 24.7333, x: 12.1333, y: 26.6 }),
+        h('rect', { key: 'l2', fill: '#FFF', height: 3.9667, rx: 1.9833, width: 24.7333, x: 12.1333, y: 34.7667 }),
+        h('rect', { key: 'l3', fill: '#FFF', height: 3.9667, rx: 1.9833, width: 14.9333, x: 12.1333, y: 42.9333 }),
+      ]),
+      sheet: ftSheet('#15803D', '#16A34A').concat([
+        h('rect', { key: 'l1', fill: '#FFF', height: 3.5, rx: 1.75, width: 24.7333, x: 12.1333, y: 25.6667 }),
+        h('rect', { key: 'l2', fill: '#FFF', height: 3.5, rx: 1.75, width: 24.7333, x: 12.1333, y: 34.0667 }),
+        h('rect', { key: 'l3', fill: '#FFF', height: 3.5, rx: 1.75, width: 24.7333, x: 12.1333, y: 42.4667 }),
+        h('rect', { key: 'v1', fill: '#FFF', height: 20.3, rx: 1.75, width: 3.5, x: 20.0667, y: 25.6667 }),
+        h('rect', { key: 'v2', fill: '#FFF', height: 20.3, rx: 1.75, width: 3.5, x: 28.4667, y: 25.6667 }),
+      ]),
+      ppt: ftSheet('#C2410C', '#F97316').concat([
+        h('rect', { key: 'card', fill: '#FFF', height: 20.5333, rx: 3.2667, width: 27.5333, x: 10.7333, y: 24.2667 }),
+        h('rect', { key: 't1', fill: '#F97316', height: 3.7333, rx: 1.8667, width: 10.7333, x: 14.4667, y: 28.4667 }),
+        h('rect', { key: 't2', fill: '#F97316', height: 2.8, opacity: 0.45, rx: 1.4, width: 20.0667, x: 14.4667, y: 34.7667 }),
+        h('rect', { key: 't3', fill: '#F97316', height: 2.8, opacity: 0.45, rx: 1.4, width: 14, x: 14.4667, y: 39.4333 }),
+      ]),
+      code: ftSheet('#0E7490', '#0891B2').concat([
+        h('path', { key: 'lt', d: 'M7.2333 0L0 6.5333L7.2333 13.0667L9.5667 10.7333L4.2 6.5333L9.5667 2.3333L7.2333 0Z', fill: '#FFF', transform: 'matrix(1 0 0 1 14.2333 24.2667)' }),
+        h('path', { key: 'gt', d: 'M2.3333 0L9.5667 6.5333L2.3333 13.0667L0 10.7333L5.3667 6.5333L0 2.3333L2.3333 0Z', fill: '#FFF', transform: 'matrix(1 0 0 1 25.2 24.2667)' }),
+      ]),
+      image: [
+        h('rect', { key: 'bg', fill: '#8B5CF6', height: 37.3333, rx: 7, width: 44.3333, x: 5.8333, y: 9.3333 }),
+        h('circle', { key: 'sun', cx: 18.4333, cy: 20.0667, fill: '#FFF', r: 4.2 }),
+        h('path', { key: 'hill', d: 'M0 17.0333L12.6 0L23.3333 12.6L28.4667 7L36.4 17.0333L0 17.0333Z', fill: '#FFF', transform: 'matrix(1 0 0 1 9.8 28.4667)' }),
+      ],
+      media: [
+        h('rect', { key: 'bg', fill: '#EC4899', height: 37.3333, rx: 7, width: 44.3333, x: 5.8333, y: 9.3333 }),
+        h('path', { key: 'play', d: 'M0 0L12.6 6.5333L0 13.0667L0 0Z', fill: '#FFF', transform: 'matrix(1 0 0 1 23.3333 21.4667)' }),
+      ],
+      archive: ftSheet('#92400E', '#B45309').concat([
+        h('rect', { key: 'z1', fill: '#FFF', height: 21.9333, rx: 1.8667, width: 3.7333, x: 24.9667, y: 22.4 }),
+        h('rect', { key: 'z2', fill: '#FFF', height: 3.7333, rx: 1.8667, width: 16.3333, x: 17.7333, y: 30.3333 }),
+        h('rect', { key: 'z3', fill: '#FFF', height: 3.7333, rx: 1.8667, width: 16.3333, x: 17.7333, y: 37.3333 }),
+      ]),
+      // 未知类型：只有折角页轮廓，不假装有类型信息
+      unknown: ftSheet('#475569', '#64748B'),
+    }
+
+    /** 设计稿徽章；尺寸走 className（20px 是 S 档下限——16px 折角细节糊成发丝）。 */
+    function FileTypeBadge({ fileName, className }) {
+      const kind = fileTypeKind(fileName)
+      return h(
+        'svg',
+        { 'aria-hidden': 'true', className: className, 'data-filetype': kind, viewBox: '0 0 56 56' },
+        FT_ICON_BY_KIND[kind],
+      )
     }
 
     /** Hand-built confirm dialog (the plugin styling contract forbids Harness
@@ -5242,6 +5403,62 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 文档行右键菜单（A④ 快捷出题；工作台＝Radix ContextMenu 于行、指针位落）。
+        指针位代理锚：宿主 Menu 挂在 0 尺寸 fixed 锚上（getAnchorRect 直供指针
+        位，wrapper 不上测）；无宿主件走 .hrag-mm 兜底面板（照 DshMenu 无宿主分支语汇）。 */
+    function DocContextMenu({ t, x, y, onSelect, onClose }) {
+      React.useEffect(() => {
+        const onKey = (event) => {
+          if (event.key === 'Escape') onClose()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+      }, [onClose])
+      const items = [{ id: 'gen-question', label: t('doc.generateQuestion'), icon: dshSparkleIcon() }]
+      if (HostMenu) {
+        return h(HostMenu, {
+          open: true,
+          anchor: h('span', {
+            className: 'hrag-ctxanchor',
+            style: { position: 'fixed', left: x + 'px', top: y + 'px', width: '0px', height: '0px' },
+          }),
+          items,
+          onSelect: (id) => {
+            onClose()
+            if (id === 'gen-question') onSelect()
+          },
+          onClose,
+          align: 'start',
+          portal: true,
+          getAnchorRect: () => ({ x: x, y: y, left: x, top: y, width: 0, height: 0, right: x, bottom: y }),
+        })
+      }
+      return h(
+        React.Fragment,
+        null,
+        h('div', { className: 'hrag-mm-backdrop', onMouseDown: onClose }),
+        h(
+          'div',
+          { className: 'hrag-mm', role: 'menu', style: { position: 'fixed', left: x + 'px', top: y + 'px' } },
+          items.map((entry) =>
+            h(
+              'button',
+              {
+                key: entry.id,
+                type: 'button',
+                className: 'hrag-mm-item',
+                onClick: () => {
+                  onClose()
+                  onSelect()
+                },
+              },
+              entry.label,
+            ),
+          ),
+        ),
+      )
+    }
+
     /** 文档面板：列表＋行内动作（重试只对 failed/降级出现；删除走级联确认）。
         照工作台词汇；随 kb 或壳刷新重载。 */
     function DocsView({ t, kbId, refreshToken, onOpenChunks }) {
@@ -5251,6 +5468,7 @@ window.__ModuleLoader__.load({
       const [deleteTarget, setDeleteTarget] = React.useState(null)
       const [dialogError, setDialogError] = React.useState(null)
       const [busy, setBusy] = React.useState(false)
+      const [ctxMenu, setCtxMenu] = React.useState(null)
 
       const load = React.useCallback(() => {
         setPhase('loading')
@@ -5292,6 +5510,14 @@ window.__ModuleLoader__.load({
         const timer = window.setInterval(poll, PIPELINE_POLL_MS)
         return () => window.clearInterval(timer)
       }, [docs, poll])
+
+      // A④ 快捷出题（照工作台 page.tsx:452-466）：单篇 count=1、合并进暂存审核；
+      // 工作台 enqueued=success／already_running=info 两档同文案，插件总线无 info 档、合一。
+      const generateQuestion = (doc) => {
+        callOp('triggerSynthesis', { kb_id: kbId, body: { doc_ids: [doc.id], count: 1 } })
+          .then(() => showToast(t('ev.syn.generating')))
+          .catch((error) => showToast(errorDetail(error), { error: true }))
+      }
 
       const retry = (doc) => {
         setBusy(true)
@@ -5364,7 +5590,13 @@ window.__ModuleLoader__.load({
                   onClick: () => {
                     if (onOpenChunks) onOpenChunks(doc)
                   },
+                  onContextMenu: (event) => {
+                    event.preventDefault()
+                    if (!canGenerateQuestion(doc)) return
+                    setCtxMenu({ x: event.clientX, y: event.clientY, doc })
+                  },
                 },
+                h(FileTypeBadge, { fileName: String(doc.name), className: 'hrag-docrow-ftype' }),
                 h('span', { className: 'hrag-docrow-name', title: String(doc.name) }, String(doc.name)),
                 h(
                   'span',
@@ -5391,7 +5623,7 @@ window.__ModuleLoader__.load({
                           type: 'button',
                           className: 'hrag-btn hrag-btn-sm hrag-btn-outline',
                           disabled: busy,
-                          title: degraded ? t('doc.degradedRetryHint') : String(doc.error || ''),
+                          title: degraded ? t('doc.degradedRetryHint') : t('doc.err.' + classifyDocError(doc.error)),
                           onClick: (event) => {
                             event.stopPropagation()
                             retry(doc)
@@ -5423,7 +5655,7 @@ window.__ModuleLoader__.load({
                   'span',
                   {
                     className: doc.status === 'failed' ? 'hrag-docrow-status hrag-docrow-status-failed' : 'hrag-docrow-status',
-                    title: doc.error || undefined,
+                    title: doc.error ? t('doc.err.' + classifyDocError(doc.error)) : undefined,
                   },
                   meta,
                 ),
@@ -5452,6 +5684,15 @@ window.__ModuleLoader__.load({
               busy,
               onCancel: () => setDeleteTarget(null),
               onConfirm: confirmDelete,
+            })
+          : null,
+        ctxMenu
+          ? h(DocContextMenu, {
+              t,
+              x: ctxMenu.x,
+              y: ctxMenu.y,
+              onSelect: () => generateQuestion(ctxMenu.doc),
+              onClose: () => setCtxMenu(null),
             })
           : null,
       )
@@ -5684,6 +5925,9 @@ window.__ModuleLoader__.load({
       ]),
     )
     const dshPlusIcon = dshIconOr('IconPlusOutlineRegular', () => dshMenuIcon([{ d: 'M8 2V14' }, { d: 'M2 8H14' }]))
+    const dshSparkleIcon = dshIconOr('IconSparkleRegular', () =>
+      dshMenuIcon([{ d: 'M8 1.6L9.65 6.35L14.4 8L9.65 9.65L8 14.4L6.35 9.65L1.6 8L6.35 6.35Z' }]),
+    )
 
     /** 知识库标题下拉的 chevron 与菜单选中勾——Task 6 起直用宿主件（旧原路径为回退）。 */
     const dshChevronDownIcon = dshIconOr('IconChevronDownOutlineRegular', () =>
