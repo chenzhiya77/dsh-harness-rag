@@ -97,17 +97,17 @@
 | --- | --- | --- |
 | 评测域菜单皮肤统一 | 本对新菜单＝DSH 真值；评测域两枚＝描边紧凑（Task 8 定稿） | 若要求统一，另议 |
 | 「重建百科 vs 刷新界面」图标撞形 | 两枚 refresh 系图标并存 | **已随 Task 1 视觉验收维持**（销定） |
-| 重复上传拦截（A②） | hash 判同＋两选/三选弹层（替换＝先删后传） | **已裁（10-14）：并入本对 Task 8（Task 2 之后）**——照工作台 `duplicate-check`／`duplicate-upload-flow`／`duplicate-upload-dialog` 三件移植；后端 `content_hash` 已实查在案（清单字段） |
-| 文档右键快捷出题（A④） | 文档行 → 合成 count=1 | 另案（同上） |
-| 文件类型图标体系（A⑪） | Ardot 9 类 56-grid 重导（权威在库外） | 另案（同上） |
-| 切片刻度轨（A⑫） | Kimi 式导航（门槛≥5/间距 26 参数现成） | 另案/后调（同上） |
-| docErrors 错误分类文案（A⑤） | 分类映射表移植 | 后调（同上） |
-| tab 行溢出降级（A⑦） | 遮罩下拉；现状＝窄档换行缓解 | 后调（归 D6 窄档清单） |
-| 库列表排序拖拽 | 拖拽重排（上次打开记忆已并入 Task 5） | 后调（同上） |
-| 面板拖拽上传（宿主全局手势冲突） | 宿主 `ui-attachment`＝**document 级**监听＋全窗 DropOverlay（`pointer-events:none` 纯装饰层），拖拽入窗＝对话附件为应用级设计；工作台有拖拽上传（`document-panel`）⇒ 一致缺口 | **已裁（10-14）：做面板内拖拽上传（plan Task 7）**——遮罩原样不动、范围仅面板内容区、其余区域维持宿主默认；接不了＝吞掉＋就地提示（**C 口径，不回落会话**）；目录拒 |
+| 重复上传拦截（A②） | hash 判同＋两选/三选弹层（替换＝先删后传） | **已实施（10-14，菜单对 Task 8）**——照工作台 `duplicate-check`／`duplicate-upload-flow`／`duplicate-upload-dialog` 三件移植；后端 `content_hash` 已实查在案（清单字段） |
+| 文档右键快捷出题（A④） | 文档行 → 合成 count=1 | **已实施（10-15，A 对）**：行右键 → `DshMenu`（指针位代理锚）→ `triggerSynthesis` count=1 → toast；门槛＝仅就绪（照工作台）＋错误面 `errorDetail` 解包（D4 甲丙） |
+| 文件类型图标体系（A⑪） | 工作台 9 类 56-grid 徽章（Ardot 源；10-15 更裁＝工作台仓内自足） | **已实施（10-15，A 对）**：`file-type-badge` 整件移植（九类内联 SVG＋`KIND_BY_SUFFIX`＋unknown 兜底；D1 更裁乙） |
+| 切片刻度轨（A⑫） | Kimi 式导航（门槛≥5/间距 26 参数现成） | **已实施（10-15，A 对）**：抽屉右缘刻度轨（≥5／间距 26／悬停标签层）；点击复用 focus 通路 |
+| docErrors 错误分类文案（A⑤） | 分类映射表移植 | **已实施（10-15，A 对）**：八类映射（`classifyDocError`）＋两处外露点改分类文案、原始串零出口（D2 甲） |
+| tab 行溢出降级（A⑦） | 遮罩下拉；现状＝窄档换行缓解 | **已实施（10-15，A 对）**：固定折点＋遮罩下拉（40px 渐隐）＋激活滚入有效可见区＋尾垫；宽档零行为变化 |
+| 库列表排序拖拽 | 拖拽重排（上次打开记忆已并入 Task 5） | **已实施（10-15，A 对）**：下拉内拖拽（D3 甲，先 spike 后全量）＋localStorage 持久（`hrag-kb-order`）；选库回退仍走服务端首件（有意收窄） |
+| 面板拖拽上传（宿主全局手势冲突） | 宿主 `ui-attachment`＝**document 级**监听＋全窗 DropOverlay（`pointer-events:none` 纯装饰层），拖拽入窗＝对话附件为应用级设计；工作台有拖拽上传（`document-panel`）⇒ 一致缺口 | **已实施（10-14，菜单对 Task 7）**——遮罩原样不动、范围仅面板内容区、其余区域维持宿主默认；接不了＝吞掉＋就地提示（**C 口径，不回落会话**）；目录拒 |
 | 行内提示位（顶栏下、占流抖动） | T3 A4「观感差记」的升级诉求；宿主 `Toast` 原件可 require（`primitives` 基线：portal／top 40px 居中／深色面双主题／3s 渐隐／可 `anchor` 锚面板顶栏） | **已裁（10-14）：换宿主 `Toast`，并入 Task 6 统一换件轮**（共享同一次复验） |
 | 宿主原件直用候选（`primitives` 282 导出） | `Menu`／`MenuSurface`／`MenuGroup`／`Tooltip`／`Input`／`Button`＋全图标集均在 `@deepseek-ai/dsh-client-ui-primitives`（`PLATFORM_MODULES` 静态基线 ⇒ 插件可 require；旗舰样板同款 require）；现菜单/图标＝按真值复刻（M2/M3 口径） | **已实施（10-15，Task 6 落码）**：`DshMenu`→宿主 `Menu` 适配器（8 调用点迁 items/children）、图标八族直用 `Icon*`、行内提示→`Toast` 总线；评测域两枚冻结；宿主无件者维持 M3；一轮复验待整重启 |
-| 宿主件采纳候选·有用未用（10-14 对账） | **换皮级**：`Button`（≈`.hrag-btn` 136 引用）／`Input`（手写 19 处）／`Checkbox`／`Tag`·`Pill`·`StateDot`（自绘芯片/状态）／`DisclosureRow`；**行为级**：`Tooltip`（≈80 处原生 `title=`）／`Modal`·`RiskConfirmation`（自绘对话框与确认闸）／`MarkdownText`（切片正文现纯文本 pre-wrap——T3 观感缺口）／`FileTypeIcon`＋`classifyFileType`（＝A⑪ 另案本体）／`ImageLightbox`·`CodeBlock`·`JsonTree`（无渲染）；**小件**：`relativeTime`·`fileSizeText`·`writeClipboard`·`HoverCard`·`SegmentedControl`·`Switch` | 待裁：换皮级可并入收口轮；行为级单项裁；设置面控件批 2–4 自然直用 |
+| 宿主件采纳候选·有用未用（10-14 对账） | **换皮级**：`Button`（≈`.hrag-btn` 136 引用）／`Input`（手写 19 处）／`Checkbox`／`Tag`·`Pill`·`StateDot`（自绘芯片/状态）／`DisclosureRow`；**行为级**：`Tooltip`（≈80 处原生 `title=`）／`Modal`·`RiskConfirmation`（自绘对话框与确认闸）／`MarkdownText`（切片正文现纯文本 pre-wrap——T3 观感缺口）／`FileTypeIcon`＋`classifyFileType`（A⑪ 首拍甲散去：10-15 更裁乙走工作台复刻）／`ImageLightbox`·`CodeBlock`·`JsonTree`（无渲染）；**小件**：`relativeTime`·`fileSizeText`·`writeClipboard`·`HoverCard`·`SegmentedControl`·`Switch` | 待裁：换皮级可并入收口轮；行为级单项裁；设置面控件批 2–4 自然直用 |
 | 思考跟随菜单（工作台 default 组） | 五槽位（extract/wiki/judge/synthesis/vlm）勾「跟随对话思考」的下拉菜单；我方表单值已全程携带（`RAG_THINKING_FIELDS`＝播种/保存/变更检测全通） | **已裁（10-15）：做——并入 Task 6 同轮**；**已落码并随换件重对**（宿主 Menu 承载；常开不关、subgrid 两列对齐、勾选即写） |
 | 重建索引组形态 | 工作台设置页＝选库＋重建（全局页需要选库）；我方＝面板内直接重建当前库（无选库行） | **有意差异（面板上下文）**——随 Task 1 定稿，收口复核维持 |
 
