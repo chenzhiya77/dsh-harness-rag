@@ -97,6 +97,8 @@ window.__ModuleLoader__.load({
       'chunk.cancel': '取消',
       'chunk.drawerTitle': '切片预览',
       'chunk.close': '关闭',
+      'chunk.tickAria': '切片',
+      'chunk.notLoaded': '未加载',
       'chunk.deletePreviewTitle': '删除预览',
       'chunk.orphanedEntities': '将失格删除的实体',
       'chunk.affectedEntities': '将受影响的实体',
@@ -676,6 +678,8 @@ window.__ModuleLoader__.load({
       'chunk.cancel': 'Cancel',
       'chunk.drawerTitle': 'Chunk preview',
       'chunk.close': 'Close',
+      'chunk.tickAria': 'Chunk',
+      'chunk.notLoaded': 'Not loaded',
       'chunk.deletePreviewTitle': 'Delete Preview',
       'chunk.orphanedEntities': 'Entities to be orphaned',
       'chunk.affectedEntities': 'Entities to be affected',
@@ -1611,6 +1615,23 @@ window.__ModuleLoader__.load({
           '.hrag-chunkrow-path { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-chunkrow-text { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; white-space: pre-wrap; word-break: break-word; }',
           '.hrag-chunkrow-flash { background: var(--dsw-alias-interactive-bg-hover); }',
+          // 刻度轨（A⑫ 照工作台 chunk-tick-rail）：叠加层不入滚动流；行高=间距 26，
+          // 行槽与刻度槽逐一对齐；hover/active 用 :not() 守护（active 不被 hover 压色）。
+          '.hrag-tickrail { position: absolute; top: 0; bottom: 0; right: 4px; z-index: 10; display: flex; width: 40px; align-items: center; justify-content: flex-end; pointer-events: none; }',
+          '.hrag-tickrail-popup { position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 10; width: 288px; border-radius: var(--dsw-radius-lg); background: var(--dsw-alias-bg-base); box-shadow: var(--dsw-elevation-prominent); pointer-events: auto; }',
+          '.hrag-tickrail-scroll { height: 100%; overflow-y: auto; }',
+          '.hrag-tickrail-rows { display: flex; flex-direction: column; padding: 4px; }',
+          '.hrag-tickrail-row { display: flex; align-items: center; gap: 8px; padding: 0 32px 0 8px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 16px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-tickrail-row:hover:not(.hrag-tickrail-row-active) { background: color-mix(in srgb, var(--dsw-alias-interactive-bg-hover) 60%, transparent); }',
+          '.hrag-tickrail-row-active { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-tickrail-idx { width: 32px; flex-shrink: 0; text-align: right; font-family: ui-monospace, monospace; opacity: 0.7; }',
+          '.hrag-tickrail-text { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-tickrail-text-unloaded { font-style: italic; opacity: 0.7; }',
+          '.hrag-tickrail-ticks { pointer-events: auto; position: relative; z-index: 20; width: 24px; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent); mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent); }',
+          '.hrag-tick-tick { position: absolute; right: 4px; display: flex; width: 16px; align-items: center; justify-content: flex-end; border: none; padding: 0; background: transparent; cursor: pointer; transition: top 180ms ease; }',
+          '.hrag-tick-bar { height: 2px; width: 10px; border-radius: 999px; background: color-mix(in srgb, var(--dsw-alias-label-primary) 30%, transparent); transition: width 180ms ease, background 180ms ease; }',
+          '.hrag-tick-tick:hover .hrag-tick-bar:not(.hrag-tick-bar-active) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 50%, transparent); }',
+          '.hrag-tick-bar-active { width: 14px; background: color-mix(in srgb, var(--dsw-alias-label-primary) 80%, transparent); }',
           '.hrag-chip { flex-shrink: 0; padding: 0 6px; height: 18px; display: inline-flex; align-items: center; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-sm); color: var(--dsw-alias-label-tertiary); font-size: 11px; white-space: nowrap; }',
           '.hrag-dialog-section { display: flex; flex-direction: column; gap: 4px; }',
           '.hrag-dialog-section-title { font-size: 12px; font-weight: 600; color: var(--dsw-alias-label-secondary); }',
@@ -1662,6 +1683,7 @@ window.__ModuleLoader__.load({
           // 设置面头部不要划分线（10-15 他点名「功能模型设置下面」）——抽屉们的头线照旧。
           '.hrag-modal .hrag-drawer-head { border-bottom: none; }',
           '.hrag-drawer-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; }',
+          '.hrag-drawer-panel { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }',
           '.hrag-drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px; }',
           // ── 评测域（Task 8）──────────────────────────────────────────────
           '.hrag-btn-primary { background: var(--dsw-alias-button-primary-fill); color: var(--dsw-alias-label-primary-foreground); }',
@@ -2843,6 +2865,171 @@ window.__ModuleLoader__.load({
       return fmt(chunk.start_ms) + '–' + fmt(chunk.end_ms)
     }
 
+    /** 切片刻度轨（照工作台 `chunk-tick-rail.tsx` 整件移植，10-15 A⑫）：刻度列
+     * 是主体——窗口化刻度列（x/尺寸/间距两态恒定），悬停在其左侧开标签层，行高
+     * 与刻度 1:1、其滚动驱动同一窗口偏移（刻度随动）；点刻度或行跳片。叠加层：
+     * 不入抽屉滚动流。 */
+    const TICK_VISIBLE = 11 // 可见刻度槽数（奇数 → active 居中；弹窗可见行数同值）
+    const TICK_MIN = 5 // 渲染门槛：刻度总数 ≥5（低于门槛跳转价值低，短带只是噪音）
+    const TICK_GAP = 26 // 刻度间距 == 弹窗行高（下限被热区 16px 留隙与 12px 行高夹住）
+    const TICK_HIT = 16 // 刻度按钮热区高度（小于间距，热区之间留隙不粘连）
+
+    /** 刻度渲染窗口（纯函数，冒烟钉）：以 active 为中心夹取，永在 [0,total) 内，
+     * 且在文档两端各保至少一档可见刻度（遮罩列不出现空半截）。 */
+    function tickRange(active, total, radius = 10) {
+      if (total <= 0) return { end: 0, start: 0 }
+      const a = Math.min(Math.max(active, 0), total - 1)
+      const r = Math.max(radius, Math.floor(TICK_VISIBLE / 2))
+      const start = Math.max(0, Math.min(a - r, total - 1))
+      const end = Math.min(total, Math.max(a + r + 1, start + Math.min(total, TICK_VISIBLE)))
+      return { end: end, start: start }
+    }
+
+    function ChunkTickRail({ total, active, entries, onJump, tickLabel, unloadedLabel }) {
+      const [open, setOpen] = React.useState(false)
+      const [scrollTop, setScrollTop] = React.useState(0)
+      const openTimer = React.useRef(null)
+      const closeTimer = React.useRef(null)
+      const popupScrollRef = React.useRef(null)
+
+      const clearTimers = () => {
+        if (openTimer.current) window.clearTimeout(openTimer.current)
+        if (closeTimer.current) window.clearTimeout(closeTimer.current)
+      }
+      // 悬停意图：进轨 150ms 后开弹窗；离轨且离弹窗（跨缝宽限）200ms 关。
+      const scheduleOpen = () => {
+        clearTimers()
+        openTimer.current = window.setTimeout(() => setOpen(true), 150)
+      }
+      const scheduleClose = () => {
+        clearTimers()
+        closeTimer.current = window.setTimeout(() => setOpen(false), 200)
+      }
+      React.useEffect(() => clearTimers, [])
+
+      const previews = React.useMemo(
+        () => new Map(entries.map((entry) => [entry.index, entry.preview])),
+        [entries],
+      )
+      const clampedActive = total > 0 ? Math.min(Math.max(active, 0), total - 1) : 0
+
+      // 共享窗口偏移（可为小数行）：弹窗打开时由其 scrollTop 驱动；收起时让
+      // active 居中。两种状态共用同一套刻度定位公式 → 几何恒定。
+      const maxOffset = Math.max(0, total - TICK_VISIBLE)
+      const offset = open
+        ? Math.min(scrollTop / TICK_GAP, maxOffset)
+        : Math.min(Math.max(clampedActive - (TICK_VISIBLE - 1) / 2, 0), maxOffset)
+      const base = Math.floor(offset)
+      const frac = offset - base
+      const band = tickRange(base + (TICK_VISIBLE - 1) / 2, total)
+      const ticks = []
+      for (let index = band.start; index < band.end; index += 1) ticks.push(index)
+
+      // 打开时把 active 行滚到弹窗可见带中心；scroll 事件随后同步 offset。
+      React.useEffect(() => {
+        if (!open) return
+        const viewport = popupScrollRef.current
+        if (!viewport) return
+        const max = Math.max(0, viewport.scrollHeight - viewport.clientHeight)
+        viewport.scrollTop = Math.min(
+          Math.max((clampedActive - (TICK_VISIBLE - 1) / 2) * TICK_GAP, 0),
+          max,
+        )
+        setScrollTop(viewport.scrollTop)
+      }, [open, clampedActive])
+
+      // 弹窗滚动 → 共享窗口偏移（rAF 节流）。
+      React.useEffect(() => {
+        const viewport = popupScrollRef.current
+        if (!open || !viewport) return
+        let frame = 0
+        const onScroll = () => {
+          if (frame) return
+          frame = requestAnimationFrame(() => {
+            frame = 0
+            setScrollTop(viewport.scrollTop)
+          })
+        }
+        viewport.addEventListener('scroll', onScroll, { passive: true })
+        return () => {
+          if (frame) cancelAnimationFrame(frame)
+          viewport.removeEventListener('scroll', onScroll)
+        }
+      }, [open])
+
+      if (total < TICK_MIN) return null
+
+      const bandHeight = Math.min(total, TICK_VISIBLE) * TICK_GAP
+
+      return h(
+        'div',
+        { className: 'hrag-tickrail', onMouseEnter: scheduleOpen, onMouseLeave: scheduleClose },
+        // 标签层：行高 == TICK_GAP，行槽与刻度槽逐一对齐；其滚动驱动共享窗口。
+        open
+          ? h(
+              'div',
+              { className: 'hrag-tickrail-popup', style: { height: bandHeight + 'px' } },
+              h(
+                'div',
+                { className: 'hrag-tickrail-scroll', ref: popupScrollRef },
+                h(
+                  'div',
+                  { className: 'hrag-tickrail-rows' },
+                  Array.from({ length: total }, (_, index) => {
+                    const preview = previews.get(index) ?? null
+                    return h(
+                      'button',
+                      {
+                        type: 'button',
+                        key: index,
+                        className:
+                          index === clampedActive ? 'hrag-tickrail-row hrag-tickrail-row-active' : 'hrag-tickrail-row',
+                        style: { height: TICK_GAP + 'px' },
+                        onClick: () => {
+                          onJump(index)
+                          setOpen(false)
+                        },
+                      },
+                      h('span', { className: 'hrag-tickrail-idx' }, '#' + String(index + 1)),
+                      h(
+                        'span',
+                        { className: preview ? 'hrag-tickrail-text' : 'hrag-tickrail-text hrag-tickrail-text-unloaded' },
+                        preview ?? unloadedLabel,
+                      ),
+                    )
+                  }),
+                ),
+              ),
+            )
+          : null,
+        // 刻度主体：两态同一公式定位（(i−base)·gap − frac·gap），几何恒定；
+        // overflow + mask 截断窗口外刻度。z 压标签层上。
+        h(
+          'div',
+          { className: 'hrag-tickrail-ticks', style: { height: bandHeight + 'px' } },
+          ticks.map((index) =>
+            h(
+              'button',
+              {
+                type: 'button',
+                key: index,
+                className: 'hrag-tick-tick',
+                style: {
+                  top: String((index - base) * TICK_GAP - frac * TICK_GAP + (TICK_GAP - TICK_HIT) / 2) + 'px',
+                  height: TICK_HIT + 'px',
+                },
+                'aria-label': tickLabel + ' #' + String(index + 1),
+                onClick: () => onJump(index),
+              },
+              h('span', {
+                className: index === clampedActive ? 'hrag-tick-bar hrag-tick-bar-active' : 'hrag-tick-bar',
+              }),
+            ),
+          ),
+        ),
+      )
+    }
+
     /** Chunk drawer (the workbench's right-side Sheet): whole-document list
      * with the same load mechanics — first page, auto full load under the cap,
      * jump-to-chunk by expanding the limit + flash highlight — plus per-chunk
@@ -2855,6 +3042,7 @@ window.__ModuleLoader__.load({
       const [limit, setLimit] = React.useState(CHUNK_PAGE_SIZE)
       const [failure, setFailure] = React.useState(null)
       const [flashId, setFlashId] = React.useState(null)
+      const [activeIndex, setActiveIndex] = React.useState(0)
       const [previewOpen, setPreviewOpen] = React.useState(false)
       const [preview, setPreview] = React.useState(null)
       const [previewTarget, setPreviewTarget] = React.useState(null)
@@ -2865,6 +3053,8 @@ window.__ModuleLoader__.load({
       // Focus hand-off guard (workbench focusedIdRef parity): marks the focus
       // id as handled so the flash timeout cannot re-trigger the jump.
       const focusedIdRef = React.useRef(null)
+      const pendingJumpRef = React.useRef(null)
+      const bodyRef = React.useRef(null)
 
       const docId = doc ? doc.id : null
 
@@ -2897,6 +3087,8 @@ window.__ModuleLoader__.load({
         setItems([])
         setTotal(0)
         setLimit(CHUNK_PAGE_SIZE)
+        setActiveIndex(0)
+        pendingJumpRef.current = null
       }, [kbId, docId])
 
       // Escape closes the drawer (the preview dialog owns Escape while open).
@@ -2915,6 +3107,16 @@ window.__ModuleLoader__.load({
         }
       }, [total])
 
+      /** 闪环 + 居中（focus 通路与刻度轨跳转共用的同一原语；守卫/时序留在各自调用点）。 */
+      const flashAndCenter = (chunkId) => {
+        setFlashId(chunkId)
+        const node = rowRefs.current[chunkId]
+        if (node && typeof node.scrollIntoView === 'function') {
+          node.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        }
+        window.setTimeout(() => setFlashId((value) => (value === chunkId ? null : value)), 1200)
+      }
+
       // Focus hand-off (recall row -> this pane): expand the limit until the
       // target chunk is loaded, then flash-highlight it. The guard must be the
       // persistent ref, not flash state — the flash timeout's own setState
@@ -2926,16 +3128,64 @@ window.__ModuleLoader__.load({
         const position = items.findIndex((chunk) => chunk.chunk_id === focusChunkId)
         if (position >= 0) {
           focusedIdRef.current = focusChunkId
-          setFlashId(focusChunkId)
-          const node = rowRefs.current[focusChunkId]
-          if (node && typeof node.scrollIntoView === 'function') {
-            node.scrollIntoView({ block: 'center', behavior: 'smooth' })
-          }
-          window.setTimeout(() => setFlashId((value) => (value === focusChunkId ? null : value)), 1200)
+          flashAndCenter(focusChunkId)
         } else if (items.length < total && limit < total) {
           setLimit((value) => Math.min(total, value + CHUNK_PAGE_SIZE))
         }
       }, [focusChunkId, phase, items, total, limit])
+
+      // ── 切片导航（A⑫ 照工作台 2026-09-05 切片导航）：位置序跳片 + 滚动打卡 ──
+      // active = 顶部越过视口上 35% 带的最后一张卡；rAF 节流 scroll 监听挂抽屉主体。
+      React.useEffect(() => {
+        if (phase !== 'ready') return
+        const viewport = bodyRef.current
+        if (!viewport) return
+        let frame = 0
+        const measure = () => {
+          frame = 0
+          const line = viewport.getBoundingClientRect().top + viewport.clientHeight * 0.35
+          let current = 0
+          for (let position = 0; position < items.length; position += 1) {
+            const node = rowRefs.current[items[position].chunk_id]
+            if (!node || node.getBoundingClientRect().top > line) break
+            current = position
+          }
+          setActiveIndex(current)
+        }
+        const onScroll = () => {
+          if (!frame) frame = requestAnimationFrame(measure)
+        }
+        measure()
+        viewport.addEventListener('scroll', onScroll, { passive: true })
+        return () => {
+          if (frame) cancelAnimationFrame(frame)
+          viewport.removeEventListener('scroll', onScroll)
+        }
+      }, [phase, items])
+
+      const scrollToPosition = (position) => {
+        const chunk = items[position]
+        if (!chunk) return
+        flashAndCenter(chunk.chunk_id)
+      }
+
+      const jumpTo = (index) => {
+        if (index < 0 || index >= total) return
+        if (index >= items.length) {
+          // 目标尚未加载：先扩 limit，数据到位后由下方 pending effect 续跳。
+          pendingJumpRef.current = index
+          setLimit((value) => Math.max(value, Math.ceil((index + 1) / CHUNK_PAGE_SIZE) * CHUNK_PAGE_SIZE))
+          return
+        }
+        scrollToPosition(index)
+      }
+
+      React.useEffect(() => {
+        const pending = pendingJumpRef.current
+        if (pending === null || pending >= items.length) return
+        pendingJumpRef.current = null
+        requestAnimationFrame(() => scrollToPosition(pending))
+      }, [items])
 
       const startDelete = (chunk) => {
         setDialogError(null)
@@ -3077,8 +3327,18 @@ window.__ModuleLoader__.load({
           ),
           h(
             'div',
-            { className: 'hrag-drawer-body' },
-            body,
+            { className: 'hrag-drawer-panel' },
+            h('div', { className: 'hrag-drawer-body', ref: bodyRef }, body),
+            phase === 'ready'
+              ? h(ChunkTickRail, {
+                  total: total,
+                  active: activeIndex,
+                  entries: items.map((chunk) => ({ index: chunk.chunk_index, preview: firstLine(chunk.text) })),
+                  onJump: jumpTo,
+                  tickLabel: t('chunk.tickAria'),
+                  unloadedLabel: t('chunk.notLoaded'),
+                })
+              : null,
           ),
         ),
         previewOpen
