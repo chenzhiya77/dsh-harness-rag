@@ -143,6 +143,9 @@ window.__ModuleLoader__.load({
       'chunk.deleteSuccess': '切片已删除',
       'chunk.deleteFailed': '删除失败',
       'chunk.timecode': '时间码',
+      'chunk.entities': '实体',
+      'chunk.tokens': 'tokens',
+      'chunk.edited': '已编辑',
       'recall.placeholder': '输入测试问题…',
       'recall.run': '开始检索',
       'recall.running': '检索中…',
@@ -754,6 +757,9 @@ window.__ModuleLoader__.load({
       'chunk.deleteSuccess': 'Chunk deleted',
       'chunk.deleteFailed': 'Failed to delete chunk',
       'chunk.timecode': 'Timecode',
+      'chunk.entities': 'Entities',
+      'chunk.tokens': 'tokens',
+      'chunk.edited': 'Edited',
       'recall.placeholder': 'Enter a test query…',
       'recall.run': 'Run',
       'recall.running': 'Running…',
@@ -1773,6 +1779,13 @@ window.__ModuleLoader__.load({
           '.hrag-chunkrow-idx { font-family: ui-monospace, monospace; color: var(--dsw-alias-label-tertiary); font-size: 12px; flex-shrink: 0; }',
           '.hrag-chunkrow-path { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-chunkrow-text { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; white-space: pre-wrap; word-break: break-word; }',
+          // 实体徽章行＋页脚度量（小件批 Task 6，照工作台 chunk-card）：徽章＝
+          // textchip 词汇（软底实体件/裸底 +N）；页脚 border-t 分层（tokens＋已编辑）。
+          '.hrag-chunkrow-entities { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-chunkrow-entities-label { flex-shrink: 0; }',
+          '.hrag-entitymore { display: inline-flex; padding: 0; border: none; background: transparent; font-family: inherit; cursor: pointer; }',
+          '.hrag-chunkrow-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 0.5px solid var(--dsw-alias-border-l2); padding-top: 6px; }',
+          '.hrag-chunkrow-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
           '.hrag-chunkrow-flash { background: var(--dsw-alias-interactive-bg-hover); }',
           // 刻度轨（A⑫ 照工作台 chunk-tick-rail）：叠加层不入滚动流；行高=间距 26，
           // 行槽与刻度槽逐一对齐；hover/active 用 :not() 守护（active 不被 hover 压色）。
@@ -2359,6 +2372,8 @@ window.__ModuleLoader__.load({
     /** 抽屉抽取轮询节拍（照工作台 chunk-drawer refetchInterval 3000）：仅当
         任一切片仍在抽取（extract_status==='pending'）时武装。 */
     const CHUNK_POLL_MS = 3000
+    /** 实体徽章展示上限（照工作台 chunk-card ENTITY_CAP）：超出折成 +N。 */
+    const ENTITY_CAP = 6
     /** Poll cadence for the documents list and the reindex status — the
      * workbench's library pipelines share this 3s cadence. */
     const PIPELINE_POLL_MS = 3000
@@ -3219,6 +3234,9 @@ window.__ModuleLoader__.load({
       const [previewTarget, setPreviewTarget] = React.useState(null)
       const [busy, setBusy] = React.useState(false)
       const [dialogError, setDialogError] = React.useState(null)
+      // 实体徽章 +N 展开集（小件批 Task 6）：按 chunk_id 记展开态（工作台为每卡
+      // 自治 state；插件行内联渲染，故由抽屉统一持有）。
+      const [expandedEntities, setExpandedEntities] = React.useState(() => new Set())
       const rowRefs = React.useRef({})
       const hasDataRef = React.useRef(false)
       // Focus hand-off guard (workbench focusedIdRef parity): marks the focus
@@ -3270,6 +3288,7 @@ window.__ModuleLoader__.load({
         setTotal(0)
         setLimit(CHUNK_PAGE_SIZE)
         setActiveIndex(0)
+        setExpandedEntities(new Set())
         pendingJumpRef.current = null
       }, [kbId, docId])
 
@@ -3429,6 +3448,10 @@ window.__ModuleLoader__.load({
             { className: 'hrag-docs' },
             items.map((chunk) => {
               const timecode = chunkTimecode(chunk)
+              // 实体徽章（小件批 Task 6，照工作台 chunk-card :223-243）：cap 6＋
+              // +N 展开钮（title 列其余名；展开后全量、+N 消失）；无实体不渲。
+              const entities = Array.isArray(chunk.entities) ? chunk.entities : []
+              const badges = entityBadges(entities, expandedEntities.has(chunk.chunk_id))
               return h(
                 'div',
                 {
@@ -3463,6 +3486,49 @@ window.__ModuleLoader__.load({
                   ),
                 ),
                 h('div', { className: 'hrag-chunkrow-text' }, String(chunk.text || '')),
+                entities.length > 0
+                  ? h(
+                      'span',
+                      { className: 'hrag-chunkrow-entities' },
+                      h('span', { className: 'hrag-chunkrow-entities-label' }, t('chunk.entities') + ':'),
+                      badges.visible.map((entity) =>
+                        h('span', { className: 'hrag-textchip hrag-headbadge-soft', key: entity }, String(entity)),
+                      ),
+                      badges.hidden > 0
+                        ? h(
+                            'button',
+                            {
+                              type: 'button',
+                              className: 'hrag-entitymore',
+                              title: entities.slice(ENTITY_CAP).join(', '),
+                              onClick: () =>
+                                setExpandedEntities((prev) => {
+                                  const next = new Set(prev)
+                                  next.add(chunk.chunk_id)
+                                  return next
+                                }),
+                            },
+                            h('span', { className: 'hrag-textchip' }, '+' + String(badges.hidden)),
+                          )
+                        : null,
+                    )
+                  : null,
+                // 页脚度量（小件批 Task 6，照工作台 :249-264）：tokens 计数＋「已编辑」
+                // 徽章（页码在顶行 chip 位照旧）；两者皆无不加分隔线。
+                chunk.token_count != null || chunk.last_edited_at
+                  ? h(
+                      'div',
+                      { className: 'hrag-chunkrow-foot' },
+                      h(
+                        'span',
+                        { className: 'hrag-chunkrow-meta' },
+                        chunk.token_count != null
+                          ? h('span', null, String(chunk.token_count) + ' ' + t('chunk.tokens'))
+                          : null,
+                        chunk.last_edited_at ? h('span', { className: 'hrag-textchip' }, t('chunk.edited')) : null,
+                      ),
+                    )
+                  : null,
               )
             }),
           ),
@@ -3594,6 +3660,16 @@ window.__ModuleLoader__.load({
         仍在抽取即为真——插件无重抽在飞源（②档裁减项）。 */
     function hasPendingExtraction(items) {
       return (Array.isArray(items) ? items : []).some((chunk) => chunk && chunk.extract_status === 'pending')
+    }
+
+    /** 实体徽章截断（照工作台 chunk-card）：展开态全量、+N 消失；未展开截
+        CAP 前段并报余名数（title/计数用）。 */
+    function entityBadges(entities, expanded) {
+      const list = Array.isArray(entities) ? entities : []
+      return {
+        visible: expanded ? list : list.slice(0, ENTITY_CAP),
+        hidden: !expanded && list.length > ENTITY_CAP ? list.length - ENTITY_CAP : 0,
+      }
     }
 
     /** First non-empty line of the chunk text (the workbench's row preview). */
