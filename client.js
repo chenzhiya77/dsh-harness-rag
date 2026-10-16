@@ -175,6 +175,10 @@ window.__ModuleLoader__.load({
       'vec.hitsPrefix': '命中',
       'vec.clearOverlay': '清除叠加',
       'recall.viewInGraphSpace': '在知识图谱查看',
+      'recall.evidenceView': '证据 {0}',
+      'recall.entitiesView': '实体 {0}',
+      'recall.slicePosition': '切片 #{0}',
+      'recall.wikiAnchorTooltip': '人工卡片无源切片：勾选仅记录预期路径，不产生切片锚定',
       'graph.loading': '正在加载知识图谱…',
       'graph.loadFailed': '知识图谱加载失败——请稍后重试',
       'graph.empty': '暂无可视化的实体——索引文档后自动构建',
@@ -789,6 +793,10 @@ window.__ModuleLoader__.load({
       'vec.hitsPrefix': 'Hits',
       'vec.clearOverlay': 'Clear overlay',
       'recall.viewInGraphSpace': 'View in the knowledge graph',
+      'recall.evidenceView': 'Evidence {0}',
+      'recall.entitiesView': 'Entities {0}',
+      'recall.slicePosition': 'Chunk #{0}',
+      'recall.wikiAnchorTooltip': 'Manual cards have no source chunks: ticking records the expected path only, without chunk anchors',
       'graph.loading': 'Loading the knowledge graph…',
       'graph.loadFailed': 'Failed to load the knowledge graph — please try again',
       'graph.empty': 'Nothing to visualize yet — entities appear after documents are indexed',
@@ -1817,11 +1825,31 @@ window.__ModuleLoader__.load({
           '.hrag-input { flex: 1; min-width: 0; height: 28px; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; }',
           '.hrag-input:focus-visible { outline: none; border-color: var(--dsw-alias-state-business-primary); }',
           '.hrag-input-num { flex: none; width: 56px; }',
-          '.hrag-recall-section { display: flex; flex-direction: column; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); min-width: 0; overflow: hidden; }',
-          '.hrag-recall-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px; min-width: 0; border-bottom: 0.5px solid var(--dsw-alias-border-l2); }',
+          // 召回面（小件批 Task 7，照工作台 three-path panel）：三路并列各占 1/3 高
+          // （flex 均分＋行区内滚）；整栏点击收起（收起路 shrink 让高位）；图谱路
+          // 段控＋内嵌迷你图；耗时档色三档（宿主静态色板最邻近色）；存为考题悬浮栏。
+          '.hrag-recall-section { display: flex; flex-direction: column; flex: 1 1 0; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); min-width: 0; min-height: 0; overflow: hidden; }',
+          '.hrag-recall-section-collapsed { flex: 0 0 auto; }',
+          '.hrag-recall-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px; min-width: 0; border-bottom: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; }',
+          '.hrag-recall-section-collapsed .hrag-recall-head { border-bottom: none; }',
+          '.hrag-recall-toggle { display: inline-flex; align-items: center; gap: 6px; min-width: 0; padding: 2px 6px; margin: -2px -6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-recall-toggle:hover { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-recall-name { color: var(--dsw-alias-label-primary); font-size: 12px; font-weight: 600; flex-shrink: 0; }',
           '.hrag-recall-meta { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }',
-          '.hrag-recall-rows { display: flex; flex-direction: column; padding: 4px; }',
+          '.hrag-recall-seg { display: inline-flex; align-items: center; flex-shrink: 0; padding: 1px; border-radius: var(--dsw-radius-md); background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-recall-segbtn { padding: 1px 6px; border: none; border-radius: 4px; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 10px; line-height: 16px; font-family: inherit; cursor: pointer; }',
+          '.hrag-recall-segbtn:hover:not(:disabled) { color: var(--dsw-alias-label-primary); }',
+          '.hrag-recall-segbtn:disabled { opacity: 0.4; cursor: not-allowed; }',
+          ".hrag-recall-segbtn[aria-pressed='true'] { background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); box-shadow: var(--dsw-elevation-prominent); }",
+          '.hrag-elapsed-fast { border-color: transparent; background: color-mix(in srgb, var(--dsw-static-green-500) 10%, transparent); color: var(--dsw-static-green-500); }',
+          '.hrag-elapsed-mid { border-color: transparent; background: color-mix(in srgb, var(--dsw-static-amber-400) 10%, transparent); color: var(--dsw-static-amber-400); }',
+          '.hrag-elapsed-slow { border-color: transparent; background: color-mix(in srgb, var(--dsw-static-amber-500) 10%, transparent); color: var(--dsw-static-amber-500); }',
+          '.hrag-elapsed-plain { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-recall-rows { display: flex; flex-direction: column; padding: 4px; flex: 1; min-height: 0; overflow-y: auto; }',
+          '.hrag-recall-mini { display: flex; flex-direction: column; flex: 1; min-height: 160px; }',
+          '.hrag-mini { position: relative; flex: 1; min-height: 0; overflow: hidden; }',
+          '.hrag-mini canvas { display: block; width: 100%; height: 100%; }',
+          '.hrag-recall-arearel { position: relative; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }',
           '.hrag-recall-empty { padding: 12px; text-align: center; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-hitrow { display: flex; align-items: center; gap: 6px; width: 100%; padding: 4px 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; text-align: left; cursor: pointer; font-family: inherit; min-width: 0; }',
           '.hrag-hitrow:hover { background: var(--dsw-alias-interactive-bg-hover); }',
@@ -1838,7 +1866,7 @@ window.__ModuleLoader__.load({
           '.hrag-hitselect:focus-visible { opacity: 1; }',
           '.hrag-hitselect-on { opacity: 1; }',
           '.hrag-recall-rows-selecting .hrag-hitselect { opacity: 1; }',
-          '.hrag-recall-sections { display: flex; flex-direction: column; gap: 8px; }',
+          '.hrag-recall-sections { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }',
           '.hrag-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 100%; }',
           '@keyframes hrag-fade-in { from { opacity: 0; } to { opacity: 1; } }',
           '@keyframes hrag-slide-in { from { transform: translateX(24px); opacity: 0.6; } to { transform: translateX(0); opacity: 1; } }',
@@ -2076,7 +2104,11 @@ window.__ModuleLoader__.load({
           '.hrag-hitrow-row .hrag-hitrow { flex: 1; min-width: 0; }',
           '.hrag-hitselect { flex-shrink: 0; width: 22px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 6px; background: transparent; color: var(--dsw-alias-label-primary); font-size: 11px; cursor: pointer; align-self: center; height: 22px; padding: 0; }',
           '.hrag-hitselect-on { background: var(--dsw-alias-button-primary-fill); color: var(--dsw-alias-label-primary-foreground); border-color: transparent; }',
-          '.hrag-recall-savebar { display: flex; align-items: center; gap: 10px; padding: 6px 4px 2px; flex-shrink: 0; }',
+          '.hrag-hitselect:disabled { opacity: 0.35; cursor: not-allowed; }',
+          // 悬浮存为考题栏（小件批 Task 7）：外层不吃交互（pointer-events 双档），
+          // 胶囊＝圆角满、底中悬浮、卡片底＋模糊＋阴影（照工作台配方）。
+          '.hrag-recall-savebar { position: absolute; left: 0; right: 0; bottom: 12px; z-index: 10; display: flex; justify-content: center; pointer-events: none; }',
+          '.hrag-recall-savepill { pointer-events: auto; display: inline-flex; align-items: center; gap: 12px; padding: 5px 16px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; background: color-mix(in srgb, var(--dsw-alias-bg-base) 95%, transparent); backdrop-filter: blur(4px); box-shadow: var(--dsw-elevation-prominent); }',
           '.hrag-recall-savecount { margin-left: auto; font-size: 12px; color: var(--dsw-alias-label-secondary); }',
         ].join('\n'),
       )
@@ -3650,6 +3682,20 @@ window.__ModuleLoader__.load({
 
     const RECALL_PATHS = ['vector', 'graph', 'wiki']
 
+    /** 耗时排名三档色（小件批 Task 7，照工作台 ELAPSED_RANK_CLASSES 绿/黄绿/橙）：
+        宿主静态色板无 lime/orange ⇒ 最近邻三档 绿→琥珀400→琥珀500（黄→橙热力序）。 */
+    const ELAPSED_RANK_CLASSES = ['hrag-elapsed-fast', 'hrag-elapsed-mid', 'hrag-elapsed-slow']
+
+    /** 耗时档色（照工作台）：跨路去重排序下标——同值共享较快档色（平局不误导）；
+        缺席/非数走中性档。 */
+    function elapsedRankClass(elapsedMs, path) {
+      if (!elapsedMs) return 'hrag-elapsed-plain'
+      const values = RECALL_PATHS.map((item) => elapsedMs[item]).filter((value) => typeof value === 'number')
+      const sorted = [...new Set(values)].sort((a, b) => a - b)
+      const rank = sorted.indexOf(elapsedMs[path])
+      return rank >= 0 && rank < ELAPSED_RANK_CLASSES.length ? ELAPSED_RANK_CLASSES[rank] : 'hrag-elapsed-plain'
+    }
+
     /** Score display mirrors the workbench: null (degraded reranker) renders
      * an em dash; the label string itself is computed server-side per request. */
     function formatScore(score) {
@@ -3687,6 +3733,335 @@ window.__ModuleLoader__.load({
       return String(summary || '')
         .replace(/^#\s.*(\n|$)/, '')
         .trim()
+    }
+
+    // 召回迷你图参数（照工作台 recall-graph-mini 的 force 配置）：斥力 140、理想边
+    // 80（edgeLength [60,100] 中值＝大图常量）、重力 0.1；节点 symbolSize 16 → 半径 8。
+    const MINI_REPULSION = 140
+    const MINI_NODE_RADIUS = 8
+
+    /** 召回迷你图（小件批 Task 7·D1 甲，照工作台 recall-graph-mini）：当次召回的
+        实体/关系渲染为力导向子图——typeColor 按 type 稳定取色、全画布 roam（滚轮
+        缩放锚光标＋拖拽平移）、节点可拖（拖动中钉住＋近邻沉降）、节点悬停 tooltip
+        （名＋描述）、边标签＝关系名与节点名随缩放档隐藏；无 LOD/叠加/搜索（迷你
+        语义）。力场内核与大图共用（graphForceStep，参数迷你化）。 */
+    function RecallGraphMini({ entities, relations }) {
+      const wrapRef = React.useRef(null)
+      const canvasRef = React.useRef(null)
+      const simRef = React.useRef(null)
+      const rafRef = React.useRef(null)
+      const viewRef = React.useRef({ zoom: 1, ox: 0, oy: 0 })
+      const dragRef = React.useRef(null)
+      const hoverRef = React.useRef(null)
+      const projectedRef = React.useRef([])
+      const [tip, setTip] = React.useState(null)
+      const [grabbing, setGrabbing] = React.useState(false)
+
+      const nodeById = React.useMemo(() => {
+        const map = new Map()
+        for (const entity of entities || []) map.set(entity.name, entity)
+        return map
+      }, [entities])
+
+      /** 单帧绘制（交互/模拟/缩放都经它落画布）。 */
+      const draw = React.useCallback(() => {
+        const canvas = canvasRef.current
+        const wrap = wrapRef.current
+        if (!canvas || !wrap) return
+        const w = wrap.clientWidth
+        const h = wrap.clientHeight
+        if (!w || !h) return
+        const dpr = window.devicePixelRatio || 1
+        if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+          canvas.width = Math.round(w * dpr)
+          canvas.height = Math.round(h * dpr)
+        }
+        const ctx = canvas.getContext('2d')
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        ctx.clearRect(0, 0, w, h)
+        const sim = simRef.current
+        if (!sim) return
+        const view = viewRef.current
+        const inkColor = getComputedStyle(wrap).color || '#3c3c3c'
+        const cx = w / 2 + view.ox
+        const cy = h / 2 + view.oy
+        const toScreen = (x, y) => ({ sx: cx + x * view.zoom, sy: cy + y * view.zoom })
+        const showEdgeLabels = view.zoom >= GRAPH_LABEL_HIDE_BELOW
+        // 边层：色＝源节点色（echarts lineStyle color:'source'）、弧 0.12 防并行边
+        // 重叠、箭头贴目标端点边界（同大图裁帽；线体终点收在箭头底边）。
+        for (const link of sim.links) {
+          const a = sim.byId.get(link.source)
+          const b = sim.byId.get(link.target)
+          if (!a || !b) continue
+          const pa = toScreen(a.x, a.y)
+          const pb = toScreen(b.x, b.y)
+          const dx = pb.sx - pa.sx
+          const dy = pb.sy - pa.sy
+          const len = Math.hypot(dx, dy) || 1
+          const trim = MINI_NODE_RADIUS + 2
+          if (len <= trim * 2 + 4) continue
+          const ux = dx / len
+          const uy = dy / len
+          const ax = pa.sx + ux * trim
+          const ay = pa.sy + uy * trim
+          const bx = pb.sx - ux * trim
+          const by = pb.sy - uy * trim
+          const mx = (pa.sx + pb.sx) / 2 + (-dy / len) * len * 0.12
+          const my = (pa.sy + pb.sy) / 2 + (dx / len) * len * 0.12
+          const angle = Math.atan2(by - my, bx - mx)
+          const baseX = bx - 6 * Math.cos(angle)
+          const baseY = by - 6 * Math.sin(angle)
+          const sourceColor = graphTypeColor((nodeById.get(link.source) || {}).type)
+          ctx.beginPath()
+          ctx.moveTo(ax, ay)
+          ctx.quadraticCurveTo(mx, my, baseX, baseY)
+          ctx.strokeStyle = sourceColor
+          ctx.lineWidth = 1
+          ctx.globalAlpha = 0.7
+          ctx.stroke()
+          // 箭头（照工作台 edgeSymbol arrow size 6）。
+          ctx.beginPath()
+          ctx.moveTo(baseX + 3.2 * Math.sin(angle), baseY - 3.2 * Math.cos(angle))
+          ctx.lineTo(bx, by)
+          ctx.lineTo(baseX - 3.2 * Math.sin(angle), baseY + 3.2 * Math.cos(angle))
+          ctx.closePath()
+          ctx.fillStyle = sourceColor
+          ctx.fill()
+          ctx.globalAlpha = 1
+          // 边标签＝关系名（9px ink 0.6；缩放档下与节点名同隐——只判 hidden 档，
+          // 迷你语义不设 important 档）。
+          if (showEdgeLabels && link.label) {
+            ctx.font = '9px sans-serif'
+            ctx.fillStyle = inkColor
+            ctx.globalAlpha = 0.6
+            ctx.fillText(link.label, mx, my - 3)
+            ctx.globalAlpha = 1
+          }
+        }
+        // 节点层：半径 8（symbolSize 16）、typeColor 填充；悬停＝蓝描边＋标签常显。
+        const hover = hoverRef.current
+        const projected = []
+        for (const item of sim.items) {
+          const entity = nodeById.get(item.id)
+          if (!entity) continue
+          const p = toScreen(item.x, item.y)
+          ctx.beginPath()
+          ctx.arc(p.sx, p.sy, MINI_NODE_RADIUS, 0, Math.PI * 2)
+          ctx.fillStyle = graphTypeColor(entity.type)
+          ctx.fill()
+          const hovered = hover != null && hover.id === item.id
+          if (hovered) {
+            ctx.strokeStyle = GRAPH_HOVER_BORDER
+            ctx.lineWidth = 2
+            ctx.stroke()
+          }
+          // 标签：10px 右侧 ink 0.85；zoom < 0.6 隐藏（照 labelTierForZoom），悬停常显。
+          if (hovered || view.zoom >= GRAPH_LABEL_HIDE_BELOW) {
+            ctx.font = '10px sans-serif'
+            ctx.fillStyle = inkColor
+            ctx.globalAlpha = 0.85
+            ctx.fillText(entity.name, p.sx + MINI_NODE_RADIUS + 3, p.sy + 3.5)
+            ctx.globalAlpha = 1
+          }
+          projected.push({ sx: p.sx, sy: p.sy, r: MINI_NODE_RADIUS + 3, node: entity })
+        }
+        projectedRef.current = projected
+      }, [nodeById])
+
+      /** 力场启动（friction 冷却至阈下停——同大图节奏）。 */
+      const startSim = React.useCallback(() => {
+        const step = () => {
+          const sim = simRef.current
+          if (!sim) return
+          graphForceStep(sim.items, sim.links, sim.byId, sim.friction, {
+            edgeLength: GRAPH_EDGE_LENGTH,
+            gravity: GRAPH_GRAVITY,
+            repulsion: MINI_REPULSION,
+          })
+          sim.friction *= GRAPH_FRICTION_DECAY
+          draw()
+          if (sim.friction > GRAPH_FRICTION_MIN) {
+            rafRef.current = window.requestAnimationFrame(step)
+          } else {
+            rafRef.current = null
+          }
+        }
+        if (rafRef.current !== null) window.cancelAnimationFrame(rafRef.current)
+        rafRef.current = window.requestAnimationFrame(step)
+      }, [draw])
+
+      // 数据重建：视口复位（zoom 1 居中——迷你无自动全览，照 echarts 初始态）、
+      // 画布内随机撒点、力场从头跑（friction 0.6）。
+      React.useEffect(() => {
+        const wrap = wrapRef.current
+        const initW = (wrap && wrap.clientWidth) || 320
+        const initH = (wrap && wrap.clientHeight) || 220
+        const names = new Set((entities || []).map((entity) => entity.name))
+        const items = []
+        const byId = new Map()
+        for (const entity of entities || []) {
+          const x = initW * (Math.random() - 0.5)
+          const y = initH * (Math.random() - 0.5) * 0.7
+          const item = { id: entity.name, x, y, ppx: x, ppy: y, fixed: false }
+          items.push(item)
+          byId.set(entity.name, item)
+        }
+        const links = (relations || [])
+          .filter((relation) => names.has(relation.source) && names.has(relation.target))
+          .map((relation) => ({ source: relation.source, target: relation.target, label: relation.relation }))
+        simRef.current = { items, byId, links, friction: GRAPH_FRICTION }
+        viewRef.current = { zoom: 1, ox: 0, oy: 0 }
+        hoverRef.current = null
+        setTip(null)
+        startSim()
+        return () => {
+          if (rafRef.current !== null) {
+            window.cancelAnimationFrame(rafRef.current)
+            rafRef.current = null
+          }
+        }
+      }, [entities, relations, startSim])
+
+      React.useEffect(() => {
+        draw()
+      }, [draw])
+
+      React.useEffect(() => {
+        const wrap = wrapRef.current
+        if (!wrap) return
+        const observer = new ResizeObserver(() => draw())
+        observer.observe(wrap)
+        return () => observer.disconnect()
+      }, [draw])
+
+      // 滚轮缩放（0.3–3，锚光标；迷你无 LOD 档切换）。
+      React.useEffect(() => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const onWheel = (event) => {
+          event.preventDefault()
+          const rect = canvas.getBoundingClientRect()
+          const mx = event.clientX - rect.left
+          const my = event.clientY - rect.top
+          const view = viewRef.current
+          const factor = Math.exp(-event.deltaY * 0.0012)
+          const next = Math.min(GRAPH_MAX_SCALE, Math.max(GRAPH_MIN_SCALE, view.zoom * factor))
+          const real = next / view.zoom
+          view.ox = mx - rect.width / 2 - (mx - rect.width / 2 - view.ox) * real
+          view.oy = my - rect.height / 2 - (my - rect.height / 2 - view.oy) * real
+          view.zoom = next
+          draw()
+        }
+        canvas.addEventListener('wheel', onWheel, { passive: false })
+        return () => canvas.removeEventListener('wheel', onWheel)
+      }, [draw])
+
+      const pick = (event) => {
+        const rect = event.currentTarget.getBoundingClientRect()
+        const mx = event.clientX - rect.left
+        const my = event.clientY - rect.top
+        const projected = projectedRef.current
+        for (let i = projected.length - 1; i >= 0; i -= 1) {
+          const entry = projected[i]
+          const dx = mx - entry.sx
+          const dy = my - entry.sy
+          if (dx * dx + dy * dy <= entry.r * entry.r) return { entry, mx, my }
+        }
+        return null
+      }
+
+      const handleMove = (event) => {
+        const drag = dragRef.current
+        if (drag) {
+          const dx = event.clientX - drag.x
+          const dy = event.clientY - drag.y
+          drag.x = event.clientX
+          drag.y = event.clientY
+          if (drag.kind === 'pan') {
+            viewRef.current.ox += dx
+            viewRef.current.oy += dy
+          } else if (drag.item) {
+            drag.item.x += dx / viewRef.current.zoom
+            drag.item.y += dy / viewRef.current.zoom
+            // 拖动中钉住该点（力场豁免），warmUp 并确保迭代在跑——邻居随拉力沉降。
+            drag.item.fixed = true
+            const sim = simRef.current
+            if (sim) {
+              sim.friction = GRAPH_FRICTION * 0.8
+              if (rafRef.current === null) startSim()
+            }
+          }
+          draw()
+          return
+        }
+        const found = pick(event)
+        if (found) {
+          const prev = hoverRef.current
+          hoverRef.current = { id: found.entry.node.name }
+          setTip({ x: found.mx + 12, y: found.my + 12, node: found.entry.node })
+          if (!prev || prev.id !== found.entry.node.name) draw()
+        } else if (tip) {
+          hoverRef.current = null
+          setTip(null)
+          draw()
+        }
+      }
+
+      const handleDown = (event) => {
+        if (event.button !== 0) return // 仅左键起拖拽（照大图/工作台）。
+        const found = pick(event)
+        dragRef.current = {
+          kind: found ? 'node' : 'pan',
+          item: found && simRef.current ? simRef.current.byId.get(found.entry.node.name) : null,
+          x: event.clientX,
+          y: event.clientY,
+        }
+        setGrabbing(true)
+      }
+
+      const releaseDrag = () => {
+        const drag = dragRef.current
+        dragRef.current = null
+        setGrabbing(false)
+        if (drag && drag.item) {
+          // 解钉并把 pp 同步到当前位（同大图；固定期间积分跳过，pp 滞留会弹跳）。
+          drag.item.fixed = false
+          drag.item.ppx = drag.item.x
+          drag.item.ppy = drag.item.y
+        }
+      }
+
+      const handleLeave = () => {
+        releaseDrag()
+        if (tip) setTip(null)
+        if (hoverRef.current) {
+          hoverRef.current = null
+          draw()
+        }
+      }
+
+      return h(
+        'div',
+        { className: 'hrag-mini', ref: wrapRef },
+        h('canvas', {
+          ref: canvasRef,
+          style: { cursor: grabbing ? 'grabbing' : tip ? 'pointer' : 'grab' },
+          onMouseDown: handleDown,
+          onMouseMove: handleMove,
+          onMouseUp: releaseDrag,
+          onMouseLeave: handleLeave,
+        }),
+        tip
+          ? h(
+              'div',
+              { className: 'hrag-vec-tip', style: { left: String(tip.x) + 'px', top: String(tip.y) + 'px' } },
+              h('span', { className: 'hrag-vec-tip-label' }, vecTruncate(tip.node.name, VEC_TOOLTIP_MAX)),
+              tip.node.description
+                ? h('span', { className: 'hrag-vec-tip-preview' }, vecTruncate(tip.node.description, 40))
+                : null,
+            )
+          : null,
+      )
     }
 
     /** Recall pane: query + top_k (clamped 1–20, same as the hrag tool) ran
@@ -3734,12 +4109,22 @@ window.__ModuleLoader__.load({
       const [failure, setFailure] = React.useState(null)
       // 「存为考题」（Task 8 补面，照工作台 §7.1）：命中行勾选 → 底部动作条。
       const [selectedChunks, setSelectedChunks] = React.useState(() => new Map())
+      // 人工卡片勾选（小件批 Task 7·D1①）：卡片无源切片——勾选只记录预期路径
+      // （wiki）与计数，不进锚定集（照工作台 selectedCards 语义）。
+      const [selectedCards, setSelectedCards] = React.useState([])
+      // 路容器收起态（小件批 Task 7，照工作台）：标题栏点击折叠，收起路只留头行。
+      const [collapsedPaths, setCollapsedPaths] = React.useState({ vector: false, graph: false, wiki: false })
+      // 图谱路容器视图（小件批 Task 7·D1②）：证据行 ↔ 实体/关系迷你图段控。
+      const [graphView, setGraphView] = React.useState('evidence')
       const [saveOpen, setSaveOpen] = React.useState(false)
 
       React.useEffect(() => {
         setResult(null)
         setFailure(null)
         setSelectedChunks(new Map())
+        setSelectedCards([])
+        setCollapsedPaths({ vector: false, graph: false, wiki: false })
+        setGraphView('evidence')
         setSaveOpen(false)
       }, [kbId])
 
@@ -3801,6 +4186,16 @@ window.__ModuleLoader__.load({
         // 两枚「在向量空间 / 在知识图谱查看」入口钮已撤（10-15 他令先去掉）；链路与图标保留（照 ASR 探针休眠先例），再接入时在此排末尾补回。
       )
 
+      // 勾选总量（照工作台）：切片锚定 + 人工卡片；卡片贡献 wiki 路径、不进锚定集。
+      const selectedList = [...selectedChunks.values()]
+      const selectionPaths = []
+      for (const item of selectedList) {
+        if (selectionPaths.indexOf(item.path) < 0) selectionPaths.push(item.path)
+      }
+      if (selectedCards.length > 0 && selectionPaths.indexOf('wiki') < 0) selectionPaths.push('wiki')
+      const selectionCount = selectedList.length + selectedCards.length
+      const anySelected = selectionCount > 0
+
       let body
       if (!result) {
         body = h(
@@ -3827,47 +4222,108 @@ window.__ModuleLoader__.load({
             return next
           })
         }
-        const hitRow = (key, entry, onOpen, select) =>
-          h(
+        // 词条行勾选（小件批 Task 7·D1①，照工作台 :233-253）：源切片整体进锚定集
+        // （已选不重）；全在＝整体撤。无源切片词条不可锚定（勾选禁）。
+        const wikiEntryChecked = (hit) => {
+          const sourceIds = Array.isArray(hit.source_chunk_ids) ? hit.source_chunk_ids : []
+          if (sourceIds.length === 0) return false
+          return sourceIds.every((id) => selectedChunks.has(id))
+        }
+        const toggleWikiEntry = (hit) => {
+          const sourceIds = Array.isArray(hit.source_chunk_ids) ? hit.source_chunk_ids : []
+          if (sourceIds.length === 0) return
+          setSelectedChunks((current) => {
+            if (sourceIds.every((id) => current.has(id))) {
+              const next = new Map(current)
+              for (const id of sourceIds) next.delete(id)
+              return next
+            }
+            const next = new Map(current)
+            for (const id of sourceIds) {
+              if (!next.has(id)) next.set(id, { id, path: 'wiki' })
+            }
+            return next
+          })
+        }
+        const toggleManualCard = (cardId) => {
+          setSelectedCards((current) =>
+            current.includes(cardId) ? current.filter((id) => id !== cardId) : [...current, cardId],
+          )
+        }
+        // 勾选描述子（三种行共用的形态）：{checked, label, onToggle, disabled?}——
+        // vector/graph 行＝切片锚定；wiki 词条行＝源切片整体；manual 卡＝记录路径。
+        const hitRow = (key, entry, onOpen, select) => {
+          const rowButton = h(
+            'button',
+            {
+              type: 'button',
+              className: onOpen ? 'hrag-hitrow' : 'hrag-hitrow hrag-hitrow-static',
+              onClick: onOpen || undefined,
+              title: entry.rowTitle || (!HostTooltip && entry.sliceLabel ? entry.sliceLabel : undefined),
+            },
+            entry.rank != null ? h('span', { className: 'hrag-hitrank' }, '#' + String(entry.rank)) : null,
+            h('span', { className: 'hrag-hitdoc', title: entry.docName }, String(entry.docName || '')),
+            entry.badge ? h('span', { className: 'hrag-hitbadge' }, entry.badge) : null,
+            h('span', { className: 'hrag-hitlead' }, entry.lead),
+            entry.page != null ? h('span', { className: 'hrag-hitpage' }, 'p.' + String(entry.page)) : null,
+            h('span', { className: 'hrag-hitscore' }, formatScore(entry.score)),
+          )
+          return h(
             'div',
-            { className: 'hrag-hitrow-row', key },
+            {
+              className: 'hrag-hitrow-row',
+              key,
+              // 右键 = 勾选/取消（小件批 Task 7，照工作台）：容器级 preventDefault；
+              // 不可锚定/无勾选面不切换。
+              onContextMenu:
+                select && !select.disabled
+                  ? (event) => {
+                      event.preventDefault()
+                      select.onToggle()
+                    }
+                  : undefined,
+            },
             select
               ? h(
                   'button',
                   {
                     type: 'button',
-                    className: 'hrag-hitselect' + (selectedChunks.has(select.chunkId) ? ' hrag-hitselect-on' : ''),
-                    'aria-label': t('recall.saveAs.selectLabel', { 0: entry.docName }),
-                    'aria-pressed': selectedChunks.has(select.chunkId),
-                    title: t('recall.saveAs.selectLabel', { 0: entry.docName }),
-                    onClick: () => toggleSelected(select.chunkId, select.path),
+                    className: 'hrag-hitselect' + (select.checked ? ' hrag-hitselect-on' : ''),
+                    'aria-label': select.label,
+                    'aria-pressed': select.checked,
+                    title: select.label,
+                    disabled: select.disabled || false,
+                    onClick: select.onToggle,
                   },
-                  selectedChunks.has(select.chunkId) ? '✓' : '',
+                  select.checked ? '✓' : '',
                 )
               : null,
-            h(
-              'button',
-              {
-                type: 'button',
-                className: onOpen ? 'hrag-hitrow' : 'hrag-hitrow hrag-hitrow-static',
-                onClick: onOpen || undefined,
-              },
-              entry.rank != null ? h('span', { className: 'hrag-hitrank' }, '#' + String(entry.rank)) : null,
-              h('span', { className: 'hrag-hitdoc', title: entry.docName }, String(entry.docName || '')),
-              entry.badge ? h('span', { className: 'hrag-hitbadge' }, entry.badge) : null,
-              h('span', { className: 'hrag-hitlead' }, entry.lead),
-              entry.page != null ? h('span', { className: 'hrag-hitpage' }, 'p.' + String(entry.page)) : null,
-              h('span', { className: 'hrag-hitscore' }, formatScore(entry.score)),
-            ),
+            // 「切片 #K」位次气泡（小件批 Task 7，照工作台 slicePosition）：宿主
+            // Tooltip 包裹；缺件回退行按钮原生 title（上 title 分支）。
+            entry.sliceLabel && HostTooltip
+              ? h(HostTooltip, { label: entry.sliceLabel, side: 'top', delayMs: 150, portal: true }, rowButton)
+              : rowButton,
           )
+        }
         const rowsFor = (path) => {
           if (path === 'vector') {
             return (result.paths.vector.hits || []).map((hit) =>
               hitRow(
                 hit.chunk_id,
-                { rank: hit.rank, docName: hit.doc_name, lead: firstLine(hit.text), page: hit.page, score: hit.score },
+                {
+                  rank: hit.rank,
+                  docName: hit.doc_name,
+                  lead: firstLine(hit.text),
+                  page: hit.page,
+                  score: hit.score,
+                  sliceLabel: hit.chunk_position != null ? t('recall.slicePosition', { 0: hit.chunk_position }) : null,
+                },
                 onOpenChunk ? () => onOpenChunk(hit.chunk_id, hit.doc_name) : null,
-                { chunkId: hit.chunk_id, path: 'vector' },
+                {
+                  checked: selectedChunks.has(hit.chunk_id),
+                  label: t('recall.saveAs.selectLabel', { 0: hit.doc_name }),
+                  onToggle: () => toggleSelected(hit.chunk_id, 'vector'),
+                },
               ),
             )
           }
@@ -3875,14 +4331,26 @@ window.__ModuleLoader__.load({
             return (result.paths.graph.evidence || []).map((hit, index) =>
               hitRow(
                 hit.chunk_id,
-                { rank: index + 1, docName: hit.doc_name, lead: firstLine(hit.text), page: hit.page, score: hit.score },
+                {
+                  rank: index + 1,
+                  docName: hit.doc_name,
+                  lead: firstLine(hit.text),
+                  page: hit.page,
+                  score: hit.score,
+                  sliceLabel: hit.chunk_position != null ? t('recall.slicePosition', { 0: hit.chunk_position }) : null,
+                },
                 onOpenChunk ? () => onOpenChunk(hit.chunk_id, hit.doc_name) : null,
-                { chunkId: hit.chunk_id, path: 'graph' },
+                {
+                  checked: selectedChunks.has(hit.chunk_id),
+                  label: t('recall.saveAs.selectLabel', { 0: hit.doc_name }),
+                  onToggle: () => toggleSelected(hit.chunk_id, 'graph'),
+                },
               ),
             )
           }
           return (result.paths.wiki.hits || []).map((hit) => {
             const manual = hit.source_type === 'manual'
+            const anchorable = !manual && Array.isArray(hit.source_chunk_ids) && hit.source_chunk_ids.length > 0
             const open = manual
               ? onOpenManualCard
                 ? () => onOpenManualCard(hit.entry_id)
@@ -3899,50 +4367,137 @@ window.__ModuleLoader__.load({
                 page: null,
                 score: hit.score,
                 badge: manual ? t('wk.cardType') : null,
+                rowTitle: manual ? t('recall.wikiAnchorTooltip') : null,
               },
               open,
+              {
+                checked: manual ? selectedCards.includes(hit.entry_id) : wikiEntryChecked(hit),
+                disabled: !manual && !anchorable,
+                label: t('recall.saveAs.selectLabel', { 0: hit.title }),
+                onToggle: () => (manual ? toggleManualCard(hit.entry_id) : toggleWikiEntry(hit)),
+              },
             )
           })
         }
-        const section = (path) =>
-          h(
+        const graphEntityCount = (result.paths.graph.entities || []).length
+        const graphRelationCount = (result.paths.graph.relations || []).length
+        const section = (path) => {
+          const collapsed = collapsedPaths[path]
+          const scoreType = String((result.score_type && result.score_type[path]) || '')
+          return h(
             'div',
-            { className: 'hrag-recall-section', key: path },
+            { className: 'hrag-recall-section' + (collapsed ? ' hrag-recall-section-collapsed' : ''), key: path },
             h(
               'div',
               { className: 'hrag-recall-head' },
-              h('span', { className: 'hrag-recall-name' }, t('recall.path.' + path)),
-              h('span', { className: 'hrag-textchip', title: String((result.score_type && result.score_type[path]) || '') }, String((result.score_type && result.score_type[path]) || '')),
+              // 整栏点击收起（小件批 Task 7，照工作台）：chevron 退役；左簇（名＋
+              // 分数语义芯片）即 toggle；收起＝只留头行，高度让给其余路。
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-recall-toggle',
+                  'aria-expanded': !collapsed,
+                  onClick: () =>
+                    setCollapsedPaths((current) => Object.assign({}, current, { [path]: !current[path] })),
+                },
+                h('span', { className: 'hrag-recall-name' }, t('recall.path.' + path)),
+                h('span', { className: 'hrag-textchip', title: scoreType }, scoreType),
+              ),
+              // 段控（小件批 Task 7·D1②，照工作台 :580-615）：图谱路右挂证据↔实体
+              // 两枚 10px 钮；实体钮 entities+relations 空时禁。
+              path === 'graph'
+                ? h(
+                    'span',
+                    { className: 'hrag-recall-seg' },
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-recall-segbtn',
+                        'aria-pressed': graphView === 'evidence',
+                        onClick: () => setGraphView('evidence'),
+                      },
+                      t('recall.evidenceView', { 0: counts.graph }),
+                    ),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-recall-segbtn',
+                        'aria-pressed': graphView === 'entities',
+                        disabled: graphEntityCount + graphRelationCount === 0,
+                        onClick: () => setGraphView('entities'),
+                      },
+                      t('recall.entitiesView', { 0: graphEntityCount }),
+                    ),
+                  )
+                : null,
               h(
                 'span',
                 { className: 'hrag-recall-meta' },
-                h('span', { className: 'hrag-textchip' }, String((result.elapsed_ms && result.elapsed_ms[path]) || 0) + ' ms'),
+                // 耗时档色（小件批 Task 7，照工作台）：跨路排名取色——绿/黄/橙。
+                h(
+                  'span',
+                  { className: 'hrag-textchip ' + elapsedRankClass(result.elapsed_ms, path) },
+                  String((result.elapsed_ms && result.elapsed_ms[path]) || 0) + ' ms',
+                ),
                 h('span', { className: 'hrag-textchip' }, String(counts[path])),
               ),
             ),
-            h(
-              'div',
-              {
-                className:
-                  'hrag-recall-rows' + (selectedChunks.size > 0 ? ' hrag-recall-rows-selecting' : ''),
-              },
-              counts[path] === 0
-                ? h('div', { className: 'hrag-recall-empty' }, messages[path])
-                : rowsFor(path),
-            ),
+            collapsed
+              ? null
+              : path === 'graph' && graphView === 'entities'
+                ? // 实体视图＝内嵌力导向迷你图（D1 甲，照 recall-graph-mini）；图自
+                  // 漫游缩放，不进滚动容器。
+                  h(
+                    'div',
+                    { className: 'hrag-recall-mini' },
+                    h(RecallGraphMini, {
+                      entities: result.paths.graph.entities || [],
+                      relations: result.paths.graph.relations || [],
+                    }),
+                  )
+                : h(
+                    'div',
+                    {
+                      className: 'hrag-recall-rows' + (anySelected ? ' hrag-recall-rows-selecting' : ''),
+                    },
+                    counts[path] === 0
+                      ? h('div', { className: 'hrag-recall-empty' }, messages[path])
+                      : rowsFor(path),
+                  ),
           )
+        }
         body = h(
           'div',
-          { className: 'hrag-recall-sections' },
+          { className: 'hrag-recall-arearel' },
           result.embedding_mismatch ? h('div', { className: 'hrag-notice hrag-notice-error' }, t('recall.mismatch')) : null,
-          RECALL_PATHS.map(section),
+          h('div', { className: 'hrag-recall-sections' }, RECALL_PATHS.map(section)),
+          // 存为考题悬浮栏（小件批 Task 7，照工作台 §7.1 2026-09-05 改造）：勾选 ≥1
+          // 浮出——absolute 底中、不占流（旧在流条浮出时压缩三路高度产生抖动）；
+          // pointer-events 双档（外层不吃画布交互，胶囊可点）。
+          anySelected
+            ? h(
+                'div',
+                { className: 'hrag-recall-savebar' },
+                h(
+                  'div',
+                  { className: 'hrag-recall-savepill' },
+                  h(
+                    'span',
+                    { className: 'hrag-recall-savecount hrag-ev-tabnums' },
+                    t('recall.saveAs.selectedCount', { 0: selectionCount }),
+                  ),
+                  h(
+                    'button',
+                    { type: 'button', className: 'hrag-btn hrag-btn-primary hrag-btn-sm', onClick: () => setSaveOpen(true) },
+                    t('recall.saveAs.button'),
+                  ),
+                ),
+              )
+            : null,
         )
-      }
-
-      const selectedList = [...selectedChunks.values()]
-      const selectionPaths = []
-      for (const item of selectedList) {
-        if (selectionPaths.indexOf(item.path) < 0) selectionPaths.push(item.path)
       }
 
       return h(
@@ -3951,23 +4506,6 @@ window.__ModuleLoader__.load({
         bar,
         failure ? h('div', { className: 'hrag-notice hrag-notice-error' }, t('recall.failed') + '：' + errorDetail(failure)) : null,
         body,
-        // 「存为考题」动作条（照工作台 §7.1 底栏）：勾选才出现；计数＋主钮。
-        selectedList.length > 0
-          ? h(
-              'div',
-              { className: 'hrag-recall-savebar' },
-              h(
-                'span',
-                { className: 'hrag-recall-savecount hrag-ev-tabnums' },
-                t('recall.saveAs.selectedCount', { 0: selectedList.length }),
-              ),
-              h(
-                'button',
-                { type: 'button', className: 'hrag-btn hrag-btn-primary', onClick: () => setSaveOpen(true) },
-                t('recall.saveAs.button'),
-              ),
-            )
-          : null,
         h(EvalSaveAsQuestionDialog, {
           t,
           kbId,
@@ -3976,9 +4514,10 @@ window.__ModuleLoader__.load({
           prefillQuery: result ? result.query : query,
           defaultPaths: selectionPaths,
           selectedChunkIds: selectedList.map((item) => item.id),
-          selectionCount: selectedList.length,
+          selectionCount: selectionCount,
           onSaved: () => {
             setSelectedChunks(new Map())
+            setSelectedCards([])
             showToast(t('recall.saveAs.savedToast'))
           },
         }),
@@ -4939,6 +5478,82 @@ window.__ModuleLoader__.load({
     /** 图谱画布（手写 canvas＋自研力导向，照工作台语义）：节点/边/缩放分级标签/
         hover 邻域蓝描边（加法）／三层路径叠加；拖节点、拖空白平移、滚轮缩放。
         LOD 分层（2026-10-13）：滚轮跨档重建渲染子集（照工作台 rebuildSeriesAtTier）。 */
+    /** 力场一步（逐公式照工作台 echarts forceHelper，2026-10-13 二轮口径）：先弹簧
+        （逐边）、再重力（逐点）、再斥力（两两累计进 pp）、最后 Verlet 积分
+        （p += (p−pp)·friction）。大图与召回迷你图共用同一内核（参数注入）。 */
+    function graphForceStep(items, links, byId, friction, opts) {
+      const n = items.length
+      const edgeLength = opts.edgeLength
+      const gravity = opts.gravity
+      const repulsion = opts.repulsion
+      // ① 弹簧（逐边）：p += 单位方向·(|Δ|−理想长)·w·friction——短于理想长反向
+      // 推开（防重叠）；w = rep_b/(rep_a+rep_b) = 0.5（均匀权重）。
+      for (const edge of links) {
+        const a = byId.get(edge.source)
+        const b = byId.get(edge.target)
+        if (!a || !b || a === b) continue
+        let dx = b.x - a.x
+        let dy = b.y - a.y
+        let dist = Math.hypot(dx, dy)
+        if (dist === 0) {
+          dx = Math.random() - 0.5
+          dy = Math.random() - 0.5
+          dist = Math.hypot(dx, dy) || 1
+        }
+        const push = ((dist - edgeLength) * friction) / dist
+        if (!a.fixed) {
+          a.x += dx * push * 0.5
+          a.y += dy * push * 0.5
+        }
+        if (!b.fixed) {
+          b.x -= dx * push * 0.5
+          b.y -= dy * push * 0.5
+        }
+      }
+      // ② 重力（逐点）：p += (中心−p)·gravity·friction，中心 = 世界原点（画布
+      // 中心；roam 平移不改布局）。线性强压实——旧速度域微重力的根因替身。
+      for (const item of items) {
+        if (item.fixed) continue
+        item.x -= item.x * gravity * friction
+        item.y -= item.y * gravity * friction
+      }
+      // ③ 斥力（两两）：位移 = 2·repulsion/d，累计进 pp（Verlet 口径——用「上一
+      // 位置」制造反向速度）；fixed 节点整体豁免。
+      for (let i = 0; i < n; i += 1) {
+        const a = items[i]
+        for (let j = i + 1; j < n; j += 1) {
+          const b = items[j]
+          let dx = b.x - a.x
+          let dy = b.y - a.y
+          let dist = Math.hypot(dx, dy)
+          if (dist === 0) {
+            dx = Math.random() - 0.5
+            dy = Math.random() - 0.5
+            dist = 1
+          }
+          const repFact = (repulsion + repulsion) / (dist * dist)
+          if (!a.fixed) {
+            a.ppx += dx * repFact
+            a.ppy += dy * repFact
+          }
+          if (!b.fixed) {
+            b.ppx -= dx * repFact
+            b.ppy -= dy * repFact
+          }
+        }
+      }
+      // ④ 积分（逐点）：p += (p−pp)·friction；pp 同步为新 p。
+      for (const item of items) {
+        if (item.fixed) continue
+        const vx = item.x - item.ppx
+        const vy = item.y - item.ppy
+        item.x += vx * friction
+        item.y += vy * friction
+        item.ppx = item.x
+        item.ppy = item.y
+      }
+    }
+
     function GraphCanvas({ t, nodes, edges, communities, colorBy, overlayTrace, focusNode, onNodeClick, onRenderTierChange, colorMap: providedColorMap, deltaIds }) {
       const wrapRef = React.useRef(null)
       const canvasRef = React.useRef(null)
@@ -5161,74 +5776,14 @@ window.__ModuleLoader__.load({
           const sim = simRef.current
           if (!sim) return
           const { items, links, byId } = sim
-          const n = items.length
           const friction = sim.friction
-          // ① 弹簧（逐边）：p += 单位方向·(|Δ|−理想长)·w·friction——短于理想长反向
-          // 推开（防重叠）；w = rep_b/(rep_a+rep_b) = 0.5（均匀权重）。
-          for (const edge of links) {
-            const a = byId.get(edge.source)
-            const b = byId.get(edge.target)
-            if (!a || !b || a === b) continue
-            let dx = b.x - a.x
-            let dy = b.y - a.y
-            let dist = Math.hypot(dx, dy)
-            if (dist === 0) {
-              dx = Math.random() - 0.5
-              dy = Math.random() - 0.5
-              dist = Math.hypot(dx, dy) || 1
-            }
-            const push = ((dist - GRAPH_EDGE_LENGTH) * friction) / dist
-            if (!a.fixed) {
-              a.x += dx * push * 0.5
-              a.y += dy * push * 0.5
-            }
-            if (!b.fixed) {
-              b.x -= dx * push * 0.5
-              b.y -= dy * push * 0.5
-            }
-          }
-          // ② 重力（逐点）：p += (中心−p)·gravity·friction，中心 = 世界原点（画布
-          // 中心；roam 平移不改布局）。线性强压实——旧速度域微重力的根因替身。
-          for (const item of items) {
-            if (item.fixed) continue
-            item.x -= item.x * GRAPH_GRAVITY * friction
-            item.y -= item.y * GRAPH_GRAVITY * friction
-          }
-          // ③ 斥力（两两）：位移 = 2·repulsion/d，累计进 pp（Verlet 口径——用「上一
-          // 位置」制造反向速度）；fixed 节点整体豁免。
-          for (let i = 0; i < n; i += 1) {
-            const a = items[i]
-            for (let j = i + 1; j < n; j += 1) {
-              const b = items[j]
-              let dx = b.x - a.x
-              let dy = b.y - a.y
-              let dist = Math.hypot(dx, dy)
-              if (dist === 0) {
-                dx = Math.random() - 0.5
-                dy = Math.random() - 0.5
-                dist = 1
-              }
-              const repFact = (GRAPH_REPULSION + GRAPH_REPULSION) / (dist * dist)
-              if (!a.fixed) {
-                a.ppx += dx * repFact
-                a.ppy += dy * repFact
-              }
-              if (!b.fixed) {
-                b.ppx -= dx * repFact
-                b.ppy -= dy * repFact
-              }
-            }
-          }
-          // ④ 积分（逐点）：p += (p−pp)·friction；pp 同步为新 p。
-          for (const item of items) {
-            if (item.fixed) continue
-            const vx = item.x - item.ppx
-            const vy = item.y - item.ppy
-            item.x += vx * friction
-            item.y += vy * friction
-            item.ppx = item.x
-            item.ppy = item.y
-          }
+          // 力场一步＝共享内核（graphForceStep）；大图参数：理想边 80（edgeLength
+          // [40,120] 中值）、斥力 120、重力 0.1（照工作台口径）。
+          graphForceStep(items, links, byId, friction, {
+            edgeLength: GRAPH_EDGE_LENGTH,
+            gravity: GRAPH_GRAVITY,
+            repulsion: GRAPH_REPULSION,
+          })
           // 自动全览（2026-10-13 他报「默认缩放偏大」——初始应为全图入画的
           // 缩略态）：收敛期间每帧按当前包围盒拟合视口（八折留边、只缩不放、
           // 下限夹取；需要缩放时压标签阈下＝全览零标签）。首帧由数据 effect 预
