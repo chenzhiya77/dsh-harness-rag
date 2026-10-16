@@ -478,6 +478,7 @@ window.__ModuleLoader__.load({
       'wk.entryNotFound': '条目不存在或已删除',
       'wk.sourceChunks': '个源切片',
       'wk.deletedSources': '个源切片已删除',
+      'wk.openInTab': '在百科 tab 中查看',
       'wk.cards': '我的条目',
       'wk.cardsEmpty': '新建卡片，记录属于你的知识',
       'wk.cardsNoMatch': '没有匹配的卡片',
@@ -1113,6 +1114,7 @@ window.__ModuleLoader__.load({
       'wk.entryNotFound': 'Entry missing or deleted',
       'wk.sourceChunks': 'source chunks',
       'wk.deletedSources': 'source chunks deleted',
+      'wk.openInTab': 'Open in the Wiki tab',
       'wk.cards': 'My Entries',
       'wk.cardsEmpty': 'Create a card to capture your own knowledge',
       'wk.cardsNoMatch': 'No matching cards',
@@ -1913,6 +1915,7 @@ window.__ModuleLoader__.load({
           '.hrag-drawer-nav { display: flex; flex-shrink: 0; gap: 2px; }',
           '.hrag-drawer-navbtn { flex-shrink: 0; width: 26px; height: 26px; padding: 0; color: var(--dsw-alias-label-secondary); }',
           '.hrag-drawer-navbtn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-drawer-reveal { flex-shrink: 0; }',
           '.hrag-drawer-panel { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }',
           '.hrag-drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px; }',
           // ── 评测域（Task 8）──────────────────────────────────────────────
@@ -7464,6 +7467,11 @@ window.__ModuleLoader__.load({
         { d: 'M5.1 10L8 12.9L10.9 10' },
       ]),
     )
+    /** 「在百科 tab 中查看」导航图标（小件批 Task 8）：宿主最近邻 IconRightUp（右上
+        箭头＝跳转语义）；缺件回退工作台原形 lucide ExternalLink。 */
+    const dshRightUpIcon = dshIconOr('IconRightUpOutlineRegular', () =>
+      lucideMenuIcon(['M15 3h6v6', 'M10 14 21 3', 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6']),
+    )
 
     /** 菜单图标：工作台同款（lucide 24 视窗・stroke 2・圆头——宿主无对应件档，
         spec M3「相同语言」）。 */
@@ -11239,7 +11247,7 @@ window.__ModuleLoader__.load({
         （chunksByIds 惰取）＋更新时间；来源切片行可点 → 切片续读（照图谱实体
         抽屉：本层 z 帧 56/57 垫在续读抽屉下，关掉续读回本条）；404 按不存在。
         Escape 不接（照图谱抽屉——续读抽屉在上时单次 Esc 只关顶层）。 */
-    function WikiEntryDrawer({ t, kbId, entryId, onClose, onOpenChunk }) {
+    function WikiEntryDrawer({ t, kbId, entryId, onClose, onOpenChunk, onRevealInTab }) {
       const tk = (key, ...args) => evText(t(key), args)
       const [entry, setEntry] = React.useState(null)
       const [phase, setPhase] = React.useState('loading')
@@ -11407,6 +11415,21 @@ window.__ModuleLoader__.load({
             h('span', { className: 'hrag-drawer-title', title: entry ? String(entry.title) : '' }, entry ? String(entry.title) : tk('wk.loading')),
             entry && entry.status === 'dirty'
               ? h('span', { className: 'hrag-ev-badge hrag-wk-dirty' }, tk('wk.dirty'))
+              : null,
+            // 「在百科 tab 中查看」导航钮（小件批 Task 8·E1①，照工作台 :99-109）：
+            // 头行右侧 outline 小钮（entry 在才现）；点击＝切百科 tab＋关抽屉
+            //（列表未分页——切过去即可见，照工作台 revealWikiEntry 语义）。
+            entry && onRevealInTab
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-outline hrag-btn-sm hrag-drawer-reveal',
+                    onClick: () => onRevealInTab(entry.id),
+                  },
+                  dshRightUpIcon(),
+                  tk('wk.openInTab'),
+                )
               : null,
             h(
               'button',
@@ -14318,6 +14341,12 @@ window.__ModuleLoader__.load({
                   kbId,
                   entryId: wikiDrawer.id,
                   onClose: () => setWikiDrawer(null),
+                  // 导航（小件批 Task 8·E1①）：切百科 tab＋关抽屉（列表未分页，
+                  // 切过去即可见；照工作台 revealWikiEntry）。
+                  onRevealInTab: () => {
+                    setSection('wiki')
+                    setWikiDrawer(null)
+                  },
                   onOpenChunk: (chunkId, docName) => {
                     const docId = String(chunkId).split('#')[0]
                     setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
