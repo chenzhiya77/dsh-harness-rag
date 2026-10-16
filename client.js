@@ -93,6 +93,29 @@ window.__ModuleLoader__.load({
       'doc.sortChunks': '切片数',
       'doc.sortAsc': '升序',
       'doc.sortDesc': '降序',
+      // 列体系（doc-columns 对 Task 1）：表头列名（照工作台 table.* 逐字）。
+      'doc.thName': '名称',
+      'doc.thStatus': '状态',
+      'doc.thUploader': '上传者',
+      'doc.thTime': '时间',
+      'doc.thSize': '大小',
+      'doc.thChunks': '切片数',
+      // 底栏统计行（doc-columns 对 Task 1 修订＝B3 收编，照工作台 statsDocuments/
+      // statsChunks 逐字）：文档 N · 切片 N · 总大小。
+      'doc.statsDocuments': '文档',
+      'doc.statsChunks': '切片',
+      // 列设置与行菜单（doc-columns 对 Task 2/3，照工作台 table.*／行 ⋯ 词汇逐字）：
+      // 表头 chevron「列选项」菜单、表头右键与「列」总控同项集、行 ⋯/右键双入口。
+      'doc.colMenu': '列选项',
+      'doc.colHide': '隐藏列',
+      'doc.columns': '列',
+      'doc.colShowAll': '全部显示',
+      'doc.colTimeFormat': '时间格式',
+      'doc.colAbsolute': '绝对',
+      'doc.colRelative': '相对',
+      'doc.colSizeUnit': '单位',
+      'doc.openChunks': '查看切片',
+      'doc.downloadOriginal': '下载原文',
       'doc.listFailed': '文档列表加载失败',
       'doc.status.uploaded': '待解析',
       'doc.status.parsing': '解析中',
@@ -101,11 +124,17 @@ window.__ModuleLoader__.load({
       'doc.status.ready': '就绪',
       'doc.status.failed': '失败',
       'doc.degraded': '部分降级',
-      'doc.chunksUnit': '切片',
+      'doc.uploaderMe': '我',
       'doc.retry': '重试',
       'doc.retrySubmitted': '已提交重试',
       'doc.degradedRetryHint': '部分产物未成功，可重试补齐',
       'doc.generateQuestion': '生成考题',
+      'doc.genQuestionBatch': '生成考题（联合）',
+      'doc.selectedCount': '已选 {0} 项',
+      'doc.selectAll': '全选',
+      'doc.selectDocument': '选择文档',
+      'doc.deleteSelected': '删除所选',
+      'doc.cancelSelection': '取消选择',
       'doc.err.empty': '文件内容为空',
       'doc.err.unsupported': '不支持的文件类型',
       'doc.err.retryLimit': '解析服务多次重试仍失败，请检查文件是否损坏或稍后重试',
@@ -507,7 +536,6 @@ window.__ModuleLoader__.load({
       'createKb.namePlaceholder': '知识库名称',
       'createKb.descPlaceholder': '描述（可选）',
       'createKb.create': '创建',
-      'doc.download': '下载',
       'upload.rejected': '已跳过不支持的文件：{0}',
       'upload.needKb': '知识库暂不可接收：请先创建知识库',
       'upload.busy': '知识库暂不可接收：上传中，请稍候',
@@ -714,6 +742,24 @@ window.__ModuleLoader__.load({
       'doc.sortChunks': 'Chunks',
       'doc.sortAsc': 'Ascending',
       'doc.sortDesc': 'Descending',
+      'doc.thName': 'Name',
+      'doc.thStatus': 'Status',
+      'doc.thUploader': 'Uploader',
+      'doc.thTime': 'Uploaded',
+      'doc.thSize': 'Size',
+      'doc.thChunks': 'Chunks',
+      'doc.statsDocuments': 'Documents',
+      'doc.statsChunks': 'Chunks',
+      'doc.colMenu': 'column options',
+      'doc.colHide': 'Hide column',
+      'doc.columns': 'Columns',
+      'doc.colShowAll': 'Show all',
+      'doc.colTimeFormat': 'Date format',
+      'doc.colAbsolute': 'Absolute',
+      'doc.colRelative': 'Relative',
+      'doc.colSizeUnit': 'Unit',
+      'doc.openChunks': 'View chunks',
+      'doc.downloadOriginal': 'Download original',
       'doc.listFailed': 'Failed to load documents',
       'doc.status.uploaded': 'Uploaded',
       'doc.status.parsing': 'Parsing',
@@ -722,11 +768,17 @@ window.__ModuleLoader__.load({
       'doc.status.ready': 'Ready',
       'doc.status.failed': 'Failed',
       'doc.degraded': 'Degraded',
-      'doc.chunksUnit': 'chunks',
+      'doc.uploaderMe': 'Me',
       'doc.retry': 'Retry',
       'doc.retrySubmitted': 'Retry submitted',
       'doc.degradedRetryHint': 'Some outputs did not succeed — retry to complete them',
       'doc.generateQuestion': 'Generate question',
+      'doc.genQuestionBatch': 'Generate question (joint)',
+      'doc.selectedCount': '{0} selected',
+      'doc.selectAll': 'Select all',
+      'doc.selectDocument': 'Select document',
+      'doc.deleteSelected': 'Delete selected',
+      'doc.cancelSelection': 'Cancel selection',
       'doc.err.empty': 'The file is empty',
       'doc.err.unsupported': 'Unsupported file type',
       'doc.err.retryLimit':
@@ -1144,7 +1196,6 @@ window.__ModuleLoader__.load({
       'createKb.namePlaceholder': 'Knowledge base name',
       'createKb.descPlaceholder': 'Description (optional)',
       'createKb.create': 'Create',
-      'doc.download': 'Download',
       'upload.rejected': 'Skipped unsupported files: {0}',
       'upload.needKb': 'The knowledge base cannot take files yet: create one first',
       'upload.busy': 'The knowledge base cannot take files yet: an upload is in progress',
@@ -1529,8 +1580,23 @@ window.__ModuleLoader__.load({
           '.hrag-state-title { color: var(--dsw-alias-label-primary); font-size: 14px; line-height: 22px; }',
           '.hrag-state-detail { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; word-break: break-word; }',
           '.hrag-state-error .hrag-state-title { color: var(--dsw-alias-label-error); }',
+          // 文档表骨架（doc-columns 对 Task 1）：滚动区横滚保护列宽（min-w 544px
+          // ＝工作台 34rem 同款），内容列撑满余高。10-16 他截图对照修订：顶部
+          // 「就绪 N」汇总行撤除，改挂工作台同款底栏统计行（document-stats-row
+          // 同构——左总量可缩省略号、右端仅可动作态彩点，永不换行）。
           '.hrag-docs { display: flex; flex-direction: column; }',
-          '.hrag-docsum { padding: 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          // 10-16 第五轮：统计行是文档面板的收尾行（工作台同姿），以 -12px 抵消
+          // 壳层下衬，让统计行底缘贴到面板底缘，不再拖一条空带。
+          '.hrag-docsbody { display: flex; flex-direction: column; min-width: 0; min-height: 0; flex: 1; margin-bottom: -12px; }',
+          '.hrag-docscroll { flex: 1; min-height: 0; overflow: auto; }',
+          '.hrag-docsbody > .hrag-docempty { flex: 1; }',
+          // 统计行横向内衬同 docbar（10-16 第四轮复测）——与表格/工具栏同左轴。
+          // 行高 16（10-16 第五轮）：对齐工作台 text-xs 口径（12/16、py-2 → 32px 高），
+          // 原 18 会让横条比工作台高一档。
+          '.hrag-docstats { display: flex; flex-shrink: 0; align-items: center; gap: 12px; padding: 8px 0; border-top: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 16px; }',
+          '.hrag-docstats-volume { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-docstats-alert { display: flex; flex-shrink: 0; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }',
+          '.hrag-docstats-item { display: inline-flex; align-items: center; gap: 4px; }',
           // 失败通知卡（小件批 Task 3，照工作台 doc-failure-panel：底右浮卡 w-80 口径 320px、
           // 纯底面色面 + 浮层阴影；皮肤映射 DSH token——bg-base / elevation-prominent 与 tickrail 弹层同档）。
           '.hrag-docfail { position: absolute; right: 12px; bottom: 12px; z-index: 20; width: 320px; max-width: calc(100% - 24px); overflow: hidden; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-lg); background: var(--dsw-alias-bg-base); box-shadow: var(--dsw-elevation-prominent); }',
@@ -1550,7 +1616,10 @@ window.__ModuleLoader__.load({
           // 文档工具栏（小件批 Task 1，照工作台 h-11 行）：搜索＝宿主 Input 前置
           // 图标（icon 属性，控件照宿主真值）；清空钮绝对定位右缘、检索词非空才渲染；
           // 排序＝28px 图标钮（hrag-iconbare）挂宿主 Menu。
-          '.hrag-docbar { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; flex-shrink: 0; }',
+          // 10-16 第四轮复测（他报「搜索框看起来不融洽，左右都有大的空的地方」）：横向
+          // 内衬 16→0——壳已含内容轴内缩，此处再 +16 拉得检索框比表格窄一圈（复原面板内
+          // 所有内容同一左轴）。统计行同修（下方）。
+          '.hrag-docbar { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0; flex-shrink: 0; }',
           '.hrag-docsearch { position: relative; flex: 1; min-width: 0; display: flex; }',
           '.hrag-docsearch .hrag-docsearch-field { flex: 1; min-width: 0; }',
           '.hrag-docsearch input { padding-right: 24px; }',
@@ -1573,16 +1642,82 @@ window.__ModuleLoader__.load({
           '.hrag-droppill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 999px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; font-weight: 500; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }',
           '.hrag-dropdim { pointer-events: none; position: absolute; inset: 8px; z-index: 20; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-lg); background: color-mix(in srgb, var(--dsw-alias-bg-base) 70%, transparent); }',
           '.hrag-dropdim-hint { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--dsw-alias-label-secondary); font-size: 14px; line-height: 22px; font-weight: 500; }',
-          '.hrag-docrow { display: flex; flex-direction: column; gap: 4px; padding: 8px 2px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); min-width: 0; }',
-          '.hrag-docrow:last-child { border-bottom: none; }',
-          '.hrag-docrow-main { display: flex; align-items: center; gap: 8px; min-width: 0; cursor: pointer; }',
+          // 文档表（doc-columns 对 Task 1，照工作台 document-panel 表形态）：表头
+          // 吸顶（sticky 于滚动区）·h-9 ；名列表承载类型徽章＋名；数值列右对齐
+          // tabular-nums。10-16 他截图对照修订：行去分隔线——工作台结构线只留表头
+          // 与统计行两条（分隔靠留白＋悬停底色 bg-muted/50→hover token）；单元格
+          // px-2（同工作台，首末列不再 2px 特例）。10-16 复测修订：列宽自适应——
+          // fixed 布局＋表头定宽（真浏览器实测：auto 布局下名称列的 min-content＝全文，
+          // 表面宽 738 溢出 570 面板 168px；fixed 后 573 面板零溢出、999 加宽时名称列
+          // 吃余宽）；min-w 552 只作超窄兜底（含复选框列 32px），名称超宽时省略号。
+          '.hrag-doctable { width: 100%; min-width: 552px; table-layout: fixed; border-collapse: separate; border-spacing: 0; }',
+          '.hrag-doctable th, .hrag-docrow td { box-sizing: border-box; }',
+          '.hrag-doctable th { position: sticky; top: 0; z-index: 10; height: 36px; padding: 0 8px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-tertiary); font-size: 12px; font-weight: 500; line-height: 18px; text-align: left; white-space: nowrap; box-shadow: inset 0 -0.5px 0 var(--dsw-alias-border-l2); }',
+          '.hrag-doccolhead { display: inline-flex; align-items: center; gap: 2px; }',
+          // 列宽（fixed 布局的定宽面；内容宽＝定宽−16 内衬）：状态/上传者/时间/大小/
+          // 切片数照各列最长字面定；名称列 auto＝吃余宽。10-16 复测再配平（他报
+          // 「名称太短、其余偏长」）：时间列随格式档双值（相对式字面短——相对 88／
+          // 绝对 124）；上传者/大小/切片数各收 4-6px 让给名称列。
+          '.hrag-docth-status { width: 80px; }',
+          '.hrag-docth-uploader { width: 52px; }',
+          '.hrag-docth-createdAt { width: 124px; }',
+          '.hrag-docth-createdAt-rel { width: 88px; }',
+          '.hrag-docth-size { width: 74px; }',
+          '.hrag-docth-chunks { width: 56px; }',
+          '.hrag-docrow { cursor: pointer; }',
+          '.hrag-docrow:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-docrow td { padding: 8px; vertical-align: middle; }',
+          // 复选框列（Task 3.6 批量版收编，照工作台 w-8）：行 checkbox 悬停/勾选/有选中
+          // 项时显形（照 wk 行先例）；选中行加底色（工作台 bg-muted/60 与悬停同档）。
+          // 24px（10-16 第五轮「名称以及文档离框有点远」）：工作台 w-8=32 装 16px 框留
+          // 零余；本插件框 13px，32 会多攒一格余量——收成 8+13+3，名称列内容左移 8px，
+          // 框到徽章间距 19→11（≈一枚框宽）。
+          '.hrag-docth-check { width: 24px; }',
+          '.hrag-docrow .hrag-ev-check { opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-docrow:hover .hrag-ev-check { opacity: 1; }',
+          '.hrag-docrow .hrag-ev-check:checked { opacity: 1; }',
+          '.hrag-doctable-selecting .hrag-ev-check { opacity: 1; }',
+          // 表头选框垂直对齐（10-16 第四轮复测「表头的选框有点没有和表头对齐」）：th
+          // 内容居中而输入框默认基线锚（底贴基线）——真链路测值中心高 2.2px；middle 后
+          // 落 ±1px 带内（行内选框维持现状：本就只偏 0.5px）。
+          '.hrag-docth-check .hrag-ev-check { vertical-align: middle; }',
+          '.hrag-docrow-selected { background: var(--dsw-alias-interactive-bg-hover); }',
+          // 行尾窄列（w-10＝工作台）：行 ⋯ 与表头「列」总控同列对位（内衬走 th/td 基准
+          // 规则——表头 0 8px 居中、行 8px）；按钮悬停淡入（行/表头 hover、键盘聚焦、
+          // 菜单展开常亮）。
+          '.hrag-docops { width: 40px; }',
+          '.hrag-docopscell { display: flex; align-items: center; justify-content: flex-end; }',
+          '.hrag-docrow-more, .hrag-doccolbtn, .hrag-doccolchev { display: inline-flex; align-items: center; justify-content: center; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-docrow-more, .hrag-doccolbtn { width: 24px; height: 24px; }',
+          '.hrag-doccolchev { width: 18px; height: 18px; }',
+          '.hrag-docrow:hover .hrag-docrow-more, .hrag-docrow-more:focus-visible, .hrag-docrow-more[aria-expanded="true"] { opacity: 1; }',
+          '.hrag-doctable th:hover .hrag-doccolbtn, .hrag-doccolbtn:focus-visible, .hrag-doccolbtn[aria-expanded="true"] { opacity: 1; }',
+          '.hrag-doctable th:hover .hrag-doccolchev, .hrag-doccolchev:focus-visible, .hrag-doccolchev[aria-expanded="true"] { opacity: 1; }',
+          '.hrag-docrow-more:hover, .hrag-doccolbtn:hover, .hrag-doccolchev:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-docnamecell { display: flex; align-items: center; gap: 8px; min-width: 0; }',
           '.hrag-docrow-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; }',
           // 20px＝九枚的 S 档下限（16px 折角细节糊成发丝，工作台同款）
           '.hrag-docrow-ftype { flex-shrink: 0; width: 20px; height: 20px; }',
-          '.hrag-docrow-actions { display: flex; gap: 4px; flex-shrink: 0; }',
           '.hrag-btn-sm { height: 26px; padding: 0 8px; font-size: 12px; border-radius: var(--dsw-radius-sm); }',
-          '.hrag-docrow-meta { display: flex; align-items: center; gap: 8px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-doccell { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }',
+          // 状态格不吃裁剪面（10-16 复测：悬挂点跨出内边 2px，被 td 的 overflow:hidden
+          // 裁成半月）——文本省略号由内层 .hrag-docrow-statustext 自持。
+          '.hrag-doccell-status { overflow: visible; }',
+          '.hrag-doccell-time { font-variant-numeric: tabular-nums; }',
+          '.hrag-doccell-right { text-align: right; font-variant-numeric: tabular-nums; }',
           '.hrag-docrow-status-failed { color: var(--dsw-alias-label-error); }',
+          // 状态点（10-16 他截图对照补，照工作台 DocumentStatusCell/STATUS_DOT_CLASS）：
+          // 6px 圆点悬挂在文字左缘外 10px（＝点 6px＋间隙 4px，与 td px-2 配对，文字左缘
+          // 压住表头线）；色＝待解析 tertiary/60 混、在飞 amber-500、就绪 green-500/45
+          // 混、失败 error。统计行内为静态小点（无悬挂定位）。
+          '.hrag-docrow-status { position: relative; display: inline-flex; align-items: center; max-width: 100%; min-width: 0; }',
+          '.hrag-docrow-statustext { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-docdot { display: inline-block; flex-shrink: 0; width: 6px; height: 6px; border-radius: 999px; }',
+          '.hrag-docrow-status .hrag-docdot { position: absolute; left: -10px; top: 50%; transform: translateY(-50%); }',
+          '.hrag-docdot-idle { background: color-mix(in srgb, var(--dsw-alias-label-tertiary) 60%, transparent); }',
+          '.hrag-docdot-active { background: var(--dsw-static-amber-500); }',
+          '.hrag-docdot-ready { background: color-mix(in srgb, var(--dsw-static-green-500) 45%, transparent); }',
+          '.hrag-docdot-failed { background: var(--dsw-alias-label-error); }',
           // 六腿分解（小件批 Task 4）：宿主 Tooltip 暗泡内两列小行（腿名淡、状态全彩；
           // degraded 着琥珀——泡内暗底取 amber-500 档，工作台 text-amber-600/dark:500 同族）。
           '.hrag-pathst { display: flex; flex-direction: column; gap: 4px; }',
@@ -6583,10 +6718,11 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** 文档行右键菜单（A④ 快捷出题；工作台＝Radix ContextMenu 于行、指针位落）。
-        指针位代理锚：宿主 Menu 挂在 0 尺寸 fixed 锚上（getAnchorRect 直供指针
-        位，wrapper 不上测）；无宿主件走 .hrag-mm 兜底面板（照 DshMenu 无宿主分支语汇）。 */
-    function DocContextMenu({ t, x, y, onSelect, onClose }) {
+    /** 指针位菜单（行右键/表头右键，doc-columns 对 Task 3 由「仅出题」升级为通用
+        项集：照工作台——行 ⋯ 镜像右键、表头右键＝列设置）。宿主 Menu 挂在 0 尺寸
+        fixed 锚上（getAnchorRect 直供指针位，wrapper 不上测）；无宿主件走 .hrag-mm
+        兜底面板（照 DshMenu 无宿主分支语汇）。 */
+    function DocContextMenu({ t, x, y, items, onSelect, onClose }) {
       React.useEffect(() => {
         const onKey = (event) => {
           if (event.key === 'Escape') onClose()
@@ -6594,7 +6730,6 @@ window.__ModuleLoader__.load({
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
       }, [onClose])
-      const items = [{ id: 'gen-question', label: t('doc.generateQuestion'), icon: dshSparkleIcon() }]
       if (HostMenu) {
         return h(HostMenu, {
           open: true,
@@ -6605,7 +6740,7 @@ window.__ModuleLoader__.load({
           items,
           onSelect: (id) => {
             onClose()
-            if (id === 'gen-question') onSelect()
+            onSelect(id)
           },
           onClose,
           align: 'start',
@@ -6620,21 +6755,24 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'hrag-mm', role: 'menu', style: { position: 'fixed', left: x + 'px', top: y + 'px' } },
-          items.map((entry) =>
-            h(
-              'button',
-              {
-                key: entry.id,
-                type: 'button',
-                className: 'hrag-mm-item',
-                onClick: () => {
-                  onClose()
-                  onSelect()
+          items
+            .filter((entry) => entry && !entry.type)
+            .map((entry) =>
+              h(
+                'button',
+                {
+                  key: entry.id,
+                  type: 'button',
+                  className: 'hrag-mm-item',
+                  disabled: entry.disabled,
+                  onClick: () => {
+                    onClose()
+                    onSelect(entry.id)
+                  },
                 },
-              },
-              entry.label,
+                entry.label,
+              ),
             ),
-          ),
         ),
       )
     }
@@ -6667,6 +6805,241 @@ window.__ModuleLoader__.load({
         if (typeof av === 'string' && typeof bv === 'string') return sign * av.localeCompare(bv)
         return sign * (Number(av) - Number(bv))
       })
+    }
+
+    // 列格式化（doc-columns 对 Task 1，照工作台 format.ts / document-stats.ts 口径）：
+    // 绝对时间走 Intl（locale 取宿主 <html lang>——dsh-client-locale 维护它，
+    // zh→zh-CN、余 en-US，与工作台 locale 映射同式）；KB 千分位整数、子 1KB 进位 1
+    // （Windows 口径），精确字节留悬停 Tooltip。不可解析值原样返回（同工作台）。
+    function docTableLangTag() {
+      try {
+        const lang =
+          (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) || ''
+        return String(lang).toLowerCase().indexOf('zh') === 0 ? 'zh-CN' : 'en-US'
+      } catch (error) {
+        return 'en-US'
+      }
+    }
+    function docFmtTimestamp(value) {
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return value
+      return new Intl.DateTimeFormat(docTableLangTag(), {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(date)
+    }
+    function docFmtKb(bytes) {
+      if (bytes <= 0) return '0'
+      if (bytes < 1024) return '1'
+      return Math.round(bytes / 1024).toLocaleString()
+    }
+
+    // 底栏统计行（doc-columns 对 Task 1 修订＝B3 收编，照工作台 document-stats.ts
+    // ＋document-stats-row）：总数走未过滤全集；右端仅「在飞/失败」计数彩点
+    // （就绪＝静默默认，两者皆零时整段不渲染）；格式＝1024 进制一位小数。
+    const DOC_DOT_CLASS = {
+      uploaded: 'hrag-docdot-idle',
+      parsing: 'hrag-docdot-active',
+      chunking: 'hrag-docdot-active',
+      indexing: 'hrag-docdot-active',
+      ready: 'hrag-docdot-ready',
+      failed: 'hrag-docdot-failed',
+    }
+    function docDotClass(status) {
+      return DOC_DOT_CLASS[status] || 'hrag-docdot-idle'
+    }
+    function docStats(docs) {
+      let failed = 0
+      let inProgress = 0
+      let totalBytes = 0
+      let totalChunks = 0
+      for (const doc of docs) {
+        if (doc.status === 'failed') failed += 1
+        else if (doc.status !== 'ready') inProgress += 1
+        totalBytes += Number(doc.size_bytes) || 0
+        totalChunks += Number(doc.chunk_count) || 0
+      }
+      return { total: docs.length, failed, inProgress, totalBytes, totalChunks }
+    }
+    function docFmtBytes(bytes) {
+      const value = Number(bytes) || 0
+      if (value < 1024) return value + ' B'
+      const kib = value / 1024
+      if (kib < 1024) return kib.toFixed(1) + ' KB'
+      const mib = kib / 1024
+      if (mib < 1024) return mib.toFixed(1) + ' MB'
+      return (mib / 1024).toFixed(1) + ' GB'
+    }
+    function docStatsRow(t, docs) {
+      const stats = docStats(docs)
+      return h(
+        'div',
+        { className: 'hrag-docstats' },
+        h(
+          'span',
+          { className: 'hrag-docstats-volume' },
+          t('doc.statsDocuments') +
+            ' ' +
+            stats.total +
+            ' · ' +
+            t('doc.statsChunks') +
+            ' ' +
+            stats.totalChunks +
+            ' · ' +
+            docFmtBytes(stats.totalBytes),
+        ),
+        stats.inProgress > 0 || stats.failed > 0
+          ? h(
+              'span',
+              { className: 'hrag-docstats-alert' },
+              stats.inProgress > 0
+                ? h(
+                    'span',
+                    { className: 'hrag-docstats-item' },
+                    h('span', { className: 'hrag-docdot hrag-docdot-active' }),
+                    t('doc.status.indexing') + ' ' + stats.inProgress,
+                  )
+                : null,
+              stats.failed > 0
+                ? h(
+                    'span',
+                    { className: 'hrag-docstats-item' },
+                    h('span', { className: 'hrag-docdot hrag-docdot-failed' }),
+                    t('doc.status.failed') + ' ' + stats.failed,
+                  )
+                : null,
+            )
+          : null,
+      )
+    }
+
+    // ── 列偏好（doc-columns 对 Task 2，照工作台 use-doc-table-prefs.ts）：per-kb
+    // localStorage（插件 hrag- 键族先例 hrag-kb-order）；脏数据/缺失一律回退默认
+    // （本地 UI 偏好是锦上添花，永不崩）；名称列钉死不可隐（行身份标识）。
+    const DOC_PREFS_KEY_PREFIX = 'hrag-doc-table-prefs.'
+    const DOC_HIDEABLE_COLUMNS = ['status', 'uploader', 'createdAt', 'size', 'chunks']
+    const DOC_COLUMN_LABEL_KEYS = {
+      status: 'doc.thStatus',
+      uploader: 'doc.thUploader',
+      createdAt: 'doc.thTime',
+      size: 'doc.thSize',
+      chunks: 'doc.thChunks',
+    }
+    const DOC_PREFS_DEFAULT = { hidden: [], timeFormat: 'absolute', sizeUnit: 'kb' }
+    function docPrefsSanitize(parsed) {
+      if (!parsed || typeof parsed !== 'object') return DOC_PREFS_DEFAULT
+      const hidden = Array.isArray(parsed.hidden)
+        ? parsed.hidden.filter((id) => DOC_HIDEABLE_COLUMNS.indexOf(id) !== -1)
+        : []
+      return {
+        hidden,
+        timeFormat: parsed.timeFormat === 'relative' ? 'relative' : 'absolute',
+        sizeUnit: parsed.sizeUnit === 'mb' ? 'mb' : 'kb',
+      }
+    }
+    function readDocPrefs(kbId) {
+      try {
+        const raw = window.localStorage.getItem(DOC_PREFS_KEY_PREFIX + kbId)
+        return raw ? docPrefsSanitize(JSON.parse(raw)) : DOC_PREFS_DEFAULT
+      } catch (cause) {
+        return DOC_PREFS_DEFAULT
+      }
+    }
+    function writeDocPrefs(kbId, prefs) {
+      try {
+        window.localStorage.setItem(DOC_PREFS_KEY_PREFIX + kbId, JSON.stringify(prefs))
+      } catch (cause) {
+        /* best effort */
+      }
+    }
+    // 相对时间（Task 2，照工作台 formatKnowledgeRelativeTime）：Intl.RelativeTimeFormat
+    // numeric auto（「昨天/3天前」）；<1 分钟硬编码「刚刚」（Intl 对亚分钟无自然词）；
+    // 不可解析值原样返回（同绝对式）。now 可注入便于测试。
+    const DOC_RELATIVE_UNITS = [
+      ['year', 1000 * 60 * 60 * 24 * 365],
+      ['month', 1000 * 60 * 60 * 24 * 30],
+      ['day', 1000 * 60 * 60 * 24],
+      ['hour', 1000 * 60 * 60],
+      ['minute', 1000 * 60],
+    ]
+    function docFmtRelative(value, now) {
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return value
+      const lang = docTableLangTag()
+      const diff = date.getTime() - (now == null ? Date.now() : now)
+      if (Math.abs(diff) < 60000) return lang === 'zh-CN' ? '刚刚' : 'just now'
+      const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' })
+      for (const [unit, ms] of DOC_RELATIVE_UNITS) {
+        if (Math.abs(diff) >= ms) return rtf.format(Math.round(diff / ms), unit)
+      }
+      return rtf.format(Math.round(diff / 60000), 'minute')
+    }
+    // 固定 MB（Task 2，照工作台 formatMb）：≥0.1 一位小数、以下两位（避免误读 0.0）；
+    // 精确字节仍走悬停 Tooltip（同 KB 档）。
+    function docFmtMb(bytes) {
+      if (bytes <= 0) return '0'
+      const mib = bytes / 1048576
+      return mib >= 0.1 ? mib.toFixed(1) : mib.toFixed(2)
+    }
+    // 行 ⋯ 菜单项（Task 3.5，照工作台行 ⋯ 逐项）：查看切片/下载原文/重试〔failed 或
+    // 降级〕/分隔/删除。生成考题不在 ⋯——工作台该入口只在右键选择态菜单（10-16 批量
+    // 版收编随改）；危险项殿后。
+    function docRowMenuItems(t, doc, opts) {
+      const items = [
+        { id: 'open-chunks', label: t('doc.openChunks'), icon: dshTextFileIcon() },
+        { id: 'download', label: t('doc.downloadOriginal'), icon: dshDownloadIcon() },
+      ]
+      if (doc.status === 'failed' || opts.degraded) {
+        items.push({ id: 'retry', label: t('doc.retry'), icon: dshRetryIcon(), disabled: opts.busy })
+      }
+      items.push({ type: 'separator', id: 'row-sep' })
+      items.push({ id: 'delete', label: t('doc.delete'), icon: dshTrashIcon(), danger: true, disabled: opts.busy })
+      return items
+    }
+    // 行右键菜单项（Task 3.6 批量版，照工作台 ContextMenuContent 两态）：选中 >1 →
+    // 批量态〔已选 N 标签／生成考题（联合）〔选中集全就绪才亮〕／取消选择／分隔／删除
+    // 所选〕；否则单行态＝⋯ 项＋生成考题〔就绪〕＋取消选择＋分隔＋删除所选（右键即选中
+    // 该行，措辞随选择态改「删除所选」——工作台同款）。
+    function docContextMenuItems(t, doc, opts) {
+      if (opts.selectedCount > 1) {
+        const items = [{ type: 'label', id: 'sel-label', text: evText(t('doc.selectedCount'), [opts.selectedCount]) }]
+        if (opts.allSelectedReady) {
+          items.push({ id: 'gen-question-batch', label: t('doc.genQuestionBatch'), icon: dshSparkleIcon() })
+        }
+        items.push({ id: 'cancel-select', label: t('doc.cancelSelection'), icon: dshCloseIcon() })
+        items.push({ type: 'separator', id: 'bulk-sep' })
+        items.push({ id: 'delete-selected', label: t('doc.deleteSelected'), icon: dshTrashIcon(), danger: true, disabled: opts.busy })
+        return items
+      }
+      const items = [
+        { id: 'open-chunks', label: t('doc.openChunks'), icon: dshTextFileIcon() },
+        { id: 'download', label: t('doc.downloadOriginal'), icon: dshDownloadIcon() },
+      ]
+      if (opts.canGenerate) items.push({ id: 'gen-question', label: t('doc.generateQuestion'), icon: dshSparkleIcon() })
+      if (doc.status === 'failed' || opts.degraded) {
+        items.push({ id: 'retry', label: t('doc.retry'), icon: dshRetryIcon(), disabled: opts.busy })
+      }
+      items.push({ id: 'cancel-select', label: t('doc.cancelSelection'), icon: dshCloseIcon() })
+      items.push({ type: 'separator', id: 'row-sep' })
+      items.push({ id: 'delete-selected', label: t('doc.deleteSelected'), icon: dshTrashIcon(), danger: true, disabled: opts.busy })
+      return items
+    }
+    // 列菜单项（Task 3，照工作台「列」总控/表头右键同项集）：勾选＝该列可见
+    // （hidden 不含它）；末尾「全部显示」＝仅清 hidden（格式/单位档不动）。
+    function docColumnsMenuItems(t, prefs) {
+      return [
+        { type: 'label', id: 'col-label', text: t('doc.columns') },
+        ...DOC_HIDEABLE_COLUMNS.map((id) => ({
+          id: 'col-' + id,
+          label: t(DOC_COLUMN_LABEL_KEYS[id]),
+          icon: prefs.hidden.indexOf(id) === -1 ? dshCheckIcon() : null,
+        })),
+        { type: 'separator', id: 'col-sep' },
+        { id: 'col-show-all', label: t('doc.colShowAll'), icon: dshEyeIcon() },
+      ]
     }
 
     // 文档空态（小件批 Task 2，照工作台 EmptyDocumentsState）：降调九宫格＋一句
@@ -6858,17 +7231,32 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function DocsView({ t, kbId, refreshToken, onOpenChunks, dragProbe, setDocsEmpty, docFailures, onDocFailuresSnapshot, onDocFailureReport, onDocFailureDismiss, onDocFailureDismissAll }) {
+    function DocsView({ t, kbId, kbOwnerId, refreshToken, onOpenChunks, dragProbe, setDocsEmpty, docFailures, onDocFailuresSnapshot, onDocFailureReport, onDocFailureDismiss, onDocFailureDismissAll }) {
       const [phase, setPhase] = React.useState('loading')
       const [docs, setDocs] = React.useState([])
       const [failure, setFailure] = React.useState(null)
-      const [deleteTarget, setDeleteTarget] = React.useState(null)
+      // 批量版选择集（Task 3.6，照工作台）：行复选框/全选/右键选中共享；删除目标改
+      // 列表（单删＝单元素列表——工作台 deleteTargets 同构）。
+      const [deleteTargets, setDeleteTargets] = React.useState(null)
+      const [selectedIds, setSelectedIds] = React.useState(() => new Set())
       const [dialogError, setDialogError] = React.useState(null)
       const [busy, setBusy] = React.useState(false)
       const [ctxMenu, setCtxMenu] = React.useState(null)
+      const [colCtxMenu, setColCtxMenu] = React.useState(null)
       // 工具栏（小件批 Task 1）：检索词/排序均为会话态（照工作台 useState，不持久）。
       const [query, setQuery] = React.useState('')
       const [sort, setSort] = React.useState(DOC_SORT_DEFAULT)
+      // 列偏好（doc-columns 对 Task 2）：per-kb 持久（照工作台 useDocTablePrefs——
+      // kbIdRef 锁最新库，避免切换库时「用旧库偏好写新库键」的 race）。
+      const [prefs, setPrefs] = React.useState(() => readDocPrefs(kbId))
+      const kbIdRef = React.useRef(kbId)
+      React.useEffect(() => {
+        kbIdRef.current = kbId
+        setPrefs(readDocPrefs(kbId))
+      }, [kbId])
+      React.useEffect(() => {
+        writeDocPrefs(kbIdRef.current, prefs)
+      }, [prefs])
 
       const load = React.useCallback(() => {
         setPhase('loading')
@@ -6923,10 +7311,54 @@ window.__ModuleLoader__.load({
         if ((phase === 'ready' || phase === 'empty') && onDocFailuresSnapshot) onDocFailuresSnapshot(docs)
       }, [docs, phase])
 
+      // 选择集随清单修剪（工作台只在删除后移除；插件 3s 自刷——被他处删除的行若留在
+      // 选择集，会挂在「已选 N」里却打不中行）。
+      React.useEffect(() => {
+        setSelectedIds((current) => {
+          if (current.size === 0) return current
+          const alive = new Set(docs.map((doc) => doc.id))
+          const next = new Set()
+          current.forEach((id) => {
+            if (alive.has(id)) next.add(id)
+          })
+          return next.size === current.size ? current : next
+        })
+      }, [docs])
+
+      // 可见集（过滤＋排序）与选择态派生（Task 3.6，照工作台）：全选/缩进/联合出题
+      // 判据随可见集与选择集现算。
+      const visibleDocs = docsSort(docsFilter(docs, query), sort.key, sort.direction)
+      const visibleIds = visibleDocs.map((doc) => doc.id)
+      const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id))
+      const someVisibleSelected = visibleIds.some((id) => selectedIds.has(id))
+      const allSelectedReady =
+        selectedIds.size > 0 &&
+        [...selectedIds].every((id) => {
+          const doc = docs.find((item) => item.id === id)
+          return Boolean(doc && doc.status === 'ready')
+        })
+      const toggleSelect = (id, checked) => {
+        setSelectedIds((current) => {
+          const next = new Set(current)
+          if (checked) next.add(id)
+          else next.delete(id)
+          return next
+        })
+      }
+      const toggleSelectAll = () => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))
+
       // A④ 快捷出题（照工作台 page.tsx:452-466）：单篇 count=1、合并进暂存审核；
       // 工作台 enqueued=success／already_running=info 两档同文案，插件总线无 info 档、合一。
       const generateQuestion = (doc) => {
         callOp('triggerSynthesis', { kb_id: kbId, body: { doc_ids: [doc.id], count: 1 } })
+          .then(() => showToast(t('ev.syn.generating')))
+          .catch((error) => showToast(errorDetail(error), { error: true }))
+      }
+
+      // 批量快捷出题（Task 3.6，照工作台）：选中集联合出一条（合并进待审候选）；
+      // 就绪门槛在菜单项层（allSelectedReady——任一篇未就绪后端整批 409）。
+      const generateQuestionBatch = () => {
+        callOp('triggerSynthesis', { kb_id: kbId, body: { doc_ids: [...selectedIds], count: 1 } })
           .then(() => showToast(t('ev.syn.generating')))
           .catch((error) => showToast(errorDetail(error), { error: true }))
       }
@@ -6947,19 +7379,93 @@ window.__ModuleLoader__.load({
           })
       }
 
+      // 删除确认（Task 3.6，照工作台 deleteTargets 语义）：单删＝单元素列表；批量走
+      // allSettled 逐删——部分失败时弹层收窄为失败集（重按只重试失败项）。
       const confirmDelete = () => {
+        if (!deleteTargets || deleteTargets.length === 0) return
+        const targets = deleteTargets
         setBusy(true)
         setDialogError(null)
-        callOp('deleteDocument', { kb_id: kbId, doc_id: deleteTarget.id })
-          .then(() => {
-            setBusy(false)
-            setDeleteTarget(null)
-            load()
+        Promise.allSettled(targets.map((id) => callOp('deleteDocument', { kb_id: kbId, doc_id: id }))).then((results) => {
+          setBusy(false)
+          const removed = []
+          const failed = []
+          results.forEach((result, index) => {
+            if (result.status === 'fulfilled') removed.push(targets[index])
+            else failed.push(targets[index])
           })
-          .catch((error) => {
-            setBusy(false)
-            setDialogError(errorDetail(error))
-          })
+          if (removed.length > 0) {
+            setSelectedIds((current) => {
+              const next = new Set(current)
+              removed.forEach((id) => next.delete(id))
+              return next
+            })
+          }
+          load()
+          if (failed.length > 0) {
+            const first = results.find((result) => result.status === 'rejected')
+            setDialogError(errorDetail(first.reason))
+            setDeleteTargets(failed)
+          } else {
+            setDeleteTargets(null)
+          }
+        })
+      }
+
+      // 列偏好动作（Task 2）：显隐互切／全部显示（仅清 hidden）；格式/单位档随表头菜单。
+      const toggleColumn = (id) => {
+        setPrefs((current) => ({
+          ...current,
+          hidden:
+            current.hidden.indexOf(id) === -1
+              ? [...current.hidden, id]
+              : current.hidden.filter((entry) => entry !== id),
+        }))
+      }
+      const showAllColumns = () => setPrefs((current) => ({ ...current, hidden: [] }))
+      const handleColumnsMenu = (id) => {
+        if (id === 'col-show-all') {
+          showAllColumns()
+          return
+        }
+        if (id.indexOf('col-') === 0) toggleColumn(id.slice(4))
+      }
+      // 行 ⋯ 与右键两入口（Task 3.6 分流）：⋯＝行内动作（查看切片/下载/重试/删除）；
+      // 右键＝选择态菜单（单行态带生成考题＋取消选择；批量态带联合出题＋删除所选）。
+      const handleRowMenu = (doc, id) => {
+        if (id === 'open-chunks') {
+          if (onOpenChunks) onOpenChunks(doc)
+          return
+        }
+        if (id === 'download') {
+          downloadDocumentFile(kbId, doc).catch((error) => showToast(errorDetail(error), { error: true }))
+          return
+        }
+        if (id === 'gen-question') {
+          generateQuestion(doc)
+          return
+        }
+        if (id === 'gen-question-batch') {
+          generateQuestionBatch()
+          return
+        }
+        if (id === 'retry') {
+          retry(doc)
+          return
+        }
+        if (id === 'cancel-select') {
+          setSelectedIds(new Set())
+          return
+        }
+        if (id === 'delete') {
+          setDialogError(null)
+          setDeleteTargets([doc.id])
+          return
+        }
+        if (id === 'delete-selected') {
+          setDialogError(null)
+          setDeleteTargets([...selectedIds])
+        }
       }
 
       // 工具行（小件批 Task 2，照工作台 h-11 稳定容器常驻）：空态与就绪态共用；
@@ -6978,7 +7484,11 @@ window.__ModuleLoader__.load({
             value: query,
             placeholder: t('doc.search'),
             'aria-label': t('doc.search'),
-            onChange: (event) => setQuery(event.target.value),
+            // 检索即清选择集（照工作台 updateQuery）：批量删除不得命中看不见的行。
+            onChange: (event) => {
+              setQuery(event.target.value)
+              setSelectedIds(new Set())
+            },
           }),
           query
             ? h(
@@ -6988,7 +7498,10 @@ window.__ModuleLoader__.load({
                   className: 'hrag-docsearch-clear',
                   'aria-label': t('doc.searchClear'),
                   title: t('doc.searchClear'),
-                  onClick: () => setQuery(''),
+                  onClick: () => {
+                    setQuery('')
+                    setSelectedIds(new Set())
+                  },
                 },
                 hostIcon('IconCloseOutlineRegular') ? h(hostIcon('IconCloseOutlineRegular'), {}) : '✕',
               )
@@ -7039,25 +7552,130 @@ window.__ModuleLoader__.load({
           h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.retry')),
         )
       } else if (phase === 'empty') {
-        body = h('div', null, docbar, h(DocsEmptyState, { t, probe: dragProbe || null }))
+        // 空态也挂底栏统计行（工作台同款：统计行常驻，空库显「文档 0 · 切片 0 · 0 B」）；
+        // .hrag-docsbody > .hrag-docempty 吃 flex:1（CSS 侧）居中九宫格。
+        body = h('div', { className: 'hrag-docsbody' }, docbar, h(DocsEmptyState, { t, probe: dragProbe || null }), docStatsRow(t, []))
       } else {
-        const counts = {}
-        for (const doc of docs) counts[doc.status] = (counts[doc.status] || 0) + 1
-        const summary = Object.keys(counts)
-          .map((key) => (DOC_STATUS_KEYS[key] ? t(DOC_STATUS_KEYS[key]) : key) + ' ' + counts[key])
-          .join(' · ')
-        const visibleDocs = docsSort(docsFilter(docs, query), sort.key, sort.direction)
+        // 文档表（doc-columns 对 Task 1/2/3，照工作台 document-panel 表形态）：吸顶
+        // 表头＋按偏好显隐列；行点开切片抽屉、行尾 ⋯/右键＝行菜单、表头 chevron/右键
+        // /「列」总控＝列设置；底栏统计行＝工作台 document-stats-row 同构。10-16 他
+        // 复测修订：列宽自适应（去 min-w 强制横滚——面板内六列全显，超窄才横滚）。
+        const colVisible = (id) => prefs.hidden.indexOf(id) === -1
+        const columnMenuItems = (columnId) => {
+          const items = []
+          if (columnId === 'createdAt') {
+            items.push({ type: 'label', id: 'fmt-label', text: t('doc.colTimeFormat') })
+            items.push({ id: 'fmt-absolute', label: t('doc.colAbsolute'), icon: prefs.timeFormat === 'absolute' ? dshCheckIcon() : null })
+            items.push({ id: 'fmt-relative', label: t('doc.colRelative'), icon: prefs.timeFormat === 'relative' ? dshCheckIcon() : null })
+            items.push({ type: 'separator', id: 'fmt-sep' })
+          }
+          if (columnId === 'size') {
+            items.push({ type: 'label', id: 'unit-label', text: t('doc.colSizeUnit') })
+            items.push({ id: 'unit-kb', label: 'KB', icon: prefs.sizeUnit === 'kb' ? dshCheckIcon() : null })
+            items.push({ id: 'unit-mb', label: 'MB', icon: prefs.sizeUnit === 'mb' ? dshCheckIcon() : null })
+            items.push({ type: 'separator', id: 'unit-sep' })
+          }
+          items.push({ id: 'col-hide', label: t('doc.colHide'), icon: dshEyeOffIcon() })
+          return items
+        }
+        const handleColumnMenu = (columnId, id) => {
+          if (id === 'fmt-absolute' || id === 'fmt-relative') {
+            setPrefs((current) => ({ ...current, timeFormat: id.slice(4) }))
+          } else if (id === 'unit-kb' || id === 'unit-mb') {
+            setPrefs((current) => ({ ...current, sizeUnit: id.slice(5) }))
+          } else if (id === 'col-hide') {
+            toggleColumn(columnId)
+          }
+        }
+        const columnHeader = (columnId, label) =>
+          h(
+            'th',
+            {
+              scope: 'col',
+              className:
+                'hrag-docth-' +
+                columnId +
+                (columnId === 'createdAt' && prefs.timeFormat === 'relative' ? ' hrag-docth-createdAt-rel' : ''),
+            },
+            h(
+              'div',
+              { className: 'hrag-doccolhead' },
+              h('span', null, label),
+              h(DshMenu, {
+                title: label + ' ' + t('doc.colMenu'),
+                className: 'hrag-doccolchev',
+                trigger: dshChevronDownIcon(),
+                items: columnMenuItems(columnId),
+                onSelect: (id) => handleColumnMenu(columnId, id),
+              }),
+            ),
+          )
         body = h(
           'div',
-          null,
+          { className: 'hrag-docsbody' },
           docbar,
-          h('div', { className: 'hrag-docsum' }, summary),
           h(
             'div',
-            { className: 'hrag-docs' },
+            { className: 'hrag-docscroll' },
             visibleDocs.length === 0
               ? h('div', { className: 'hrag-docnomatch' }, t('doc.noMatch'))
-              : visibleDocs.map((doc) => {
+              : h(
+                  'table',
+                  { className: 'hrag-doctable' + (selectedIds.size > 0 ? ' hrag-doctable-selecting' : '') },
+                  h(
+                    'thead',
+                    null,
+                    h(
+                      'tr',
+                      {
+                        onContextMenu: (event) => {
+                          event.preventDefault()
+                          setColCtxMenu({ x: event.clientX, y: event.clientY })
+                        },
+                      },
+                      // 复选框列（Task 3.6，照工作台 w-8）：全选/缩进随可见集。
+                      h(
+                        'th',
+                        { scope: 'col', className: 'hrag-docth-check' },
+                        h('input', {
+                          type: 'checkbox',
+                          className: 'hrag-ev-check',
+                          'aria-label': t('doc.selectAll'),
+                          checked: allVisibleSelected,
+                          ref: (element) => {
+                            if (element) element.indeterminate = !allVisibleSelected && someVisibleSelected
+                          },
+                          onChange: toggleSelectAll,
+                        }),
+                      ),
+                      h('th', { scope: 'col' }, t('doc.thName')),
+                      colVisible('status') ? columnHeader('status', t('doc.thStatus')) : null,
+                      colVisible('uploader') ? columnHeader('uploader', t('doc.thUploader')) : null,
+                      colVisible('createdAt') ? columnHeader('createdAt', t('doc.thTime')) : null,
+                      colVisible('size') ? columnHeader('size', t('doc.thSize')) : null,
+                      colVisible('chunks') ? columnHeader('chunks', t('doc.thChunks')) : null,
+                      h(
+                        'th',
+                        { scope: 'col', className: 'hrag-docops' },
+                        h(
+                          'div',
+                          { className: 'hrag-docopscell' },
+                          h(DshMenu, {
+                            title: t('doc.columns'),
+                            align: 'end',
+                            className: 'hrag-doccolbtn',
+                            trigger: dshColumnsIcon(),
+                            items: docColumnsMenuItems(t, prefs),
+                            onSelect: handleColumnsMenu,
+                          }),
+                        ),
+                      ),
+                    ),
+                  ),
+                  h(
+                    'tbody',
+                    null,
+                    visibleDocs.map((doc) => {
             const degraded = isDegraded(doc)
             const statusKey = DOC_STATUS_KEYS[doc.status]
             let meta = statusKey ? t(statusKey) : String(doc.status)
@@ -7068,108 +7686,140 @@ window.__ModuleLoader__.load({
             // （错误 copy 仍挂在重试钮 title 上，D2 口径不破）。无宿主 Tooltip 时
             // 铺平为原生 title（缺件回退面）。
             const statusClass = doc.status === 'failed' ? 'hrag-docrow-status hrag-docrow-status-failed' : 'hrag-docrow-status'
+            // 状态点（10-16 他截图对照补，照工作台 DocumentStatusCell）：6px 悬挂在
+            // 文字左缘外 10px（点 6px＋间隙 4px；与 td px-2 配对，文字左缘同表头线）。
+            const dotNode = h('span', { className: 'hrag-docdot ' + docDotClass(doc.status), 'aria-hidden': 'true' })
+            // 状态文本吃省略号（fixed 布局窄档：长态「就绪 · 部分降级」不撑列；点在外，
+            // 不被文本裁剪面影响）。
+            const metaNode = h('span', { className: 'hrag-docrow-statustext' }, meta)
             const pathLines = doc.status === 'failed' ? null : pathStatusLines(doc)
             let statusNode
             if (!pathLines) {
               statusNode = h(
                 'span',
                 { className: statusClass, title: doc.error ? t('doc.err.' + classifyDocError(doc.error)) : undefined },
-                meta,
+                dotNode,
+                metaNode,
               )
             } else if (HostTooltip) {
               statusNode = h(
                 HostTooltip,
                 { label: h(PathStatusBreakdown, { t, doc }), side: 'top', delayMs: 150, portal: true },
-                h('span', { className: statusClass }, meta),
+                h('span', { className: statusClass }, dotNode, metaNode),
               )
             } else {
               statusNode = h(
                 'span',
                 { className: statusClass, title: pathLines.map((line) => docPathLineText(t, line)).join('\n') },
-                meta,
+                dotNode,
+                metaNode,
               )
             }
+            const rowItems = docRowMenuItems(t, doc, { degraded, busy })
+            const isSelected = selectedIds.has(doc.id)
             return h(
-              'div',
-              { className: 'hrag-docrow', key: String(doc.id) },
-              h(
-                'div',
-                {
-                  className: 'hrag-docrow-main',
-                  onClick: () => {
-                    if (onOpenChunks) onOpenChunks(doc)
-                  },
-                  onContextMenu: (event) => {
-                    event.preventDefault()
-                    if (!canGenerateQuestion(doc)) return
-                    setCtxMenu({ x: event.clientX, y: event.clientY, doc })
-                  },
+              'tr',
+              {
+                className: 'hrag-docrow' + (isSelected ? ' hrag-docrow-selected' : ''),
+                key: String(doc.id),
+                onClick: () => {
+                  if (onOpenChunks) onOpenChunks(doc)
                 },
-                h(FileTypeBadge, { fileName: String(doc.name), className: 'hrag-docrow-ftype' }),
-                h('span', { className: 'hrag-docrow-name', title: String(doc.name) }, String(doc.name)),
-                h(
-                  'span',
-                  { className: 'hrag-docrow-actions' },
-                  h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'hrag-btn hrag-btn-sm hrag-btn-outline',
-                      disabled: busy,
-                      onClick: (event) => {
-                        event.stopPropagation()
-                        downloadDocumentFile(kbId, doc).catch((error) =>
-                          showToast(errorDetail(error), { error: true }),
-                        )
-                      },
-                    },
-                    t('doc.download'),
-                  ),
-                  doc.status === 'failed' || degraded
-                    ? h(
-                        'button',
-                        {
-                          type: 'button',
-                          className: 'hrag-btn hrag-btn-sm hrag-btn-outline',
-                          disabled: busy,
-                          title: degraded ? t('doc.degradedRetryHint') : t('doc.err.' + classifyDocError(doc.error)),
-                          onClick: (event) => {
-                            event.stopPropagation()
-                            retry(doc)
-                          },
-                        },
-                        t('doc.retry'),
-                      )
-                    : null,
-                  h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'hrag-btn hrag-btn-sm hrag-btn-outline',
-                      disabled: busy,
-                      onClick: (event) => {
-                        event.stopPropagation()
-                        setDialogError(null)
-                        setDeleteTarget(doc)
-                      },
-                    },
-                    t('doc.delete'),
-                  ),
-                ),
+                // 右键即选中（照工作台文件管理器惯例）：未选中的行改为单选它；已选中的
+                // 行保留批量上下文。
+                onContextMenu: (event) => {
+                  event.preventDefault()
+                  setSelectedIds((current) => (current.has(doc.id) ? current : new Set([doc.id])))
+                  setCtxMenu({ x: event.clientX, y: event.clientY, doc })
+                },
+              },
+              h(
+                'td',
+                { onClick: (event) => event.stopPropagation() },
+                h('input', {
+                  type: 'checkbox',
+                  className: 'hrag-ev-check',
+                  'aria-label': t('doc.selectDocument') + ': ' + String(doc.name),
+                  checked: isSelected,
+                  onChange: (event) => toggleSelect(doc.id, event.target.checked),
+                }),
               ),
               h(
-                'div',
-                { className: 'hrag-docrow-meta' },
-                statusNode,
+                'td',
+                null,
                 h(
-                  'span',
-                  { className: 'hrag-docrow-chunks' },
-                  doc.chunk_count == null ? '—' : String(doc.chunk_count) + ' ' + t('doc.chunksUnit'),
+                  'div',
+                  { className: 'hrag-docnamecell' },
+                  h(FileTypeBadge, { fileName: String(doc.name), className: 'hrag-docrow-ftype' }),
+                  h('span', { className: 'hrag-docrow-name', title: String(doc.name) }, String(doc.name)),
+                ),
+              ),
+              colVisible('status') ? h('td', { className: 'hrag-doccell hrag-doccell-status' }, statusNode) : null,
+              colVisible('uploader')
+                ? h(
+                    'td',
+                    { className: 'hrag-doccell', title: doc.uploader_id == null ? undefined : String(doc.uploader_id) },
+                    doc.uploader_id === kbOwnerId ? t('doc.uploaderMe') : doc.uploader_id,
+                  )
+                : null,
+              colVisible('createdAt')
+                ? h(
+                    'td',
+                    { className: 'hrag-doccell hrag-doccell-time' },
+                    prefs.timeFormat === 'relative' ? docFmtRelative(doc.created_at) : docFmtTimestamp(doc.created_at),
+                  )
+                : null,
+              colVisible('size')
+                ? h(
+                    'td',
+                    { className: 'hrag-doccell hrag-doccell-right' },
+                    HostTooltip
+                      ? h(
+                          HostTooltip,
+                          {
+                            label: Number(doc.size_bytes || 0).toLocaleString() + ' B',
+                            side: 'top',
+                            delayMs: 150,
+                            portal: true,
+                          },
+                          h('span', null, (prefs.sizeUnit === 'mb' ? docFmtMb(doc.size_bytes) + ' MB' : docFmtKb(doc.size_bytes) + ' KB')),
+                        )
+                      : h(
+                          'span',
+                          { title: Number(doc.size_bytes || 0).toLocaleString() + ' B' },
+                          prefs.sizeUnit === 'mb' ? docFmtMb(doc.size_bytes) + ' MB' : docFmtKb(doc.size_bytes) + ' KB',
+                        ),
+                  )
+                : null,
+              colVisible('chunks')
+                ? h(
+                    'td',
+                    { className: 'hrag-doccell hrag-doccell-right' },
+                    doc.chunk_count == null ? '—' : String(doc.chunk_count),
+                  )
+                : null,
+              h(
+                'td',
+                { className: 'hrag-docops', onClick: (event) => event.stopPropagation() },
+                h(
+                  'div',
+                  { className: 'hrag-docopscell' },
+                  h(DshMenu, {
+                    title: t('menu.more'),
+                    align: 'end',
+                    className: 'hrag-docrow-more',
+                    trigger: dshEllipsisIcon(),
+                    items: rowItems,
+                    onSelect: (id) => handleRowMenu(doc, id),
+                  }),
                 ),
               ),
             )
           }),
+                  ),
+                ),
           ),
+          docStatsRow(t, docs),
         )
       }
 
@@ -7189,14 +7839,14 @@ window.__ModuleLoader__.load({
               },
             })
           : null,
-        deleteTarget
+        deleteTargets && deleteTargets.length > 0
           ? h(ConfirmDialog, {
               t,
               title: t('doc.deleteTitle'),
               description: t('doc.deleteDescription'),
               error: dialogError,
               busy,
-              onCancel: () => setDeleteTarget(null),
+              onCancel: () => setDeleteTargets(null),
               onConfirm: confirmDelete,
             })
           : null,
@@ -7205,8 +7855,25 @@ window.__ModuleLoader__.load({
               t,
               x: ctxMenu.x,
               y: ctxMenu.y,
-              onSelect: () => generateQuestion(ctxMenu.doc),
+              items: docContextMenuItems(t, ctxMenu.doc, {
+                degraded: isDegraded(ctxMenu.doc),
+                canGenerate: canGenerateQuestion(ctxMenu.doc),
+                busy,
+                selectedCount: selectedIds.has(ctxMenu.doc.id) ? selectedIds.size : 0,
+                allSelectedReady,
+              }),
+              onSelect: (id) => handleRowMenu(ctxMenu.doc, id),
               onClose: () => setCtxMenu(null),
+            })
+          : null,
+        colCtxMenu
+          ? h(DocContextMenu, {
+              t,
+              x: colCtxMenu.x,
+              y: colCtxMenu.y,
+              items: docColumnsMenuItems(t, prefs),
+              onSelect: handleColumnsMenu,
+              onClose: () => setColCtxMenu(null),
             })
           : null,
       )
@@ -7442,6 +8109,13 @@ window.__ModuleLoader__.load({
     const dshSparkleIcon = dshIconOr('IconSparkleRegular', () =>
       dshMenuIcon([{ d: 'M8 1.6L9.65 6.35L14.4 8L9.65 9.65L8 14.4L6.35 9.65L1.6 8L6.35 6.35Z' }]),
     )
+    // 关闭（X）——批量菜单「取消选择」用（宿主 IconCloseOutlineRegular；回退＝交叉两笔）。
+    const dshCloseIcon = dshIconOr('IconCloseOutlineRegular', () =>
+      dshMenuIcon([
+        { d: 'M3.5 3.5L12.5 12.5' },
+        { d: 'M12.5 3.5L3.5 12.5' },
+      ]),
+    )
 
     /** 知识库标题下拉的 chevron 与菜单选中勾——Task 6 起直用宿主件（旧原路径为回退）；
         小件批 Task 5 起上/下 chevron 还供抽屉逐片跳转钮（回退＝下行镜像）。 */
@@ -7471,6 +8145,26 @@ window.__ModuleLoader__.load({
         箭头＝跳转语义）；缺件回退工作台原形 lucide ExternalLink。 */
     const dshRightUpIcon = dshIconOr('IconRightUpOutlineRegular', () =>
       lucideMenuIcon(['M15 3h6v6', 'M10 14 21 3', 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6']),
+    )
+    /** 行 ⋯ 菜单与列设置图标（doc-columns 对 Task 3）：宿主件优先、缺件回退工作台
+        同款 lucide 原形（行 ⋯＝FileText/Download/RotateCcw；列设置＝EyeOff/Eye/Columns）。 */
+    const dshTextFileIcon = dshIconOr('IconFileTextOutlineRegular', () =>
+      lucideMenuIcon(['M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z', 'M14 2v4a2 2 0 0 0 2 2h4', 'M10 9H8', 'M16 13H8', 'M16 17H8']),
+    )
+    const dshDownloadIcon = dshIconOr('IconDownloadOutlineRegular', () =>
+      lucideMenuIcon(['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'm7 10 5 5 5-5', 'M12 15V3']),
+    )
+    const dshRetryIcon = dshIconOr('IconRotateCcwOutlineRegular', () =>
+      lucideMenuIcon(['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5']),
+    )
+    const dshEyeOffIcon = dshIconOr('IconEyeOffOutlineRegular', () =>
+      lucideMenuIcon(['M9.88 9.88a3 3 0 1 0 4.24 4.24', 'M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68', 'M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61', 'M2 2l20 20']),
+    )
+    const dshEyeIcon = dshIconOr('IconEyeOutlineRegular', () =>
+      lucideMenuIcon(['M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z', 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z']),
+    )
+    const dshColumnsIcon = dshIconOr('IconColumnsOutlineRegular', () =>
+      lucideMenuIcon(['M3 3h18v18H3z', 'M9 3v18', 'M15 3v18']),
     )
 
     /** 菜单图标：工作台同款（lucide 24 视窗・stroke 2・圆头——宿主无对应件档，
@@ -13379,6 +14073,15 @@ window.__ModuleLoader__.load({
       return dot <= 0 ? '' : name.slice(dot).toLowerCase()
     }
 
+    // ── 白名单兜底（Task 4，D2＝甲）：白名单未取（未加载 null／取失败空返）时照拦——
+    // 常量照工作台 `supported-formats.ts` FALLBACK_SUPPORTED_SUFFIXES 逐条（15 项）。
+    const FALLBACK_SUPPORTED_SUFFIXES = ['.md', '.markdown', '.txt', '.csv', '.tsv', '.xlsx', '.xls', '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.png', '.jpg', '.jpeg']
+
+    /** 工作台同款派生（`page.tsx: data?.suffixes ?? FALLBACK`）：未取两窗回退常量。 */
+    function supportedSuffixesFor(fetched) {
+      return Array.isArray(fetched) && fetched.length > 0 ? fetched : FALLBACK_SUPPORTED_SUFFIXES
+    }
+
     /** 同名预检：基名精确（显示名不是归一化键），后缀大小写不敏感。 */
     function dupFindByName(filename, documents) {
       const wantedBase = dupBaseName(filename)
@@ -13680,6 +14383,9 @@ window.__ModuleLoader__.load({
       const toastAnchorRef = React.useRef(null)
       const [pendingDuplicate, setPendingDuplicate] = React.useState(null)
       const [acceptedSuffixes, setAcceptedSuffixes] = React.useState(null)
+      // 白名单兜底（Task 4）：三消费点（上传拦截/accept/probe）一律持派生值——未取两窗
+      // （未加载 null／取失败空返）回退 15 常量；原「空⇒放行／不设／全拒」三处分歧作废。
+      const supportedSuffixes = supportedSuffixesFor(acceptedSuffixes)
       // 拖拽反馈（小件批 Task 2）：根拖入态＋判词（指纹去重，dragover 高频只重渲
       // 变化）＋文档空态上报（放置层双态用；先按空库＝虚线框的安全默认）。
       const [dragActive, setDragActive] = React.useState(false)
@@ -13807,17 +14513,14 @@ window.__ModuleLoader__.load({
         const files = Array.from(fileList || [])
         if (files.length === 0) return
         // 白名单前置拦截（Task 5，照工作台 partitionFilesBySuffix 语义）：accept 只是
-        // 建议，用户可经「所有文件」绕过——被拒项先行提示、仅合规项入队。
+        // 建议，用户可经「所有文件」绕过——被拒项先行提示、仅合规项入队。白名单未取
+        // 时由 supportedSuffixes 兜底常量照拦（Task 4）。
         const accepted = []
         const rejectedNames = []
-        if (acceptedSuffixes && acceptedSuffixes.length > 0) {
-          const allowed = new Set(acceptedSuffixes.map((suffix) => String(suffix).toLowerCase()))
-          for (const file of files) {
-            if (allowed.has(dupSuffix(file.name))) accepted.push(file)
-            else rejectedNames.push(file.name)
-          }
-        } else {
-          for (const file of files) accepted.push(file)
+        const allowed = new Set(supportedSuffixes.map((suffix) => String(suffix).toLowerCase()))
+        for (const file of files) {
+          if (allowed.has(dupSuffix(file.name))) accepted.push(file)
+          else rejectedNames.push(file.name)
         }
         if (rejectedNames.length > 0) {
           showToast(t('upload.rejected', { 0: rejectedNames.join(', ') }), { error: true })
@@ -13941,7 +14644,7 @@ window.__ModuleLoader__.load({
         if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
         // 判词探针（小件批 Task 2）：dragover 每次鼠标移动都触发——指纹不变不重渲。
         setDragActive(true)
-        const probe = probeDraggedItems(event.dataTransfer.items, acceptedSuffixes || [])
+        const probe = probeDraggedItems(event.dataTransfer.items, supportedSuffixes)
         const verdict = probe.anyAccepted || probe.anyRejected ? probe : null
         const key = probeSignature(verdict)
         if (key !== probeKeyRef.current) {
@@ -14167,7 +14870,7 @@ window.__ModuleLoader__.load({
             multiple: true,
             ref: fileInputRef,
             style: { display: 'none' },
-            accept: acceptedSuffixes && acceptedSuffixes.length > 0 ? acceptedSuffixes.join(',') : undefined,
+            accept: supportedSuffixes.join(','),
             onChange: (event) => {
               handleUpload(event.target.files)
               event.target.value = ''
@@ -14181,6 +14884,7 @@ window.__ModuleLoader__.load({
             h(HragBoundary, { t, name: t('shell.tab.docs') }, h(DocsView, {
               t,
               kbId,
+              kbOwnerId: currentKb ? currentKb.owner_id : null,
               refreshToken,
               onOpenChunks: (doc) => setDrawer({ doc, focus: null }),
               dragProbe,
