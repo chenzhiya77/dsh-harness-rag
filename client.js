@@ -114,6 +114,9 @@ window.__ModuleLoader__.load({
       'doc.err.indexIncomplete': '文档索引不完整，部分切片未能入库，请重试',
       'doc.err.noIndexableContent': '文档没有可索引的内容，请检查文件内容',
       'doc.err.unknown': '处理失败，请重试',
+      'doc.err.title': '文档处理失败',
+      'doc.err.dismissAll': '全部关闭',
+      'doc.err.dismiss': '关闭',
       'doc.delete': '删除',
       'doc.deleteTitle': '删除文档？',
       'doc.deleteDescription': '将级联清理该文档的切片、向量与图谱贡献，且不可恢复。',
@@ -732,6 +735,9 @@ window.__ModuleLoader__.load({
       'doc.err.indexIncomplete': 'The document index is incomplete — some chunks were not indexed; please retry',
       'doc.err.noIndexableContent': 'The document had no indexable content — check the file and retry',
       'doc.err.unknown': 'Processing failed — please retry',
+      'doc.err.title': 'Document processing failed',
+      'doc.err.dismissAll': 'Close all',
+      'doc.err.dismiss': 'Close',
       'doc.delete': 'Delete',
       'doc.deleteTitle': 'Delete this document?',
       'doc.deleteDescription': 'Its chunks, vectors and graph contributions will be cascade-deleted. This cannot be undone.',
@@ -1523,6 +1529,22 @@ window.__ModuleLoader__.load({
           '.hrag-state-error .hrag-state-title { color: var(--dsw-alias-label-error); }',
           '.hrag-docs { display: flex; flex-direction: column; }',
           '.hrag-docsum { padding: 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          // 失败通知卡（小件批 Task 3，照工作台 doc-failure-panel：底右浮卡 w-80 口径 320px、
+          // 纯底面色面 + 浮层阴影；皮肤映射 DSH token——bg-base / elevation-prominent 与 tickrail 弹层同档）。
+          '.hrag-docfail { position: absolute; right: 12px; bottom: 12px; z-index: 20; width: 320px; max-width: calc(100% - 24px); overflow: hidden; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-lg); background: var(--dsw-alias-bg-base); box-shadow: var(--dsw-elevation-prominent); }',
+          '.hrag-docfail-head { display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 12px; }',
+          '.hrag-docfail-summary { display: flex; min-width: 0; flex: 1; align-items: center; gap: 8px; }',
+          '.hrag-docfail-icon { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-error); }',
+          '.hrag-docfail-body { min-width: 0; flex: 1; }',
+          '.hrag-docfail-name { margin: 0; font-size: 12px; font-weight: 500; color: var(--dsw-alias-label-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-docfail-reason { margin: 0; font-size: 12px; color: var(--dsw-alias-label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-docfail-count { min-width: 0; flex: 1; font-size: 12px; color: var(--dsw-alias-label-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-docfail-retry { display: inline-flex; height: 24px; flex-shrink: 0; align-items: center; gap: 4px; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 6px; background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; cursor: pointer; }',
+          '.hrag-docfail-retry:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-docfail-close { display: inline-flex; flex-shrink: 0; padding: 4px; border: none; border-radius: 6px; background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
+          '.hrag-docfail-close:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-docfail-list { max-height: 160px; overflow-y: auto; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-docfail-row { display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px; }',
           // 文档工具栏（小件批 Task 1，照工作台 h-11 行）：搜索＝宿主 Input 前置
           // 图标（icon 属性，控件照宿主真值）；清空钮绝对定位右缘、检索词非空才渲染；
           // 排序＝28px 图标钮（hrag-iconbare）挂宿主 Menu。
@@ -2168,6 +2190,36 @@ window.__ModuleLoader__.load({
       if (text.includes('mineru_api_token')) return 'serviceUnconfigured'
       if (text.includes('timed out') || text.includes('timeout')) return 'timeout'
       return 'unknown'
+    }
+
+    /** 失败折叠（小件批 Task 3，照工作台 `useDocFailureNotifier` 语义逐条移植）：
+        仅入 failed 转变播报／首屏不补播（预标记）／episode 去重（离 failed 清记、
+        再 failed 重报）／离 failed 或删行撤条（rejection-* 保留）。纯函数＝可冒烟。 */
+    function foldDocFailures(state, docs, reasonOf) {
+      const byId = new Map(docs.map((doc) => [doc.id, doc]))
+      const entries = state.entries.filter(
+        (entry) => entry.key.indexOf('rejection-') === 0 || (byId.get(entry.key) && byId.get(entry.key).status === 'failed'),
+      )
+      const notified = new Set(state.notified)
+      for (const doc of docs) {
+        if (doc.status !== 'failed') notified.delete(doc.id)
+      }
+      if (!state.initialized) {
+        for (const doc of docs) {
+          if (doc.status === 'failed') notified.add(doc.id)
+        }
+        return { entries, notified, initialized: true }
+      }
+      const fresh = docs.filter((doc) => doc.status === 'failed' && !notified.has(doc.id))
+      if (fresh.length === 0) return { entries, notified, initialized: true }
+      for (const doc of fresh) notified.add(doc.id)
+      return {
+        entries: entries.concat(
+          fresh.map((doc) => ({ key: doc.id, name: doc.name, reason: reasonOf(doc), retryable: true })),
+        ),
+        notified,
+        initialized: true,
+      }
     }
 
     /** 文件后缀规范化（照工作台 `supported-formats.ts` fileSuffix：小写虚线后缀，
@@ -6734,7 +6786,76 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function DocsView({ t, kbId, refreshToken, onOpenChunks, dragProbe, setDocsEmpty }) {
+    /** 失败通知卡（小件批 Task 3，照工作台 `doc-failure-panel.tsx`）：底右浮卡、
+        双行制（名/因）、悬停展开（感应区不含 ✕）、逐条 ✕、重试钮、不自动消退。 */
+    function DocFailureCard({ t, failures, onDismiss, onDismissAll, onRetry }) {
+      const [expanded, setExpanded] = React.useState(false)
+      if (failures.length === 0) return null
+      const multiple = failures.length > 1
+      const first = failures[0]
+      const entryBody = (entry) =>
+        h(
+          'div',
+          { className: 'hrag-docfail-body' },
+          h('p', { className: 'hrag-docfail-name', title: entry.name }, entry.name),
+          h('p', { className: 'hrag-docfail-reason', title: entry.reason }, entry.reason),
+        )
+      const retryButton = (entry) =>
+        h(
+          'button',
+          { type: 'button', className: 'hrag-docfail-retry', onClick: () => onRetry(entry.key) },
+          hostIcon('IconRefreshOutlineRegular') ? h(hostIcon('IconRefreshOutlineRegular'), { size: 12 }) : null,
+          t('doc.retry'),
+        )
+      const closeButton = (label, onClick) =>
+        h(
+          'button',
+          { type: 'button', className: 'hrag-docfail-close', 'aria-label': label, title: label, onClick },
+          hostIcon('IconCloseOutlineRegular') ? h(hostIcon('IconCloseOutlineRegular'), { size: 14 }) : '✕',
+        )
+      const alertIcon = hostIcon('IconWarningOutlineRegular')
+      return h(
+        'div',
+        { className: 'hrag-docfail', 'data-testid': 'doc-failure-panel', onMouseLeave: () => setExpanded(false) },
+        h(
+          'div',
+          { className: 'hrag-docfail-head' },
+          h(
+            'div',
+            {
+              className: 'hrag-docfail-summary',
+              'data-testid': 'doc-failure-summary',
+              onMouseEnter: () => {
+                if (multiple) setExpanded(true)
+              },
+            },
+            alertIcon ? h('span', { className: 'hrag-docfail-icon' }, h(alertIcon, { size: 16 })) : null,
+            multiple
+              ? h('span', { className: 'hrag-docfail-count', title: t('doc.err.title') }, t('doc.err.title') + '（' + failures.length + '）')
+              : entryBody(first),
+          ),
+          !multiple && first.retryable && onRetry ? retryButton(first) : null,
+          closeButton(t('doc.err.dismissAll'), onDismissAll),
+        ),
+        multiple && expanded
+          ? h(
+              'div',
+              { className: 'hrag-docfail-list' },
+              failures.map((entry) =>
+                h(
+                  'div',
+                  { className: 'hrag-docfail-row', key: entry.key },
+                  entryBody(entry),
+                  entry.retryable && onRetry ? retryButton(entry) : null,
+                  closeButton(t('doc.err.dismiss'), () => onDismiss(entry.key)),
+                ),
+              ),
+            )
+          : null,
+      )
+    }
+
+    function DocsView({ t, kbId, refreshToken, onOpenChunks, dragProbe, setDocsEmpty, docFailures, onDocFailuresSnapshot, onDocFailureReport, onDocFailureDismiss, onDocFailureDismissAll }) {
       const [phase, setPhase] = React.useState('loading')
       const [docs, setDocs] = React.useState([])
       const [failure, setFailure] = React.useState(null)
@@ -6793,6 +6914,12 @@ window.__ModuleLoader__.load({
         if (setDocsEmpty) setDocsEmpty(phase !== 'ready')
       }, [phase, setDocsEmpty])
 
+      // 失败快照上报（小件批 Task 3）：只在有效清单阶段交给壳的 fold 状态机——首载前
+      // 的空数组不得预标记，否则首屏已有的 failed 会被当转变播报（「首屏不补播」语义）。
+      React.useEffect(() => {
+        if ((phase === 'ready' || phase === 'empty') && onDocFailuresSnapshot) onDocFailuresSnapshot(docs)
+      }, [docs, phase])
+
       // A④ 快捷出题（照工作台 page.tsx:452-466）：单篇 count=1、合并进暂存审核；
       // 工作台 enqueued=success／already_running=info 两档同文案，插件总线无 info 档、合一。
       const generateQuestion = (doc) => {
@@ -6811,7 +6938,9 @@ window.__ModuleLoader__.load({
           })
           .catch((error) => {
             setBusy(false)
-            showToast(errorDetail(error), { error: true })
+            // 重试请求失败（照工作台 page：状态仍停在 failed，hook 不会重新提醒）——
+            // 收编进同一面板，不走 toast。
+            if (onDocFailureReport) onDocFailureReport(doc.name, errorDetail(error))
           })
       }
 
@@ -7045,6 +7174,18 @@ window.__ModuleLoader__.load({
         React.Fragment,
         null,
         body,
+        docFailures && docFailures.length > 0
+          ? h(DocFailureCard, {
+              t,
+              failures: docFailures,
+              onDismiss: onDocFailureDismiss,
+              onDismissAll: onDocFailureDismissAll,
+              onRetry: (key) => {
+                const doc = docs.find((item) => item.id === key)
+                if (doc) retry(doc)
+              },
+            })
+          : null,
         deleteTarget
           ? h(ConfirmDialog, {
               t,
@@ -13521,6 +13662,33 @@ window.__ModuleLoader__.load({
       const [dragActive, setDragActive] = React.useState(false)
       const [dragProbe, setDragProbe] = React.useState(null)
       const [docsEmpty, setDocsEmpty] = React.useState(true)
+      // 失败通知（小件批 Task 3，照工作台 page 层 useDocFailureNotifier）：fold 状态机在壳
+      // （数据快照出自 DocsView），收编族（上传请求失败／重试请求失败）直接 report 进卡；
+      // notified/initialized 随 state 走——updater 保持纯，严格模式双调安全。
+      const [docFailState, setDocFailState] = React.useState({ entries: [], notified: new Set(), initialized: false })
+      const reportSeqRef = React.useRef(0)
+      const snapshotDocFailures = (list) => {
+        setDocFailState((prev) => foldDocFailures(prev, list, (doc) => t('doc.err.' + classifyDocError(doc.error))))
+      }
+      const reportDocFailure = (name, reason) => {
+        reportSeqRef.current += 1
+        const key = 'rejection-' + reportSeqRef.current
+        setDocFailState((prev) => ({
+          entries: prev.entries.concat([{ key, name, reason, retryable: false }]),
+          notified: prev.notified,
+          initialized: prev.initialized,
+        }))
+      }
+      const dismissDocFailure = (key) => {
+        setDocFailState((prev) => ({
+          entries: prev.entries.filter((entry) => entry.key !== key),
+          notified: prev.notified,
+          initialized: prev.initialized,
+        }))
+      }
+      const dismissAllDocFailures = () => {
+        setDocFailState((prev) => ({ entries: [], notified: prev.notified, initialized: prev.initialized }))
+      }
       const probeKeyRef = React.useRef('')
       // 菜单批 Task 1：库级 ⋯ 菜单状态——重命名弹层/删除确认/设置面/百科指令线。
       const [menuRenameOpen, setMenuRenameOpen] = React.useState(false)
@@ -13639,26 +13807,11 @@ window.__ModuleLoader__.load({
 
         const finish = () => {
           const ok = results.filter((entry) => entry.ok).length
-          const failed = results.length - ok
           setUploading(false)
-          if (results.length > 0) {
-            if (failed === 0) {
-              showToast(String(ok) + ' ' + t('upload.submittedUnit'))
-            } else {
-              const firstFailure = results.find((entry) => !entry.ok)
-              showToast(
-                String(ok) +
-                  ' ' +
-                  t('upload.submittedUnit') +
-                  ' · ' +
-                  String(failed) +
-                  ' ' +
-                  t('upload.failedUnit') +
-                  '：' +
-                  firstFailure.detail,
-                { error: true },
-              )
-            }
+          // 失败明细不再走 toast（小件批 Task 3）：逐条已由 doUpload catch 收编进失败卡
+          // （照工作台——失败不进汇总提示；白名单预拒 toast 维持工作台同款不动）。
+          if (ok > 0) {
+            showToast(String(ok) + ' ' + t('upload.submittedUnit'))
           }
           setRefreshToken((value) => value + 1)
         }
@@ -13675,6 +13828,8 @@ window.__ModuleLoader__.load({
             })
             .catch((error) => {
               entry.detail = errorDetail(error)
+              // 上传请求失败（含服务端即拒 400）收编进失败卡（照工作台 doUpload catch）。
+              reportDocFailure(file.name, entry.detail)
             })
         }
 
@@ -14007,6 +14162,11 @@ window.__ModuleLoader__.load({
               onOpenChunks: (doc) => setDrawer({ doc, focus: null }),
               dragProbe,
               setDocsEmpty,
+              docFailures: docFailState.entries,
+              onDocFailuresSnapshot: snapshotDocFailures,
+              onDocFailureReport: reportDocFailure,
+              onDocFailureDismiss: dismissDocFailure,
+              onDocFailureDismissAll: dismissAllDocFailures,
             })),
           ),
           // 召回视图 keep-alive（10-15 他报「切走回来结果消失」＝缺陷修正）：query/结果/选择集切走不丢。
