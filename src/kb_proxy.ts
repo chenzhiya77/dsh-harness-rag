@@ -1,5 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import type { ReadableStream as WebReadableStream } from 'node:stream/web'
 import type { Context } from 'cordis'
 import { api, HarnessRagError } from './http.ts'
 import type { ApiError } from './http.ts'
@@ -24,7 +26,10 @@ export const KB_PROXY_ROUTE = '/dsh-harness-rag/api'
  * Task 7 the knowledge graph (nodes / edges / communities) and the chunk
  * positions behind the "slice #K" labels; Task 8 the eval family (question
  * bank CRUD, the synthesis quartet, run history / trigger / cancel / delete /
- * latest / trend / detail, and the anchor-preview chunk lookup).
+ * latest / trend / detail, and the anchor-preview chunk lookup). ②档乙对
+ * Task 1 adds the slice-face actions (chunk text update / re-extract) plus
+ * three read-only media relays that the panel's <img>/<video> load directly
+ * (document files, shot keyframes, the range-negotiated video stream).
  */
 /** Shared projection query mirror for both projection ops: collections join
  * into the comma form the route declares (absent array = route default),
@@ -83,6 +88,19 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
     },
     deleteChunk: (args) =>
       api(config, `${kbPath(args)}/chunks/${encodeURIComponent(needString(args, 'chunk_id'))}`, { method: 'DELETE' }),
+    // ── 切片面（②档乙对 Task 1）：编辑重嵌＋重抽（五步级联，文档非终态 409）──
+    updateChunk: (args) => {
+      const body = bodyOf(args)
+      if (typeof body.text !== 'string') {
+        throw new HarnessRagError({ kind: 'http', status: 400, detail: 'panel op requires a string "text" in body' })
+      }
+      return api(config, `${kbPath(args)}/chunks/${encodeURIComponent(needString(args, 'chunk_id'))}`, {
+        method: 'PATCH',
+        body,
+      })
+    },
+    reExtractChunk: (args) =>
+      api(config, `${kbPath(args)}/chunks/${encodeURIComponent(needString(args, 'chunk_id'))}/re-extract`, { method: 'POST' }),
     recallTest: (args) => {
       const source = args as Record<string, unknown> | null | undefined
       const query = typeof source?.query === 'string' ? source.query.trim() : ''
@@ -388,17 +406,118 @@ const forwardDownload = async (req: IncomingMessage, res: ServerResponse, config
   res.end(bytes)
 }
 
+/** One read-only media relay (②档乙对 Task 1): the panel's <img>/<video> load
+ * these URLs natively, so the route answers GET (the JSON ops stay POST-only)
+ * and the query carries the addressing. `range` forwards the request header
+ * and streams the upstream body untouched, so <video> seeking negotiates 206
+ * through the whole chain instead of buffering the file. */
+interface RelaySpec {
+  /** Upstream path from the relay's query params; null = malformed addressing. */
+  path: (params: URLSearchParams) => string | null
+  range?: boolean
+}
+
+const relayAddress = (params: URLSearchParams, key: string): string => (params.get(key) ?? '').trim()
+
+const rawRelays: Record<string, RelaySpec> = {
+  documentFile: {
+    path: (params) => {
+      const kbId = relayAddress(params, 'kb_id')
+      const docId = relayAddress(params, 'doc_id')
+      const ref = relayAddress(params, 'ref')
+      if (!kbId || !docId || !ref) return null
+      // 照工作台 documentFileUrl：ref 按段编码，斜杠保留作路径分隔。
+      const encodedRef = ref.split('/').map(encodeURIComponent).join('/')
+      return `/api/knowledge-bases/${encodeURIComponent(kbId)}/documents/${encodeURIComponent(docId)}/files/${encodedRef}`
+    },
+  },
+  shotFrame: {
+    path: (params) => {
+      const kbId = relayAddress(params, 'kb_id')
+      const docId = relayAddress(params, 'doc_id')
+      const shotIndex = Number.parseInt(relayAddress(params, 'shot_index'), 10)
+      if (!kbId || !docId || !Number.isInteger(shotIndex) || shotIndex < 0) return null
+      return `/api/knowledge-bases/${encodeURIComponent(kbId)}/documents/${encodeURIComponent(docId)}/shots/${shotIndex}/frame`
+    },
+  },
+  videoStream: {
+    range: true,
+    path: (params) => {
+      const kbId = relayAddress(params, 'kb_id')
+      const docId = relayAddress(params, 'doc_id')
+      if (!kbId || !docId) return null
+      return `/api/knowledge-bases/${encodeURIComponent(kbId)}/documents/${encodeURIComponent(docId)}/video/stream`
+    },
+  },
+}
+
+const forwardRelay = async (
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: Config,
+  spec: RelaySpec,
+): Promise<void> => {
+  const url = new URL(req.url ?? '/', 'http://webServer')
+  const base = config.backendUrl?.trim()
+  if (!base) {
+    sendJson(res, 503, { error: { kind: 'not_configured', detail: 'backendUrl is not configured (settings → harness-rag).' } })
+    return
+  }
+  const path = spec.path(url.searchParams)
+  if (path === null) {
+    sendJson(res, 400, { error: { kind: 'http', status: 400, detail: 'panel relay requires well-formed addressing params' } })
+    return
+  }
+  const headers: Record<string, string> = {}
+  if (config.apiToken) headers.authorization = `Bearer ${config.apiToken}`
+  const range = req.headers.range
+  if (spec.range && typeof range === 'string' && range) headers.range = range
+  let upstream: Response
+  try {
+    upstream = await fetch(new URL(path, base), { headers })
+  } catch (cause) {
+    sendJson(res, 502, { error: { kind: 'network', detail: `knowledge service unreachable: ${String(cause)}` } })
+    return
+  }
+  // 状态与体原样中继（404/416 等让原生 <img>/<video> 走自己的失败面）；流式不缓冲。
+  const outHeaders: Record<string, string> = {
+    'content-type': upstream.headers.get('content-type') ?? 'application/octet-stream',
+    'cache-control': 'no-store',
+  }
+  for (const name of ['content-length', 'content-range', 'accept-ranges'] as const) {
+    const value = upstream.headers.get(name)
+    if (value) outHeaders[name] = value
+  }
+  res.writeHead(upstream.status, outHeaders)
+  if (!upstream.body) {
+    res.end()
+    return
+  }
+  // 客户端提前断开（视频 seek 常态）会让 pipeline 以 abort 结束——响应已亡，静默收尾。
+  await pipeline(Readable.fromWeb(upstream.body as unknown as WebReadableStream<Uint8Array>), res).catch(() => {})
+}
+
 export function registerKbProxy(ctx: Context, config: Config): void {
   const ops = buildOps(config)
 
   const handler = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     try {
+      const pathname = new URL(req.url ?? '/', 'http://webServer').pathname
+      const opName = decodeURIComponent(pathname.slice(KB_PROXY_ROUTE.length + 1))
+      // 媒体直载路（<img>/<video> 原生加载）：GET；JSON op 与 upload/download 维持 POST。
+      const relay = rawRelays[opName]
+      if (relay) {
+        if (req.method !== 'GET') {
+          sendJson(res, 405, { error: { kind: 'method', detail: 'the media relay accepts GET only' } })
+          return
+        }
+        await forwardRelay(req, res, config, relay)
+        return
+      }
       if (req.method !== 'POST') {
         sendJson(res, 405, { error: { kind: 'method', detail: 'the panel proxy accepts POST only' } })
         return
       }
-      const pathname = new URL(req.url ?? '/', 'http://webServer').pathname
-      const opName = decodeURIComponent(pathname.slice(KB_PROXY_ROUTE.length + 1))
       if (opName === 'uploadDocument') {
         await forwardUpload(req, res, config)
         return

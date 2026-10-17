@@ -26,6 +26,12 @@ window.__ModuleLoader__.load({
     // 转圈件＝宿主 StateDot(ongoing)：自带旋转/相位同步/reduced-motion；自绘 CSS 环（粗边方头）退役；缺件＝不渲染。
     const HostStateDot = hostIcon('StateDot')
     const stateDot = (size) => (HostStateDot ? h(HostStateDot, { state: 'ongoing', size, className: 'hrag-statedot' }) : null)
+    // 切片面（②档乙对 Task 2）：MarkdownText 渲染器与 SegmentedControl 两态钮直用宿主件；
+    // 缺件回退＝pre-wrap 正文／自绘两钮（本常量在 factory 求值期捕获一次）。
+    const HostMarkdownText = hostPrimitives && hostPrimitives.MarkdownText ? hostPrimitives.MarkdownText : null
+    const HostSegmentedControl = hostPrimitives && hostPrimitives.SegmentedControl ? hostPrimitives.SegmentedControl : null
+    // 剪贴板（②档乙对 Task 3）：宿主 writeClipboard 有件直用（含 execCommand 兜底）；缺件回退 navigator.clipboard。
+    const HostWriteClipboard = hostPrimitives && hostPrimitives.writeClipboard ? hostPrimitives.writeClipboard : null
 
     const NS = 'harnessRag'
     // The host half's named route (src/kb_proxy.ts owns the other end).
@@ -178,6 +184,36 @@ window.__ModuleLoader__.load({
       'chunk.entities': '实体',
       'chunk.tokens': 'tokens',
       'chunk.edited': '已编辑',
+      // 渲染/原始两态钮（②档乙对 Task 2，逐字照工作台 chunk-card viewRendered/viewRaw）。
+      'chunk.viewRendered': '渲染视图',
+      'chunk.viewRaw': '原始文本',
+      // 宿主 MarkdownText 代码块/脚注 chrome（逐字照宿主 locale 六键：copy/copied/codeBlock.*/markdown.footnotes）。
+      'markdown.copy': '复制',
+      'markdown.copied': '复制成功',
+      'markdown.codeTitle': '代码块',
+      'markdown.wrap': '自动换行',
+      'markdown.unwrap': '取消自动换行',
+      'markdown.footnotes': '脚注',
+      // 视频镜头条＋播放器（②档乙对 Task 3，逐字照工作台 chunkDrawer 时间码/播放器族）。
+      'chunk.playShot': '播放此镜头',
+      'chunk.copyTimecode': '复制时间码',
+      'chunk.copiedTimecode': '时间码已复制',
+      'chunk.copyTimecodeFailed': '复制失败',
+      'chunk.frameMissing': '关键帧缺失',
+      'chunk.playerHint': '点击镜头时间码或缩略图即可跳转播放',
+      // 切片编辑＋重抽（②档乙对 Task 4，逐字照工作台 chunkDrawer 编辑族）。
+      'chunk.edit': '编辑',
+      'chunk.save': '保存',
+      'chunk.editHint': '实体与 Wiki 不会自动更新，如需以新内容重建实体请使用『重新抽取』',
+      'chunk.updateSuccess': '切片已更新',
+      'chunk.updateFailed': '更新失败',
+      'chunk.reExtract': '重新抽取',
+      'chunk.reExtractCost': '将消耗 1 次 LLM 抽取调用',
+      'chunk.reExtracting': '抽取中…',
+      'chunk.reExtractHint': '正在抽取实体，请稍候…',
+      'chunk.reExtractSuccess': '重抽取完成，实体已更新',
+      'chunk.reExtractFailed': '重抽取失败',
+      'chunk.reExtractProcessing': '文档正在处理中，请稍后重试',
       'recall.placeholder': '输入测试问题…',
       'recall.run': '开始检索',
       'recall.running': '检索中…',
@@ -823,6 +859,32 @@ window.__ModuleLoader__.load({
       'chunk.entities': 'Entities',
       'chunk.tokens': 'tokens',
       'chunk.edited': 'Edited',
+      'chunk.viewRendered': 'Rendered view',
+      'chunk.viewRaw': 'Raw text',
+      'markdown.copy': 'Copy',
+      'markdown.copied': 'Copied',
+      'markdown.codeTitle': 'Code block',
+      'markdown.wrap': 'Wrap lines',
+      'markdown.unwrap': 'Do not wrap lines',
+      'markdown.footnotes': 'Footnotes',
+      'chunk.playShot': 'Play this shot',
+      'chunk.copyTimecode': 'Copy timecode',
+      'chunk.copiedTimecode': 'Timecode copied',
+      'chunk.copyTimecodeFailed': 'Copy failed',
+      'chunk.frameMissing': 'Keyframe missing',
+      'chunk.playerHint': "Click a shot's timecode or thumbnail to seek and play",
+      'chunk.edit': 'Edit',
+      'chunk.save': 'Save',
+      'chunk.editHint': "Entities and Wiki will not auto-update. Use 'Re-extract' to rebuild entities with new content",
+      'chunk.updateSuccess': 'Chunk updated',
+      'chunk.updateFailed': 'Update failed',
+      'chunk.reExtract': 'Re-extract',
+      'chunk.reExtractCost': 'Costs 1 LLM extraction call',
+      'chunk.reExtracting': 'Extracting…',
+      'chunk.reExtractHint': 'Extracting entities, please wait…',
+      'chunk.reExtractSuccess': 'Re-extract done; entities updated',
+      'chunk.reExtractFailed': 'Re-extract failed',
+      'chunk.reExtractProcessing': 'Document is being processed, please retry later',
       'recall.placeholder': 'Enter a test query…',
       'recall.run': 'Run',
       'recall.running': 'Running…',
@@ -1579,7 +1641,7 @@ window.__ModuleLoader__.load({
           '.hrag-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; text-align: center; }',
           '.hrag-state-title { color: var(--dsw-alias-label-primary); font-size: 14px; line-height: 22px; }',
           '.hrag-state-detail { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; word-break: break-word; }',
-          '.hrag-state-error .hrag-state-title { color: var(--dsw-alias-label-error); }',
+          '.hrag-state-error .hrag-state-title { color: var(--dsw-alias-state-error-primary); }',
           // 文档表骨架（doc-columns 对 Task 1）：滚动区横滚保护列宽（min-w 544px
           // ＝工作台 34rem 同款），内容列撑满余高。10-16 他截图对照修订：顶部
           // 「就绪 N」汇总行撤除，改挂工作台同款底栏统计行（document-stats-row
@@ -1602,7 +1664,7 @@ window.__ModuleLoader__.load({
           '.hrag-docfail { position: absolute; right: 12px; bottom: 12px; z-index: 20; width: 320px; max-width: calc(100% - 24px); overflow: hidden; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-lg); background: var(--dsw-alias-bg-base); box-shadow: var(--dsw-elevation-prominent); }',
           '.hrag-docfail-head { display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 12px; }',
           '.hrag-docfail-summary { display: flex; min-width: 0; flex: 1; align-items: center; gap: 8px; }',
-          '.hrag-docfail-icon { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-error); }',
+          '.hrag-docfail-icon { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-state-error-primary); }',
           '.hrag-docfail-body { min-width: 0; flex: 1; }',
           '.hrag-docfail-name { margin: 0; font-size: 12px; font-weight: 500; color: var(--dsw-alias-label-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
           '.hrag-docfail-reason { margin: 0; font-size: 12px; color: var(--dsw-alias-label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
@@ -1705,7 +1767,7 @@ window.__ModuleLoader__.load({
           '.hrag-doccell-status { overflow: visible; }',
           '.hrag-doccell-time { font-variant-numeric: tabular-nums; }',
           '.hrag-doccell-right { text-align: right; font-variant-numeric: tabular-nums; }',
-          '.hrag-docrow-status-failed { color: var(--dsw-alias-label-error); }',
+          '.hrag-docrow-status-failed { color: var(--dsw-alias-state-error-primary); }',
           // 状态点（10-16 他截图对照补，照工作台 DocumentStatusCell/STATUS_DOT_CLASS）：
           // 6px 圆点悬挂在文字左缘外 10px（＝点 6px＋间隙 4px，与 td px-2 配对，文字左缘
           // 压住表头线）；色＝待解析 tertiary/60 混、在飞 amber-500、就绪 green-500/45
@@ -1717,7 +1779,7 @@ window.__ModuleLoader__.load({
           '.hrag-docdot-idle { background: color-mix(in srgb, var(--dsw-alias-label-tertiary) 60%, transparent); }',
           '.hrag-docdot-active { background: var(--dsw-static-amber-500); }',
           '.hrag-docdot-ready { background: color-mix(in srgb, var(--dsw-static-green-500) 45%, transparent); }',
-          '.hrag-docdot-failed { background: var(--dsw-alias-label-error); }',
+          '.hrag-docdot-failed { background: var(--dsw-alias-state-error-primary); }',
           // 六腿分解（小件批 Task 4）：宿主 Tooltip 暗泡内两列小行（腿名淡、状态全彩；
           // degraded 着琥珀——泡内暗底取 amber-500 档，工作台 text-amber-600/dark:500 同族）。
           '.hrag-pathst { display: flex; flex-direction: column; gap: 4px; }',
@@ -1725,7 +1787,7 @@ window.__ModuleLoader__.load({
           '.hrag-pathst-name { opacity: 0.75; }',
           '.hrag-pathst-degraded { color: var(--dsw-static-amber-500); }',
           '.hrag-notice { padding: 6px 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; word-break: break-word; }',
-          '.hrag-notice-error { color: var(--dsw-alias-label-error); }',
+          '.hrag-notice-error { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-reindex-status { padding: 0 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
           '.hrag-btn-icon { width: 32px; padding: 0; }',
           '.hrag-vec-slot { flex-direction: column; min-height: 0; flex: 1; }',
@@ -1823,7 +1885,7 @@ window.__ModuleLoader__.load({
           '.hrag-wk-lintext { padding: 6px 8px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }',
           '.hrag-wk-tags { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); }',
           '.hrag-crash { display: flex; flex-direction: column; gap: 6px; margin: 8px 2px; padding: 10px 12px; border: 0.5px solid color-mix(in srgb, var(--dsw-alias-state-error-primary) 55%, transparent); border-radius: var(--dsw-radius-md); background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 6%, transparent); }',
-          '.hrag-crash-title { margin: 0; color: var(--dsw-alias-label-error); font-size: 13px; font-weight: 600; }',
+          '.hrag-crash-title { margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 13px; font-weight: 600; }',
           '.hrag-crash-hint { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 1.6; }',
           '.hrag-crash-pre { margin: 0; max-height: 220px; overflow: auto; padding: 8px; border-radius: 6px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-secondary); font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }',
           '.hrag-mm-wrap { position: relative; display: inline-flex; }',
@@ -1858,7 +1920,7 @@ window.__ModuleLoader__.load({
           '.hrag-set-body > * { flex-shrink: 0; }',
           '.hrag-set-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-set-migration { padding: 6px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
-          '.hrag-set-migration-failed { color: var(--dsw-alias-label-error); border-color: color-mix(in srgb, var(--dsw-alias-label-error) 40%, transparent); }',
+          '.hrag-set-migration-failed { color: var(--dsw-alias-state-error-primary); border-color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 40%, transparent); }',
           '.hrag-set-card { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; }',
           '.hrag-set-cardhead { padding: 6px 10px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
           '.hrag-set-cardbody { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 8px 10px; }',
@@ -1910,7 +1972,7 @@ window.__ModuleLoader__.load({
           '.hrag-set-adv-chev-open { transform: rotate(0deg); }',
           '.hrag-set-saverow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }',
           '.hrag-set-savehint { color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
-          '.hrag-set-saveerr { color: var(--dsw-alias-label-error); font-size: 12px; }',
+          '.hrag-set-saveerr { color: var(--dsw-alias-state-error-primary); font-size: 12px; }',
           '.hrag-set-savewarn { color: var(--dsw-alias-label-secondary); font-size: 12px; }',
           '.hrag-secret-wrap { position: relative; width: 100%; min-width: 0; }',
           '.hrag-secret-badge { position: absolute; top: 50%; left: 10px; transform: translateY(-50%); pointer-events: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
@@ -1936,7 +1998,7 @@ window.__ModuleLoader__.load({
           '.hrag-dialog-wide { width: min(480px, 100%); }',
           '.hrag-dialog-title { color: var(--dsw-alias-label-primary); font-size: 14px; font-weight: 600; line-height: 22px; }',
           '.hrag-dialog-body { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }',
-          '.hrag-dialog-error { color: var(--dsw-alias-label-error); font-size: 12px; line-height: 18px; word-break: break-word; }',
+          '.hrag-dialog-error { color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; word-break: break-word; }',
           '.hrag-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 2px; }',
           '.hrag-btn-danger { background: var(--dsw-alias-state-error-primary); color: var(--dsw-alias-label-primary-foreground); }',
           '.hrag-btn-danger:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-danger); }',
@@ -1951,9 +2013,62 @@ window.__ModuleLoader__.load({
           '.hrag-chunkrow-entities { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
           '.hrag-chunkrow-entities-label { flex-shrink: 0; }',
           '.hrag-entitymore { display: inline-flex; padding: 0; border: none; background: transparent; font-family: inherit; cursor: pointer; }',
-          '.hrag-chunkrow-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 0.5px solid var(--dsw-alias-border-l2); padding-top: 6px; }',
+          // 页脚（Task 4 重构，照工作台 chunk-card 页脚）：列向＝度量/动作行＋抽取提示行；
+          // 行内＝度量左、动作族右（动作 margin-left:auto 推右，空度量不塌）。
+          '.hrag-chunkrow-foot { display: flex; flex-direction: column; gap: 4px; border-top: 0.5px solid var(--dsw-alias-border-l2); padding-top: 6px; }',
+          '.hrag-chunkrow-footrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }',
           '.hrag-chunkrow-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-chunkrow-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }',
+          '.hrag-chunkrow-actions .hrag-btn svg { width: 12px; height: 12px; }',
+          '.hrag-chunkrow-extracting { display: flex; align-items: center; gap: 4px; margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          // 就地编辑（Task 4，照工作台卡编辑态）：等宽正文域 min-h 100＋提示行＋保存/取消。
+          '.hrag-chunkrow-edit { display: flex; flex-direction: column; gap: 8px; }',
+          // 照宿主 Textarea 基类 `field-sizing-content`：编辑域随内容增高，100px 只是下限。
+          '.hrag-chunkrow-editarea { width: 100%; min-height: 100px; field-sizing: content; box-sizing: border-box; padding: 8px 10px; border: 0.5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-family: ui-monospace, monospace; font-size: 12px; line-height: 18px; resize: vertical; }',
+          '.hrag-chunkrow-editarea:focus-visible { outline: none; border-color: var(--dsw-alias-state-business-primary); }',
+          '.hrag-chunkrow-edithint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-chunkrow-editbtns { display: flex; gap: 8px; }',
           '.hrag-chunkrow-flash { background: var(--dsw-alias-interactive-bg-hover); }',
+          // 渲染/原始两态钮（②档乙对 Task 2）：宿主 SegmentedControl 直用（居行尾）；
+          // 缺件回退＝outline 边框双钮（工作台 h-7 形态），按下＝宿主 hover 底＋主色。
+          '.hrag-chunkrow-view { display: inline-flex; align-items: center; margin-left: auto; flex-shrink: 0; }',
+          '.hrag-viewseg { display: inline-flex; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; flex-shrink: 0; }',
+          '.hrag-viewseg-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 28px; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); font-family: inherit; cursor: pointer; }',
+          ".hrag-viewseg-btn[aria-pressed='true'] { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }",
+          '.hrag-viewseg-btn:focus-visible { outline: none; box-shadow: inset 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          // 渲染态 Markdown 容器（②档乙对 Task 2）：宿主 MarkdownText 为文档级排版
+          // （--dsw-font-markdown-*：h1 32/16 边距、p 16px 边距）——收进行内 12px 档，
+          // 边距照工作台 chunk-card 紧凑覆盖（p/列表 6、li 2、pre 8、引用 6）；`> div`
+          // 抬一档特异度压宿主 .markdown 规则（无需依赖样式表注入顺序）。
+          '.hrag-chunkrow-render { min-width: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }',
+          '.hrag-chunkrow-render > div { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }',
+          '.hrag-chunkrow-render > div h1 { font-size: 14px; font-weight: 600; margin: 8px 0 4px; }',
+          '.hrag-chunkrow-render > div h2, .hrag-chunkrow-render > div h3 { font-size: 12px; font-weight: 600; margin: 8px 0 4px; }',
+          '.hrag-chunkrow-render > div h4, .hrag-chunkrow-render > div h5, .hrag-chunkrow-render > div h6 { font-size: 12px; font-weight: 500; margin: 8px 0 4px; }',
+          '.hrag-chunkrow-render > div p { margin: 6px 0; }',
+          '.hrag-chunkrow-render > div :where(ul, ol) { margin: 6px 0; }',
+          '.hrag-chunkrow-render > div li:not(:first-child) { margin-top: 2px; }',
+          '.hrag-chunkrow-render > div pre { margin: 8px 0; }',
+          '.hrag-chunkrow-render > div blockquote { margin: 6px 0 0; }',
+          '.hrag-chunkrow-render > div hr { margin: 8px 0; }',
+          '.hrag-chunkrow-render > div :first-child { margin-top: 0; }',
+          '.hrag-chunkrow-render > div :last-child { margin-bottom: 0; }',
+          // 视频镜头条（②档乙对 Task 3，照工作台 VideoShotBar）：缩略图 64×36＋
+          // 等宽时间码芯片整体为 seek 触发器；缺帧＝虚线缺框；复制钮＝iconbare 词汇。
+          '.hrag-shotbar { display: flex; align-items: center; gap: 8px; min-width: 0; }',
+          '.hrag-shotbar-seek { display: inline-flex; align-items: center; gap: 8px; min-width: 0; padding: 0; border: none; background: transparent; font-family: inherit; cursor: pointer; }',
+          '.hrag-shotbar-thumb { width: 64px; height: 36px; flex-shrink: 0; border-radius: var(--dsw-radius-sm); border: 0.5px solid var(--dsw-alias-border-l2); object-fit: cover; display: block; }',
+          '.hrag-shotbar-missing { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 36px; flex-shrink: 0; border: 0.5px dashed var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-sm); color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-shotbar-chip { color: var(--dsw-alias-label-tertiary); font-family: ui-monospace, monospace; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }',
+          '.hrag-shotbar-copy { width: 26px; height: 26px; flex-shrink: 0; }',
+          // 播放头命中镜头行（Task 3）：琥珀环（宿主静态色板 amber-500，照工作台
+          // ring-amber-500/70）——box-shadow 只改边框不占布局、不抢滚动。
+          '.hrag-chunkrow-shot-active { box-shadow: 0 0 0 2px color-mix(in srgb, var(--dsw-static-amber-500) 70%, transparent); }',
+          // 抽屉内嵌播放器（Task 3，照工作台头内视频块）：aspect-video / max-h-56 /
+          // 黑底圆角；提示行 11px 三级字。
+          '.hrag-drawer-video { flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; padding: 8px 12px 10px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-drawer-video-el { display: block; width: 100%; max-height: 224px; aspect-ratio: 16 / 9; background: #000; border-radius: var(--dsw-radius-md); }',
+          '.hrag-drawer-video-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
           // 刻度轨（A⑫ 照工作台 chunk-tick-rail）：叠加层不入滚动流；行高=间距 26，
           // 行槽与刻度槽逐一对齐；hover/active 用 :not() 守护（active 不被 hover 压色）。
           '.hrag-tickrail { position: absolute; top: 0; bottom: 0; right: 4px; z-index: 10; display: flex; width: 40px; align-items: center; justify-content: flex-end; pointer-events: none; }',
@@ -1974,11 +2089,11 @@ window.__ModuleLoader__.load({
           '.hrag-chip { flex-shrink: 0; padding: 0 6px; height: 18px; display: inline-flex; align-items: center; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-sm); color: var(--dsw-alias-label-tertiary); font-size: 11px; white-space: nowrap; }',
           '.hrag-dialog-section { display: flex; flex-direction: column; gap: 4px; }',
           '.hrag-dialog-section-title { font-size: 12px; font-weight: 600; color: var(--dsw-alias-label-secondary); }',
-          '.hrag-dialog-section-title-error { color: var(--dsw-alias-label-error); }',
+          '.hrag-dialog-section-title-error { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-dialog-section-title-warn { color: var(--dsw-alias-state-warn-primary); }',
           '.hrag-dialog-badges { display: flex; flex-wrap: wrap; gap: 4px; }',
           '.hrag-badge { padding: 0 6px; height: 20px; display: inline-flex; align-items: center; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-sm); font-size: 11px; color: var(--dsw-alias-label-secondary); }',
-          '.hrag-badge-error { border-color: var(--dsw-alias-label-error); color: var(--dsw-alias-label-error); }',
+          '.hrag-badge-error { border-color: var(--dsw-alias-state-error-primary); color: var(--dsw-alias-state-error-primary); }',
           '.hrag-badge-warn { border-color: var(--dsw-alias-state-warn-primary); color: var(--dsw-alias-state-warn-primary); }',
           '.hrag-recall-bar { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 2px; }',
           '.hrag-input { flex: 1; min-width: 0; height: 28px; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; }',
@@ -2069,7 +2184,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-run:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
           '.hrag-ev-chev { height: 26px; padding: 0 6px; font-size: 11px; border-radius: 0 var(--dsw-radius-sm) var(--dsw-radius-sm) 0; border: none; border-left: 0.5px solid color-mix(in srgb, var(--dsw-alias-label-primary) 10%, transparent); white-space: nowrap; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }',
           '.hrag-ev-chev:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
-          '.hrag-ev-chev-armed { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-chev-armed { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-scroll { display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1; overflow-y: auto; padding-right: 2px; }',
           '.hrag-ev-card { background: var(--dsw-alias-bg-layer-1); border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; flex-shrink: 0; }',
           '.hrag-ev-cardhead { display: flex; align-items: center; gap: 6px; padding: 6px 10px; color: var(--dsw-alias-label-secondary); font-size: 12px; min-width: 0; }',
@@ -2082,7 +2197,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-banner { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; }',
           '.hrag-ev-banner-idle { flex-direction: row; align-items: center; }',
           '.hrag-ev-slottext { font-size: 13px; color: var(--dsw-alias-label-secondary); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }',
-          '.hrag-ev-slottext-failed { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-slottext-failed { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-banner-side { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }',
           '.hrag-ev-progrow { display: flex; align-items: center; gap: 10px; }',
           '.hrag-ev-track { position: relative; flex: 1; min-width: 0; height: 6px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); overflow: hidden; }',
@@ -2092,13 +2207,13 @@ window.__ModuleLoader__.load({
           '.hrag-ev-eta { font-size: 11px; color: var(--dsw-alias-label-tertiary); flex-shrink: 0; }',
           '.hrag-ev-logrow { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--dsw-alias-label-tertiary); min-width: 0; }',
           '.hrag-ev-logtext { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; animation: hrag-fade-in 200ms ease; }',
-          '.hrag-ev-failedchip { flex-shrink: 0; background: color-mix(in srgb, var(--dsw-alias-label-error) 12%, transparent); color: var(--dsw-alias-label-error); border-radius: 4px; padding: 0 5px; font-size: 10px; }',
+          '.hrag-ev-failedchip { flex-shrink: 0; background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 12%, transparent); color: var(--dsw-alias-state-error-primary); border-radius: 4px; padding: 0 5px; font-size: 10px; }',
           '.hrag-ev-muted { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-ev-tabnums { font-variant-numeric: tabular-nums; }',
           '.hrag-ev-hint { border: 1px dashed var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); padding: 14px 10px; text-align: center; font-size: 12px; color: var(--dsw-alias-label-tertiary); }',
-          '.hrag-ev-hint-error { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-hint-error { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-badge { display: inline-flex; align-items: center; gap: 4px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; padding: 0 6px; font-size: 10px; line-height: 16px; color: var(--dsw-alias-label-secondary); white-space: nowrap; }',
-          '.hrag-ev-badge-danger { border-color: color-mix(in srgb, var(--dsw-alias-label-error) 40%, transparent); color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-badge-danger { border-color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 40%, transparent); color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-badge-amber { border-color: color-mix(in srgb, #f59e0b 45%, transparent); color: #b45309; }',
           '.hrag-ev-badge-baseline { border-color: color-mix(in srgb, #f59e0b 45%, transparent); color: #b45309; }',
           '.hrag-ev-capsule { display: inline-flex; align-items: center; border-radius: 6px; padding: 1px 6px; }',
@@ -2122,7 +2237,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-time-regression { background: color-mix(in srgb, #ef4444 10%, transparent); color: #b91c1c; }',
           '.hrag-ev-time-baseline { background: color-mix(in srgb, #f59e0b 12%, transparent); color: #b45309; }',
           '.hrag-ev-status { font-size: 12px; }',
-          '.hrag-ev-status-error { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-status-error { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-status-skipped, .hrag-ev-status-cancelled { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-ev-recall { display: inline-flex; align-items: center; gap: 5px; justify-content: flex-end; }',
           '.hrag-ev-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }',
@@ -2153,7 +2268,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-menu-item { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; padding: 5px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
           '.hrag-ev-menu-item:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-ev-menu-item:disabled { opacity: 0.5; cursor: not-allowed; }',
-          '.hrag-ev-menu-item-danger { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-menu-item-danger { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-menu-check { margin-left: auto; }',
           '.hrag-ev-menu-sep { height: 0.5px; background: var(--dsw-alias-border-l2); margin: 4px 2px; }',
           '.hrag-ev-menu-note { margin-left: auto; color: var(--dsw-alias-label-tertiary); font-size: 10px; padding-left: 8px; }',
@@ -2184,7 +2299,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-tip-head { font-weight: 600; color: var(--dsw-alias-label-primary); margin-bottom: 2px; }',
           '.hrag-ev-tip-row { display: flex; align-items: center; gap: 4px; }',
           '.hrag-ev-tip-delta { opacity: 0.6; }',
-          '.hrag-ev-tip-regression { margin-top: 2px; color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-tip-regression { margin-top: 2px; color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-tip-meta { margin-top: 2px; opacity: 0.7; }',
           '.hrag-ev-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }',
           '.hrag-ev-legend-item { display: inline-flex; align-items: center; gap: 5px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11px; cursor: pointer; padding: 1px 2px; font-family: inherit; }',
@@ -2217,7 +2332,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-textarea { min-height: 52px; resize: vertical; padding: 6px 8px; font-size: 12px; font-family: inherit; }',
           '.hrag-ev-select { height: 28px; font-size: 12px; padding: 0 6px; }',
           '.hrag-ev-formnote { margin: 0; font-size: 11px; }',
-          '.hrag-ev-anchor { display: flex; flex-direction: column; gap: 6px; border: 0.5px solid color-mix(in srgb, var(--dsw-alias-label-error) 40%, transparent); background: color-mix(in srgb, var(--dsw-alias-label-error) 8%, transparent); color: var(--dsw-alias-label-error); border-radius: 8px; padding: 8px 10px; font-size: 12px; }',
+          '.hrag-ev-anchor { display: flex; flex-direction: column; gap: 6px; border: 0.5px solid color-mix(in srgb, var(--dsw-alias-state-error-primary) 40%, transparent); background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 8%, transparent); color: var(--dsw-alias-state-error-primary); border-radius: 8px; padding: 8px 10px; font-size: 12px; }',
           '.hrag-ev-anchor p { margin: 0; }',
           '.hrag-ev-anchor-title { font-weight: 600; }',
           '.hrag-ev-anchor-btn { align-self: flex-start; border: 0.5px solid color-mix(in srgb, #f59e0b 45%, transparent); background: color-mix(in srgb, #f59e0b 15%, transparent); color: #b45309; border-radius: var(--dsw-radius-sm); padding: 3px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }',
@@ -2228,7 +2343,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-anchorchunk-trigger { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; border: none; background: transparent; color: var(--dsw-alias-label-primary); cursor: pointer; padding: 2px 0; text-align: left; width: 100%; font-family: inherit; }',
           '.hrag-ev-anchorchunk-preview { font-size: 11px; color: var(--dsw-alias-label-tertiary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-left: 16px; }',
           '.hrag-ev-anchorchunk-body { font-size: 11px; color: var(--dsw-alias-label-secondary); white-space: pre-wrap; word-break: break-word; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 6px; padding: 6px 8px; max-height: 180px; overflow-y: auto; margin-left: 16px; }',
-          '.hrag-ev-danglingrow { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-danglingrow { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-caret { display: inline-block; font-size: 10px; color: var(--dsw-alias-label-tertiary); transition: transform 120ms ease; flex-shrink: 0; }',
           '.hrag-ev-caret-open { transform: rotate(180deg); }',
           '.hrag-ev-editgroup { border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; }',
@@ -2257,7 +2372,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-drawer-qtitle { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }',
           '.hrag-ev-drawerbody { display: flex; flex-direction: column; gap: 10px; }',
           '.hrag-ev-footer { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; }',
-          '.hrag-ev-danger-text { color: var(--dsw-alias-label-error); }',
+          '.hrag-ev-danger-text { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-pre { margin: 0; font-size: 12px; white-space: pre-wrap; word-break: break-word; }',
           // 召回补面（存为考题）：行勾选与底栏。
           '.hrag-hitrow-row { display: flex; align-items: stretch; gap: 4px; min-width: 0; }',
@@ -3443,6 +3558,491 @@ window.__ModuleLoader__.load({
      * jump-to-chunk by expanding the limit + flash highlight — plus per-chunk
      * delete behind the delete-preview dialog (spec §6 keeps direct windowing
      * out for now). Opens over the panel from doc rows / recall hits. */
+    // ── 切片面渲染段（②档乙对 Task 2）：行渲染器＋图片通道 ─────────────────
+    /** 宿主 MarkdownText 的 chrome 字典（照宿主 markdownLabels 六键；t 换 locale 即新对象）。 */
+    function markdownLabelsFor(t) {
+      return {
+        code: {
+          copyLabel: t('markdown.copy'),
+          copiedLabel: t('markdown.copied'),
+          toolbarLabels: {
+            codeLabel: t('markdown.codeTitle'),
+            wrapLabel: t('markdown.wrap'),
+            unwrapLabel: t('markdown.unwrap'),
+          },
+        },
+        footnotes: t('markdown.footnotes'),
+      }
+    }
+
+    /** 文本内相对图片引用扫描（渲染态图片通道预取表）：inline `![alt](dest)`（含
+        `<...>` 角括号形）与引用定义 `[label]: dest` 两类 dest；相对＝无 scheme、非
+        `/` 起始（照工作台 ChunkImage 判据）。 */
+    function relativeImageRefs(text) {
+      const refs = new Set()
+      const push = (dest) => {
+        if (typeof dest !== 'string') return
+        const trimmed = dest.trim()
+        if (!trimmed || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(trimmed)) return
+        refs.add(trimmed)
+      }
+      const src = String(text || '')
+      const inline = /!\[[^\]]*\]\(\s*(<[^>]*>|[^)\s]+)/g
+      let match
+      while ((match = inline.exec(src)) !== null) {
+        const dest = match[1]
+        push(dest.startsWith('<') ? dest.slice(1, -1) : dest)
+      }
+      const definition = /^ {0,3}\[[^\]]+\]:[ \t]*(<[^>]*>|\S+)/gm
+      while ((match = definition.exec(src)) !== null) {
+        const dest = match[1]
+        push(dest.startsWith('<') ? dest.slice(1, -1) : dest)
+      }
+      return Array.from(refs)
+    }
+
+    /** 文档资产相对 URL（照工作台 documentFileUrl）：走 host 半 documentFile 中继回门，
+        页 origin 直载；ref 整体作 query 值编码（host 半按段编码回斜杠）。 */
+    function documentFileRelayUrl(kbId, docId, ref) {
+      return (
+        PROXY_ROUTE +
+        '/documentFile?kb_id=' + encodeURIComponent(kbId) +
+        '&doc_id=' + encodeURIComponent(docId) +
+        '&ref=' + encodeURIComponent(ref)
+      )
+    }
+
+    /** 关键帧相对 URL（②档乙对 Task 3）：直载（原生 img 经壳全量转发），非预取通道。 */
+    function shotFrameRelayUrl(kbId, docId, shotIndex) {
+      return (
+        PROXY_ROUTE +
+        '/shotFrame?kb_id=' + encodeURIComponent(kbId) +
+        '&doc_id=' + encodeURIComponent(docId) +
+        '&shot_index=' + String(shotIndex)
+      )
+    }
+
+    /** 视频流相对 URL（②档乙对 Task 3）：原生 <video> 直载，Range 由壳透传（206 实测）。 */
+    function videoStreamRelayUrl(kbId, docId) {
+      return (
+        PROXY_ROUTE +
+        '/videoStream?kb_id=' + encodeURIComponent(kbId) +
+        '&doc_id=' + encodeURIComponent(docId)
+      )
+    }
+
+    /** 镜头时间码 HH:MM:SS（照工作台 formatShotTimecode，与后端镜头卡 format_timecode 同口径：去毫秒）。 */
+    function formatShotTimecode(ms) {
+      const totalSeconds = Math.floor(ms / 1000)
+      const hours = Math.floor(totalSeconds / 3600)
+      const minutes = Math.floor((totalSeconds % 3600) / 60)
+      const seconds = totalSeconds % 60
+      const pad = (value) => String(value).padStart(2, '0')
+      return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds)
+    }
+
+    /** 镜头时间码区间 HH:MM:SS–HH:MM:SS（en dash，照工作台 formatTimecodeRange）。 */
+    function formatTimecodeRange(startMs, endMs) {
+      return formatShotTimecode(startMs) + '–' + formatShotTimecode(endMs)
+    }
+
+    /** 渲染/原始两态钮（②档乙对 Task 2，照工作台 chunk-card 头行）：宿主
+        SegmentedControl（icon 段）直用；缺件回退自绘 outline 双钮。 */
+    function ChunkViewToggle({ t, chunkId, value, onChange }) {
+      const options = [
+        { value: 'rendered', label: dshEyeIcon(), title: t('chunk.viewRendered') },
+        { value: 'raw', label: dshCodeIcon(), title: t('chunk.viewRaw') },
+      ]
+      if (HostSegmentedControl) {
+        return h(
+          'span',
+          { className: 'hrag-chunkrow-view' },
+          h(HostSegmentedControl, {
+            id: 'hrag-chunkview-' + String(chunkId).replace(/[^a-zA-Z0-9_-]/g, '-'),
+            value,
+            options,
+            onChange,
+          }),
+        )
+      }
+      return h(
+        'span',
+        { className: 'hrag-chunkrow-view' },
+        h(
+          'span',
+          { className: 'hrag-viewseg', role: 'group' },
+          options.map((option) =>
+            h(
+              'button',
+              {
+                key: option.value,
+                type: 'button',
+                className: 'hrag-viewseg-btn',
+                'aria-pressed': value === option.value,
+                'aria-label': option.title,
+                title: option.title,
+                onClick: () => {
+                  if (value !== option.value) onChange(option.value)
+                },
+              },
+              option.label,
+            ),
+          ),
+        ),
+      )
+    }
+
+    /** 视频镜头条（②档乙对 Task 3，照工作台 VideoShotBar）：缩略图＋`#K · 时间码`芯片
+        整体为 seek 触发器（点击 → 播放器跳到 start_ms 并播放）；缺帧降级虚线缺框；
+        复制钮走宿主 writeClipboard（缺件回退 navigator.clipboard），toast 照工作台文案。 */
+    function VideoShotBar({ t, kbId, docId, chunk, onSeek }) {
+      const [frameFailed, setFrameFailed] = React.useState(false)
+      const shotIndex = chunk.shot_index == null ? 0 : chunk.shot_index
+      const startMs = chunk.start_ms == null ? 0 : chunk.start_ms
+      const endMs = chunk.end_ms == null ? 0 : chunk.end_ms
+      const timecode = formatTimecodeRange(startMs, endMs)
+      const hasFrame = Boolean(chunk.frame_url) && !frameFailed
+      const handleCopy = async () => {
+        try {
+          let ok = false
+          if (HostWriteClipboard) {
+            ok = await HostWriteClipboard(timecode)
+          } else {
+            const clipboard = navigator.clipboard
+            if (clipboard && typeof clipboard.writeText === 'function') {
+              ok = await clipboard.writeText(timecode).then(() => true, () => false)
+            }
+          }
+          if (ok) showToast(t('chunk.copiedTimecode'))
+          else showToast(t('chunk.copyTimecodeFailed'), { error: true })
+        } catch (cause) {
+          showToast(t('chunk.copyTimecodeFailed'), { error: true })
+        }
+      }
+      return h(
+        'div',
+        { className: 'hrag-shotbar' },
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'hrag-shotbar-seek',
+            'aria-label': t('chunk.playShot'),
+            title: t('chunk.playShot'),
+            onClick: () => onSeek(startMs),
+          },
+          hasFrame
+            ? h('img', {
+                className: 'hrag-shotbar-thumb',
+                src: shotFrameRelayUrl(kbId, docId, shotIndex),
+                alt: '',
+                loading: 'lazy',
+                decoding: 'async',
+                onError: () => setFrameFailed(true),
+              })
+            : h('span', { className: 'hrag-shotbar-missing', title: t('chunk.frameMissing') }, dshImageOffIcon()),
+          h(
+            'span',
+            { className: 'hrag-shotbar-chip', title: t('chunk.timecode') },
+            '#' + String(shotIndex + 1) + ' · ' + timecode,
+          ),
+        ),
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'hrag-iconbare hrag-shotbar-copy',
+            'aria-label': t('chunk.copyTimecode'),
+            title: t('chunk.copyTimecode'),
+            onClick: () => {
+              void handleCopy()
+            },
+          },
+          dshCopyIcon(),
+        ),
+      )
+    }
+
+    /** 编辑域高度：宿主 Textarea 基类带 `field-sizing-content`（CSS 已照抄）；
+        老内核不认时退回按 scrollHeight 撑开，避免内容锁在 100px 里滚动。 */
+    function growTextarea(el) {
+      if (!el) return
+      const supported =
+        typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('field-sizing', 'content')
+      if (supported) return
+      el.style.height = 'auto'
+      el.style.height = el.scrollHeight + 'px'
+    }
+
+    /** 切片行（②档乙对 Task 2 起自治件，照工作台 chunk-card）：自持视图态与图片
+        blob 映射；抽屉只传数据与回调（行内联渲染退役）。 */
+    function ChunkRow({
+      t,
+      kbId,
+      docId,
+      chunk,
+      flash,
+      shotActive,
+      busy,
+      expanded,
+      reExtracting,
+      reExtractDisabled,
+      onExpand,
+      onDelete,
+      onEdit,
+      onReExtract,
+      onSeekShot,
+      rowRef,
+    }) {
+      const [viewMode, setViewMode] = React.useState('rendered')
+      const [imageTick, setImageTick] = React.useState(0)
+      const imageUrlsRef = React.useRef(new Map())
+      // 就地编辑（Task 4，照工作台 chunk-card）：卡自治编辑态＋原始文本暂存；
+      // 保存中转圈禁入，失败停留编辑态（抽屉层已 toast）。
+      const [isEditing, setIsEditing] = React.useState(false)
+      const [editedText, setEditedText] = React.useState(chunk.text)
+      const [isSaving, setIsSaving] = React.useState(false)
+
+      // 图片通道（D1 甲）：渲染态扫描相对引用 → documentFile 预取 → blob URL 映射 →
+      // pathImages.resolve 同步查表；切原始/卸载/文本变更即 revoke（blob 生命周期
+      // 随行；失败无映射 → 宿主落 alt）。缺件（无 MarkdownText）不预取。
+      React.useEffect(() => {
+        if (!HostMarkdownText || viewMode !== 'rendered') return undefined
+        const refs = relativeImageRefs(chunk.text)
+        if (refs.length === 0) return undefined
+        let cancelled = false
+        const created = []
+        const prefetch = async () => {
+          for (const ref of refs) {
+            if (imageUrlsRef.current.has(ref)) continue
+            try {
+              const response = await fetch(documentFileRelayUrl(kbId, docId, ref))
+              if (!response.ok) continue
+              const blob = await response.blob()
+              if (cancelled) return
+              const url = URL.createObjectURL(blob)
+              created.push(url)
+              imageUrlsRef.current.set(ref, url)
+              setImageTick((value) => value + 1)
+            } catch (cause) {
+              /* 缺图/网络失败 → 无映射 → alt 面（spec §6 登记） */
+            }
+          }
+        }
+        prefetch()
+        return () => {
+          cancelled = true
+          for (const url of created) URL.revokeObjectURL(url)
+          for (const ref of refs) imageUrlsRef.current.delete(ref)
+        }
+      }, [kbId, docId, chunk.text, viewMode])
+
+      // pathImages 身份随 blob 到达换新（MarkdownText 为 memo：同身份不重渲，
+      // 新映射渲不进旧元素）；resolve 同步查表、未到达即 undefined。
+      const pathImages = React.useMemo(
+        () => ({ resolve: (dest) => imageUrlsRef.current.get(String(dest || '').trim()) }),
+        [imageTick],
+      )
+      const labels = React.useMemo(() => markdownLabelsFor(t), [t])
+
+      const handleSave = async () => {
+        if (!onEdit) return
+        setIsSaving(true)
+        try {
+          await onEdit(chunk.chunk_id, editedText)
+          setIsEditing(false)
+        } catch (cause) {
+          /* 停留编辑态：失败不落新文（照工作台），文案由抽屉层 toast */
+        } finally {
+          setIsSaving(false)
+        }
+      }
+
+      const handleCancel = () => {
+        setEditedText(chunk.text)
+        setIsEditing(false)
+      }
+
+      const timecode = chunkTimecode(chunk)
+      const entities = Array.isArray(chunk.entities) ? chunk.entities : []
+      const badges = entityBadges(entities, expanded)
+      const isVideo = chunk.media === 'video'
+      // 抽取出力面（Task 4，照工作台）：本行在飞或后端 pending → 转圈＋「抽取中…」＋
+      // 提示行；重抽钮每文档互斥（在飞禁余卡——按工作台 prop 文档意图实现，其字面
+      // `??` 令 reExtractDisabled 失效，此处取 OR）。
+      const extracting = Boolean(reExtracting) || chunk.extract_status === 'pending'
+      return h(
+        'div',
+        {
+          className:
+            'hrag-chunkrow' +
+            (flash ? ' hrag-chunkrow-flash' : '') +
+            (shotActive ? ' hrag-chunkrow-shot-active' : ''),
+          ref: rowRef,
+        },
+        // 镜头条（Task 3）：视频行顶置（照工作台镜头条在卡上方）；播放头命中行由抽屉
+        // 经 shotActive 传回（琥珀环，只改边框不抢滚动）。
+        isVideo ? h(VideoShotBar, { t, kbId, docId, chunk, onSeek: onSeekShot }) : null,
+        h(
+          'div',
+          { className: 'hrag-chunkrow-top' },
+          h('span', { className: 'hrag-chunkrow-idx' }, '#' + String(Number(chunk.chunk_index) + 1)),
+          h(
+            'span',
+            { className: 'hrag-chunkrow-path' },
+            Array.isArray(chunk.heading_path) && chunk.heading_path.length > 0 ? chunk.heading_path.join(' / ') : '',
+          ),
+          timecode ? h('span', { className: 'hrag-textchip', title: t('chunk.timecode') }, timecode) : null,
+          chunk.page != null
+            ? h('span', { className: 'hrag-textchip' }, t('chunk.page') + ' ' + String(chunk.page))
+            : null,
+          // 两态钮编辑态隐藏（照工作台 chunk-card：`{!isEditing && <ToggleGroup .../>}`）。
+          isEditing ? null : h(ChunkViewToggle, { t, chunkId: chunk.chunk_id, value: viewMode, onChange: setViewMode }),
+        ),
+        isEditing
+          ? h(
+              'div',
+              { className: 'hrag-chunkrow-edit' },
+              h('textarea', {
+                className: 'hrag-chunkrow-editarea',
+                ref: growTextarea,
+                value: editedText,
+                onChange: (event) => {
+                  growTextarea(event.currentTarget)
+                  setEditedText(event.target.value)
+                },
+              }),
+              h('p', { className: 'hrag-chunkrow-edithint' }, t('chunk.editHint')),
+              h(
+                'div',
+                { className: 'hrag-chunkrow-editbtns' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-sm hrag-btn-primary',
+                    disabled: isSaving || !String(editedText).trim(),
+                    onClick: handleSave,
+                  },
+                  t('chunk.save'),
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-sm hrag-btn-outline',
+                    disabled: isSaving,
+                    onClick: handleCancel,
+                  },
+                  t('chunk.cancel'),
+                ),
+              ),
+            )
+          : viewMode === 'rendered' && HostMarkdownText
+            ? h(
+                'div',
+                { className: 'hrag-chunkrow-render' },
+                h(HostMarkdownText, { text: String(chunk.text || ''), labels, pathImages, variant: 'body' }),
+              )
+            : h('div', { className: 'hrag-chunkrow-text' }, String(chunk.text || '')),
+        !isEditing && entities.length > 0
+          ? h(
+              'span',
+              { className: 'hrag-chunkrow-entities' },
+              h('span', { className: 'hrag-chunkrow-entities-label' }, t('chunk.entities') + ':'),
+              badges.visible.map((entity) =>
+                h('span', { className: 'hrag-textchip hrag-headbadge-soft', key: entity }, String(entity)),
+              ),
+              badges.hidden > 0
+                ? h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'hrag-entitymore',
+                      title: entities.slice(ENTITY_CAP).join(', '),
+                      onClick: () => onExpand(chunk.chunk_id),
+                    },
+                    h('span', { className: 'hrag-textchip' }, '+' + String(badges.hidden)),
+                  )
+                : null,
+            )
+          : null,
+        // 页脚（照工作台 chunk-card :245-300）：度量左（tokens/已编辑；页码在顶行 chip 位
+        // 照旧）、动作右（编辑/重新抽取/删除——Task 4 起动作族入页脚，删除钮随迁）；
+        // 抽取在飞/后端 pending 时下方挂提示行。编辑态整页脚隐藏（照工作台）。
+        !isEditing
+          ? h(
+              'div',
+              { className: 'hrag-chunkrow-foot' },
+              h(
+                'div',
+                { className: 'hrag-chunkrow-footrow' },
+                h(
+                  'span',
+                  { className: 'hrag-chunkrow-meta' },
+                  chunk.token_count != null
+                    ? h('span', null, String(chunk.token_count) + ' ' + t('chunk.tokens'))
+                    : null,
+                  chunk.last_edited_at ? h('span', { className: 'hrag-textchip' }, t('chunk.edited')) : null,
+                ),
+                h(
+                  'span',
+                  { className: 'hrag-chunkrow-actions' },
+                  onEdit
+                    ? h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'hrag-btn hrag-btn-sm',
+                          disabled: busy || Boolean(reExtracting),
+                          onClick: () => setIsEditing(true),
+                        },
+                        dshEditIcon(),
+                        t('chunk.edit'),
+                      )
+                    : null,
+                  onReExtract
+                    ? h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'hrag-btn hrag-btn-sm',
+                          title: t('chunk.reExtractCost'),
+                          disabled: busy || Boolean(reExtracting) || Boolean(reExtractDisabled),
+                          onClick: () => onReExtract(chunk.chunk_id),
+                        },
+                        extracting ? stateDot(12) : dshRefreshIcon(),
+                        extracting ? t('chunk.reExtracting') : t('chunk.reExtract'),
+                      )
+                    : null,
+                  onDelete
+                    ? h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'hrag-btn hrag-btn-sm',
+                          disabled: busy || Boolean(reExtracting),
+                          onClick: () => onDelete(chunk),
+                        },
+                        dshTrashIcon(),
+                        t('chunk.delete'),
+                      )
+                    : null,
+                ),
+              ),
+              extracting
+                ? h(
+                    'p',
+                    { className: 'hrag-chunkrow-extracting' },
+                    stateDot(12),
+                    t('chunk.reExtractHint'),
+                  )
+                : null,
+            )
+          : null,
+      )
+    }
+
     function ChunkDrawer({ t, kbId, doc, refreshToken, focusChunkId, onClose }) {
       const [phase, setPhase] = React.useState('loading')
       const [items, setItems] = React.useState([])
@@ -3459,6 +4059,9 @@ window.__ModuleLoader__.load({
       // 实体徽章 +N 展开集（小件批 Task 6）：按 chunk_id 记展开态（工作台为每卡
       // 自治 state；插件行内联渲染，故由抽屉统一持有）。
       const [expandedEntities, setExpandedEntities] = React.useState(() => new Set())
+      // 重抽在飞（Task 4，照工作台 chunk-drawer）：每文档互斥——在飞禁余卡；也是
+      // 条件轮询的第二源（服务端置 pending 亦覆盖，双保险）。
+      const [reExtractingChunkId, setReExtractingChunkId] = React.useState(null)
       const rowRefs = React.useRef({})
       const hasDataRef = React.useRef(false)
       // Focus hand-off guard (workbench focusedIdRef parity): marks the focus
@@ -3466,6 +4069,11 @@ window.__ModuleLoader__.load({
       const focusedIdRef = React.useRef(null)
       const pendingJumpRef = React.useRef(null)
       const bodyRef = React.useRef(null)
+      // 内嵌播放器（②档乙对 Task 3，照工作台 chunk-drawer）：抽屉单例 <video>，
+      // 仅视频文档渲染；播放头命中行高亮 + 引用定位暂停 seek。
+      const videoRef = React.useRef(null)
+      const pendingPausedSeekRef = React.useRef(null)
+      const [activeShotIndex, setActiveShotIndex] = React.useState(null)
 
       const docId = doc ? doc.id : null
 
@@ -3494,9 +4102,9 @@ window.__ModuleLoader__.load({
         load()
       }, [load, refreshToken])
 
-      // 抽取进行中条件轮询（照工作台 refetchInterval）：pending 存在即武装
+      // 抽取进行中条件轮询（照工作台 refetchInterval）：pending 存在或重抽在飞即武装
       // 3s 轮询，全落定自动停（谓词变化才换 interval，节拍不被每次回包重置）。
-      const pendingExtract = hasPendingExtraction(items)
+      const pendingExtract = hasPendingExtraction(items) || reExtractingChunkId !== null
       React.useEffect(() => {
         if (phase !== 'ready' || !pendingExtract) return undefined
         const timer = window.setInterval(load, CHUNK_POLL_MS)
@@ -3511,7 +4119,10 @@ window.__ModuleLoader__.load({
         setLimit(CHUNK_PAGE_SIZE)
         setActiveIndex(0)
         setExpandedEntities(new Set())
+        setReExtractingChunkId(null)
         pendingJumpRef.current = null
+        pendingPausedSeekRef.current = null
+        setActiveShotIndex(null)
       }, [kbId, docId])
 
       // Escape closes the drawer (the preview dialog owns Escape while open).
@@ -3553,11 +4164,56 @@ window.__ModuleLoader__.load({
           focusedIdRef.current = focusChunkId
           // 头部「当前 #K」同步置位：smooth 滚动落定前先显示正确位次（照工作台）。
           setActiveIndex(position)
+          // 引用闪环定位：视频镜头把播放器载到 start_ms 但保持暂停（不惊喜自动播，照工作台）；
+          // 播放器可能尚未挂载 → 暂存，attachVideo 补 seek。
+          const target = items[position]
+          if (target && target.media === 'video') {
+            const seekTo = (target.start_ms == null ? 0 : target.start_ms) / 1000
+            if (videoRef.current) videoRef.current.currentTime = seekTo
+            else pendingPausedSeekRef.current = seekTo
+          }
           flashAndCenter(focusChunkId)
         } else if (items.length < total && limit < total) {
           setLimit((value) => Math.min(total, value + CHUNK_PAGE_SIZE))
         }
       }, [focusChunkId, phase, items, total, limit])
+
+      // ── 视频播放器（Task 3，照工作台 chunk-drawer）：单例 video 挂载回调（补暂存
+      // 暂停 seek）＋镜头条 seek 播放（点缩略图/芯片 → 跳到起点并播放）＋timeupdate
+      // 命中镜头行高亮（浏览器 ~4Hz 节流；仅变化时 setState，只改边框不抢滚动）。──
+      const attachVideo = React.useCallback((node) => {
+        videoRef.current = node
+        if (node && pendingPausedSeekRef.current != null) {
+          node.currentTime = pendingPausedSeekRef.current
+          pendingPausedSeekRef.current = null
+        }
+      }, [])
+
+      const seekShot = (startMs) => {
+        const video = videoRef.current
+        if (!video) return
+        video.currentTime = startMs / 1000
+        if (typeof video.play === 'function') {
+          const played = video.play()
+          if (played && typeof played.catch === 'function') played.catch(() => {})
+        }
+      }
+
+      const handleTimeUpdate = () => {
+        const video = videoRef.current
+        if (!video) return
+        const ms = video.currentTime * 1000
+        const active = items.find(
+          (chunk) =>
+            chunk.media === 'video' &&
+            chunk.start_ms != null &&
+            chunk.end_ms != null &&
+            ms >= chunk.start_ms &&
+            ms < chunk.end_ms,
+        )
+        const next = active && active.shot_index != null ? active.shot_index : null
+        setActiveShotIndex((prev) => (prev === next ? prev : next))
+      }
 
       // ── 切片导航（A⑫ 照工作台 2026-09-05 切片导航）：位置序跳片 + 滚动打卡 ──
       // active = 顶部越过视口上 35% 带的最后一张卡；rAF 节流 scroll 监听挂抽屉主体。
@@ -3646,7 +4302,41 @@ window.__ModuleLoader__.load({
           })
       }
 
+      // 就地编辑保存（Task 4，照工作台 handleEditChunk）：成功 toast＋reload（行元数据
+      // 刷出「已编辑」徽章/新 tokens）；失败 toast 后原样抛出——行件停留编辑态。
+      const handleEditChunk = async (chunkId, newText) => {
+        try {
+          await callOp('updateChunk', { kb_id: kbId, chunk_id: chunkId, body: { text: newText } })
+          showToast(t('chunk.updateSuccess'))
+          load()
+        } catch (error) {
+          showToast(errorDetail(error) || t('chunk.updateFailed'), { error: true })
+          throw error
+        }
+      }
+
+      // 重抽（Task 4，照工作台 handleReExtractChunk）：在飞禁余卡（每文档互斥）；
+      // 成功 toast＋reload；409（文档非终态）走警告 toast（宿主 Toast 无 warn 档 ⇒
+      // 中性色），其余错误红字。
+      const handleReExtractChunk = async (chunkId) => {
+        setReExtractingChunkId(chunkId)
+        try {
+          await callOp('reExtractChunk', { kb_id: kbId, chunk_id: chunkId })
+          showToast(t('chunk.reExtractSuccess'))
+          load()
+        } catch (error) {
+          const message = errorDetail(error) || t('chunk.reExtractFailed')
+          if (String(message).includes('being processed')) showToast(t('chunk.reExtractProcessing'))
+          else showToast(message, { error: true })
+        } finally {
+          setReExtractingChunkId(null)
+        }
+      }
+
       if (!doc) return null
+
+      // 视频文档判据（Task 3）：任一切片带 media==='video'（后端 chunks 端点注入）。
+      const hasVideo = items.some((chunk) => chunk && chunk.media === 'video')
 
       let body
       if (phase === 'loading') {
@@ -3668,91 +4358,35 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'hrag-docs' },
-            items.map((chunk) => {
-              const timecode = chunkTimecode(chunk)
-              // 实体徽章（小件批 Task 6，照工作台 chunk-card :223-243）：cap 6＋
-              // +N 展开钮（title 列其余名；展开后全量、+N 消失）；无实体不渲。
-              const entities = Array.isArray(chunk.entities) ? chunk.entities : []
-              const badges = entityBadges(entities, expandedEntities.has(chunk.chunk_id))
-              return h(
-                'div',
-                {
-                  className: flashId === chunk.chunk_id ? 'hrag-chunkrow hrag-chunkrow-flash' : 'hrag-chunkrow',
-                  key: chunk.chunk_id,
-                  ref: (node) => {
-                    rowRefs.current[chunk.chunk_id] = node
-                  },
+            items.map((chunk) =>
+              h(ChunkRow, {
+                key: chunk.chunk_id,
+                t,
+                kbId,
+                docId,
+                chunk,
+                flash: flashId === chunk.chunk_id,
+                shotActive:
+                  activeShotIndex != null && chunk.media === 'video' && chunk.shot_index === activeShotIndex,
+                busy,
+                expanded: expandedEntities.has(chunk.chunk_id),
+                reExtracting: reExtractingChunkId === chunk.chunk_id,
+                reExtractDisabled: reExtractingChunkId !== null && reExtractingChunkId !== chunk.chunk_id,
+                onExpand: (chunkId) =>
+                  setExpandedEntities((prev) => {
+                    const next = new Set(prev)
+                    next.add(chunkId)
+                    return next
+                  }),
+                onDelete: startDelete,
+                onEdit: handleEditChunk,
+                onReExtract: handleReExtractChunk,
+                onSeekShot: seekShot,
+                rowRef: (node) => {
+                  rowRefs.current[chunk.chunk_id] = node
                 },
-                h(
-                  'div',
-                  { className: 'hrag-chunkrow-top' },
-                  h('span', { className: 'hrag-chunkrow-idx' }, '#' + String(Number(chunk.chunk_index) + 1)),
-                  h(
-                    'span',
-                    { className: 'hrag-chunkrow-path' },
-                    Array.isArray(chunk.heading_path) && chunk.heading_path.length > 0 ? chunk.heading_path.join(' / ') : '',
-                  ),
-                  timecode ? h('span', { className: 'hrag-textchip', title: t('chunk.timecode') }, timecode) : null,
-                  chunk.page != null
-                    ? h('span', { className: 'hrag-textchip' }, t('chunk.page') + ' ' + String(chunk.page))
-                    : null,
-                  h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'hrag-btn hrag-btn-sm hrag-btn-outline',
-                      disabled: busy,
-                      onClick: () => startDelete(chunk),
-                    },
-                    t('chunk.delete'),
-                  ),
-                ),
-                h('div', { className: 'hrag-chunkrow-text' }, String(chunk.text || '')),
-                entities.length > 0
-                  ? h(
-                      'span',
-                      { className: 'hrag-chunkrow-entities' },
-                      h('span', { className: 'hrag-chunkrow-entities-label' }, t('chunk.entities') + ':'),
-                      badges.visible.map((entity) =>
-                        h('span', { className: 'hrag-textchip hrag-headbadge-soft', key: entity }, String(entity)),
-                      ),
-                      badges.hidden > 0
-                        ? h(
-                            'button',
-                            {
-                              type: 'button',
-                              className: 'hrag-entitymore',
-                              title: entities.slice(ENTITY_CAP).join(', '),
-                              onClick: () =>
-                                setExpandedEntities((prev) => {
-                                  const next = new Set(prev)
-                                  next.add(chunk.chunk_id)
-                                  return next
-                                }),
-                            },
-                            h('span', { className: 'hrag-textchip' }, '+' + String(badges.hidden)),
-                          )
-                        : null,
-                    )
-                  : null,
-                // 页脚度量（小件批 Task 6，照工作台 :249-264）：tokens 计数＋「已编辑」
-                // 徽章（页码在顶行 chip 位照旧）；两者皆无不加分隔线。
-                chunk.token_count != null || chunk.last_edited_at
-                  ? h(
-                      'div',
-                      { className: 'hrag-chunkrow-foot' },
-                      h(
-                        'span',
-                        { className: 'hrag-chunkrow-meta' },
-                        chunk.token_count != null
-                          ? h('span', null, String(chunk.token_count) + ' ' + t('chunk.tokens'))
-                          : null,
-                        chunk.last_edited_at ? h('span', { className: 'hrag-textchip' }, t('chunk.edited')) : null,
-                      ),
-                    )
-                  : null,
-              )
-            }),
+              }),
+            ),
           ),
           items.length < total
             ? h(
@@ -3844,6 +4478,23 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'hrag-drawer-panel' },
+            // 内嵌播放器（Task 3）：抽屉头下固定区（同工作台「头内视频块」语义——
+            // 浏览镜头卡时始终可见）；原生 controls/preload=metadata、不自动播。
+            hasVideo
+              ? h(
+                  'div',
+                  { className: 'hrag-drawer-video' },
+                  h('video', {
+                    className: 'hrag-drawer-video-el',
+                    controls: true,
+                    preload: 'metadata',
+                    ref: attachVideo,
+                    src: videoStreamRelayUrl(kbId, docId),
+                    onTimeUpdate: handleTimeUpdate,
+                  }),
+                  h('p', { className: 'hrag-drawer-video-hint' }, t('chunk.playerHint')),
+                )
+              : null,
             h('div', { className: 'hrag-drawer-body', ref: bodyRef }, body),
             phase === 'ready'
               ? h(ChunkTickRail, {
@@ -7681,10 +8332,9 @@ window.__ModuleLoader__.load({
             let meta = statusKey ? t(statusKey) : String(doc.status)
             if (doc.status === 'indexing') meta += ' ' + String(doc.progress_percent) + '%'
             if (degraded) meta += ' · ' + t('doc.degraded')
-            // 状态悬停（小件批 Task 4，照工作台）：failed 行不出分解（工作台用重试卡
-            // 顶替）；其余有 path_status 的行挂宿主 Tooltip——分类错误文案让位给分解
-            // （错误 copy 仍挂在重试钮 title 上，D2 口径不破）。无宿主 Tooltip 时
-            // 铺平为原生 title（缺件回退面）。
+            // 状态悬停（小件批 Task 4；10-18 他点名修正）：凡有 path_status 的行
+            // （含 failed）一律挂宿主 Tooltip 出六腿分解——失败行也要看各阶段状态；
+            // 无 path_status 的老行回退原生 title（分类错误文案）。
             const statusClass = doc.status === 'failed' ? 'hrag-docrow-status hrag-docrow-status-failed' : 'hrag-docrow-status'
             // 状态点（10-16 他截图对照补，照工作台 DocumentStatusCell）：6px 悬挂在
             // 文字左缘外 10px（点 6px＋间隙 4px；与 td px-2 配对，文字左缘同表头线）。
@@ -7692,7 +8342,7 @@ window.__ModuleLoader__.load({
             // 状态文本吃省略号（fixed 布局窄档：长态「就绪 · 部分降级」不撑列；点在外，
             // 不被文本裁剪面影响）。
             const metaNode = h('span', { className: 'hrag-docrow-statustext' }, meta)
-            const pathLines = doc.status === 'failed' ? null : pathStatusLines(doc)
+            const pathLines = pathStatusLines(doc)
             let statusNode
             if (!pathLines) {
               statusNode = h(
@@ -8162,6 +8812,29 @@ window.__ModuleLoader__.load({
     )
     const dshEyeIcon = dshIconOr('IconEyeOutlineRegular', () =>
       lucideMenuIcon(['M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z', 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z']),
+    )
+    /** 原始文本视图图标（②档乙对 Task 2）：宿主最近邻 IconInspectOutline＝CodeBrackets
+        真值（`</>`）；缺件回退工作台同款 lucide Code2。 */
+    const dshCodeIcon = dshIconOr('IconInspectOutlineRegular', () =>
+      lucideMenuIcon(['m18 16 4-4-4-4', 'm6 8-4 4 4 4', 'm14.5 4-5 16']),
+    )
+    /** 视频镜头条图标（②档乙对 Task 3）：复制＝宿主 IconCopyOutline；缺帧＝宿主无件，
+        直用工作台同款 lucide ImageOff 原形（六形全量）。 */
+    const dshCopyIcon = dshIconOr('IconCopyOutlineRegular', () =>
+      lucideMenuIcon([
+        'M10 8h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2Z',
+        'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2',
+      ]),
+    )
+    const dshImageOffIcon = dshIconOr('IconImageOffOutlineRegular', () =>
+      lucideMenuIcon([
+        'M2 2L22 22',
+        'M10.41 10.41a2 2 0 1 1-2.83-2.83',
+        'M13.5 13.5L6 21',
+        'M18 12L21 15',
+        'M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59',
+        'M21 15V5a2 2 0 0 0-2-2H9',
+      ]),
     )
     const dshColumnsIcon = dshIconOr('IconColumnsOutlineRegular', () =>
       lucideMenuIcon(['M3 3h18v18H3z', 'M9 3v18', 'M15 3v18']),

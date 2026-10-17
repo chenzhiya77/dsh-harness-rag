@@ -124,6 +124,7 @@
 **实测**（Task 4，2026-10-16，真跑过（他手点，复「测过了」）；提交 `1be7c93`，148+/11−）：
 - **实现面**：字典 14 键（zh/en 逐字照工作台）；`pathStatusLines`（视频腿 presence 前置、图谱仅 `indexing && doc.status==='indexing'` 带 `percent`、无 `path_status` 返 null）＋`docPathStateLabel`（未知态回原串）＋`PathStatusBreakdown`（degraded 着 `--dsw-static-amber-500`）；docrow 三分支＝failed 裸 span（分类错误文案留 title）／`HostTooltip` 包裹（side `top`、delayMs 150、portal）／无宿主件铺平原生 title（缺件回退面）。
 - **门禁**：`node --check`＋冒烟三块（映射 11 断言＋渲染＋Tooltip 载体随 `path_status` 出现/消失）全绿。
+- **补修（2026-10-18，他真跑两轮点名）**：①**失败行也挂六腿分解**——原实现 failed 行跳过分解（只给原生 title）；他明确要「图 1 的状态框、不要重试卡」⇒ `pathLines` 对 failed 行照算、状态格走宿主 Tooltip 六腿分解（首版误做 HoverCard 重试卡已撤；重试仍在右下失败卡＋行 ⋯ 菜单）。②**错误 token 修正**——宿主主题**无** `--dsw-alias-label-error` 定义（只有 `--dsw-alias-state-error-primary`）⇒ 失败文字不红、状态点背景透明不可见；插件 22 处全部替换。另做全量比对：插件用到的 31 个 `--dsw-*` token 对宿主主题 403 项定义**零缺失**。冒烟更新（failed 行 Tooltip 载体／状态点存在／错 token 清零＋正确 token）；`node --check`＋默认/缺件二跑全绿。随 chunk-items 对定稿一笔落地。
 
 ---
 
