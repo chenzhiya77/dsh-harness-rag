@@ -5,6 +5,8 @@ import type { ReadableStream as WebReadableStream } from 'node:stream/web'
 import type { Context } from 'cordis'
 import { api, HarnessRagError } from './http.ts'
 import type { ApiError } from './http.ts'
+import { registerIngestJobs } from './jobs.ts'
+import type { IngestJobs } from './jobs.ts'
 import type { Config } from './settings.ts'
 
 /**
@@ -50,7 +52,7 @@ function projectionQueryParams(args: unknown): Record<string, unknown> {
   return query
 }
 
-function buildOps(config: Config): Record<string, (args: unknown) => Promise<unknown>> {
+function buildOps(config: Config, ingestJobs: IngestJobs): Record<string, (args: unknown) => Promise<unknown>> {
   const needString = (args: unknown, key: string): string => {
     const value = (args as Record<string, unknown> | null | undefined)?.[key]
     if (typeof value !== 'string' || !value.trim()) {
@@ -124,7 +126,17 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
       }
       return api(config, `${kbPath(args)}/chunk-positions`, { body: { chunk_ids: ids } })
     },
-    reindex: (args) => api(config, `${kbPath(args)}/reindex`, { method: 'POST' }),
+    reindex: async (args) => {
+      const source = args as Record<string, unknown> | null | undefined
+      const data = await api<Record<string, unknown> | null>(config, `${kbPath(args)}/reindex`, { method: 'POST' })
+      // T4 摄取通道：只给新起的重建登记宿主后台任务（already_running 不起，防重复）。
+      if (data && data.status === 'enqueued') {
+        const sessionId = typeof source?.session_id === 'string' ? source.session_id.trim() : ''
+        const kbLabel = typeof source?.kb_label === 'string' ? source.kb_label : ''
+        ingestJobs.noteReindex({ sessionId, kbId: needString(args, 'kb_id'), kbLabel })
+      }
+      return data
+    },
     reindexStatus: (args) => api(config, `${kbPath(args)}/reindex/status`),
     vectorProjection: (args) => {
       const query = projectionQueryParams(args)
@@ -336,8 +348,14 @@ const errorStatus = (info: ApiError): number => {
 /** Raw upload pass-through: the browser posts multipart here and the body
  * streams to the backend unchanged (the JSON ops' envelope does not fit
  * file payloads). The original content-type boundary, the token header and
- * the upstream status all pass through. */
-const forwardUpload = async (req: IncomingMessage, res: ServerResponse, config: Config): Promise<void> => {
+ * the upstream status all pass through. A 2xx response that parses as the
+ * created document record additionally registers the T4 ingest job. */
+const forwardUpload = async (
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: Config,
+  ingestJobs: IngestJobs,
+): Promise<void> => {
   const url = new URL(req.url ?? '/', 'http://webServer')
   const kbId = (url.searchParams.get('kb_id') ?? '').trim()
   if (!kbId) {
@@ -366,6 +384,19 @@ const forwardUpload = async (req: IncomingMessage, res: ServerResponse, config: 
     return
   }
   const text = await upstream.text()
+  // T4 摄取通道：2xx 且响应可解析出文档记录时登记宿主后台任务（跟随到终态）；
+  // 失败面/非 JSON 一律原样中继，不猜、不起 job。
+  if (upstream.status < 300) {
+    try {
+      const doc = JSON.parse(text)
+      if (doc && typeof doc === 'object') {
+        const sessionId = (url.searchParams.get('session_id') ?? '').trim()
+        ingestJobs.noteDocument({ sessionId, kbId, doc: doc as Record<string, unknown> })
+      }
+    } catch {
+      /* not JSON: the panel body passes through unchanged */
+    }
+  }
   res.writeHead(upstream.status, {
     'content-type': 'application/json; charset=utf-8',
     'content-length': Buffer.byteLength(text),
@@ -519,7 +550,8 @@ const forwardRelay = async (
 }
 
 export function registerKbProxy(ctx: Context, config: Config): void {
-  const ops = buildOps(config)
+  const ingestJobs = registerIngestJobs(ctx, config)
+  const ops = buildOps(config, ingestJobs)
 
   const handler = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     try {
@@ -540,7 +572,7 @@ export function registerKbProxy(ctx: Context, config: Config): void {
         return
       }
       if (opName === 'uploadDocument') {
-        await forwardUpload(req, res, config)
+        await forwardUpload(req, res, config, ingestJobs)
         return
       }
       if (opName === 'downloadDocument') {

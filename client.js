@@ -1599,14 +1599,37 @@ window.__ModuleLoader__.load({
       return payload
     }
 
+    // ── T4 摄取通道：面板会话 id 采集（宿主后台任务归属） ─────────────────────
+    /** 宿主把面板挂进 `[data-sidebar-right-session]` 容器（dockkit 的事实来源）；
+     * 从自己的根节点读会话 id。任何缺失/异常＝空串（host 半会回退「无主」尝试）。 */
+    let panelSessionValue = ''
+    function capturePanelSession(element) {
+      let value = ''
+      try {
+        const holder =
+          element && typeof element.closest === 'function' ? element.closest('[data-sidebar-right-session]') : null
+        if (holder && typeof holder.getAttribute === 'function') {
+          value = String(holder.getAttribute('data-sidebar-right-session') || '')
+        }
+      } catch (cause) {
+        value = ''
+      }
+      panelSessionValue = value
+    }
+    function panelSessionId() {
+      return panelSessionValue
+    }
+
     /** Multipart upload: the file posts raw to the host route (the JSON op
      * envelope does not fit file payloads); the host streams the body through. */
     async function callUpload(kbId, file) {
       const form = new FormData()
       form.append('file', file, file.name)
+      const session = panelSessionId()
+      const query = '?kb_id=' + encodeURIComponent(kbId) + (session ? '&session_id=' + encodeURIComponent(session) : '')
       let response
       try {
-        response = await fetch(PROXY_ROUTE + '/uploadDocument?kb_id=' + encodeURIComponent(kbId), {
+        response = await fetch(PROXY_ROUTE + '/uploadDocument' + query, {
           method: 'POST',
           body: form,
         })
@@ -15358,7 +15381,13 @@ window.__ModuleLoader__.load({
         if (!reindexKbId) return
         setReindexBusy(true)
         setReindexError(null)
-        callOp('reindex', { kb_id: reindexKbId })
+        // T4 摄取通道：携带面板会话 id 与库名（宿主半据此登记后台任务）。
+        const kbEntry = (kbs || []).find((item) => String(item.id) === reindexKbId)
+        callOp('reindex', {
+          kb_id: reindexKbId,
+          session_id: panelSessionId(),
+          kb_label: kbEntry ? String(kbEntry.name || kbEntry.id) : reindexKbId,
+        })
           .then((data) => {
             setReindexBusy(false)
             setReindexConfirmOpen(false)
@@ -17508,6 +17537,11 @@ window.__ModuleLoader__.load({
       const [wikiDrawer, setWikiDrawer] = React.useState(null)
       const [uploading, setUploading] = React.useState(false)
       const toastAnchorRef = React.useRef(null)
+      // T4 摄取通道：面板根 ref＋会话 id 采集（宿主后台任务归属；失败＝空串软着陆）。
+      const panelRootRef = React.useRef(null)
+      React.useEffect(() => {
+        capturePanelSession(panelRootRef.current)
+      }, [])
       const [pendingDuplicate, setPendingDuplicate] = React.useState(null)
       const [acceptedSuffixes, setAcceptedSuffixes] = React.useState(null)
       // 白名单兜底（Task 4）：三消费点（上传拦截/accept/probe）一律持派生值——未取两窗
@@ -18120,6 +18154,7 @@ window.__ModuleLoader__.load({
           'div',
           {
             className: 'hrag-root' + (dragFeedbackOn ? ' hrag-root-drag' : ''),
+            ref: panelRootRef,
             onDragOver: panelDragOver,
             onDragLeave: panelDragLeave,
             onDrop: panelDrop,
