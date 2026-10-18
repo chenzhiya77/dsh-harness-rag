@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
 **Spec:** [2026-10-18-tier3-polish-spec.md](../specs/2026-10-18-tier3-polish-spec.md)
-**Status:** ✅ 实施完成（2026-10-18 他令「先盘点,都做了」）——F 组零待办；G×5＋H×5 全做；host 半不动；门禁双绿；候真跑；2026-10-19 定稿一笔（未推）。
+**Status:** ✅ 实施完成（2026-10-18 他令「先盘点,都做了」）——F 组零待办；G×5＋H×5 全做；host 半不动；门禁双绿；真跑已过（2026-10-19 他手验）；2026-10-19 定稿一笔（未推）。
 **Parent:** ②档三对收官（`ce4faa8`）× T3 走查账 F/G/H。
 **步骤记录:** [2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)。
 
@@ -100,9 +100,9 @@
 - [x] `node --check client.js`＋`node --experimental-strip-types --check src/kb_proxy.ts`。
 - [x] 冒烟默认＋`SMOKE_HOSTLESS=1` 双绿；`probe-menu` 13/13。
 - [x] 回写本 plan 实测、T3 走查账 F/G/H 销定、步骤记录。
-- [x] 真跑候他手验；提交候令。
+- [x] 真跑已过（2026-10-19 他手验）；定稿一笔已落（`2ea80c1`）。
 
-**实测**（2026-10-18）：`node --check client.js` 过；`node --experimental-strip-types --check src/kb_proxy.ts` 过；`probe-menu.mjs` 13/13 PASS；冒烟默认 74 PASS/0 FAIL、`SMOKE_HOSTLESS=1` 74 PASS/0 FAIL。host 半零改动。真跑项：搜索/范围、三档工具栏与 ⋯、索引提示、3D 右键平移、趋势缩放/滑条、时长格式、历史右键、合成头部右键/相对时间（重开面板生效）。
+**实测**（2026-10-18）：`node --check client.js` 过；`node --experimental-strip-types --check src/kb_proxy.ts` 过；`probe-menu.mjs` 13/13 PASS；冒烟默认 74 PASS/0 FAIL、`SMOKE_HOSTLESS=1` 74 PASS/0 FAIL。host 半零改动。真跑已过（2026-10-19 他手验）：搜索/范围、三档工具栏与 ⋯、索引提示、3D 右键平移、趋势缩放/滑条、时长格式、历史右键、合成头部右键/相对时间（重开面板生效）。
 
 ## Task 9 — 复测修订（10-18 他截图点名）
 
