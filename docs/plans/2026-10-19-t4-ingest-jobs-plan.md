@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
 **Spec:** [2026-10-19-t4-ingest-jobs-spec.md](../specs/2026-10-19-t4-ingest-jobs-spec.md)
-**Status:** ✅ 实施完成（2026-10-19 他令「都做」＝最小＋完整合一整做）——Task 0–4 全落；门禁：双语法全过＋冒烟默认/hostless 各 **78 PASS/0 FAIL**＋`probe-t4` 6/6＋`probe-menu` 13/13；真跑候他手验（先整重启 DSH 换 host 模块代）；定稿一笔候令。
+**Status:** ✅ 实施完成（2026-10-19 他令「都做」＝最小＋完整合一整做）——Task 0–4 全落；门禁：双语法全过＋冒烟默认/hostless 各 **78 PASS/0 FAIL**＋`probe-t4` 6/6＋`probe-menu` 13/13；真跑候他手验（先整重启 DSH 换 host 模块代）；定稿一笔已落（`af6bb38`，未推）。
 **Parent:** 步骤记录 §5 T4 × ③档批收官（`2ea80c1`）。
 **步骤记录:** [2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)。
 
@@ -73,4 +73,4 @@
 
 ## 提交链（滚动记实）
 
-- [ ] 定稿一笔（候令；英文 Conventional）。**未推**（仓暂无 remote；前笔 tip＝`2ea80c1`）。
+- [x] 定稿一笔（2026-10-19；英文 Conventional；本笔 `af6bb38`）。**未推**（仓暂无 remote；前笔 tip＝`2ea80c1`）。

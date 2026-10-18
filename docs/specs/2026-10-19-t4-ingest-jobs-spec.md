@@ -1,6 +1,6 @@
 # 插件 T4 —— 摄取通道（宿主后台任务）Spec
 
-**Status:** ✅ 实施完成（2026-10-19 他令「都做」＝最小＋完整两案合一整做）——Task 0–4 全落（host `src/jobs.ts`＋`kb_proxy.ts` 两接线＋client 会话采集）；门禁：双语法全过＋冒烟默认/hostless 各 **78 PASS/0 FAIL**＋`probe-t4` 6/6＋`probe-menu` 13/13；真跑候他手验（整重启 DSH 换 host 模块代）；定稿一笔候令（未提交）。
+**Status:** ✅ 实施完成（2026-10-19 他令「都做」＝最小＋完整两案合一整做）——Task 0–4 全落（host `src/jobs.ts`＋`kb_proxy.ts` 两接线＋client 会话采集）；门禁：双语法全过＋冒烟默认/hostless 各 **78 PASS/0 FAIL**＋`probe-t4` 6/6＋`probe-menu` 13/13；真跑候他手验（整重启 DSH 换 host 模块代）；定稿一笔已落（`af6bb38`，未推）。
 **Date:** 2026-10-19
 **配套 plan:** [2026-10-19-t4-ingest-jobs-plan.md](../plans/2026-10-19-t4-ingest-jobs-plan.md)
 
