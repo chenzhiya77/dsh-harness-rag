@@ -243,6 +243,16 @@ window.__ModuleLoader__.load({
       'vec.overlayFailed': '检索叠加失败——请重试',
       'vec.hitsPrefix': '命中',
       'vec.clearOverlay': '清除叠加',
+      // ③档批 G 组（照工作台 vectorSpace 逐字）：全量搜索＋范围＋更多选项＋索引提示。
+      'vec.searchAll': '搜索…',
+      'vec.searchScopeLabel': '搜索范围',
+      'vec.searchScopes.all': '全部',
+      'vec.searchScopes.chunks': '文档',
+      'vec.searchScopes.entities': '实体',
+      'vec.searchScopes.wiki': '百科',
+      'vec.searchScopes.cards': '条目',
+      'vec.moreOptions': '更多选项',
+      'vec.indexingHint': '{0} 个文档索引中，投影可能不完整',
       'recall.viewInGraphSpace': '在知识图谱查看',
       'recall.evidenceView': '证据 {0}',
       'recall.entitiesView': '实体 {0}',
@@ -279,6 +289,7 @@ window.__ModuleLoader__.load({
       'graph.hop2': '2 跳',
       'sort.asc': '升序',
       'sort.desc': '降序',
+      'sort.title': '排序',
       // ── 评测（Task 8）：词汇照工作台 tk.eval / recallTest.saveAsQuestion ──
       'shell.tab.eval': '评测',
       'ev.viewsLabel': '评测视图切换',
@@ -396,6 +407,7 @@ window.__ModuleLoader__.load({
       'ev.questions.recallUntested': '未测或上次运行未包含',
       'ev.questions.unanchored': '未锚定',
       'ev.questions.danglingBadge': '悬空',
+      'ev.questions.danglingHint': '参考切片 {0} 个，悬空 {1} 个',
       'ev.questions.mismatchBadge': '存疑',
       'ev.questions.addQuestion': '添加考题',
       'ev.questions.emptyBank': '题库为空——在召回测试面板勾选正确切片可一键存为考题',
@@ -463,6 +475,11 @@ window.__ModuleLoader__.load({
       'ev.history.colScope': '评测内容',
       'ev.history.colStatus': '状态',
       'ev.history.colDuration': '时长',
+      'ev.history.durFormatLabel': '时长格式',
+      'ev.history.durFormatCompact': '紧凑',
+      'ev.history.durFormatSeconds': '按秒',
+      'ev.history.selectedCount': '已选 {0} 条',
+      'ev.selection.deleteSelected': '删除所选',
       'ev.history.scopeQuick': '快速',
       'ev.history.scopeFull': '完整',
       'ev.history.scopeGeneration': '生成',
@@ -970,6 +987,16 @@ window.__ModuleLoader__.load({
       'vec.overlayFailed': 'Overlay failed — please retry',
       'vec.hitsPrefix': 'Hits',
       'vec.clearOverlay': 'Clear overlay',
+      // ③档批 G 组（照工作台 vectorSpace 逐字）。
+      'vec.searchAll': 'Search…',
+      'vec.searchScopeLabel': 'Search scope',
+      'vec.searchScopes.all': 'All',
+      'vec.searchScopes.chunks': 'Documents',
+      'vec.searchScopes.entities': 'Entities',
+      'vec.searchScopes.wiki': 'Wiki',
+      'vec.searchScopes.cards': 'Entries',
+      'vec.moreOptions': 'More options',
+      'vec.indexingHint': '{0} document(s) still indexing — the projection may be incomplete',
       'recall.viewInGraphSpace': 'View in the knowledge graph',
       'recall.evidenceView': 'Evidence {0}',
       'recall.entitiesView': 'Entities {0}',
@@ -1006,6 +1033,7 @@ window.__ModuleLoader__.load({
       'graph.hop2': '2 hops',
       'sort.asc': 'Ascending',
       'sort.desc': 'Descending',
+      'sort.title': 'Sort',
       // ── Eval (Task 8): copy mirrors the workbench tk.eval / recallTest.saveAsQuestion ──
       'shell.tab.eval': 'Evaluation',
       'ev.viewsLabel': 'Switch eval view',
@@ -1129,6 +1157,7 @@ window.__ModuleLoader__.load({
       'ev.questions.recallUntested': 'Not tested or not in the latest run',
       'ev.questions.unanchored': 'Unanchored',
       'ev.questions.danglingBadge': 'Dangling',
+      'ev.questions.danglingHint': '{0} reference chunk(s), {1} dangling',
       'ev.questions.mismatchBadge': 'Suspect',
       'ev.questions.addQuestion': 'Add question',
       'ev.questions.emptyBank':
@@ -1199,6 +1228,11 @@ window.__ModuleLoader__.load({
       'ev.history.colScope': 'Eval content',
       'ev.history.colStatus': 'Status',
       'ev.history.colDuration': 'Duration',
+      'ev.history.durFormatLabel': 'Duration format',
+      'ev.history.durFormatCompact': 'Compact',
+      'ev.history.durFormatSeconds': 'Seconds',
+      'ev.history.selectedCount': '{0} selected',
+      'ev.selection.deleteSelected': 'Delete selected',
       'ev.history.scopeQuick': 'Quick',
       'ev.history.scopeFull': 'Full',
       'ev.history.scopeGeneration': 'Generation',
@@ -1736,6 +1770,9 @@ window.__ModuleLoader__.load({
           '.hrag-tabswrap > .hrag-mmhost, .hrag-tabswrap > .hrag-mm-wrap { position: absolute; top: 0; right: 0; bottom: 0; width: 40px; }',
           '.hrag-tabswrap > .hrag-mmhost > span { position: static; display: block; }',
           '.hrag-tabs { display: flex; overflow-x: auto; padding-bottom: 1px; scrollbar-width: none; box-shadow: inset 0 -0.5px 0 var(--dsw-alias-border-l3); }',
+          // 六 tab 首行统一工具条（照工作台 px-4 py-2 + h-7 = 44px）：搜索行高与
+          // 纵向位置跨 tab 一致；行内控件一律 28px 垂直居中，行尾按钮不再撑行。
+          '.hrag-tabbar { display: flex; align-items: center; gap: 8px; min-height: 44px; flex-shrink: 0; min-width: 0; }',
           '.hrag-tabs::-webkit-scrollbar { display: none; }',
           '.hrag-tabs-list { display: flex; gap: 0 36px; flex-shrink: 0; }',
           // 尾垫＝遮罩宽：没有它滚动到不了有效可见区落点（照工作台）。
@@ -1752,6 +1789,10 @@ window.__ModuleLoader__.load({
           '.hrag-tab:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); border-radius: 4px; }',
           '.hrag-pane { padding: 8px 2px; color: var(--dsw-alias-label-tertiary); font-size: 13px; line-height: 20px; }',
           '.hrag-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; text-align: center; }',
+          // 空态照工作台 recall-test-panel（FlaskConical size-5 + text-sm muted，gap-2 居中）。
+          '.hrag-state-empty { flex: 1; justify-content: center; gap: 8px; padding: 16px; }',
+          '.hrag-state-empty .hrag-state-title { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-state-icon { display: inline-flex; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-state-title { color: var(--dsw-alias-label-primary); font-size: 14px; line-height: 22px; }',
           '.hrag-state-detail { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; word-break: break-word; }',
           '.hrag-state-error .hrag-state-title { color: var(--dsw-alias-state-error-primary); }',
@@ -1796,10 +1837,14 @@ window.__ModuleLoader__.load({
           // 所有内容同一左轴）。统计行同修（下方）。
           '.hrag-docbar { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0; flex-shrink: 0; }',
           '.hrag-docsearch { position: relative; flex: 1; min-width: 0; display: flex; }',
-          '.hrag-docsearch .hrag-docsearch-field { flex: 1; min-width: 0; }',
+          // 宿主 Input 根高 32/字号 14/图标 16——压到六 tab 统一搜索档（28/12/14）。
+          '.hrag-docsearch .hrag-docsearch-field { flex: 1; min-width: 0; height: 28px; padding: 0 6px 0 8px; gap: 4px; border-color: var(--dsw-alias-border-l3); box-sizing: border-box; }',
+          '.hrag-docsearch .hrag-docsearch-field input { font-size: 12px; line-height: 20px; }',
+          '.hrag-docsearch .hrag-docsearch-field svg { width: 14px; height: 14px; }',
           '.hrag-docsearch input { padding-right: 24px; }',
-          '.hrag-docsearch-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
+          '.hrag-docsearch-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
           '.hrag-docsearch-clear:hover { color: var(--dsw-alias-label-primary); }',
+          '.hrag-docsearch-clear svg { width: 14px; height: 14px; }',
           '.hrag-docnomatch { padding: 32px 16px; text-align: center; color: var(--dsw-alias-label-tertiary); font-size: 13px; }',
           // 拖拽反馈（小件批 Task 2，照工作台）：根拖入＝淡灰底；空态九宫格里
           // 可落类放大点亮、其余降灰（全拒＝整体降灰）；放置层＝虚线框/70% 实底
@@ -1905,7 +1950,24 @@ window.__ModuleLoader__.load({
           '.hrag-btn-icon { width: 32px; padding: 0; }',
           '.hrag-vec-slot { flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-vec { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
-          '.hrag-vec-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }',
+          // ③档批 G1/G2（照工作台）：搜索栏独立一行，范围下拉在右；命中强调由画布承载。
+          '.hrag-vec-searchrow { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }',
+          // 下拉统一走 EvalMenu（宿主菜单触发件），不用原生 select——与面板其余下拉同语汇。
+          '.hrag-vec-scopemenu { flex-shrink: 0; }',
+          '.hrag-vec-scopemenu .hrag-ev-menu-btn { height: 28px; max-width: 108px; padding: 0 8px; border-radius: var(--dsw-radius-md); display: inline-flex; align-items: center; gap: 4px; font-size: 12px; background: var(--dsw-alias-bg-layer-1); }',
+          '.hrag-vec-algomenu { flex-shrink: 0; }',
+          '.hrag-vec-algomenu .hrag-ev-menu-btn { height: 24px; padding: 0 8px; border-radius: var(--dsw-radius-md); display: inline-flex; align-items: center; gap: 4px; font-size: 12px; background: var(--dsw-alias-bg-layer-1); }',
+          '.hrag-vec-dropchev { display: inline-flex; align-items: center; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-vec-dropchev svg { width: 12px; height: 12px; }',
+          // ③档批 G3：工具栏不换行，档位由 useToolbarTier 逐级降级（档 2 维度/算法入 ⋯）。
+          // 控件统一 24px（照工作台 h-6）；档 0 chip 自动宽并带色点，档 1 收成图标钮。
+          '.hrag-vec-bar { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; overflow: hidden; min-height: 24px; }',
+          '.hrag-vec-bar .hrag-chip { flex-shrink: 0; width: auto; height: 24px; padding: 0 8px; gap: 6px; }',
+          '.hrag-vec-bar .hrag-chip-icon { width: 24px; padding: 0; gap: 0; }',
+          '.hrag-vec-bar .hrag-chip .hrag-chip-dot { flex-shrink: 0; }',
+          '.hrag-vec-bar .hrag-seg button { height: 24px; }',
+          '.hrag-vec-bar .hrag-vec-iconbtn { width: 24px; height: 24px; }',
+          '.hrag-vec-bar .hrag-vec-sampled { flex-shrink: 0; white-space: nowrap; }',
           '.hrag-chip { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: transparent; cursor: pointer; }',
           '.hrag-chip:hover { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-chip:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
@@ -1915,16 +1977,18 @@ window.__ModuleLoader__.load({
           '.hrag-seg { display: inline-flex; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; }',
           '.hrag-seg button { height: 26px; padding: 0 8px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 12px; font-family: inherit; cursor: pointer; }',
           ".hrag-seg button[aria-pressed='true'] { background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); font-weight: 600; }",
-          '.hrag-vec-algo { height: 26px; padding: 0 6px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; }',
           '.hrag-vec-body { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-vec-canvas { position: relative; flex: 1; min-height: 180px; overflow: hidden; }',
           '.hrag-vec-canvas canvas { display: block; width: 100%; height: 100%; }',
-          '.hrag-vec-tip { position: absolute; z-index: 20; max-width: 210px; padding: 5px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12); color: var(--dsw-alias-label-primary); font-size: 11px; line-height: 1.5; white-space: normal; pointer-events: none; }',
+          '.hrag-vec-tip { position: absolute; z-index: 20; max-width: 210px; padding: 5px 8px; border: 0.5px solid rgba(255, 255, 255, 0.14); border-radius: var(--dsw-radius-md); background: #1f1f1f; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24); color: #fff; font-size: 11px; line-height: 1.5; white-space: normal; pointer-events: none; }',
           '.hrag-vec-tip-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }',
           '.hrag-vec-tip-label { font-weight: 500; }',
-          '.hrag-vec-tip-preview { display: block; color: var(--dsw-alias-label-tertiary); }',
-          '.hrag-vec-legend { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); z-index: 5; display: inline-flex; flex-wrap: nowrap; max-width: 94%; overflow: hidden; gap: 8px; padding: 3px 10px; border-radius: 6px; background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 68%, transparent); backdrop-filter: blur(4px); }',
-          '.hrag-vec-legend-item { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11px; font-family: inherit; cursor: pointer; }',
+          '.hrag-vec-tip-preview { display: block; color: rgba(255, 255, 255, 0.68); }',
+          // 图例照 ECharts legend(type:scroll)：不换行、不压缩；窄栏横向滚动（滚动条隐藏）。
+          '.hrag-vec-legend { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; flex-wrap: nowrap; max-width: 94%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; gap: 8px; padding: 3px 10px; border-radius: 6px; background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 68%, transparent); backdrop-filter: blur(4px); }',
+          '.hrag-vec-legend::-webkit-scrollbar { display: none; }',
+          '.hrag-vec-legend-item { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11px; font-family: inherit; white-space: nowrap; cursor: pointer; }',
+          '.hrag-vec-legend-item .hrag-chip-dot { flex-shrink: 0; }',
           '.hrag-vec-legend-item:hover { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-vec-legend-off { opacity: 0.45; }',
           '.hrag-vec-overlay-badge { position: absolute; top: 6px; left: 6px; z-index: 10; display: inline-flex; align-items: center; gap: 6px; max-width: 82%; padding: 3px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-secondary); font-size: 11px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }',
@@ -1932,14 +1996,17 @@ window.__ModuleLoader__.load({
           '.hrag-vec-overlay-hits { flex-shrink: 0; }',
           '.hrag-vec-overlay-close { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex-shrink: 0; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 10px; line-height: 1; cursor: pointer; }',
           '.hrag-vec-overlay-close:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          // ③档批 G4：索引在飞提示（工作台琥珀文字行）。
+          '.hrag-vec-indexhint { flex-shrink: 0; color: var(--dsw-static-amber-500); font-size: 11px; line-height: 16px; }',
           '.hrag-spin { animation: hrag-rotate 900ms linear infinite; }',
           '@keyframes hrag-rotate { to { transform: rotate(360deg); } }',
           '@media (prefers-reduced-motion: reduce) { .hrag-spin { animation-duration: 1ms; } }',
           '.hrag-graph-slot { flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-graph { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
-          '.hrag-graph-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }',
+          '.hrag-graph-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }',
+          '.hrag-graph-bar .hrag-seg { height: 28px; box-sizing: border-box; }',
+          '.hrag-graph-bar .hrag-seg button { height: 100%; }',
           '.hrag-graph-search { flex: 1; min-width: 120px; display: flex; }',
-          '.hrag-graph-search .hrag-input { width: 100%; height: 26px; font-size: 12px; }',
           '.hrag-graph-body { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-graph-canvas { position: relative; flex: 1; min-height: 220px; overflow: hidden; }',
           '.hrag-graph-canvas canvas { display: block; width: 100%; height: 100%; }',
@@ -2090,8 +2157,9 @@ window.__ModuleLoader__.load({
           '.hrag-mm-tcheck-on { background: var(--dsw-alias-state-business-primary); border-color: var(--dsw-alias-state-business-primary); }',
           '.hrag-mm-trole { position: relative; padding-left: 28px; white-space: nowrap; }',
           '.hrag-mm-tmodel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); }',
-          '.hrag-set-thinkingwrap { margin-top: 8px; }',
-          '.hrag-set-body { display: flex; flex-direction: column; gap: 10px; }',
+          '.hrag-set-thinkingwrap { margin-top: 0; }',
+          // 设置表单纵距：12px 节间距、14px 侧衬（覆盖 drawer-body 的 8/12），底部留 16。
+          '.hrag-drawer-body.hrag-set-body { display: flex; flex-direction: column; gap: 12px; padding: 12px 14px 16px; }',
           // 滚动体是 flex 列时，子项必须禁缩——否则带 overflow:hidden 的卡（自动最小
           // 尺寸保护被摘）会在内容超出视口时被压成 1px（10-14 重建索引卡"消失"案）。
           '.hrag-set-body > * { flex-shrink: 0; }',
@@ -2099,11 +2167,11 @@ window.__ModuleLoader__.load({
           '.hrag-set-migration { padding: 6px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
           '.hrag-set-migration-failed { color: var(--dsw-alias-state-error-primary); border-color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 40%, transparent); }',
           '.hrag-set-card { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; }',
-          '.hrag-set-cardhead { padding: 6px 10px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
-          '.hrag-set-cardbody { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 8px 10px; }',
-          '.hrag-set-group { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); }',
-          '.hrag-set-grouptitle { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; }',
-          '.hrag-set-row { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 8px; font-size: 12px; line-height: 20px; }',
+          '.hrag-set-cardhead { padding: 8px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
+          '.hrag-set-cardbody { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 10px 12px; }',
+          '.hrag-set-group { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px 12px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); }',
+          '.hrag-set-grouptitle { margin-bottom: 0; padding-bottom: 6px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; }',
+          '.hrag-set-row { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 32px; font-size: 12px; line-height: 20px; }',
           '.hrag-set-label { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-set-value { color: var(--dsw-alias-label-primary); word-break: break-word; }',
           // 下拉选择器＝与 Model ID 输入框同款外观（宿主 Input 真值：l4 边框／layer-1 底／32 高／
@@ -2132,7 +2200,7 @@ window.__ModuleLoader__.load({
           '.hrag-set-tierwrap { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
           '.hrag-set-tierbtn { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
           '.hrag-set-tierbtn:hover { color: var(--dsw-alias-label-secondary); }',
-          '.hrag-set-role { display: flex; align-items: center; margin: 6px 0 2px; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; cursor: pointer; }',
+          '.hrag-set-role { display: flex; align-items: center; margin: 10px 0 2px; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; cursor: pointer; }',
           '.hrag-set-role:disabled { color: var(--dsw-alias-label-secondary); cursor: default; }',
           '.hrag-set-dot { display: inline-block; width: 8px; height: 8px; margin-left: 7px; border-radius: 999px; background: rgba(128, 128, 128, 0.45); }',
           '.hrag-set-dot-probing { animation: hrag-dot-pulse 1.2s ease-in-out infinite; }',
@@ -2143,7 +2211,7 @@ window.__ModuleLoader__.load({
           // 缩进是给标题看的，值列必须与父行同列对齐（10-14 复跑实证：整行 padding 会连框一起推动）。
           '.hrag-set-row-nested > .hrag-set-label { margin-left: 12px; border-left: 1px solid var(--dsw-alias-border-l2); padding-left: 12px; }',
           '.hrag-set-locked { display: flex; align-items: center; min-height: 32px; padding: 0 10px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); background: rgba(128, 128, 128, 0.08); color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
-          '.hrag-set-adv { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; cursor: pointer; }',
+          '.hrag-set-adv { display: inline-flex; align-items: center; gap: 6px; margin-top: 0; padding: 0; border: 0; background: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; cursor: pointer; }',
           '.hrag-set-adv:hover { color: var(--dsw-alias-label-secondary); }',
           '.hrag-set-adv-chev { display: inline-flex; transform: rotate(-90deg); transition: transform 0.15s ease; }',
           '.hrag-set-adv-chev-open { transform: rotate(0deg); }',
@@ -2272,10 +2340,22 @@ window.__ModuleLoader__.load({
           '.hrag-badge { padding: 0 6px; height: 20px; display: inline-flex; align-items: center; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-sm); font-size: 11px; color: var(--dsw-alias-label-secondary); }',
           '.hrag-badge-error { border-color: var(--dsw-alias-state-error-primary); color: var(--dsw-alias-state-error-primary); }',
           '.hrag-badge-warn { border-color: var(--dsw-alias-state-warn-primary); color: var(--dsw-alias-state-warn-primary); }',
-          '.hrag-recall-bar { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 2px; }',
+          '.hrag-recall-bar { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 0; }',
+          // 主树召回工具栏全锁 h-7（28px）：按钮与搜索框同高，不再高出 4px。
+          '.hrag-recall-run { height: 28px; padding: 0 12px; font-size: 12px; }',
           '.hrag-input { flex: 1; min-width: 0; height: 28px; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; }',
+          // 六 tab 统一搜索框（照工作台 Input h-7 + Search size-3.5 left-2 + pl-7）：
+          // 28px 高、左 8px 14px 放大镜、文字内衬 28px；带清除钮的容器右衬 26px。
+          '.hrag-searchwrap { position: relative; flex: 1; min-width: 0; display: flex; }',
+          '.hrag-searchicon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); display: inline-flex; color: var(--dsw-alias-label-tertiary); pointer-events: none; }',
+          '.hrag-searchicon svg { width: 14px; height: 14px; }',
+          '.hrag-searchinput { width: 100%; height: 28px; padding: 0 8px 0 28px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; box-sizing: border-box; }',
+          '.hrag-searchwrap-clear .hrag-searchinput { padding-right: 26px; }',
+          '.hrag-searchclear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
+          '.hrag-searchclear:hover { color: var(--dsw-alias-label-primary); }',
+          '.hrag-searchclear svg { width: 14px; height: 14px; }',
           '.hrag-input:focus-visible { outline: none; border-color: var(--dsw-alias-state-business-primary); }',
-          '.hrag-input-num { flex: none; width: 56px; }',
+          '.hrag-input-num { flex: none; width: 56px; border-color: var(--dsw-alias-border-l3); box-sizing: border-box; }',
           // 召回面（小件批 Task 7，照工作台 three-path panel）：三路并列各占 1/3 高
           // （flex 均分＋行区内滚）；整栏点击收起（收起路 shrink 让高位）；图谱路
           // 段控＋内嵌迷你图；耗时档色三档（宿主静态色板最邻近色）；存为考题悬浮栏。
@@ -2292,9 +2372,15 @@ window.__ModuleLoader__.load({
           '.hrag-recall-segbtn:hover:not(:disabled) { color: var(--dsw-alias-label-primary); }',
           '.hrag-recall-segbtn:disabled { opacity: 0.4; cursor: not-allowed; }',
           ".hrag-recall-segbtn[aria-pressed='true'] { background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); box-shadow: var(--dsw-elevation-prominent); }",
-          '.hrag-elapsed-fast { border-color: transparent; background: color-mix(in srgb, var(--dsw-static-green-500) 10%, transparent); color: var(--dsw-static-green-500); }',
-          '.hrag-elapsed-mid { border-color: transparent; background: color-mix(in srgb, var(--dsw-static-amber-400) 10%, transparent); color: var(--dsw-static-amber-400); }',
-          '.hrag-elapsed-slow { border-color: transparent; background: color-mix(in srgb, var(--dsw-static-amber-500) 10%, transparent); color: var(--dsw-static-amber-500); }',
+          // 逐字照工作台 ELAPSED_RANK_CLASSES（跨路排名）：emerald/lime/orange，
+          // 10% 底 + light 700 文字 / dark 300 文字。500 级文字在浅底上会发白，
+          // 绿与黄绿分不开（2026-10-18 真跑反馈）。宿主暗色钩子＝body[data-ds-dark-theme]。
+          '.hrag-elapsed-fast { border-color: transparent; background: color-mix(in srgb, #10b981 10%, transparent); color: #047857; }',
+          '.hrag-elapsed-mid { border-color: transparent; background: color-mix(in srgb, #84cc16 10%, transparent); color: #4d7c0f; }',
+          '.hrag-elapsed-slow { border-color: transparent; background: color-mix(in srgb, #f97316 10%, transparent); color: #c2410c; }',
+          'body[data-ds-dark-theme] .hrag-elapsed-fast { color: #6ee7b7; }',
+          'body[data-ds-dark-theme] .hrag-elapsed-mid { color: #bef264; }',
+          'body[data-ds-dark-theme] .hrag-elapsed-slow { color: #fdba74; }',
           '.hrag-elapsed-plain { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-recall-rows { display: flex; flex-direction: column; padding: 4px; flex: 1; min-height: 0; overflow-y: auto; }',
           '.hrag-recall-mini { display: flex; flex-direction: column; flex: 1; min-height: 160px; }',
@@ -2319,6 +2405,8 @@ window.__ModuleLoader__.load({
           '.hrag-recall-rows-selecting .hrag-hitselect { opacity: 1; }',
           '.hrag-recall-sections { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }',
           '.hrag-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 100%; }',
+          // 原生 title 已由 NativeTipLayer 接管；这是统一暗泡（主树/DSH 同款黑底白字）。
+          '.hrag-native-tip { position: fixed; z-index: 2147483000; max-width: min(340px, calc(100vw - 24px)); max-height: 60vh; overflow: hidden; padding: 6px 8px; border-radius: 6px; background: #1f1f1f; color: #fff; font-family: inherit; font-size: 12px; line-height: 18px; white-space: pre-line; word-break: break-word; pointer-events: none; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24); }',
           '@keyframes hrag-fade-in { from { opacity: 0; } to { opacity: 1; } }',
           '@keyframes hrag-slide-in { from { transform: translateX(24px); opacity: 0.6; } to { transform: translateX(0); opacity: 1; } }',
           '.hrag-drawer-overlay { position: absolute; inset: 0; z-index: 70; background: var(--dsw-alias-bg-mask-1); animation: hrag-fade-in 160ms ease; }',
@@ -2350,10 +2438,15 @@ window.__ModuleLoader__.load({
           '.hrag-btn-primary:hover:not(:disabled) { background: var(--dsw-alias-button-primary-hover); }',
           '.hrag-ev-slot { flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-ev { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
-          '.hrag-ev-bar { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; min-width: 0; }',
-          '.hrag-ev-searchwrap { position: relative; flex: 1; min-width: 90px; display: flex; }',
-          '.hrag-ev-search { width: 100%; height: 26px; font-size: 12px; padding-left: 8px; padding-right: 22px; }',
-          '.hrag-ev-searchclear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: none; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; font-size: 11px; padding: 2px; }',
+          '.hrag-ev-bar { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; min-width: 0; }',
+          // 工具栏控件同档 28px（主树 h-7）：搜索框加高后，段控/运行钮/⋯ 不留在 22/26。
+          '.hrag-ev-bar .hrag-searchwrap { min-width: 90px; }',
+          // 段控外框含 0.5px 边框，锁 28 border-box、按钮吃满内容高——外高与搜索框一致。
+          '.hrag-ev-bar .hrag-seg { height: 28px; box-sizing: border-box; }',
+          '.hrag-ev-bar .hrag-seg button { height: 100%; }',
+          '.hrag-ev-bar .hrag-ev-run, .hrag-ev-bar .hrag-ev-chev, .hrag-ev-bar .hrag-ev-runbtns .hrag-ev-menu-btn { height: 28px; }',
+          // 首行里的图标钮（百科 ⋯）同档 28×28，不再用 22px 的正文图标档。
+          '.hrag-tabbar .hrag-ev-iconbtn { width: 28px; height: 28px; min-width: 28px; padding: 0; }',
           '.hrag-ev-runbtns { margin-left: auto; display: inline-flex; align-items: stretch; flex-shrink: 0; }',
           '.hrag-ev-graybtn { background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }',
           '.hrag-ev-graybtn:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
@@ -2401,8 +2494,17 @@ window.__ModuleLoader__.load({
           '.hrag-ev-table th { text-align: left; font-weight: 500; color: var(--dsw-alias-label-tertiary); padding: 4px 6px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); white-space: nowrap; }',
           '.hrag-ev-table td { padding: 5px 6px; color: var(--dsw-alias-label-primary); vertical-align: middle; }',
           '.hrag-ev-th-num { text-align: right; }',
+          '.hrag-ev-th-numlabel { display: inline-flex; align-items: center; gap: 2px; }',
           '.hrag-ev-th-withnote { display: inline-flex; align-items: center; gap: 4px; }',
-          '.hrag-ev-th-check { width: 26px; }',
+          // 行选框＝瞬态件（照文档表/工作台）：悬停/勾选/有选中项时显形；表头常亮。
+          // 宽 1%＝auto 表格里「收到最窄」的固定技法：26px 只是最小值，剩余宽度
+          // 会被表格灌进这一列，选框与问题列之间被拉出大空档（10-19 真跑反馈）。
+          '.hrag-ev-th-check { width: 1%; padding-left: 6px; padding-right: 8px; white-space: nowrap; vertical-align: middle; }',
+          '.hrag-ev-th-check .hrag-ev-check { vertical-align: middle; }',
+          '.hrag-ev-tr .hrag-ev-check { opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-ev-tr:hover .hrag-ev-check { opacity: 1; }',
+          '.hrag-ev-tr .hrag-ev-check:checked { opacity: 1; }',
+          '.hrag-ev-bank-selecting .hrag-ev-check { opacity: 1; }',
           '.hrag-ev-th-sort { width: 30px; text-align: right; }',
           '.hrag-ev-tr-muted td { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-ev-tr-summary { border-top: 1.5px solid var(--dsw-alias-border-l3); font-weight: 600; }',
@@ -2422,6 +2524,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-dot-part { background: #84cc16; }',
           '.hrag-ev-dot-miss { background: #ef4444; }',
           '.hrag-ev-refchunks { display: inline-flex; align-items: center; gap: 5px; justify-content: flex-end; }',
+          '.hrag-ev-danglingicon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-check { accent-color: var(--dsw-alias-button-primary-fill); width: 13px; height: 13px; margin: 0; flex-shrink: 0; }',
           '.hrag-ev-checkrow { display: inline-flex; align-items: center; gap: 12px; padding-top: 5px; }',
           '.hrag-ev-checklabel { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }',
@@ -2471,14 +2574,18 @@ window.__ModuleLoader__.load({
           '.hrag-ev-bar-danger { background: #ef4444; }',
           '.hrag-ev-bar-muted { background: var(--dsw-alias-border-l3); }',
           '.hrag-ev-tile-reason { margin-top: 4px; font-size: 10px; color: var(--dsw-alias-label-tertiary); }',
-          '.hrag-ev-chartwrap { position: relative; min-width: 0; }',
+          '.hrag-ev-chartwrap { position: relative; min-width: 0; display: flex; flex-direction: column; }',
           '.hrag-ev-chart { display: block; width: 100%; height: 240px; }',
           '.hrag-ev-chart-hover { cursor: pointer; }',
-          '.hrag-ev-tip { position: absolute; z-index: 5; max-width: 228px; padding: 6px 8px; border-radius: 8px; background: var(--dsw-alias-bg-layer-1); border: 0.5px solid var(--dsw-alias-border-l3); box-shadow: var(--dsw-elevation-panel); font-size: 11px; line-height: 16px; color: var(--dsw-alias-label-secondary); pointer-events: none; }',
-          '.hrag-ev-tip-head { font-weight: 600; color: var(--dsw-alias-label-primary); margin-bottom: 2px; }',
+          // ③档批 H1：dataZoom 细滑条（照工作台 slider 14px 细带；左右缘与绘图区同轴）。
+          '.hrag-ev-zoom { position: relative; height: 14px; margin: 0 16px 0 46px; flex-shrink: 0; cursor: grab; }',
+          '.hrag-ev-zoom-track { position: absolute; left: 0; right: 0; top: 6px; height: 2px; border-radius: 1px; background: var(--dsw-alias-border-l3); }',
+          '.hrag-ev-zoom-win { position: absolute; top: 1px; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--dsw-alias-interactive-bg-hover) 80%, transparent); border: 0.5px solid var(--dsw-alias-border-l3); cursor: grab; }',
+          '.hrag-ev-tip { position: absolute; z-index: 5; max-width: 228px; padding: 6px 8px; border-radius: 8px; background: #1f1f1f; border: 0.5px solid rgba(255, 255, 255, 0.14); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24); font-size: 11px; line-height: 16px; color: rgba(255, 255, 255, 0.82); pointer-events: none; }',
+          '.hrag-ev-tip-head { font-weight: 600; color: #fff; margin-bottom: 2px; }',
           '.hrag-ev-tip-row { display: flex; align-items: center; gap: 4px; }',
           '.hrag-ev-tip-delta { opacity: 0.6; }',
-          '.hrag-ev-tip-regression { margin-top: 2px; color: var(--dsw-alias-state-error-primary); }',
+          '.hrag-ev-tip-regression { margin-top: 2px; color: #fca5a5; }',
           '.hrag-ev-tip-meta { margin-top: 2px; opacity: 0.7; }',
           '.hrag-ev-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }',
           '.hrag-ev-legend-item { display: inline-flex; align-items: center; gap: 5px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 11px; cursor: pointer; padding: 1px 2px; font-family: inherit; }',
@@ -2489,7 +2596,6 @@ window.__ModuleLoader__.load({
           '.hrag-ev-bank { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
           '.hrag-ev-bankscroll { min-height: 0; flex: 1; overflow: auto; }',
           '.hrag-ev-banktable { min-width: 480px; }',
-          '.hrag-ev-bulkbar { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); flex-shrink: 0; }',
           '.hrag-ev-review { display: flex; flex-direction: column; flex-shrink: 0; }',
           '.hrag-ev-review-open { min-height: 0; flex: 1; max-height: 45%; }',
           '.hrag-ev-review-static { font-weight: 600; color: inherit; }',
@@ -2561,7 +2667,8 @@ window.__ModuleLoader__.load({
           // 召回补面（存为考题）：行勾选与底栏。
           '.hrag-hitrow-row { display: flex; align-items: stretch; gap: 4px; min-width: 0; }',
           '.hrag-hitrow-row .hrag-hitrow { flex: 1; min-width: 0; }',
-          '.hrag-hitselect { flex-shrink: 0; width: 22px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 6px; background: transparent; color: var(--dsw-alias-label-primary); font-size: 11px; cursor: pointer; align-self: center; height: 22px; padding: 0; }',
+          // 16px：照工作台 Checkbox（size-4），不再用 22px 撑高召回行。
+          '.hrag-hitselect { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0; width: 16px; height: 16px; padding: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 4px; background: transparent; color: var(--dsw-alias-label-primary); font-size: 10px; line-height: 1; cursor: pointer; align-self: center; }',
           '.hrag-hitselect-on { background: var(--dsw-alias-button-primary-fill); color: var(--dsw-alias-label-primary-foreground); border-color: transparent; }',
           '.hrag-hitselect:disabled { opacity: 0.35; cursor: not-allowed; }',
           // 悬浮存为考题栏（小件批 Task 7）：外层不吃交互（pointer-events 双档），
@@ -3411,18 +3518,25 @@ window.__ModuleLoader__.load({
       return 1
     }
 
-    /** 视窗过滤：ts ≥ 末点 − span 的点（插件版＝时间窗直滤；工作台为索引窗，
-        用户可见行为等价——切换窗口不重新取数）。 */
-    function evSpanPoints(points, preset) {
-      if (!points || points.length === 0) return []
+    /** dataZoom 初始索引窗（照工作台 presetToIndexWindow）：日/周/月 → 首个
+        ts ≥ 末点 − 跨度的索引。切档只移窗口，不重新取数。 */
+    function evTrendWindow(points, preset) {
+      const n = points ? points.length : 0
+      if (n === 0) return { start: 0, end: 0 }
+      const last = n - 1
       const span = EVAL_SPAN_MS[preset] || EVAL_SPAN_MS.month
-      const last = Date.parse(points[points.length - 1].ts)
-      if (!Number.isFinite(last)) return points
-      const cutoff = last - span
-      return points.filter((point) => {
-        const ts = Date.parse(point.ts)
-        return Number.isFinite(ts) && ts >= cutoff
-      })
+      const lastTs = Date.parse(points[last].ts)
+      if (!Number.isFinite(lastTs)) return { start: 0, end: last }
+      const cutoff = lastTs - span
+      let start = last
+      for (let i = 0; i <= last; i += 1) {
+        const ts = Date.parse(points[i].ts)
+        if (Number.isFinite(ts) && ts >= cutoff) {
+          start = i
+          break
+        }
+      }
+      return { start, end: last }
     }
 
     /** 火花线（照 EvalSparkline 28×12）：min-max 归一 + 末点实心圆；<2 值 null。 */
@@ -4707,8 +4821,8 @@ window.__ModuleLoader__.load({
 
     const RECALL_PATHS = ['vector', 'graph', 'wiki']
 
-    /** 耗时排名三档色（小件批 Task 7，照工作台 ELAPSED_RANK_CLASSES 绿/黄绿/橙）：
-        宿主静态色板无 lime/orange ⇒ 最近邻三档 绿→琥珀400→琥珀500（黄→橙热力序）。 */
+    /** 耗时排名三档色（照工作台 ELAPSED_RANK_CLASSES 逐字取色：emerald/lime/orange；
+        样式见 .hrag-elapsed-*，暗色主题走宿主 body[data-ds-dark-theme] 钩子）。 */
     const ELAPSED_RANK_CLASSES = ['hrag-elapsed-fast', 'hrag-elapsed-mid', 'hrag-elapsed-slow']
 
     /** 耗时档色（照工作台）：跨路去重排序下标——同值共享较快档色（平局不误导）；
@@ -5177,17 +5291,22 @@ window.__ModuleLoader__.load({
 
       const bar = h(
         'div',
-        { className: 'hrag-recall-bar' },
-        h('input', {
-          type: 'text',
-          className: 'hrag-input',
-          placeholder: t('recall.placeholder'),
-          value: query,
-          onChange: (event) => setQuery(event.target.value),
-          onKeyDown: (event) => {
-            if (event.key === 'Enter') run()
-          },
-        }),
+        { className: 'hrag-recall-bar hrag-tabbar' },
+        h(
+          'span',
+          { className: 'hrag-searchwrap' },
+          h('span', { className: 'hrag-searchicon' }, h(dshSearchIcon)),
+          h('input', {
+            type: 'text',
+            className: 'hrag-searchinput',
+            placeholder: t('recall.placeholder'),
+            value: query,
+            onChange: (event) => setQuery(event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === 'Enter') run()
+            },
+          }),
+        ),
         h('input', {
           type: 'number',
           className: 'hrag-input hrag-input-num',
@@ -5202,7 +5321,7 @@ window.__ModuleLoader__.load({
           'button',
           {
             type: 'button',
-            className: 'hrag-btn hrag-btn-outline',
+            className: 'hrag-btn hrag-btn-outline hrag-recall-run',
             disabled: pending || !query.trim(),
             onClick: run,
           },
@@ -5225,7 +5344,8 @@ window.__ModuleLoader__.load({
       if (!result) {
         body = h(
           'div',
-          { className: 'hrag-state' },
+          { className: 'hrag-state hrag-state-empty' },
+          h('span', { className: 'hrag-state-icon' }, lucideFlaskIcon()),
           h('div', { className: 'hrag-state-title' }, t('recall.empty')),
         )
       } else {
@@ -5592,6 +5712,14 @@ window.__ModuleLoader__.load({
       return value.length > max ? value.slice(0, max) + '…' : value
     }
 
+    /** 搜索命中谓词（照工作台）：四类 label 子串；范围限定类别。 */
+    function vecSearchMatches(point, needle, scope) {
+      const collection = VEC_COLLECTION_OF_SOURCE[point.source_type]
+      if (!collection) return false
+      if (scope !== 'all' && collection !== scope) return false
+      return String(point.label || '').toLowerCase().includes(needle)
+    }
+
     /** 坐标网格（照工作台/echarts 逻辑）：逐轴取 1/2/5 族步长、轴界取步长整
         （floor/ceil ⇒ 每格完整、盒缘即最外刻度线＝闭环）；轴界供逐轴归一映射
         到同一正方形盒面（GL 立方盒语义：列宽/行高各自均匀，盒恒正方）。 */
@@ -5661,7 +5789,7 @@ window.__ModuleLoader__.load({
     /** 投影画布（手写 canvas 2D，代码不搬）：2D＝拖拽平移/滚轮缩放，3D＝拖拽
         旋转/滚轮缩放；绘制照工作台语义——光晕衬底、聚焦淡化、叠加（query 星标
         ＋命中连线＋score 色深）。悬停拾取返回点级 tooltip；单击回调 onPick。 */
-    function VectorCanvas({ t, dims, points, groups, opacities, hiddenTypes, activeOverlay, onPick }) {
+    function VectorCanvas({ t, dims, points, groups, opacities, hiddenTypes, activeOverlay, searchedPointIds, onPick }) {
       const wrapRef = React.useRef(null)
       const canvasRef = React.useRef(null)
       const viewRef = React.useRef({ zoom: 1, ox: 0, oy: 0, yaw: VEC_VIEW_YAW, pitch: VEC_VIEW_PITCH })
@@ -5946,8 +6074,18 @@ window.__ModuleLoader__.load({
           if (p.sx < -20 || p.sx > w + 20 || p.sy < -20 || p.sy > h + 20) continue
           const hit = hitById.has(point.id)
           const dimmed = isDimmed(point)
-          const alpha = hit ? 1 : dimmed ? VEC_DIMMED_OPACITY : baseOpacity
-          const size = group.size || 8
+          const matched = searchedPointIds === null || searchedPointIds.has(point.id)
+          const alpha =
+            searchedPointIds !== null
+              ? matched
+                ? 1
+                : 0.2
+              : hit
+                ? 1
+                : dimmed
+                  ? VEC_DIMMED_OPACITY
+                  : baseOpacity
+          const size = (group.size || 8) * (searchedPointIds !== null && matched ? 1.4 : 1)
           // 光晕衬底（照工作台「白圈」语义）：底色大一圈先画，露出即描边。
           ctx.globalAlpha = alpha
           ctx.fillStyle = haloColor
@@ -5993,7 +6131,7 @@ window.__ModuleLoader__.load({
           projected.push({ sx: qp.sx, sy: qp.sy, r: star, point: null, query: true })
         }
         projectedRef.current = projected
-      }, [dims, groups, opacities, hiddenTypes, activeOverlay, hitById, hitRange])
+      }, [dims, groups, opacities, hiddenTypes, activeOverlay, searchedPointIds, hitById, hitRange])
 
       // 数据/维度变化：重算网格（逐轴取整）& 视口归位（用户配置切换的稳定起点）。
       React.useEffect(() => {
@@ -6081,9 +6219,16 @@ window.__ModuleLoader__.load({
           drag.y = event.clientY
           const view = viewRef.current
           if (dims === 3) {
-            // 抓取语义（他实跑点名「拖拽反了」）：拖向右＝近侧跟随向右。
-            view.yaw -= dx * 0.008
-            view.pitch = Math.max(-1.45, Math.min(1.45, view.pitch + dy * 0.008))
+            if (drag.button === 2) {
+              // ③档批 G5（照工作台 3D viewControl 默认 panMouseButton=right）：
+              // 右键拖拽平移；左键仍是抓取旋转。
+              view.ox += dx
+              view.oy += dy
+            } else {
+              // 抓取语义（他实跑点名「拖拽反了」）：拖向右＝近侧跟随向右。
+              view.yaw -= dx * 0.008
+              view.pitch = Math.max(-1.45, Math.min(1.45, view.pitch + dy * 0.008))
+            }
           } else {
             view.ox += dx
             view.oy += dy
@@ -6117,14 +6262,21 @@ window.__ModuleLoader__.load({
       }
 
       const handleDown = (event) => {
-        dragRef.current = { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false }
+        dragRef.current = {
+          x: event.clientX,
+          y: event.clientY,
+          startX: event.clientX,
+          startY: event.clientY,
+          moved: false,
+          button: event.button,
+        }
         setGrabbing(true)
       }
       const handleUp = (event) => {
         const drag = dragRef.current
         dragRef.current = null
         setGrabbing(false)
-        if (drag && !drag.moved) {
+        if (drag && !drag.moved && drag.button === 0) {
           const found = pick(event)
           if (found && found.entry.point && onPick) onPick(found.entry.point)
         }
@@ -6149,6 +6301,7 @@ window.__ModuleLoader__.load({
           onMouseMove: handleMove,
           onMouseUp: handleUp,
           onMouseLeave: handleLeave,
+          onContextMenu: (event) => event.preventDefault(),
         }),
         tip
           ? h(
@@ -6196,6 +6349,14 @@ window.__ModuleLoader__.load({
       const [recomputing, setRecomputing] = React.useState(false)
       const [hiddenTypes, setHiddenTypes] = React.useState({})
       const [activeOverlay, setActiveOverlay] = React.useState(null)
+      // ③档批 G 组：搜索/范围、工具栏档位、索引在飞计数。
+      const [searchQuery, setSearchQuery] = React.useState('')
+      const [searchScope, setSearchScope] = React.useState('all')
+      const [toolbarTier, setToolbarTier] = React.useState(0)
+      const [indexingCount, setIndexingCount] = React.useState(0)
+      const toolbarRef = React.useRef(null)
+      const tierRef = React.useRef(0)
+      const tierRestoreRef = React.useRef([0, 0, 0])
       const collectionsKey = collections.join(',')
       const projectionRef = React.useRef(null)
       projectionRef.current = projection
@@ -6205,7 +6366,62 @@ window.__ModuleLoader__.load({
         setPhase('idle')
         setFailure(null)
         setActiveOverlay(null)
+        setSearchQuery('')
+        setSearchScope('all')
+        setIndexingCount(0)
       }, [kbId])
+
+      // 工具栏档位（照工作台 useToolbarTier）：溢出逐级升档；回落到本档精确触发点。
+      const evaluateTier = React.useCallback(() => {
+        const element = toolbarRef.current
+        if (!element) return
+        const width = element.clientWidth
+        const overflow = element.scrollWidth > width + 1
+        const current = tierRef.current
+        if (overflow && current < 2) {
+          tierRestoreRef.current[current + 1] = element.scrollWidth + 4
+          tierRef.current = current + 1
+          setToolbarTier(current + 1)
+        } else if (!overflow && current > 0 && width >= tierRestoreRef.current[current]) {
+          tierRef.current = current - 1
+          setToolbarTier(current - 1)
+        }
+      }, [])
+      React.useEffect(() => {
+        evaluateTier()
+      })
+      React.useEffect(() => {
+        const element = toolbarRef.current
+        if (!element || typeof ResizeObserver === 'undefined') return undefined
+        const observer = new ResizeObserver(evaluateTier)
+        observer.observe(element)
+        return () => observer.disconnect()
+      }, [evaluateTier])
+
+      // 索引中提示（照工作台 indexingCount）：有在飞文档时 3s 续拍，空闲 15s 慢拍。
+      React.useEffect(() => {
+        if (!enabled) return undefined
+        let cancelled = false
+        let timer = null
+        const tick = () => {
+          callOp('listDocuments', { kb_id: kbId })
+            .then((rows) => {
+              if (cancelled) return
+              const list = Array.isArray(rows) ? rows : []
+              const count = list.filter((doc) => doc.status !== 'ready' && doc.status !== 'failed').length
+              setIndexingCount(count)
+              timer = window.setTimeout(tick, count > 0 ? PIPELINE_POLL_MS : 15000)
+            })
+            .catch(() => {
+              if (!cancelled) timer = window.setTimeout(tick, 15000)
+            })
+        }
+        tick()
+        return () => {
+          cancelled = true
+          if (timer !== null) window.clearTimeout(timer)
+        }
+      }, [enabled, kbId])
 
       const load = React.useCallback(() => {
         setPhase((current) => (current === 'ready' ? 'ready' : 'loading'))
@@ -6316,6 +6532,16 @@ window.__ModuleLoader__.load({
       const points = React.useMemo(() => (projection ? projection.points : []), [projection])
       const groups = React.useMemo(() => groupVectorPoints(points), [points])
       const opacities = React.useMemo(() => vectorGroupOpacities(groups), [groups])
+      // 搜索命中集（照工作台）：四类 label 子串；范围限定类别；空查询＝不启用。
+      const searchedPointIds = React.useMemo(() => {
+        const needle = searchQuery.trim().toLowerCase()
+        if (!needle) return null
+        const ids = new Set()
+        for (const point of points) {
+          if (vecSearchMatches(point, needle, searchScope)) ids.add(point.id)
+        }
+        return ids
+      }, [searchQuery, searchScope, points])
       const overlayHitCounts = React.useMemo(() => {
         if (!activeOverlay) return null
         const ids = new Set(points.map((point) => point.id))
@@ -6323,9 +6549,53 @@ window.__ModuleLoader__.load({
         return { matched, total: activeOverlay.hits.length }
       }, [activeOverlay, points])
 
+      const searchRow = h(
+        'div',
+        { className: 'hrag-vec-searchrow hrag-tabbar' },
+        h(
+          'div',
+          { className: 'hrag-searchwrap' },
+          h('span', { className: 'hrag-searchicon' }, h(dshSearchIcon)),
+          h('input', {
+            type: 'search',
+            className: 'hrag-searchinput',
+            placeholder: t('vec.searchAll'),
+            'aria-label': t('vec.searchAll'),
+            value: searchQuery,
+            onChange: (event) => setSearchQuery(event.target.value),
+          }),
+        ),
+        h(EvalMenu, {
+          className: 'hrag-vec-scopemenu',
+          label: h(
+            React.Fragment,
+            null,
+            h('span', null, t('vec.searchScopes.' + searchScope)),
+            h('span', { className: 'hrag-vec-dropchev' }, lucideChevronDownIcon(1)),
+          ),
+          title: t('vec.searchScopeLabel'),
+          align: 'end',
+          render: (close) =>
+            ['all', 'chunks', 'entities', 'wiki', 'cards'].map((key) =>
+              h(
+                EvalMenuItem,
+                {
+                  key,
+                  selected: searchScope === key,
+                  onSelect: () => {
+                    setSearchScope(key)
+                    close()
+                  },
+                },
+                t('vec.searchScopes.' + key),
+              ),
+            ),
+        }),
+      )
+
       const bar = h(
         'div',
-        { className: 'hrag-vec-bar' },
+        { className: 'hrag-vec-bar', ref: toolbarRef },
         VEC_COLLECTIONS.map((key) => {
           const active = collections.includes(key)
           const color = VEC_COLORS[VEC_SOURCE_OF_COLLECTION[key]]
@@ -6334,7 +6604,7 @@ window.__ModuleLoader__.load({
             {
               key,
               type: 'button',
-              className: 'hrag-chip',
+              className: 'hrag-chip' + (toolbarTier === 0 ? '' : ' hrag-chip-icon'),
               'aria-pressed': active,
               'aria-label': t('vec.chips.' + key),
               title: t('vec.chips.' + key),
@@ -6345,6 +6615,7 @@ window.__ModuleLoader__.load({
               className: 'hrag-chip-dot',
               style: { backgroundColor: color, opacity: active ? 1 : 0.4 },
             }),
+            toolbarTier === 0 ? h('span', null, t('vec.chips.' + key)) : null,
           )
         }),
         projection && projection.sampled
@@ -6363,39 +6634,96 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'hrag-vec-bar-right' },
-          h(
-            'span',
-            { className: 'hrag-seg', role: 'group', 'aria-label': t('vec.dimsLabel') },
-            [2, 3].map((value) =>
-              h(
-                'button',
-                {
-                  key: value,
-                  type: 'button',
-                  'aria-pressed': dims === value,
-                  onClick: () => setDims(value),
-                },
-                String(value) + 'D',
-              ),
-            ),
-          ),
-          h(
-            'select',
-            {
-              className: 'hrag-vec-algo',
-              'aria-label': t('vec.algoLabel'),
-              title: t('vec.algoLabel'),
-              value: algo,
-              onChange: (event) => setAlgo(event.target.value),
-            },
-            h('option', { value: 'pca' }, 'PCA'),
-            h('option', { value: 'umap' }, 'UMAP'),
-          ),
+          toolbarTier < 2
+            ? h(
+                React.Fragment,
+                null,
+                h(
+                  'span',
+                  { className: 'hrag-seg', role: 'group', 'aria-label': t('vec.dimsLabel') },
+                  [2, 3].map((value) =>
+                    h(
+                      'button',
+                      {
+                        key: value,
+                        type: 'button',
+                        'aria-pressed': dims === value,
+                        onClick: () => setDims(value),
+                      },
+                      String(value) + 'D',
+                    ),
+                  ),
+                ),
+                h(EvalMenu, {
+                  className: 'hrag-vec-algomenu',
+                  label: h(
+                    React.Fragment,
+                    null,
+                    h('span', null, algo.toUpperCase()),
+                    h('span', { className: 'hrag-vec-dropchev' }, lucideChevronDownIcon(1)),
+                  ),
+                  title: t('vec.algoLabel'),
+                  align: 'end',
+                  render: (close) =>
+                    ['pca', 'umap'].map((value) =>
+                      h(
+                        EvalMenuItem,
+                        {
+                          key: value,
+                          selected: algo === value,
+                          onSelect: () => {
+                            setAlgo(value)
+                            close()
+                          },
+                        },
+                        value.toUpperCase(),
+                      ),
+                    ),
+                }),
+              )
+            : h(EvalMenu, {
+                icon: dshEllipsisIcon(),
+                title: t('vec.moreOptions'),
+                align: 'end',
+                render: (close) => [
+                  h('div', { key: 'dims', className: 'hrag-ev-menu-note' }, t('vec.dimsLabel')),
+                  [2, 3].map((value) =>
+                    h(
+                      EvalMenuItem,
+                      {
+                        key: 'dims-' + value,
+                        selected: dims === value,
+                        onSelect: () => {
+                          setDims(value)
+                          close()
+                        },
+                      },
+                      String(value) + 'D',
+                    ),
+                  ),
+                  h('div', { key: 'sep', className: 'hrag-ev-menu-sep' }),
+                  h('div', { key: 'algo', className: 'hrag-ev-menu-note' }, t('vec.algoLabel')),
+                  ['pca', 'umap'].map((value) =>
+                    h(
+                      EvalMenuItem,
+                      {
+                        key: 'algo-' + value,
+                        selected: algo === value,
+                        onSelect: () => {
+                          setAlgo(value)
+                          close()
+                        },
+                      },
+                      value.toUpperCase(),
+                    ),
+                  ),
+                ],
+              }),
           h(
             'button',
             {
               type: 'button',
-              className: 'hrag-btn hrag-btn-outline hrag-btn-icon',
+              className: 'hrag-btn hrag-btn-outline hrag-btn-icon hrag-vec-iconbtn',
               'aria-label': t('vec.recompute'),
               title: t('vec.recompute'),
               disabled: recomputing,
@@ -6418,7 +6746,12 @@ window.__ModuleLoader__.load({
           h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.retry')),
         )
       } else if (phase === 'empty') {
-        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('vec.empty')))
+        body = h(
+          'div',
+          { className: 'hrag-state hrag-state-empty' },
+          h('span', { className: 'hrag-state-icon' }, lucideChartScatterIcon()),
+          h('div', { className: 'hrag-state-title' }, t('vec.empty')),
+        )
       } else {
         body = h(
           'div',
@@ -6431,6 +6764,7 @@ window.__ModuleLoader__.load({
             opacities,
             hiddenTypes,
             activeOverlay,
+            searchedPointIds,
             onPick: (point) => {
               if (point.source_type === 'chunk' && onOpenChunk) {
                 onOpenChunk(point.color_key, point.id, point.label)
@@ -6495,7 +6829,11 @@ window.__ModuleLoader__.load({
       return h(
         'div',
         { className: 'hrag-vec' },
+        searchRow,
         bar,
+        indexingCount > 0
+          ? h('div', { className: 'hrag-vec-indexhint' }, evText(t('vec.indexingHint'), [indexingCount]))
+          : null,
         body,
       )
     }
@@ -7281,18 +7619,23 @@ window.__ModuleLoader__.load({
 
       const bar = h(
         'div',
-        { className: 'hrag-graph-bar' },
+        { className: 'hrag-graph-bar hrag-tabbar' },
         h(
           'form',
           { className: 'hrag-graph-search', onSubmit: handleSearch },
-          h('input', {
-            type: 'text',
-            className: 'hrag-input',
-            placeholder: t('graph.searchEntities'),
-            'aria-label': t('graph.searchEntities'),
-            value: query,
-            onChange: (event) => setQuery(event.target.value),
-          }),
+          h(
+            'span',
+            { className: 'hrag-searchwrap' },
+            h('span', { className: 'hrag-searchicon' }, h(dshSearchIcon)),
+            h('input', {
+              type: 'text',
+              className: 'hrag-searchinput',
+              placeholder: t('graph.searchEntities'),
+              'aria-label': t('graph.searchEntities'),
+              value: query,
+              onChange: (event) => setQuery(event.target.value),
+            }),
+          ),
         ),
         h(
           'span',
@@ -7330,7 +7673,12 @@ window.__ModuleLoader__.load({
           h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.retry')),
         )
       } else if (phase === 'empty') {
-        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('graph.empty')))
+        body = h(
+          'div',
+          { className: 'hrag-state hrag-state-empty' },
+          h('span', { className: 'hrag-state-icon' }, lucideWaypointsIcon()),
+          h('div', { className: 'hrag-state-title' }, t('graph.empty')),
+        )
       } else {
         const trace = activeOverlay ? activeOverlay.trace : null
         const layers = trace
@@ -8341,7 +8689,7 @@ window.__ModuleLoader__.load({
       // 加载/错误态维持全屏状态页（插件既有词汇）。
       const docbar = h(
         'div',
-        { className: 'hrag-docbar' },
+        { className: 'hrag-docbar hrag-tabbar' },
         h(
           'div',
           { className: 'hrag-docsearch' },
@@ -8997,7 +9345,7 @@ window.__ModuleLoader__.load({
     const dshCheckIcon = dshIconOr('IconCheckOutlineRegular', () =>
       dshMenuIcon([{ d: 'M2.25 8.5L5.49732 11.7473C5.90519 12.1552 6.57263 12.1344 6.95426 11.7018L13.75 4' }]),
     )
-    /** 文档工具栏图标（小件批 Task 1）：搜索/双箭头排序（回退路径＝宿主 primitives 提取真值）。 */
+    /** 搜索图标（六 tab 统一搜索框）/双箭头排序（回退路径＝宿主 primitives 提取真值）。 */
     const dshSearchIcon = dshIconOr('IconSearchOutlineRegular', () =>
       dshMenuIcon([
         { d: 'M6.58727 11.8586C9.55061 11.8586 11.9529 9.45637 11.9529 6.49304C11.9529 3.5297 9.55061 1.12744 6.58727 1.12744C3.62394 1.12744 1.22168 3.5297 1.22168 6.49304C1.22168 9.45637 3.62394 11.8586 6.58727 11.8586Z' },
@@ -9095,6 +9443,87 @@ window.__ModuleLoader__.load({
         'svg',
         { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', opacity, 'aria-hidden': 'true' },
         h('path', { d: 'm6 9 6 6 6-6', stroke: 'currentColor' }),
+      )
+    }
+
+    /** 评测表头排序钮（照工作台 ArrowUpDown；图标钮＝无边框，与行 ⋯ 同语汇）。 */
+    function lucideSortIcon() {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        h('path', { d: 'm21 16-4 4-4-4', stroke: 'currentColor' }),
+        h('path', { d: 'M17 20V4', stroke: 'currentColor' }),
+        h('path', { d: 'm3 8 4-4 4 4', stroke: 'currentColor' }),
+        h('path', { d: 'M7 4v16', stroke: 'currentColor' }),
+      )
+    }
+
+    function lucidePlayIcon() {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        h('path', { d: 'M6 3l14 9-14 9V3z', stroke: 'currentColor' }),
+      )
+    }
+
+    function lucideLayersIcon() {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        h('path', { d: 'm12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z', stroke: 'currentColor' }),
+        h('path', { d: 'm22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65', stroke: 'currentColor' }),
+        h('path', { d: 'm22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65', stroke: 'currentColor' }),
+      )
+    }
+
+    /** 空态烧瓶（照工作台 recall-test-panel 的 lucide FlaskConical size-5）。 */
+    function lucideFlaskIcon() {
+      return h(
+        'svg',
+        { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        h('path', { d: 'M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2', stroke: 'currentColor' }),
+        h('path', { d: 'M6.453 15h11.094', stroke: 'currentColor' }),
+        h('path', { d: 'M8.5 2h7', stroke: 'currentColor' }),
+      )
+    }
+
+    /** 空态散点（lucide ChartScatter，投影 tab 词汇）。 */
+    function lucideChartScatterIcon() {
+      const dot = (cx, cy) => h('circle', { cx, cy, r: 1.5, fill: 'currentColor', stroke: 'none' })
+      return h(
+        'svg',
+        { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', 'aria-hidden': 'true' },
+        h('path', { d: 'M3 3v16a2 2 0 0 0 2 2h16', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+        dot(7.5, 7.5),
+        dot(18.5, 5.5),
+        dot(11.5, 11.5),
+        dot(7.5, 16.5),
+        dot(17.5, 14.5),
+      )
+    }
+
+    /** 空态实体图（lucide Waypoints，图谱 tab 词汇）。 */
+    function lucideWaypointsIcon() {
+      return h(
+        'svg',
+        { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        h('circle', { cx: 12, cy: 4.5, r: 2.5 }),
+        h('path', { d: 'm10.2 6.3-3.9 3.9' }),
+        h('circle', { cx: 4.5, cy: 12, r: 2.5 }),
+        h('path', { d: 'M7 12h10' }),
+        h('circle', { cx: 19.5, cy: 12, r: 2.5 }),
+        h('path', { d: 'm13.8 17.7 3.9-3.9' }),
+        h('circle', { cx: 12, cy: 19.5, r: 2.5 }),
+      )
+    }
+
+    /** 悬空标记：红色禁止通行（圆＋斜杠）；计数/缺失明细交给 title 悬浮提示。 */
+    function lucideBanIcon() {
+      return h(
+        'svg',
+        { width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        h('circle', { cx: 12, cy: 12, r: 10, stroke: 'currentColor' }),
+        h('path', { d: 'm4.9 4.9 14.2 14.2', stroke: 'currentColor' }),
       )
     }
 
@@ -9447,7 +9876,7 @@ window.__ModuleLoader__.load({
 
       const toolbar = h(
         'div',
-        { className: 'hrag-ev-bar' },
+        { className: 'hrag-ev-bar hrag-tabbar' },
         h(
           'span',
           { className: 'hrag-seg', role: 'group', 'aria-label': tk('ev.viewsLabel') },
@@ -9462,10 +9891,11 @@ window.__ModuleLoader__.load({
         view === 'questions'
           ? h(
               'span',
-              { className: 'hrag-ev-searchwrap' },
+              { className: 'hrag-searchwrap hrag-searchwrap-clear' },
+              h('span', { className: 'hrag-searchicon' }, h(dshSearchIcon)),
               h('input', {
                 type: 'text',
-                className: 'hrag-input hrag-ev-search',
+                className: 'hrag-searchinput',
                 placeholder: tk('ev.questions.searchPlaceholder'),
                 'aria-label': tk('ev.questions.searchPlaceholder'),
                 value: bankSearch,
@@ -9476,11 +9906,11 @@ window.__ModuleLoader__.load({
                     'button',
                     {
                       type: 'button',
-                      className: 'hrag-ev-searchclear',
+                      className: 'hrag-searchclear',
                       'aria-label': tk('ev.questions.searchClear'),
                       onClick: () => setBankSearch(''),
                     },
-                    '✕',
+                    h(dshCloseIcon),
                   )
                 : null,
             )
@@ -10052,7 +10482,7 @@ window.__ModuleLoader__.load({
         } else if (!data.has_data) {
           body = h('div', { className: 'hrag-ev-hint' }, tk('ev.emptyTrend'))
         } else {
-          const points = evSpanPoints(data.points, span)
+          const points = data.points
           body =
             points.length === 0
               ? h('div', { className: 'hrag-ev-hint' }, tk('ev.emptyTrend'))
@@ -10099,8 +10529,8 @@ window.__ModuleLoader__.load({
     /** 手绘趋势图（照工作台合同）：序号轴（每 run 等距槽）＋分段加权纵轴
         （六等分刻度 0/40/80/90/95/100%）＋阈值红虚线＋基线更新竖线＋按图例/
         picker 的指标线（L1 实线实心圆、L2 虚线空心圆、回退点红）＋最近点
-        tooltip（环比箭头）＋点击下钻 run。插件版＝时间窗直滤（工作台为
-        dataZoom 索引窗，用户可见行为等价）。 */
+        tooltip（环比箭头）＋点击下钻 run。③档批 H1：dataZoom 索引窗（滚轮
+        缩放＋拖拽平移＋点数 >8 的细滑条；日/周/月只设初始窗）。 */
     function EvalTrendChart({ tk, points, baseline, span, pickerSelected, legendSelected, onOpenRun }) {
       const wrapRef = React.useRef(null)
       const canvasRef = React.useRef(null)
@@ -10108,6 +10538,15 @@ window.__ModuleLoader__.load({
       const hoverRef = React.useRef(null)
       hoverRef.current = hover
       const layoutRef = React.useRef({ xs: [] })
+      // ③档批 H1（照工作台 dataZoom）：全量点入场，日/周/月只设初始索引窗；
+      // 滚轮/拖拽/滑条改窗口，切窗不重新取数。
+      const [win, setWin] = React.useState(() => evTrendWindow(points, span))
+      const sliderRef = React.useRef(null)
+      const panRef = React.useRef(null)
+      const sliderDragRef = React.useRef(null)
+      React.useEffect(() => {
+        setWin(evTrendWindow(points, span))
+      }, [points, span])
 
       const visibleSeries = React.useCallback(() => {
         const list = []
@@ -10153,12 +10592,16 @@ window.__ModuleLoader__.load({
         const padB = 24
         const plotW = width - padL - padR
         const plotH = height - padT - padB
-        const count = points.length
-        const xAt = (index) => padL + (count === 1 ? plotW / 2 : (index / (count - 1)) * plotW)
+        const total = points.length
+        const start = Math.max(0, Math.min(total - 1, win.start))
+        const end = Math.max(start, Math.min(total - 1, win.end))
+        const count = end - start + 1
+        const xAt = (index) =>
+          padL + (count === 1 ? plotW / 2 : ((index - start) / (count - 1)) * plotW)
         const yAt = (value) => padT + (1 - evWarpValue(value)) * plotH
-        const xs = []
-        for (let index = 0; index < count; index += 1) xs.push(xAt(index))
-        layoutRef.current = { xs }
+        const xs = new Array(total)
+        for (let index = start; index <= end; index += 1) xs[index] = xAt(index)
+        layoutRef.current = { xs, start, end }
         ctx.font = '10px sans-serif'
         for (const entry of EVAL_WARP_TICKS) {
           const y = padT + (1 - entry[0]) * plotH
@@ -10179,13 +10622,17 @@ window.__ModuleLoader__.load({
         ctx.textBaseline = 'top'
         const step = Math.max(1, Math.ceil(count / Math.max(1, Math.floor(plotW / 48))))
         const pad2 = (value) => String(value).padStart(2, '0')
-        for (let index = 0; index < count; index += step) {
+        // 轴格式随可见跨度（照工作台 presetRef 回算）：≤2 天看时分，否则看日期。
+        const firstTs = Date.parse(points[start] ? points[start].ts : '')
+        const lastTs = Date.parse(points[end] ? points[end].ts : '')
+        const visibleMs = Number.isFinite(firstTs) && Number.isFinite(lastTs) ? lastTs - firstTs : 0
+        const useTimeLabel = count <= 1 || visibleMs <= 2 * 86400000
+        for (let index = start; index <= end; index += step) {
           const date = new Date(points[index].ts)
           if (Number.isNaN(date.getTime())) continue
-          const label =
-            span === 'day'
-              ? pad2(date.getHours()) + ':' + pad2(date.getMinutes())
-              : pad2(date.getMonth() + 1) + '-' + pad2(date.getDate())
+          const label = useTimeLabel
+            ? pad2(date.getHours()) + ':' + pad2(date.getMinutes())
+            : pad2(date.getMonth() + 1) + '-' + pad2(date.getDate())
           ctx.fillText(label, xs[index], height - padB + 6)
         }
         if (baseline) {
@@ -10201,7 +10648,7 @@ window.__ModuleLoader__.load({
         }
         ctx.textAlign = 'center'
         ctx.textBaseline = 'bottom'
-        for (let index = 0; index < count; index += 1) {
+        for (let index = start; index <= end; index += 1) {
           if (!points[index].is_baseline_update) continue
           ctx.strokeStyle = ink(0.3)
           ctx.setLineDash([3, 3])
@@ -10221,9 +10668,10 @@ window.__ModuleLoader__.load({
           ctx.lineTo(xs[hoverIndex], padT + plotH)
           ctx.stroke()
         }
+        const dotRadius = count <= 20 ? 2.6 : count <= 40 ? 1.8 : 0
         for (const metric of visibleSeries()) {
           const pts = []
-          for (let index = 0; index < count; index += 1) {
+          for (let index = start; index <= end; index += 1) {
             const value = points[index][metric.key]
             if (value == null) continue
             pts.push({ index, x: xs[index], y: yAt(value) })
@@ -10240,12 +10688,13 @@ window.__ModuleLoader__.load({
           ctx.globalAlpha = 1
           for (const point of pts) {
             const highlighted = hoverIndex === point.index
+            if (!highlighted && dotRadius === 0) continue
             const regression =
               metric.key === 'recall_at_k' &&
               points[point.index].regression &&
               points[point.index].regression.detected
             ctx.beginPath()
-            ctx.arc(point.x, point.y, highlighted ? 4 : 2.6, 0, Math.PI * 2)
+            ctx.arc(point.x, point.y, highlighted ? 4 : dotRadius, 0, Math.PI * 2)
             if (regression) {
               ctx.fillStyle = EVAL_REGRESSION_COLOR
               ctx.fill()
@@ -10261,7 +10710,7 @@ window.__ModuleLoader__.load({
             }
           }
         }
-      }, [points, baseline, span, tk, visibleSeries])
+      }, [points, baseline, span, tk, visibleSeries, win])
 
       React.useEffect(() => {
         draw()
@@ -10274,16 +10723,66 @@ window.__ModuleLoader__.load({
         return () => observer.disconnect()
       }, [draw])
 
+      const total = points.length
+      const clampCount = (count) => Math.max(2, Math.min(total, count))
+      const moveWindow = (start, count) => {
+        const next = Math.max(0, Math.min(total - count, start))
+        setWin({ start: next, end: next + count - 1 })
+      }
+
+      // dataZoom inside（照工作台）：滚轮围绕光标缩放索引窗。≥2 点即接管滚轮
+      // （2 点不可再缩＝无视觉变化，但与工作台一致地不把滚动漏给页面）。
+      React.useEffect(() => {
+        const canvas = canvasRef.current
+        if (!canvas || total < 2) return undefined
+        const onWheel = (event) => {
+          event.preventDefault()
+          const rect = canvas.getBoundingClientRect()
+          if (!rect.width) return
+          const fraction = Math.max(
+            0,
+            Math.min(1, (event.clientX - rect.left - 46) / Math.max(1, rect.width - 46 - 16)),
+          )
+          setWin((current) => {
+            const count = current.end - current.start + 1
+            const nextCount = clampCount(Math.round(count * Math.exp(-event.deltaY * 0.0015)))
+            if (nextCount === count) return current
+            const anchor = current.start + fraction * (count - 1)
+            const nextStart = Math.max(
+              0,
+              Math.min(total - nextCount, Math.round(anchor - fraction * (nextCount - 1))),
+            )
+            return { start: nextStart, end: nextStart + nextCount - 1 }
+          })
+        }
+        canvas.addEventListener('wheel', onWheel, { passive: false })
+        return () => canvas.removeEventListener('wheel', onWheel)
+      }, [total])
+
+      const onMouseDown = (event) => {
+        if (event.button !== 0) return
+        panRef.current = { x: event.clientX, win, moved: false }
+      }
       const onMouseMove = (event) => {
         const canvas = canvasRef.current
         if (!canvas) return
         const rect = canvas.getBoundingClientRect()
+        const pan = panRef.current
+        if (pan) {
+          const dx = event.clientX - pan.x
+          if (Math.abs(dx) > 3) pan.moved = true
+          const count = pan.win.end - pan.win.start + 1
+          const slot = Math.max(1, (rect.width - 46 - 16) / Math.max(1, count - 1))
+          const delta = Math.round(-dx / slot)
+          if (delta !== 0) moveWindow(pan.win.start + delta, count)
+          return
+        }
         const mx = event.clientX - rect.left
-        const xs = layoutRef.current.xs
+        const layout = layoutRef.current
         let best = null
         let bestDistance = 18
-        for (let index = 0; index < xs.length; index += 1) {
-          const distance = Math.abs(xs[index] - mx)
+        for (let index = layout.start; index <= layout.end; index += 1) {
+          const distance = Math.abs(layout.xs[index] - mx)
           if (distance <= bestDistance) {
             bestDistance = distance
             best = index
@@ -10294,6 +10793,48 @@ window.__ModuleLoader__.load({
           return
         }
         setHover({ index: best, x: mx, y: event.clientY - rect.top })
+      }
+      const onMouseUp = () => {
+        const pan = panRef.current
+        panRef.current = null
+        if (pan && !pan.moved) {
+          const current = hoverRef.current
+          if (current && points[current.index]) onOpenRun(points[current.index].run_id)
+        }
+      }
+      const onMouseLeave = () => {
+        panRef.current = null
+        setHover(null)
+      }
+
+      // dataZoom slider（照工作台：点数 > 8 出 14px 细带；拖窗平移）。
+      const onSliderDown = (event) => {
+        const track = sliderRef.current
+        if (!track) return
+        const rect = track.getBoundingClientRect()
+        if (!rect.width) return
+        const fraction = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
+        const count = win.end - win.start + 1
+        const startF = win.start / Math.max(1, total - 1)
+        const endF = win.end / Math.max(1, total - 1)
+        if (fraction < startF || fraction > endF) {
+          moveWindow(Math.round(fraction * (total - 1) - count / 2), count)
+        }
+        sliderDragRef.current = { x: event.clientX, win }
+        if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId)
+      }
+      const onSliderMove = (event) => {
+        const drag = sliderDragRef.current
+        const track = sliderRef.current
+        if (!drag || !track) return
+        const rect = track.getBoundingClientRect()
+        if (!rect.width) return
+        const count = drag.win.end - drag.win.start + 1
+        const delta = Math.round(((event.clientX - drag.x) / rect.width) * Math.max(1, total - 1))
+        moveWindow(drag.win.start + delta, count)
+      }
+      const onSliderUp = () => {
+        sliderDragRef.current = null
       }
 
       const buildTooltip = (index) => {
@@ -10358,18 +10899,40 @@ window.__ModuleLoader__.load({
 
       const wrapWidth = wrapRef.current ? wrapRef.current.clientWidth : 320
       const tipLeft = hover ? Math.max(6, Math.min(hover.x + 12, Math.max(6, wrapWidth - 236))) : 0
+      const zoomVisible = total > 8
+      const zoomCount = win.end - win.start + 1
+      const zoomLeftRaw = total > 1 ? (win.start / (total - 1)) * 100 : 0
+      const zoomWidth = total > 1 ? Math.max(4, ((zoomCount - 1) / (total - 1)) * 100) : 100
+      const zoomLeft = Math.min(zoomLeftRaw, 100 - zoomWidth)
       return h(
         'div',
         { className: 'hrag-ev-chartwrap', ref: wrapRef },
         h('canvas', {
           ref: canvasRef,
           className: 'hrag-ev-chart' + (hover ? ' hrag-ev-chart-hover' : ''),
+          onMouseDown,
           onMouseMove,
-          onMouseLeave: () => setHover(null),
-          onClick: () => {
-            if (hover && points[hover.index]) onOpenRun(points[hover.index].run_id)
-          },
+          onMouseUp,
+          onMouseLeave,
         }),
+        zoomVisible
+          ? h(
+              'div',
+              {
+                className: 'hrag-ev-zoom',
+                ref: sliderRef,
+                onPointerDown: onSliderDown,
+                onPointerMove: onSliderMove,
+                onPointerUp: onSliderUp,
+                onPointerCancel: onSliderUp,
+              },
+              h('div', { className: 'hrag-ev-zoom-track' }),
+              h('div', {
+                className: 'hrag-ev-zoom-win',
+                style: { left: zoomLeft + '%', width: zoomWidth + '%' },
+              }),
+            )
+          : null,
         hover
           ? h('div', { className: 'hrag-ev-tip', style: { left: tipLeft + 'px', top: '8px' } }, buildTooltip(hover.index))
           : null,
@@ -10624,7 +11187,8 @@ window.__ModuleLoader__.load({
     }
 
     /** 题库视图（照工作台）：表格（选择集/参考切片数＋悬空/存疑徽章/召回率
-        三态点/行菜单）＋考题抽屉＋添加/合成弹层＋底部候选题审核停靠。 */
+        三态点/行菜单）＋考题抽屉＋添加/合成弹层＋底部候选题审核停靠。
+        选中集动作只在行右键菜单（工作台 2026-09-02 批量运行栏退役），不再插底条。 */
     function EvalBank({ t, tk, kbId, enabled, questionsQ, overviewData, search, selected, onSelectedChange, addOpen, onAddOpenChange, synthOpen, onSynthOpenChange, onTrigger, onReproduce, notify }) {
       const [sortKey, setSortKey] = React.useState('default')
       const [sortDir, setSortDir] = React.useState('asc')
@@ -10632,12 +11196,14 @@ window.__ModuleLoader__.load({
       const [deleteTargets, setDeleteTargets] = React.useState(null)
       const [busy, setBusy] = React.useState(false)
       const [docTitles, setDocTitles] = React.useState(null)
+      const [ctxMenu, setCtxMenu] = React.useState(null)
       // 合成触发信号（照工作台触发后失效合成缓存）：递增即唤醒审核停靠重拉。
       const [synthWake, setSynthWake] = React.useState(0)
 
       React.useEffect(() => {
         setDrawerQuestionId(null)
         setDeleteTargets(null)
+        setCtxMenu(null)
       }, [kbId])
 
       // 文档标题映射（参考切片 tooltip 与抽屉组头共用；文档 tab 同端点）。
@@ -10715,8 +11281,18 @@ window.__ModuleLoader__.load({
         else visibleQuestions.forEach((question) => next.add(question.id))
         onSelectedChange(next)
       }
-      const handleRowContextMenu = (questionId) => {
-        if (!selected.has(questionId)) onSelectedChange(new Set([questionId]))
+      // 工作台惯例：右键未选中行只选中该行；右键已选中行保持批量上下文。
+      const handleRowContextMenu = (question, event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        const already = selected.has(question.id)
+        if (!already) onSelectedChange(new Set([question.id]))
+        setCtxMenu({
+          x: event.clientX,
+          y: event.clientY,
+          question,
+          batch: already && selected.size > 1,
+        })
       }
 
       const handleDeleteConfirm = () => {
@@ -10816,7 +11392,7 @@ window.__ModuleLoader__.load({
       } else {
         table = h(
           'table',
-          { className: 'hrag-ev-table hrag-ev-banktable' },
+          { className: 'hrag-ev-table hrag-ev-banktable' + (selected.size > 0 ? ' hrag-ev-bank-selecting' : '') },
           h(
             'thead',
             null,
@@ -10851,7 +11427,8 @@ window.__ModuleLoader__.load({
                 'th',
                 { className: 'hrag-ev-th-sort' },
                 h(EvalMenu, {
-                  label: '⇅',
+                  icon: lucideSortIcon(),
+                  title: tk('sort.title'),
                   align: 'end',
                   render: (close) => [
                     h(EvalMenuItem, { key: 'default', selected: sortKey === 'default', onSelect: () => { setSortKey('default'); close() } }, tk('ev.questions.sortDefault')),
@@ -10879,16 +11456,16 @@ window.__ModuleLoader__.load({
             sortedQuestions.map((question) => {
               const isSelected = selected.has(question.id)
               const docIds = evRefDocIds(question.relevant_chunk_ids)
+              const refTotal = question.relevant_chunk_ids.length
+              const refMissing = question.missing_chunk_ids ? question.missing_chunk_ids.length : 0
+              const refAllDangling = refTotal > 0 && refMissing >= refTotal
               return h(
                 'tr',
                 {
                   key: question.id,
                   className: 'hrag-ev-tr' + (isSelected ? ' hrag-ev-tr-on' : ''),
                   onClick: () => setDrawerQuestionId(question.id),
-                  onContextMenu: (event) => {
-                    event.preventDefault()
-                    handleRowContextMenu(question.id)
-                  },
+                  onContextMenu: (event) => handleRowContextMenu(question, event),
                 },
                 h(
                   'td',
@@ -10911,15 +11488,24 @@ window.__ModuleLoader__.load({
                   h(
                     'span',
                     { className: 'hrag-ev-refchunks' },
-                    question.relevant_chunk_ids.length > 0
+                    refTotal > 0 && !refAllDangling
                       ? h(
                           'span',
                           { title: docIds.map(docTitle).join('\n') },
-                          String(question.relevant_chunk_ids.length),
+                          String(refTotal),
                         )
                       : null,
-                    question.missing_chunk_ids && question.missing_chunk_ids.length > 0
-                      ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-danger' }, tk('ev.questions.danglingBadge'))
+                    refMissing > 0
+                      ? h(
+                          'span',
+                          {
+                            className: 'hrag-ev-danglingicon',
+                            role: 'img',
+                            'aria-label': tk('ev.questions.danglingBadge'),
+                            title: tk('ev.questions.danglingHint', refTotal, refMissing),
+                          },
+                          lucideBanIcon(),
+                        )
                       : null,
                     question.anchor_mismatch != null
                       ? h(
@@ -10949,28 +11535,44 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'hrag-ev-bank' },
         h('div', { className: 'hrag-ev-bankscroll' }, table),
-        // 选中集批量动作条（工作台为工具栏原位切换；插件版＝表下方浮条，精简档）。
-        selected.size > 0
-          ? h(
-              'div',
-              { className: 'hrag-ev-bulkbar' },
-              h('span', { className: 'hrag-ev-muted hrag-ev-tabnums' }, tk('ev.selection.selected', selected.size)),
-              h(
-                'button',
-                { type: 'button', className: 'hrag-btn hrag-ev-graybtn', onClick: () => onTrigger({ layers: 'l1', question_ids: [...selected] }) },
-                tk('ev.tierQuick'),
-              ),
-              h(
-                'button',
-                { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => onTrigger({ layers: 'l1_l2', question_ids: [...selected] }) },
-                tk('ev.tierFull'),
-              ),
-              h(
-                'button',
-                { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => onSelectedChange(new Set()) },
-                tk('ev.selection.clear'),
-              ),
-            )
+        // 批量动作只在行右键菜单（照工作台 2026-09-02 批量运行栏退役）；底部不再插条。
+        ctxMenu !== null
+          ? h(DocContextMenu, {
+              t,
+              x: ctxMenu.x,
+              y: ctxMenu.y,
+              items: ctxMenu.batch
+                ? [
+                    { id: 'count', label: tk('ev.selection.selected', selected.size), disabled: true },
+                    { id: 'quick', label: tk('ev.tierQuick'), icon: lucidePlayIcon() },
+                    { id: 'full', label: tk('ev.tierFull'), icon: lucideLayersIcon() },
+                    { id: 'cancel', label: tk('ev.selection.clear'), icon: dshCloseIcon() },
+                    { type: 'separator', id: 'sep' },
+                    { id: 'delete', label: tk('ev.selection.deleteSelected'), icon: dshTrashIcon(), danger: true },
+                  ]
+                : [
+                    { id: 'quick', label: tk('ev.tierQuick'), icon: lucidePlayIcon() },
+                    { id: 'full', label: tk('ev.tierFull'), icon: lucideLayersIcon() },
+                    { id: 'cancel', label: tk('ev.selection.clear'), icon: dshCloseIcon() },
+                    { type: 'separator', id: 'sep' },
+                    { id: 'delete', label: tk('ev.questions.rowDelete'), icon: dshTrashIcon(), danger: true },
+                  ],
+              onClose: () => setCtxMenu(null),
+              onSelect: (id) => {
+                if (id === 'quick' || id === 'full') {
+                  onTrigger({
+                    layers: id === 'quick' ? 'l1' : 'l1_l2',
+                    question_ids: ctxMenu.batch ? [...selected] : [ctxMenu.question.id],
+                  })
+                } else if (id === 'cancel') {
+                  onSelectedChange(new Set())
+                } else if (id === 'delete') {
+                  setDeleteTargets(
+                    ctxMenu.batch ? allQuestions.filter((question) => selected.has(question.id)) : [ctxMenu.question],
+                  )
+                }
+              },
+            })
           : null,
         h(EvalSynthReview, {
           t,
@@ -11333,6 +11935,7 @@ window.__ModuleLoader__.load({
       }, [wake]) // eslint-disable-line react-hooks/exhaustive-deps
       const [collapsed, setCollapsed] = React.useState(false)
       const [busyId, setBusyId] = React.useState(null)
+      const [headCtx, setHeadCtx] = React.useState(null)
       const anchor = useAnchorBlocks()
       const data = statusQ.data
       const candidates = data && Array.isArray(data.candidates) ? data.candidates : []
@@ -11410,14 +12013,20 @@ window.__ModuleLoader__.load({
           ? docIds.map(docTitle).join(tk('ev.syn.docsSep'))
           : tk('ev.syn.docsMore', docIds.slice(0, 2).map(docTitle).join(tk('ev.syn.docsSep')), docIds.length)
       const metaTip =
-        data && data.generated_at != null ? tk('ev.syn.reviewMetaTip', docsLine, evFmtRunTime(data.generated_at)) : null
+        data && data.generated_at != null ? tk('ev.syn.reviewMetaTip', docsLine, docFmtRelative(data.generated_at)) : null
       const busy = busyId !== null
       return h(
         'section',
         { className: 'hrag-ev-card hrag-ev-review' + (expanded ? ' hrag-ev-review-open' : '') },
         h(
           'div',
-          { className: 'hrag-ev-cardhead' + (expanded ? ' hrag-ev-cardhead-open' : '') },
+          {
+            className: 'hrag-ev-cardhead' + (expanded ? ' hrag-ev-cardhead-open' : ''),
+            onContextMenu: (event) => {
+              event.preventDefault()
+              setHeadCtx({ x: event.clientX, y: event.clientY })
+            },
+          },
           hasCandidates
             ? h(
                 'button',
@@ -11437,22 +12046,26 @@ window.__ModuleLoader__.load({
               ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-amber hrag-ev-tabnums', title: tk('ev.syn.metaLine', data.dropped) }, tk('ev.syn.droppedChip', data.dropped))
               : null,
             metaTip ? h('span', { className: 'hrag-ev-tile-note', title: metaTip, 'aria-label': metaTip }, 'ⓘ') : null,
-            hasCandidates
-              ? h(
-                  'button',
-                  { type: 'button', className: 'hrag-ev-linkbtn', disabled: busy, onClick: handleAcceptAll },
-                  tk('ev.syn.acceptAll'),
-                )
-              : null,
-            hasCandidates
-              ? h(
-                  'button',
-                  { type: 'button', className: 'hrag-ev-linkbtn', disabled: busy, onClick: handleRejectAll },
-                  tk('ev.syn.rejectAll'),
-                )
-              : null,
           ),
         ),
+        headCtx !== null
+          ? h(DocContextMenu, {
+              t,
+              x: headCtx.x,
+              y: headCtx.y,
+              items: hasCandidates
+                ? [
+                    { id: 'accept-all', label: tk('ev.syn.acceptAll'), icon: dshCheckIcon(), disabled: busy },
+                    { id: 'reject-all', label: tk('ev.syn.rejectAll'), icon: dshCloseIcon(), disabled: busy },
+                  ]
+                : [{ id: 'empty', label: tk('ev.syn.empty'), disabled: true }],
+              onClose: () => setHeadCtx(null),
+              onSelect: (id) => {
+                if (id === 'accept-all') handleAcceptAll()
+                else if (id === 'reject-all') handleRejectAll()
+              },
+            })
+          : null,
         expanded
           ? h(
               'div',
@@ -11900,19 +12513,23 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** 历史视图（照 EvalRunHistory 精简档）：五列表（时间胶囊：回退红/基线琥珀｜
-        环境｜评测内容｜状态｜时长右对齐）＋选择集批量删除＋行级删除确认（含
-        基线警示）；行点击＝run 详情抽屉。时长恒紧凑词汇（工作台另有按秒格式
-        下拉——精简省略）。 */
+    /** 历史视图（照 EvalRunHistory）：五列表（时间胶囊：回退红/基线琥珀｜
+        环境｜评测内容｜状态｜时长右对齐）＋行右键两态（单删/批删）＋行级删除
+        确认（含基线警示）；行点击＝run 详情抽屉。时长紧凑/按秒下拉；选中动作
+        只在右键菜单，底条已按工作台退役。 */
     function EvalHistory({ t, tk, kbId, runsQ, onOpenRun, notify }) {
       const [selectedIds, setSelectedIds] = React.useState(() => new Set())
       const [deleteTargets, setDeleteTargets] = React.useState(null)
       const [busy, setBusy] = React.useState(false)
       const [sortKey, setSortKey] = React.useState('default')
       const [sortDir, setSortDir] = React.useState('asc')
+      // ③档批 H2/H3：时长格式下拉＋行右键两态菜单。
+      const [durationFormat, setDurationFormat] = React.useState('compact')
+      const [ctxMenu, setCtxMenu] = React.useState(null)
       React.useEffect(() => {
         setSelectedIds(new Set())
         setDeleteTargets(null)
+        setCtxMenu(null)
       }, [kbId])
       const runs = runsQ.data && Array.isArray(runsQ.data.runs) ? runsQ.data.runs : []
       React.useEffect(() => {
@@ -11944,7 +12561,10 @@ window.__ModuleLoader__.load({
       const statusGlyph = (run) => (run.status === 'error' ? '✕' : run.status === 'skipped' ? '‣' : run.status === 'cancelled' ? '⊘' : '✓')
       const durationText = (run) => {
         const secs = evRunDurationSeconds(run)
-        return secs === null ? null : evDurationText(t, secs)
+        if (secs === null) return null
+        return durationFormat === 'seconds'
+          ? evText(t('ev.durSeconds'), [Math.round(secs)])
+          : evDurationText(t, secs)
       }
       const sortedRuns = React.useMemo(() => {
         if (sortKey === 'default') return runs
@@ -12023,7 +12643,7 @@ window.__ModuleLoader__.load({
       } else {
         table = h(
           'table',
-          { className: 'hrag-ev-table hrag-ev-banktable' },
+          { className: 'hrag-ev-table hrag-ev-banktable' + (selectedIds.size > 0 ? ' hrag-ev-bank-selecting' : '') },
           h(
             'thead',
             null,
@@ -12045,12 +12665,54 @@ window.__ModuleLoader__.load({
               h('th', null, tk('ev.history.colEnv')),
               h('th', null, tk('ev.history.colScope')),
               h('th', null, tk('ev.history.colStatus')),
-              h('th', { className: 'hrag-ev-th-num' }, tk('ev.history.colDuration')),
+              h(
+                'th',
+                { className: 'hrag-ev-th-num' },
+                h(
+                  'span',
+                  { className: 'hrag-ev-th-numlabel' },
+                  tk('ev.history.colDuration'),
+                  h(EvalMenu, {
+                    icon: dshChevronDownIcon(),
+                    className: 'hrag-ev-th-menu',
+                    title: tk('ev.history.durFormatLabel'),
+                    align: 'end',
+                    render: (close) => [
+                      h('div', { key: 'label', className: 'hrag-ev-menu-note' }, tk('ev.history.durFormatLabel')),
+                      h(
+                        EvalMenuItem,
+                        {
+                          key: 'compact',
+                          selected: durationFormat === 'compact',
+                          onSelect: () => {
+                            setDurationFormat('compact')
+                            close()
+                          },
+                        },
+                        tk('ev.history.durFormatCompact'),
+                      ),
+                      h(
+                        EvalMenuItem,
+                        {
+                          key: 'seconds',
+                          selected: durationFormat === 'seconds',
+                          onSelect: () => {
+                            setDurationFormat('seconds')
+                            close()
+                          },
+                        },
+                        tk('ev.history.durFormatSeconds'),
+                      ),
+                    ],
+                  }),
+                ),
+              ),
               h(
                 'th',
                 { className: 'hrag-ev-th-sort' },
                 h(EvalMenu, {
-                  label: '⇅',
+                  icon: lucideSortIcon(),
+                  title: tk('sort.title'),
                   align: 'end',
                   render: (close) => [
                     h(EvalMenuItem, { key: 'default', selected: sortKey === 'default', onSelect: () => { setSortKey('default'); close() } }, tk('ev.questions.sortDefault')),
@@ -12084,6 +12746,19 @@ window.__ModuleLoader__.load({
                   key: run.run_id,
                   className: 'hrag-ev-tr' + (isSelected ? ' hrag-ev-tr-on' : ''),
                   onClick: () => onOpenRun(run.run_id),
+                  onContextMenu: (event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    const already = selectedIds.has(run.run_id)
+                    const next = already ? selectedIds : new Set([run.run_id])
+                    if (!already) setSelectedIds(next)
+                    setCtxMenu({
+                      x: event.clientX,
+                      y: event.clientY,
+                      run,
+                      batch: already && next.size > 1,
+                    })
+                  },
                 },
                 h(
                   'td',
@@ -12124,22 +12799,31 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'hrag-ev-bank' },
         h('div', { className: 'hrag-ev-bankscroll' }, table),
-        selectedIds.size > 0
-          ? h(
-              'div',
-              { className: 'hrag-ev-bulkbar' },
-              h('span', { className: 'hrag-ev-muted hrag-ev-tabnums' }, tk('ev.selection.selected', selectedIds.size)),
-              h(
-                'button',
-                { type: 'button', className: 'hrag-btn hrag-btn-danger', onClick: () => setDeleteTargets([...selectedIds]) },
-                tk('ev.history.rowDelete'),
-              ),
-              h(
-                'button',
-                { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => setSelectedIds(new Set()) },
-                tk('ev.selection.clear'),
-              ),
-            )
+        ctxMenu !== null
+          ? h(DocContextMenu, {
+              t,
+              x: ctxMenu.x,
+              y: ctxMenu.y,
+              items: ctxMenu.batch
+                ? [
+                    { id: 'count', label: tk('ev.history.selectedCount', selectedIds.size), disabled: true },
+                    { id: 'cancel', label: tk('ev.selection.clear'), icon: dshCloseIcon() },
+                    { type: 'separator', id: 'sep' },
+                    { id: 'delete', label: tk('ev.selection.deleteSelected'), icon: dshTrashIcon(), danger: true },
+                  ]
+                : [
+                    { id: 'cancel', label: tk('ev.selection.clear'), icon: dshCloseIcon() },
+                    { type: 'separator', id: 'sep' },
+                    { id: 'delete', label: tk('ev.history.rowDelete'), icon: dshTrashIcon(), danger: true },
+                  ],
+              onClose: () => setCtxMenu(null),
+              onSelect: (id) => {
+                if (id === 'cancel') setSelectedIds(new Set())
+                else if (id === 'delete') {
+                  setDeleteTargets(ctxMenu.batch ? [...selectedIds] : [ctxMenu.run.run_id])
+                }
+              },
+            })
           : null,
         deleteTargets !== null
           ? h(ConfirmDialog, {
@@ -13124,13 +13808,14 @@ window.__ModuleLoader__.load({
         { className: 'hrag-ev' },
         h(
           'div',
-          { className: 'hrag-ev-bar' },
+          { className: 'hrag-ev-bar hrag-tabbar' },
           h(
             'span',
-            { className: 'hrag-ev-searchwrap' },
+            { className: 'hrag-searchwrap hrag-searchwrap-clear' },
+            h('span', { className: 'hrag-searchicon' }, h(dshSearchIcon)),
             h('input', {
               type: 'text',
-              className: 'hrag-input hrag-ev-search',
+              className: 'hrag-searchinput',
               placeholder: tk('wk.search'),
               'aria-label': tk('wk.search'),
               value: query,
@@ -13141,11 +13826,11 @@ window.__ModuleLoader__.load({
                   'button',
                   {
                     type: 'button',
-                    className: 'hrag-ev-searchclear',
+                    className: 'hrag-searchclear',
                     'aria-label': tk('wk.clearSearch'),
                     onClick: () => setQuery(''),
                   },
-                  '✕',
+                  h(dshCloseIcon),
                 )
               : null,
           ),
@@ -15770,16 +16455,23 @@ window.__ModuleLoader__.load({
         },
         t('set.form.save'),
       )
-      const saveStatus = h(
-        'div',
-        { className: 'hrag-set-saverow' },
-        saveError
-          ? h('span', { className: 'hrag-set-saveerr' }, saveError)
-          : savedNotice
-            ? h('span', { className: 'hrag-set-savehint' }, t('set.form.saved'))
-            : h('span', { className: 'hrag-set-savehint' }, saveBlockReason || t('set.form.noChanges')),
-        saveWarning ? h('span', { className: 'hrag-set-savewarn', role: 'status' }, saveWarning) : null,
-      )
+      // 保存按钮已上标题栏（10-15）；无反馈时不再占一行「没有需要保存的改动」。
+      // 只有错误/已保存/阻断原因/校验警告才在表单尾留状态行。
+      const saveStatus =
+        saveError || savedNotice || saveWarning || saveBlockReason
+          ? h(
+              'div',
+              { className: 'hrag-set-saverow' },
+              saveError
+                ? h('span', { className: 'hrag-set-saveerr' }, saveError)
+                : savedNotice
+                  ? h('span', { className: 'hrag-set-savehint' }, t('set.form.saved'))
+                  : saveBlockReason
+                    ? h('span', { className: 'hrag-set-savehint' }, saveBlockReason)
+                    : null,
+              saveWarning ? h('span', { className: 'hrag-set-savewarn', role: 'status' }, saveWarning) : null,
+            )
+          : null
 
       return h(
         React.Fragment,
@@ -16689,6 +17381,120 @@ window.__ModuleLoader__.load({
       return dragLabel
     }
 
+    /** 原生 title 统一换暗泡（主树/DSH 同款黑底白字）：捕获层只作用于
+        `.hrag-root`；悬停期间暂存 title 并让位给暗泡，离开时原样还原。 */
+    function NativeTipLayer() {
+      React.useEffect(() => {
+        const bubble = document.createElement('div')
+        bubble.className = 'hrag-native-tip'
+        bubble.id = 'hrag-native-tip-' + Math.random().toString(36).slice(2)
+        bubble.setAttribute('role', 'tooltip')
+        bubble.style.display = 'none'
+        document.body.appendChild(bubble)
+        let current = null
+        let savedTitle = null
+        let savedDescribedBy = null
+        let showTimer = null
+        let titleObserver = null
+        let point = { x: 0, y: 0 }
+        const hide = () => {
+          if (showTimer !== null) {
+            clearTimeout(showTimer)
+            showTimer = null
+          }
+          bubble.style.display = 'none'
+          bubble.textContent = ''
+        }
+        const restore = () => {
+          hide()
+          if (titleObserver) {
+            titleObserver.disconnect()
+            titleObserver = null
+          }
+          if (current) {
+            if (savedTitle !== null) current.setAttribute('title', savedTitle)
+            if (savedDescribedBy === null) current.removeAttribute('aria-describedby')
+            else current.setAttribute('aria-describedby', savedDescribedBy)
+            current.removeAttribute('data-hrag-tip')
+          }
+          current = null
+          savedTitle = null
+          savedDescribedBy = null
+        }
+        const place = () => {
+          bubble.style.display = 'block'
+          const rect = bubble.getBoundingClientRect()
+          const pad = 8
+          let left = point.x + 12
+          let top = point.y + 16
+          if (left + rect.width > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - rect.width - pad)
+          if (top + rect.height > window.innerHeight - pad) top = Math.max(pad, point.y - rect.height - 10)
+          bubble.style.left = left + 'px'
+          bubble.style.top = top + 'px'
+        }
+        const onOver = (event) => {
+          const target = event.target
+          if (!target || !target.closest) return
+          const root = target.closest('.hrag-root')
+          if (!root) {
+            restore()
+            return
+          }
+          const el = target.closest('[title], [data-hrag-tip]')
+          if (!el || !root.contains(el) || el === current) return
+          restore()
+          const text = el.getAttribute('title')
+          if (text === null || text === '') return
+          current = el
+          savedTitle = text
+          savedDescribedBy = el.getAttribute('aria-describedby')
+          el.setAttribute('data-hrag-tip', text)
+          el.removeAttribute('title')
+          el.setAttribute('aria-describedby', bubble.id)
+          point = { x: event.clientX, y: event.clientY }
+          bubble.textContent = text
+          bubble.style.display = 'none'
+          showTimer = setTimeout(() => {
+            showTimer = null
+            if (current === el) place()
+          }, 180)
+          // 轮询/状态刷新会把 title 写回来——悬停期间持续移除，避免原生白泡抢先出现。
+          titleObserver = new MutationObserver(() => {
+            if (current === el && el.hasAttribute('title')) el.removeAttribute('title')
+          })
+          titleObserver.observe(el, { attributes: true, attributeFilter: ['title'] })
+        }
+        const onMove = (event) => {
+          if (current) point = { x: event.clientX, y: event.clientY }
+        }
+        const onOut = (event) => {
+          if (!current) return
+          if (event.relatedTarget && current.contains(event.relatedTarget)) return
+          restore()
+        }
+        const onEscape = (event) => {
+          if (event.key === 'Escape') restore()
+        }
+        document.addEventListener('mouseover', onOver, true)
+        document.addEventListener('mousemove', onMove, true)
+        document.addEventListener('mouseout', onOut, true)
+        window.addEventListener('scroll', restore, true)
+        window.addEventListener('blur', restore)
+        document.addEventListener('keydown', onEscape)
+        return () => {
+          document.removeEventListener('mouseover', onOver, true)
+          document.removeEventListener('mousemove', onMove, true)
+          document.removeEventListener('mouseout', onOut, true)
+          window.removeEventListener('scroll', restore, true)
+          window.removeEventListener('blur', restore)
+          document.removeEventListener('keydown', onEscape)
+          restore()
+          bubble.remove()
+        }
+      }, [])
+      return null
+    }
+
     function KnowledgePanel({ t }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -17309,6 +18115,7 @@ window.__ModuleLoader__.load({
         React.Fragment,
         null,
         h(Styles),
+        h(NativeTipLayer),
         h(
           'div',
           {
