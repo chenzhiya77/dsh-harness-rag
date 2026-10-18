@@ -1,6 +1,6 @@
 # Harness RAG → DSH 插件线（dsh-harness-rag）· 步骤记录
 
-- Status: T1 ✅ 收官（冒烟复验三条 10-11 实测全过）· T2 ✅ 收官（2026-10-12 真栈两半全过）· T3 ✅ 收官（10-15 真栈验收全过）· 菜单对 ✅ 收官（10-15，Task 0–8 全交付）· A 对 ✅ 收官（10-15，A 档余项六件全交付）· B–K 小件批 ✅ 收官（10-15 开跑，10-16 全交付：①档全量；D1–D3 已拍＝全甲；Task 0–8 全毕、八组真跑全过；代码九笔全落〔`9a36851`…`687c214`，含 spinner 插队 `864f15c`〕＋定稿一笔〔本提交〕；宿主遮罩定性＝甲〔潜伏层保留〕；销定已落＝T3 plan B–K 审计节补销＋E1③ 勘误〔注记早已落，`0007c03`〕）· T4 ✅ 收官（10-19：观察型 job——host `src/jobs.ts`＋kb_proxy 上传/重建两接线＋client 会话采集；`probe-t4` 6/6＋冒烟各 78 PASS＋`probe-menu` 13/13；真跑候他手验〔整重启换 host 代〕；定稿提交 `af6bb38`）· 全部未推（仓暂无 remote）
+- Status: T1 ✅ 收官（冒烟复验三条 10-11 实测全过）· T2 ✅ 收官（2026-10-12 真栈两半全过）· T3 ✅ 收官（10-15 真栈验收全过）· 菜单对 ✅ 收官（10-15，Task 0–8 全交付）· A 对 ✅ 收官（10-15，A 档余项六件全交付）· B–K 小件批 ✅ 收官（10-15 开跑，10-16 全交付：①档全量；D1–D3 已拍＝全甲；Task 0–8 全毕、八组真跑全过；代码九笔全落〔`9a36851`…`687c214`，含 spinner 插队 `864f15c`〕＋定稿一笔〔本提交〕；宿主遮罩定性＝甲〔潜伏层保留〕；销定已落＝T3 plan B–K 审计节补销＋E1③ 勘误〔注记早已落，`0007c03`〕）· T4 ✅ 收官（10-19：观察型 job——host `src/jobs.ts`＋kb_proxy 上传/重建两接线＋client 会话采集；`probe-t4` 6/6＋冒烟各 78 PASS＋`probe-menu` 13/13；真跑已过（10-19 他手验四格）；定稿提交 `af6bb38`）· 全部未推（仓暂无 remote）
 - Date: 2026-10-11
 - 形态（10-11 他拍）：**spec↔plan 一一配对**——`docs/specs/*-spec.md` 与 `docs/plans/*-plan.md` 同名成对（T2 对=`2026-10-11-equivalence-freeze-{spec,plan}.md`）；本档=全线路**步骤记录**（落 `docs/` 根），只记进度与决策，执行步骤进各配对 plan、不重复。
 - 每步一个复选框；Status 随交付更新。
@@ -21,7 +21,7 @@
 | T1 | 插件骨架（门面六件+安装冒烟） | ✅ 收官（三修+复验三条 10-11 全过） |
 | T2 | 工具面等价移植（端点对齐+召回测试缝） | ✅ 收官（2026-10-12；两笔后端跟进笔＋Task 3–6＋真栈两半；含真栈咬出的 list_documents 形状修复） |
 | T3 | 管理面板（功能面＝工作台知识库页全部：管理＋可视化） | ✅ 收官（2026-10-15 真栈验收全过：Task 0–12 全毕；一条龙他手点走完；10-12 冻清单 D1–D6，详见 T3 plan） |
-| T4 | 摄取通道（`ctx.jobs`） | ✅ 收官（2026-10-19；[spec](specs/2026-10-19-t4-ingest-jobs-spec.md)＋[plan](plans/2026-10-19-t4-ingest-jobs-plan.md) 对；Task 0–4 全落；`probe-t4` 6/6＋冒烟双 78；真跑候他手验〔整重启换 host 代〕） |
+| T4 | 摄取通道（`ctx.jobs`） | ✅ 收官（2026-10-19；[spec](specs/2026-10-19-t4-ingest-jobs-spec.md)＋[plan](plans/2026-10-19-t4-ingest-jobs-plan.md) 对；Task 0–4 全落；`probe-t4` 6/6＋冒烟双 78；真跑已过（10-19 他手验）） |
 | T5 | 丙′ 子槽契约化+命名空间四防 | 未开工 |
 | T6 | 验收（等价移植对照表+文档+icon） | 未开工 |
 
@@ -80,6 +80,8 @@
 落法＝**观察型 job**：后端照旧干摄取重活；host 半在上传（2xx 且响应为文档记录）与重建（`enqueued`）两处向 `ctx.jobs` 注册后台任务（kind `hrag-ingest`／`hrag-reindex`，label＝文件名/库名），3s 轮询既有 REST 面呈现进度（`queued`→阶段→`indexing N%`；`rebuilding N/M · K vectors`）与终态（`ready · N slices`／`failed · <腿>`／`rebuild succeeded|failed`）；名册停止＝停跟踪（结算 killed 注明服务端继续）；owner＝面板会话 id（采集自 `[data-sidebar-right-session]`，回退无主）；静默 `wait` 收走结算不打扰对话；原始 error 串零出口（沿 A⑤）。零后端改动、零新 op、面板自轮询零回归。
 
 - [x] `ctx.jobs` 后台摄取接入（上传→解析→分块→嵌入的进度与失败呈现）
+
+**真跑（2026-10-19 他手验，整重启 DSH 换 host 代后）**：①上传→`hrag-ingest` 行、终态 `ready · 1 slices`；②两击停止→`tracking stopped; the ingest continues on the server; cancelled by the user`，文档随后仍 ready；③重建→`hrag-reindex`、`rebuilding 5/10 · 9 vectors`→`rebuild succeeded`；④停网关 25s→`knowledge service unreachable`（24s），重启后面板恢复、worker 自动重排被中断文档。
 
 ## 6. T5 丙′ 子槽契约化+命名空间四防（未开工）
 

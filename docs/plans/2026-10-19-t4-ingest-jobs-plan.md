@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
 **Spec:** [2026-10-19-t4-ingest-jobs-spec.md](../specs/2026-10-19-t4-ingest-jobs-spec.md)
-**Status:** ✅ 实施完成（2026-10-19 他令「都做」＝最小＋完整合一整做）——Task 0–4 全落；门禁：双语法全过＋冒烟默认/hostless 各 **78 PASS/0 FAIL**＋`probe-t4` 6/6＋`probe-menu` 13/13；真跑候他手验（先整重启 DSH 换 host 模块代）；定稿一笔已落（`af6bb38`，未推）。
+**Status:** ✅ 实施完成（2026-10-19 他令「都做」＝最小＋完整合一整做）——Task 0–4 全落；门禁：双语法全过＋冒烟默认/hostless 各 **78 PASS/0 FAIL**＋`probe-t4` 6/6＋`probe-menu` 13/13；真跑已过（2026-10-19 他手验，整重启 DSH 换 host 代后）；定稿一笔已落（`af6bb38`，未推）；真跑回写已落（本笔）。
 **Parent:** 步骤记录 §5 T4 × ③档批收官（`2ea80c1`）。
 **步骤记录:** [2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)。
 
@@ -67,10 +67,11 @@
 - [x] 回写：本 plan 各 Task 实测、步骤记录 T4 行与总览、spec Status。
 - [x] 真跑清单交付（整重启 DSH 换 host 代后他手验）；提交候令。
 
-**实测**：冒烟暴露面补 `capturePanelSession`/`panelSessionId`；新增「T4 面板会话采集」块（假元素链五断言：读回 `sess-abc`／缺容器／`closest` 抛异常／null 元素／空属性，全回退空串）。仓外新增 `probe-t4.mjs`（假 registry＋桩后端 HTTP）六例全过：①上传全链（kind/label/owner、初始 `queued`、三拍轮询、`ready · 28 slices`、环＝parsing/indexing/ready 三行、progress 带 40%）；②kill（结算 killed＋其后零轮询）；③owner 被拒→无主回退（尝试序＝[sess-2, undefined]、零 warn）＋畸形通知不起 job（无 id 文档／空 kb_id 重建）；④重建翻转结算（计数器行 `rebuilding 3/10 · 126 vectors`、`rebuild succeeded`、单条起始行）；⑤重建宽限（3 拍后按 `last_run=failed` 判）；⑥无 jobs 服务静默 no-op。语法门禁：`node --check client.js`＋全部 6 个 src `.ts` strip-types 过；冒烟默认 **78 PASS/0 FAIL**、`SMOKE_HOSTLESS=1` **78 PASS/0 FAIL**；`probe-menu` 13/13。真跑候他手验（**先整重启 DSH 换 host 模块代**）：①上传一条→头部名册出行、进度推进、终态 ready；②名册两击停止→killed 且面板照常走到 ready；③重建→`rebuilding N/M` 行与终态；④断后端→约 15s 后 unreachable。提交候令。
+**实测**：冒烟暴露面补 `capturePanelSession`/`panelSessionId`；新增「T4 面板会话采集」块（假元素链五断言：读回 `sess-abc`／缺容器／`closest` 抛异常／null 元素／空属性，全回退空串）。仓外新增 `probe-t4.mjs`（假 registry＋桩后端 HTTP）六例全过：①上传全链（kind/label/owner、初始 `queued`、三拍轮询、`ready · 28 slices`、环＝parsing/indexing/ready 三行、progress 带 40%）；②kill（结算 killed＋其后零轮询）；③owner 被拒→无主回退（尝试序＝[sess-2, undefined]、零 warn）＋畸形通知不起 job（无 id 文档／空 kb_id 重建）；④重建翻转结算（计数器行 `rebuilding 3/10 · 126 vectors`、`rebuild succeeded`、单条起始行）；⑤重建宽限（3 拍后按 `last_run=failed` 判）；⑥无 jobs 服务静默 no-op。语法门禁：`node --check client.js`＋全部 6 个 src `.ts` strip-types 过；冒烟默认 **78 PASS/0 FAIL**、`SMOKE_HOSTLESS=1` **78 PASS/0 FAIL**；`probe-menu` 13/13。真跑已过（2026-10-19 他手验，整重启 DSH 换 host 模块代后）：①上传 `t3-doc-a.md`/`t3-doc-b.md`→名册 `hrag-ingest` 行、终态 `ready · 1 slices`（5分36秒/4分57秒）；②`t4-offline-test.md` 行两击停止→`tracking stopped; the ingest continues on the server; cancelled by the user`（21秒），该文档随后仍到 ready——停跟踪不影响服务端摄取；③重建→`hrag-reindex · t3-panel-acceptance`，进度 `rebuilding 5/10 · 9 vectors`，终态 `rebuild succeeded`（1分24秒）；④上传后停 :8001 网关 25s→`knowledge service unreachable`（24秒），重启后健康 200、面板轮询恢复、worker 自动重排被中断文档。提交候令。
 
 ---
 
 ## 提交链（滚动记实）
 
 - [x] 定稿一笔（2026-10-19；英文 Conventional；本笔 `af6bb38`）。**未推**（仓暂无 remote；前笔 tip＝`2ea80c1`）。
+- [x] 真跑回写一笔（2026-10-19；英文 Conventional；本笔）。**未推**（前笔 tip＝`bea5903`）。
