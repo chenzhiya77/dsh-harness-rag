@@ -30,6 +30,9 @@ export const KB_PROXY_ROUTE = '/dsh-harness-rag/api'
  * Task 1 adds the slice-face actions (chunk text update / re-extract) plus
  * three read-only media relays that the panel's <img>/<video> load directly
  * (document files, shot keyframes, the range-negotiated video stream).
+ * The ②档丙对 (my-entries) adds the manual-card CRUD trio (create / update /
+ * delete); grouping stays device-local in localStorage, so the backend surface
+ * is unchanged.
  */
 /** Shared projection query mirror for both projection ops: collections join
  * into the comma form the route declares (absent array = route default),
@@ -197,6 +200,12 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
       api(config, `${kbPath(args)}/wiki/entries/${encodeURIComponent(needString(args, 'entry_id'))}`, {
         method: 'DELETE',
       }),
+    // 丙对收口追加（E3 条目编辑）：PATCH 主内容＋补充层，字段级校验归服务端 422。
+    updateWikiEntry: (args) =>
+      api(config, `${kbPath(args)}/wiki/entries/${encodeURIComponent(needString(args, 'entry_id'))}`, {
+        method: 'PATCH',
+        body: bodyOf(args),
+      }),
     regenerateWikiEntries: (args) => {
       const ids = (args as Record<string, unknown> | null | undefined)?.entry_ids
       if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === 'string' && id.trim())) {
@@ -220,6 +229,18 @@ function buildOps(config: Config): Record<string, (args: unknown) => Promise<unk
     },
     manualCard: (args) =>
       api(config, `${kbPath(args)}/manual-knowledge/${encodeURIComponent(needString(args, 'card_id'))}`),
+    // ②档丙对：我的条目管理面——卡片 CRUD 三枚（分组仍在本机 localStorage，零后端）。
+    createManualCard: (args) =>
+      api(config, `${kbPath(args)}/manual-knowledge`, { method: 'POST', body: bodyOf(args) }),
+    updateManualCard: (args) =>
+      api(config, `${kbPath(args)}/manual-knowledge/${encodeURIComponent(needString(args, 'card_id'))}`, {
+        method: 'PATCH',
+        body: bodyOf(args),
+      }),
+    deleteManualCard: (args) =>
+      api(config, `${kbPath(args)}/manual-knowledge/${encodeURIComponent(needString(args, 'card_id'))}`, {
+        method: 'DELETE',
+      }),
     // ── 库级与设置面（菜单批 Task 1）：KB CRUD ＋ RAG 配置读取 ＋ 模型目录 ──
     createKb: (args) => {
       const source = args as Record<string, unknown> | null | undefined

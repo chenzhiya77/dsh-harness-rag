@@ -22,6 +22,7 @@ window.__ModuleLoader__.load({
     const HostMenu = hostPrimitives && hostPrimitives.Menu ? hostPrimitives.Menu : null
     const HostToast = hostPrimitives && hostPrimitives.Toast ? hostPrimitives.Toast : null
     const HostTooltip = hostPrimitives && hostPrimitives.Tooltip ? hostPrimitives.Tooltip : null
+    const HostSwitch = hostPrimitives && hostPrimitives.Switch ? hostPrimitives.Switch : null
     const hostIcon = (name) => (hostPrimitives && hostPrimitives[name] ? hostPrimitives[name] : null)
     // 转圈件＝宿主 StateDot(ongoing)：自带旋转/相位同步/reduced-motion；自绘 CSS 环（粗边方头）退役；缺件＝不渲染。
     const HostStateDot = hostIcon('StateDot')
@@ -531,6 +532,20 @@ window.__ModuleLoader__.load({
       'wk.updatedAt': '更新于',
       'wk.selectEntry': '选择条目',
       'wk.openEntry': '打开详情',
+      'wk.editEntry': '编辑条目',
+      'wk.wikiEditTitle': '编辑百科条目',
+      'wk.wikiEditDesc': '主内容区可被下次生成覆盖；补充层永久保留，并作为每次生成的方向',
+      'wk.wikiEditMainLabel': '主内容区（自动生成）',
+      'wk.wikiEditMainPlaceholder': 'AI 生成的内容将在此显示，您可以手动编辑',
+      'wk.wikiEditMainHint': '⚠️ 此内容会在下次重新生成时被覆盖',
+      'wk.wikiEditSupplementLabel': '补充层（AI 生成方向）',
+      'wk.wikiEditSupplementPlaceholder': '写下你希望 AI 怎么改这篇条目，等同于给生成用的提示词。例如：语气严谨些，多介绍相关概念',
+      'wk.wikiEditSupplementHint': '✅ 永久保留；每次重新生成都会作为你的要求带给 AI',
+      'wk.wikiEditSave': '保存',
+      'wk.wikiEditSaving': '保存中…',
+      'wk.wikiEditLastEdited': '最后编辑时间',
+      'wk.wikiEntryUpdated': 'Wiki 条目已更新',
+      'wk.wikiEntryUpdateFailed': '更新 Wiki 条目失败',
       'wk.updateEntry': '更新条目',
       'wk.updateSelected': '更新所选',
       'wk.deleteEntry': '删除条目',
@@ -551,6 +566,48 @@ window.__ModuleLoader__.load({
       'wk.cardType': '我的卡片',
       'wk.openCard': '打开详情',
       'wk.cardNotFound': '卡片不存在或已删除',
+      'wk.cardNew': '新建卡片',
+      'wk.cardIncludeHint': '开启后参与百科检索，与 AI 条目共享名额，按相关性纯质量竞争',
+      'wk.cardEdit': '编辑卡片',
+      'wk.cardDelete': '删除卡片',
+      'wk.cardDeleteTitle': '删除这张知识卡片？',
+      'wk.cardDeleteDesc': '将删除卡片内容与其检索向量，删除后不可恢复。',
+      'wk.cardDeleteBatchTitle': '删除 {0} 张知识卡片？',
+      'wk.cardEditorCreate': '新建知识卡片',
+      'wk.cardEditorEdit': '编辑知识卡片',
+      'wk.cardEditorDesc': '人工卡片永不自动更新，与 AI 生成内容隔离',
+      'wk.cardTitleLabel': '标题',
+      'wk.cardTitlePlaceholder': '一句话概括这条知识',
+      'wk.cardContentLabel': '内容',
+      'wk.cardContentPlaceholder': '记录你的经验、结论或注意事项',
+      'wk.cardTagsLabel': '标签（可选）',
+      'wk.cardTagsPlaceholder': '用逗号分隔，如：运维, 发布',
+      'wk.cardSave': '保存',
+      'wk.cardSaving': '保存中…',
+      'wk.cardCreateSuccess': '卡片已创建',
+      'wk.cardUpdateSuccess': '卡片已更新',
+      'wk.cardDeleteSuccess': '卡片已删除',
+      'wk.cardSaveFailed': '保存卡片失败',
+      'wk.cardDeleteFailed': '删除卡片失败',
+      'wk.cardSelect': '选择卡片',
+      'wk.cardIncludeOn': '开启混入搜索',
+      'wk.cardIncludeOff': '关闭混入搜索',
+      'wk.cardMoreActions': '更多操作',
+      'wk.selectAllCards': '全选卡片',
+      'wk.drawerNew': '新建抽屉',
+      'wk.drawerEdit': '编辑抽屉',
+      'wk.drawerNameLabel': '名称',
+      'wk.drawerNamePlaceholder': '输入名称…',
+      'wk.drawerIconLabel': '图标',
+      'wk.drawerColorLabel': '颜色',
+      'wk.drawerCreate': '创建',
+      'wk.drawerSave': '保存',
+      'wk.drawerDelete': '删除抽屉',
+      'wk.drawerClose': '收起',
+      'wk.drawerAll': '全部抽屉',
+      'wk.drawerMoveTo': '移动到抽屉',
+      'wk.drawerUnfiled': '未分组',
+      'wk.drawerNewFromMenu': '新建抽屉…',
       'crash.title': '视图渲染出错（{0}）',
       'crash.hint': '该视图已隔离，其他分区可继续使用；点「重试」重新挂载。',
       'crash.retry': '重试',
@@ -1215,6 +1272,20 @@ window.__ModuleLoader__.load({
       'wk.updatedAt': 'Updated',
       'wk.selectEntry': 'Select entry',
       'wk.openEntry': 'Open details',
+      'wk.editEntry': 'Edit entry',
+      'wk.wikiEditTitle': 'Edit Wiki Entry',
+      'wk.wikiEditDesc': 'Main content can be replaced by regeneration; the supplement layer persists and steers every generation',
+      'wk.wikiEditMainLabel': 'Main Content (Auto-generated)',
+      'wk.wikiEditMainPlaceholder': 'AI-generated content will be displayed here, you can manually edit',
+      'wk.wikiEditMainHint': '⚠️ This content will be replaced on next regeneration',
+      'wk.wikiEditSupplementLabel': 'Supplement Layer (Generation Direction)',
+      'wk.wikiEditSupplementPlaceholder': 'Describe how you want the AI to rewrite this entry — it works like a prompt for generation. e.g. Keep the tone rigorous and cover more related concepts',
+      'wk.wikiEditSupplementHint': '✅ Persists permanently; it is passed to the AI as your requirement on every regeneration',
+      'wk.wikiEditSave': 'Save',
+      'wk.wikiEditSaving': 'Saving…',
+      'wk.wikiEditLastEdited': 'Last edited',
+      'wk.wikiEntryUpdated': 'Wiki entry updated',
+      'wk.wikiEntryUpdateFailed': 'Failed to update wiki entry',
       'wk.updateEntry': 'Update entry',
       'wk.updateSelected': 'Update selected',
       'wk.deleteEntry': 'Delete entry',
@@ -1236,6 +1307,48 @@ window.__ModuleLoader__.load({
       'wk.cardType': 'My Card',
       'wk.openCard': 'Open details',
       'wk.cardNotFound': 'Card missing or deleted',
+      'wk.cardNew': 'New Card',
+      'wk.cardIncludeHint': 'When on, the card joins wiki retrieval and competes for the shared top-k slots purely by relevance',
+      'wk.cardEdit': 'Edit card',
+      'wk.cardDelete': 'Delete card',
+      'wk.cardDeleteTitle': 'Delete this knowledge card?',
+      'wk.cardDeleteDesc': 'The card content and its retrieval vector will be removed. This cannot be undone.',
+      'wk.cardDeleteBatchTitle': 'Delete {0} knowledge cards?',
+      'wk.cardEditorCreate': 'New Knowledge Card',
+      'wk.cardEditorEdit': 'Edit Knowledge Card',
+      'wk.cardEditorDesc': 'Manual cards never auto-update and stay isolated from AI-generated content',
+      'wk.cardTitleLabel': 'Title',
+      'wk.cardTitlePlaceholder': 'Sum up this piece of knowledge in one line',
+      'wk.cardContentLabel': 'Content',
+      'wk.cardContentPlaceholder': 'Capture your experience, conclusions, or caveats',
+      'wk.cardTagsLabel': 'Tags (optional)',
+      'wk.cardTagsPlaceholder': 'Comma-separated, e.g.: ops, release',
+      'wk.cardSave': 'Save',
+      'wk.cardSaving': 'Saving…',
+      'wk.cardCreateSuccess': 'Card created',
+      'wk.cardUpdateSuccess': 'Card updated',
+      'wk.cardDeleteSuccess': 'Card deleted',
+      'wk.cardSaveFailed': 'Failed to save the card',
+      'wk.cardDeleteFailed': 'Failed to delete the card',
+      'wk.cardSelect': 'Select card',
+      'wk.cardIncludeOn': 'Include in search',
+      'wk.cardIncludeOff': 'Exclude from search',
+      'wk.cardMoreActions': 'More actions',
+      'wk.selectAllCards': 'Select all cards',
+      'wk.drawerNew': 'New Drawer',
+      'wk.drawerEdit': 'Edit Drawer',
+      'wk.drawerNameLabel': 'Name',
+      'wk.drawerNamePlaceholder': 'Enter a name…',
+      'wk.drawerIconLabel': 'Icon',
+      'wk.drawerColorLabel': 'Color',
+      'wk.drawerCreate': 'Create',
+      'wk.drawerSave': 'Save',
+      'wk.drawerDelete': 'Delete Drawer',
+      'wk.drawerClose': 'Hide',
+      'wk.drawerAll': 'All drawers',
+      'wk.drawerMoveTo': 'Move to Drawer',
+      'wk.drawerUnfiled': 'Unfiled',
+      'wk.drawerNewFromMenu': 'New Drawer…',
       'crash.title': 'View render failed ({0})',
       'crash.hint': 'The view is isolated; other sections keep working. Retry remounts it.',
       'crash.retry': 'Retry',
@@ -1847,22 +1960,27 @@ window.__ModuleLoader__.load({
           '.hrag-wk-sect-open { flex: 1 1 0; min-height: 0; }',
           '.hrag-wk-secthead { display: flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; flex-shrink: 0; }',
           '.hrag-wk-secthead:hover { background: var(--dsw-alias-interactive-bg-hover); }',
-          '.hrag-wk-secttoggle { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; padding: 6px; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; font-family: inherit; cursor: pointer; text-align: left; }',
+          '.hrag-wk-secttoggle { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; padding: 6px 6px 6px 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; font-family: inherit; cursor: pointer; text-align: left; }',
+          // 与「我的条目」头对齐：箭头槽同为 22px（居中）＋2px 补距，图标/标题同 x。
+          '.hrag-wk-secttoggle .hrag-ev-caret { width: 22px; text-align: center; margin-right: 2px; }',
           '.hrag-wk-secticon { display: inline-flex; color: var(--dsw-alias-label-secondary); flex-shrink: 0; }',
           '.hrag-wk-secttitle { font-weight: 500; }',
           '.hrag-wk-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; flex: 1; padding: 16px; color: var(--dsw-alias-label-tertiary); font-size: 12px; text-align: center; }',
           '.hrag-wk-empty p { margin: 0; }',
           '.hrag-wk-empty-icon { display: inline-flex; opacity: 0.4; }',
           '.hrag-wk-inset { margin: 6px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }',
-          '.hrag-wk-list { display: flex; flex-direction: column; gap: 1px; overflow-y: auto; min-height: 0; flex: 1; padding: 4px 6px 6px; }',
-          '.hrag-wk-row { display: flex; align-items: center; gap: 6px; padding: 0 6px; height: 36px; border-radius: var(--dsw-radius-sm); min-width: 0; }',
+          // 列表是纵向单轴：横向内容一律裁掉。卡片行 width:100% 叠加左右内边距，
+          // 页内没有全局 border-box，缺了它就会多出 12px 横向滚动条。
+          // 行几何照工作台（h-10／text-sm／8px）：10-18 真跑嫌 36px＋13px 偏挤。
+          '.hrag-wk-list { display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; min-height: 0; flex: 1; padding: 8px; }',
+          '.hrag-wk-row { display: flex; align-items: center; gap: 8px; padding: 0 8px; height: 40px; border-radius: var(--dsw-radius-sm); min-width: 0; box-sizing: border-box; }',
           '.hrag-wk-row:hover { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-wk-row-on { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-wk-row .hrag-ev-check { opacity: 0; transition: opacity 120ms ease; }',
           '.hrag-wk-row:hover .hrag-ev-check { opacity: 1; }',
           '.hrag-wk-row .hrag-ev-check:checked { opacity: 1; }',
           '.hrag-wk-list-selecting .hrag-ev-check { opacity: 1; }',
-          '.hrag-wk-row-main { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; height: 100%; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-wk-row-main { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; height: 100%; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; text-align: left; cursor: pointer; }',
           '.hrag-wk-rowicon { display: inline-flex; color: var(--dsw-alias-label-tertiary); flex-shrink: 0; }',
           '.hrag-wk-rowtitle { max-width: 45%; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }',
           '.hrag-wk-rowsummary { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--dsw-alias-label-tertiary); }',
@@ -1870,6 +1988,58 @@ window.__ModuleLoader__.load({
           '.hrag-wk-dirtydot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }',
           '.hrag-wk-rowtime { flex-shrink: 0; font-size: 12px; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-wk-cardrow { width: 100%; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 13px; text-align: left; cursor: pointer; }',
+          // 我的条目管理面（②档丙对）：头部走横向标签条（照工作台），标签溢出裁切、
+          // 不横滚；右侧控件由垫片顶到最右。批量走右键菜单（无批量条）。
+          '.hrag-wk-cardhead { gap: 2px; overflow: hidden; }',
+          '.hrag-wk-cardcaret { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 28px; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
+          '.hrag-wk-cardcaret:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-wk-cardhome { display: flex; align-items: center; gap: 6px; flex-shrink: 0; min-width: 0; height: 28px; padding: 0 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; font-family: inherit; cursor: pointer; }',
+          '.hrag-wk-cardhome:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-wk-cardhome-dim { opacity: 0.55; }',
+          '.hrag-wk-cardhome-dim:hover { opacity: 0.9; }',
+          '.hrag-wk-drawers { display: flex; align-items: center; min-width: 0; overflow: hidden; }',
+          '.hrag-wk-drawersep { flex-shrink: 0; width: 1px; height: 14px; margin: 0 4px; background: var(--dsw-alias-border-l3); }',
+          '.hrag-wk-drawertab { display: flex; align-items: center; flex-shrink: 0; width: 112px; height: 28px; border-radius: var(--dsw-radius-sm); }',
+          '.hrag-wk-drawertab:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-wk-drawertabmain { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; height: 100%; padding: 0 2px 0 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; text-align: left; cursor: pointer; opacity: 0.55; }',
+          '.hrag-wk-drawertab:hover .hrag-wk-drawertabmain { opacity: 0.9; }',
+          '.hrag-wk-drawertab-on .hrag-wk-drawertabmain { opacity: 1; font-weight: 500; }',
+          '.hrag-wk-drawertablabel { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: clip; }',
+          '.hrag-wk-drawertabclose { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 18px; height: 18px; margin-right: 2px; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 1; cursor: pointer; opacity: 0; }',
+          '.hrag-wk-drawertab:hover .hrag-wk-drawertabclose, .hrag-wk-drawertabclose:focus-visible { opacity: 1; }',
+          '.hrag-wk-drawertabclose:hover { color: var(--dsw-alias-label-primary); }',
+          '.hrag-wk-draweradd { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 24px; height: 24px; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
+          '.hrag-wk-draweradd:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-wk-drawerspacer { flex: 1; min-width: 0; align-self: stretch; }',
+          '.hrag-wk-cardctl { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }',
+          '.hrag-wk-cardctlbtn { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-wk-cardhead:hover .hrag-wk-cardctlbtn, .hrag-wk-cardctlbtn[aria-expanded="true"], .hrag-wk-cardctlbtn:focus-visible { opacity: 1; }',
+          '.hrag-wk-cardctlbtn:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-wk-cardbody { display: flex; flex-direction: column; flex: 1; min-height: 0; }',
+          '.hrag-wk-cardrow { cursor: default; }',
+          '.hrag-wk-cardtime { width: 72px; text-align: right; }',
+          '.hrag-cardrow-more { opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-wk-cardrow:hover .hrag-cardrow-more, .hrag-wk-cardrow[data-selected="true"] .hrag-cardrow-more, .hrag-cardrow-more[aria-expanded="true"], .hrag-cardrow-more:focus-visible { opacity: 1; }',
+          '.hrag-dialog-card { width: min(520px, 100%); max-height: 100%; overflow-y: auto; }',
+          '.hrag-dialog-drawer { width: min(560px, 100%); max-height: 100%; overflow-y: auto; }',
+          '.hrag-dialog-wiki { width: min(600px, 100%); max-height: 100%; overflow-y: auto; }',
+          '.hrag-wiki-editarea { min-height: 200px; font-family: ui-monospace, monospace; font-size: 12px; field-sizing: content; resize: vertical; }',
+          '.hrag-wiki-edithint { font-size: 11px; line-height: 16px; }',
+          '.hrag-wiki-editmeta { padding-top: 8px; border-top: 0.5px solid var(--dsw-alias-border-l2); font-size: 12px; }',
+          '.hrag-cardcontent { min-height: 128px; field-sizing: content; resize: vertical; }',
+          '.hrag-card-switchrow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }',
+          '.hrag-card-switchlabel { font-size: 12px; font-weight: 500; color: var(--dsw-alias-label-primary); }',
+          '.hrag-card-switchhint { flex: 1 1 240px; min-width: 0; font-size: 11px; line-height: 16px; }',
+          '.hrag-switch { position: relative; flex-shrink: 0; width: 32px; height: 18px; padding: 0; border: none; border-radius: 999px; background: var(--dsw-alias-border-l3); cursor: pointer; }',
+          '.hrag-switch-on { background: var(--dsw-alias-state-business-primary); }',
+          '.hrag-switch-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 120ms ease; }',
+          '.hrag-switch-on .hrag-switch-thumb { transform: translateX(14px); }',
+          '.hrag-drawer-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; }',
+          '.hrag-drawer-cell { display: flex; aspect-ratio: 1; align-items: center; justify-content: center; width: 100%; padding: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
+          '.hrag-drawer-cell:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-drawer-cell-on { border-width: 2px; }',
+          '.hrag-drawer-colorwrap { display: flex; aspect-ratio: 1; align-items: center; justify-content: center; width: 100%; }',
+          '.hrag-drawer-colorcell { width: 22px; height: 22px; padding: 0; border: none; border-radius: 50%; cursor: pointer; }',
           '.hrag-hitbadge { flex-shrink: 0; display: inline-flex; align-items: center; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; padding: 0 5px; font-size: 10px; line-height: 15px; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-wk-metarow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-wk-srcbtn { height: 24px; padding: 0 8px; font-size: 11px; }',
@@ -1893,6 +2063,9 @@ window.__ModuleLoader__.load({
           '.hrag-bar > .hrag-mm-wrap + .hrag-mm-wrap { margin-left: auto; }',
           '.hrag-bar > .hrag-mmhost + .hrag-mmhost { margin-left: auto; }',
           '.hrag-mm-backdrop { position: fixed; inset: 0; z-index: 40; }',
+          // 宿主子菜单恒向右（left:100%+10px）且不随视口翻转：靠近右缘时镜像到左侧。
+          '.hrag-ctxmenu-subflip [role="menu"] { left: auto; right: calc(100% + 10px); }',
+          '.hrag-ctxmenu-subflip [role="menu"]::before { left: auto; right: -10px; }',
           // 宿主 Menu（Task 6）：触发器包层。field 直用时整框占满（宿主 root 为 inline-flex 会收内容宽——
           // 宽链＝mmhost(flex,100%) > 宿主 root(flex:1) > 按钮(width:100%)）；trail/顶栏内不套此规则。
           '.hrag-set-field > .hrag-mmhost { display: flex; width: 100%; }',
@@ -1904,6 +2077,10 @@ window.__ModuleLoader__.load({
           '.hrag-mm-item { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 34px; padding: 6px 8px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-family: inherit; text-align: left; cursor: pointer; }',
           '.hrag-mm-item:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-mm-item:disabled { opacity: 0.5; cursor: not-allowed; }',
+          '.hrag-mm-item-danger { color: var(--dsw-alias-state-error-primary); }',
+          '.hrag-mm-sub { padding-left: 18px; }',
+          '.hrag-mm-sep { height: 1px; margin: 4px 0; background: var(--dsw-alias-border-l2); }',
+          '.hrag-mm-label { padding: 4px 8px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
           // 思考跟随菜单行（10-15 他复跑调参）：勾选盒**移进角色格内**（绝对定位＋28px 头距＝勾文距 12px）——
           // 网格只留两列（角色｜该槽当前模型，subgrid 共享列＝逐行对齐）；独立勾选列在 subgrid 下
           // 首轨间距不可控（浏览器实测钉死）。行高＝宿主 item 34px。
@@ -2266,6 +2443,8 @@ window.__ModuleLoader__.load({
           '.hrag-ev-menu-backdrop { position: fixed; inset: 0; z-index: 40; }',
           '.hrag-ev-menu { position: fixed; z-index: 41; min-width: 148px; padding: 4px; border-radius: 8px; background: var(--dsw-alias-bg-layer-1); border: 0.5px solid var(--dsw-alias-border-l3); box-shadow: var(--dsw-elevation-panel); }',
           '.hrag-ev-menu-item { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; padding: 5px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
+          '.hrag-ev-menu-item-icon { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-secondary); }',
+          '.hrag-ev-menu-item-danger .hrag-ev-menu-item-icon { color: currentColor; }',
           '.hrag-ev-menu-item:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-ev-menu-item:disabled { opacity: 0.5; cursor: not-allowed; }',
           '.hrag-ev-menu-item-danger { color: var(--dsw-alias-state-error-primary); }',
@@ -2346,6 +2525,11 @@ window.__ModuleLoader__.load({
           '.hrag-ev-danglingrow { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-caret { display: inline-block; font-size: 10px; color: var(--dsw-alias-label-tertiary); transition: transform 120ms ease; flex-shrink: 0; }',
           '.hrag-ev-caret-open { transform: rotate(180deg); }',
+          // 百科两容器的收起箭头改用工作台同款 lucide chevron：展开朝下、收起朝右，
+          // 不再用 ▾/▴ 文本小三角（10-18 他对照设置页下拉判为不同件）。
+          '.hrag-wk-chev { display: inline-flex; align-items: center; justify-content: center; }',
+          '.hrag-wk-chev.hrag-ev-caret-open { transform: none; }',
+          '.hrag-wk-chev:not(.hrag-ev-caret-open) { transform: rotate(-90deg); }',
           '.hrag-ev-editgroup { border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; }',
           '.hrag-ev-editgroup-head { display: flex; align-items: center; gap: 6px; width: 100%; border: none; background: transparent; cursor: pointer; padding: 3px 0; font-family: inherit; }',
           '.hrag-ev-editgroup-name { flex: 1; min-width: 0; font-size: 11px; font-weight: 500; color: var(--dsw-alias-label-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }',
@@ -7373,6 +7557,34 @@ window.__ModuleLoader__.load({
         项集：照工作台——行 ⋯ 镜像右键、表头右键＝列设置）。宿主 Menu 挂在 0 尺寸
         fixed 锚上（getAnchorRect 直供指针位，wrapper 不上测）；无宿主件走 .hrag-mm
         兜底面板（照 DshMenu 无宿主分支语汇）。 */
+    let ctxMenuSeq = 0
+    // 宿主子菜单最小宽 163＋10 间距＋12 视口边距；宿主只夹父菜单，不夹子菜单。
+    const CTX_SUBMENU_RESERVE = 163 + 10 + 12
+    function useCtxListClass() {
+      return React.useMemo(() => 'hrag-ctxmenu-' + ++ctxMenuSeq, [])
+    }
+    /** 宿主子菜单恒向右展开（left:100%+10px）；父菜单最终右缘留给子菜单不足
+        时加翻转类，把子菜单镜像到左侧。anchorLeft/anchorRight 二选一：前者是
+        align=start 的锚点左缘，后者是 align=end 的锚点右缘（宿主的夹取口径）。 */
+    function useCtxSubmenuFlip(listClass, hasSubmenu, anchorLeft, anchorRight) {
+      const [flip, setFlip] = React.useState(false)
+      React.useLayoutEffect(() => {
+        if (!HostMenu) return
+        if (!hasSubmenu) {
+          setFlip(false)
+          return
+        }
+        if (anchorLeft === null && anchorRight === null) return
+        const list = document.querySelector('.' + listClass)
+        const width = list === null ? 0 : list.offsetWidth
+        const viewport = window.innerWidth
+        if (width <= 0 || viewport <= 0) return
+        const left = anchorRight === null ? anchorLeft : anchorRight - width
+        const right = Math.min(left + width, viewport - 12)
+        setFlip(right + CTX_SUBMENU_RESERVE > viewport - 12)
+      }, [listClass, hasSubmenu, anchorLeft, anchorRight])
+      return flip
+    }
     function DocContextMenu({ t, x, y, items, onSelect, onClose }) {
       React.useEffect(() => {
         const onKey = (event) => {
@@ -7381,23 +7593,38 @@ window.__ModuleLoader__.load({
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
       }, [onClose])
+      const listClass = useCtxListClass()
+      const hasSubmenu = items.some((entry) => entry && Array.isArray(entry.submenu) && entry.submenu.length > 0)
+      const submenuFlip = useCtxSubmenuFlip(listClass, hasSubmenu, x, null)
       if (HostMenu) {
-        return h(HostMenu, {
-          open: true,
-          anchor: h('span', {
-            className: 'hrag-ctxanchor',
-            style: { position: 'fixed', left: x + 'px', top: y + 'px', width: '0px', height: '0px' },
-          }),
-          items,
-          onSelect: (id) => {
-            onClose()
-            onSelect(id)
+        // 宿主 Menu 的根是普通 span：直接挂在 flex column 容器里会多出一个
+        // 参与 gap 的 flex 项（菜单开关瞬间上下区块收缩→抖动）。零尺寸
+        // fixed 包裹把整棵锚点移出文档流；菜单本体仍由宿主 portal 到 body。
+        return h(
+          'span',
+          {
+            className: 'hrag-ctxmenu-flowless',
+            style: { position: 'fixed', left: 0, top: 0, width: 0, height: 0 },
           },
-          onClose,
-          align: 'start',
-          portal: true,
-          getAnchorRect: () => ({ x: x, y: y, left: x, top: y, width: 0, height: 0, right: x, bottom: y }),
-        })
+          h(HostMenu, {
+            open: true,
+            anchor: h('span', {
+              className: 'hrag-ctxanchor',
+              style: { position: 'fixed', left: x + 'px', top: y + 'px', width: '0px', height: '0px' },
+            }),
+            items,
+            onSelect: (id) => {
+              onClose()
+              onSelect(id)
+            },
+            onClose,
+            align: 'start',
+            portal: true,
+            listClassName:
+              'hrag-ctxmenu-list ' + listClass + (submenuFlip ? ' hrag-ctxmenu-subflip' : ''),
+            getAnchorRect: () => ({ x: x, y: y, left: x, top: y, width: 0, height: 0, right: x, bottom: y }),
+          }),
+        )
       }
       return h(
         React.Fragment,
@@ -7405,25 +7632,16 @@ window.__ModuleLoader__.load({
         h('div', { className: 'hrag-mm-backdrop', onMouseDown: onClose }),
         h(
           'div',
-          { className: 'hrag-mm', role: 'menu', style: { position: 'fixed', left: x + 'px', top: y + 'px' } },
-          items
-            .filter((entry) => entry && !entry.type)
-            .map((entry) =>
-              h(
-                'button',
-                {
-                  key: entry.id,
-                  type: 'button',
-                  className: 'hrag-mm-item',
-                  disabled: entry.disabled,
-                  onClick: () => {
-                    onClose()
-                    onSelect(entry.id)
-                  },
-                },
-                entry.label,
-              ),
-            ),
+          {
+            className: 'hrag-mm',
+            role: 'menu',
+            onContextMenu: (event) => event.stopPropagation(),
+            style: { position: 'fixed', left: x + 'px', top: y + 'px' },
+          },
+          fallbackMenuRows(items, (id) => {
+            onClose()
+            onSelect(id)
+          }),
         ),
       )
     }
@@ -8682,8 +8900,8 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** 弹层菜单项（选中态尾置 ✓；danger 红字）。 */
-    function EvalMenuItem({ danger, disabled, selected, onSelect, children }) {
+    /** 弹层菜单项（可选前置图标；选中态尾置 ✓；danger 红字）。 */
+    function EvalMenuItem({ danger, disabled, selected, icon, onSelect, children }) {
       return h(
         'button',
         {
@@ -8695,6 +8913,7 @@ window.__ModuleLoader__.load({
           disabled,
           onClick: () => onSelect && onSelect(),
         },
+        icon ? h('span', { className: 'hrag-ev-menu-item-icon' }, icon) : null,
         children,
         selected ? h('span', { className: 'hrag-ev-menu-check' }, '✓') : null,
       )
@@ -8869,11 +9088,12 @@ window.__ModuleLoader__.load({
 
     /** 框内下拉触发器 chevron：工作台同款（lucide ChevronDown size-4 opacity-50——
         维度档位与 ASR 候选两处逐字对照 functional-models-view）。与菜单行图标
-        （lucideMenuIcon 14px）分开：这是值域控件的件，尺寸/透明度跟工作台走。 */
-    function lucideChevronDownIcon() {
+        （lucideMenuIcon 14px）分开：这是值域控件的件，尺寸/透明度跟工作台走。
+        百科两容器的收起箭头也用它：传 1（不再叠 50%），颜色随头的 tertiary。 */
+    function lucideChevronDownIcon(opacity = 0.5) {
       return h(
         'svg',
-        { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.5, 'aria-hidden': 'true' },
+        { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', opacity, 'aria-hidden': 'true' },
         h('path', { d: 'm6 9 6 6 6-6', stroke: 'currentColor' }),
       )
     }
@@ -8883,9 +9103,78 @@ window.__ModuleLoader__.load({
         selectedId/onSelect（onSelect 后自动收起＝旧行为）。`anchor:'field'`＝整框等宽
         （宿主 list 在 body portal 下——宽经根变量 `--hrag-menu-eq-w` 传入）。缺件回退＝
         极简 fixed 列表（无键盘导航；保证不因宿主换名整体失效）。 */
+    /** 极简菜单行（宿主 Menu 缺件回退）：label/separator/submenu/danger 全支持；
+        子菜单在回退面平铺（父项作标签、子项缩进）。 */
+    function fallbackMenuRows(items, onPick) {
+      const rows = []
+      for (const entry of items || []) {
+        if (!entry) continue
+        if (entry.type === 'separator') {
+          rows.push(h('div', { key: entry.id, className: 'hrag-mm-sep' }))
+          continue
+        }
+        if (entry.type === 'label') {
+          rows.push(h('div', { key: entry.id, className: 'hrag-mm-label' }, entry.text))
+          continue
+        }
+        if (Array.isArray(entry.submenu) && entry.submenu.length > 0) {
+          rows.push(h('div', { key: entry.id, className: 'hrag-mm-label' }, entry.label))
+          for (const sub of entry.submenu) {
+            if (!sub) continue
+            const subKey = entry.id + '-' + sub.id
+            if (sub.type === 'separator') {
+              rows.push(h('div', { key: subKey, className: 'hrag-mm-sep' }))
+              continue
+            }
+            if (sub.type === 'label') {
+              rows.push(h('div', { key: subKey, className: 'hrag-mm-label' }, sub.text))
+              continue
+            }
+            rows.push(
+              h(
+                'button',
+                {
+                  key: subKey,
+                  type: 'button',
+                  className: 'hrag-mm-item hrag-mm-sub' + (sub.danger ? ' hrag-mm-item-danger' : ''),
+                  disabled: sub.disabled,
+                  onClick: () => onPick(sub.id),
+                },
+                sub.label,
+              ),
+            )
+          }
+          continue
+        }
+        rows.push(
+          h(
+            'button',
+            {
+              key: entry.id,
+              type: 'button',
+              className: 'hrag-mm-item' + (entry.danger ? ' hrag-mm-item-danger' : ''),
+              disabled: entry.disabled,
+              onClick: () => onPick(entry.id),
+            },
+            entry.label,
+          ),
+        )
+      }
+      return rows
+    }
+
     function DshMenu({ title, trigger, align, className, anchor, items, children, selectedId, onSelect, footer }) {
       const [open, setOpen] = React.useState(false)
+      const [anchorBox, setAnchorBox] = React.useState(null)
       const btnRef = React.useRef(null)
+      const listClass = useCtxListClass()
+      const hasSubmenu = (items || []).some((entry) => entry && Array.isArray(entry.submenu) && entry.submenu.length > 0)
+      const submenuFlip = useCtxSubmenuFlip(
+        listClass,
+        open && hasSubmenu,
+        align === 'end' || anchorBox === null ? null : anchorBox.left,
+        align === 'end' && anchorBox !== null ? anchorBox.right : null,
+      )
       const close = () => setOpen(false)
       const toggle = () => {
         if (open) {
@@ -8899,6 +9188,8 @@ window.__ModuleLoader__.load({
             document.documentElement.style.setProperty('--hrag-menu-eq-w', Math.round(rect.width) + 'px')
           }
         }
+        const rect = btnRef.current ? btnRef.current.getBoundingClientRect() : null
+        setAnchorBox(rect ? { left: rect.left, right: rect.right } : null)
         setOpen(true)
       }
       const anchorButton = h(
@@ -8932,7 +9223,10 @@ window.__ModuleLoader__.load({
             onClose: close,
             align: align === 'end' ? 'end' : 'start',
             portal: true,
-            listClassName: anchor === 'field' ? 'hrag-mm-eqw' : undefined,
+            listClassName:
+              (anchor === 'field' ? 'hrag-mm-eqw ' : '') +
+              listClass +
+              (submenuFlip ? ' hrag-ctxmenu-subflip' : ''),
             footer,
           }),
         )
@@ -8952,6 +9246,7 @@ window.__ModuleLoader__.load({
                 {
                   className: 'hrag-mm',
                   role: 'menu',
+                  onContextMenu: (event) => event.stopPropagation(),
                   style: rect
                     ? {
                         top: rect.bottom + 4 + 'px',
@@ -8960,24 +9255,10 @@ window.__ModuleLoader__.load({
                       }
                     : undefined,
                 },
-                (items || [])
-                  .filter((entry) => !entry || !entry.type)
-                  .map((entry) =>
-                    h(
-                      'button',
-                      {
-                        key: entry.id,
-                        type: 'button',
-                        className: 'hrag-mm-item',
-                        disabled: entry.disabled,
-                        onClick: () => {
-                          close()
-                          if (onSelect) onSelect(entry.id)
-                        },
-                      },
-                      entry.label,
-                    ),
-                  ),
+                fallbackMenuRows(items, (id) => {
+                  close()
+                  if (onSelect) onSelect(id)
+                }),
                 children,
               ),
             )
@@ -12093,6 +12374,323 @@ window.__ModuleLoader__.load({
       )
     }
 
+    // ── 我的条目管理面（②档丙对，2026-10-18）：抽屉分组模型 ──────────────
+    // 照工作台 core/card-drawers.ts：localStorage 分区、每卡至多一屉；
+    // 无归属/归属指向已删抽屉 ⇒ 未分组（首页）。后端只存卡片本身。
+    const CARD_DRAWER_ICON_KEYS = ['folder', 'star', 'layers', 'briefcase', 'target', 'zap', 'flag', 'heart', 'bookmark', 'clock', 'message', 'grid']
+    const CARD_DRAWER_COLOR_KEYS = ['emerald', 'teal', 'sky', 'blue', 'indigo', 'violet', 'purple', 'pink', 'rose', 'orange', 'amber', 'lime']
+    const CARD_DRAWER_COLORS = {
+      emerald: { accent: '#10B981' },
+      teal: { accent: '#14B8A6' },
+      sky: { accent: '#0EA5E9' },
+      blue: { accent: '#3B82F6' },
+      indigo: { accent: '#6366F1' },
+      violet: { accent: '#8B5CF6' },
+      purple: { accent: '#A855F7' },
+      pink: { accent: '#EC4899' },
+      rose: { accent: '#F43F5E' },
+      orange: { accent: '#F97316' },
+      amber: { accent: '#F59E0B' },
+      lime: { accent: '#84CC16' },
+    }
+    const CARD_DRAWER_DEFAULT_ICON = 'folder'
+    const CARD_DRAWER_DEFAULT_COLOR = 'emerald'
+    const CARD_DRAWER_ICON_SET = new Set(CARD_DRAWER_ICON_KEYS)
+    const CARD_DRAWER_COLOR_SET = new Set(CARD_DRAWER_COLOR_KEYS)
+
+    /** 工作台 drawer-icon.tsx 的 lucide 节点逐字（v0.562）；含 circle/rect 的
+        四枚不能只走 path——通用渲染器按 node[0] 分发。 */
+    const CARD_DRAWER_ICON_NODES = {
+      folder: [['path', { d: 'M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z' }]],
+      star: [['path', { d: 'M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z' }]],
+      layers: [
+        ['path', { d: 'M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z' }],
+        ['path', { d: 'M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12' }],
+        ['path', { d: 'M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17' }],
+      ],
+      briefcase: [
+        ['path', { d: 'M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16' }],
+        ['rect', { width: 20, height: 14, x: 2, y: 6, rx: 2 }],
+      ],
+      target: [
+        ['circle', { cx: 12, cy: 12, r: 10 }],
+        ['circle', { cx: 12, cy: 12, r: 6 }],
+        ['circle', { cx: 12, cy: 12, r: 2 }],
+      ],
+      zap: [['path', { d: 'M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z' }]],
+      flag: [['path', { d: 'M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528' }]],
+      heart: [['path', { d: 'M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5' }]],
+      bookmark: [['path', { d: 'm19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z' }]],
+      clock: [
+        ['path', { d: 'M12 6v6l4 2' }],
+        ['circle', { cx: 12, cy: 12, r: 10 }],
+      ],
+      message: [['path', { d: 'M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z' }]],
+      grid: [
+        ['rect', { width: 7, height: 7, x: 3, y: 3, rx: 1 }],
+        ['rect', { width: 7, height: 7, x: 14, y: 3, rx: 1 }],
+        ['rect', { width: 7, height: 7, x: 14, y: 14, rx: 1 }],
+        ['rect', { width: 7, height: 7, x: 3, y: 14, rx: 1 }],
+      ],
+    }
+
+    function cardDrawersKey(kbId) {
+      return 'deerflow.knowledge.card-drawers.' + String(kbId) + '.v1'
+    }
+
+    function newCardDrawerId() {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+      } catch (error) {
+        // Fall through to the timestamp id.
+      }
+      return 'drawer-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
+    }
+
+    /** 解析＋消毒；任何坏形降级为空态（分组是锦上添花，永不崩）。 */
+    function sanitizeCardDrawers(parsed) {
+      if (!parsed || typeof parsed !== 'object') return { drawers: [], membership: {} }
+      const drawers = Array.isArray(parsed.drawers)
+        ? parsed.drawers.flatMap((item) => {
+            if (!item || typeof item !== 'object') return []
+            if (typeof item.id !== 'string' || typeof item.name !== 'string') return []
+            const icon = CARD_DRAWER_ICON_SET.has(item.icon) ? item.icon : CARD_DRAWER_DEFAULT_ICON
+            const color = CARD_DRAWER_COLOR_SET.has(item.color) ? item.color : CARD_DRAWER_DEFAULT_COLOR
+            return [{ id: item.id, name: item.name, icon: icon, color: color, ...(item.hidden === true ? { hidden: true } : {}) }]
+          })
+        : []
+      const membership = {}
+      if (parsed.membership && typeof parsed.membership === 'object' && !Array.isArray(parsed.membership)) {
+        for (const [cardId, drawerId] of Object.entries(parsed.membership)) {
+          if (typeof drawerId === 'string') membership[cardId] = drawerId
+        }
+      }
+      return { drawers: drawers, membership: membership }
+    }
+
+    function readCardDrawers(kbId) {
+      try {
+        const raw = window.localStorage.getItem(cardDrawersKey(kbId))
+        if (!raw) return { drawers: [], membership: {} }
+        return sanitizeCardDrawers(JSON.parse(raw))
+      } catch (error) {
+        return { drawers: [], membership: {} }
+      }
+    }
+
+    function writeCardDrawers(kbId, state) {
+      try {
+        window.localStorage.setItem(cardDrawersKey(kbId), JSON.stringify(state))
+      } catch (error) {
+        // Best effort only; the in-memory state still applies this session.
+      }
+    }
+
+    function useCardDrawers(kbId) {
+      const [state, setState] = React.useState(() => readCardDrawers(kbId))
+      const [loadedKb, setLoadedKb] = React.useState(kbId)
+      if (loadedKb !== kbId) {
+        setLoadedKb(kbId)
+        setState(readCardDrawers(kbId))
+      }
+      const persist = React.useCallback(
+        (next) => {
+          setState(next)
+          writeCardDrawers(kbId, next)
+        },
+        [kbId],
+      )
+      const createDrawer = React.useCallback(
+        (input) => {
+          const drawer = {
+            id: newCardDrawerId(),
+            name: String(input.name || '').trim(),
+            icon: input.icon,
+            color: input.color,
+          }
+          persist({ ...state, drawers: state.drawers.concat([drawer]) })
+          return drawer.id
+        },
+        [state, persist],
+      )
+      const updateDrawer = React.useCallback(
+        (id, patch) => {
+          persist({
+            ...state,
+            drawers: state.drawers.map((drawer) =>
+              drawer.id === id
+                ? {
+                    ...drawer,
+                    ...patch,
+                    name: patch.name !== undefined ? String(patch.name).trim() : drawer.name,
+                  }
+                : drawer,
+            ),
+          })
+        },
+        [state, persist],
+      )
+      const deleteDrawer = React.useCallback(
+        (id) => {
+          const membership = {}
+          for (const [cardId, drawerId] of Object.entries(state.membership)) {
+            if (drawerId !== id) membership[cardId] = drawerId
+          }
+          persist({ drawers: state.drawers.filter((drawer) => drawer.id !== id), membership: membership })
+        },
+        [state, persist],
+      )
+      const setDrawerHidden = React.useCallback(
+        (id, hidden) => {
+          persist({
+            ...state,
+            drawers: state.drawers.map((drawer) => (drawer.id === id ? { ...drawer, hidden: hidden } : drawer)),
+          })
+        },
+        [state, persist],
+      )
+      // 从「全部抽屉」找回：取消收起＋置顶；重建对象时不带 hidden 键（读写往返保真）。
+      const revealDrawerToFront = React.useCallback(
+        (id) => {
+          const target = state.drawers.find((drawer) => drawer.id === id)
+          if (!target) return
+          const revealed = { id: target.id, name: target.name, icon: target.icon, color: target.color }
+          persist({
+            ...state,
+            drawers: [revealed].concat(state.drawers.filter((drawer) => drawer.id !== id)),
+          })
+        },
+        [state, persist],
+      )
+      const applyMove = React.useCallback(
+        (cardIds, drawerId, baseState) => {
+          const membership = { ...baseState.membership }
+          for (const cardId of cardIds) {
+            if (drawerId === null) delete membership[cardId]
+            else membership[cardId] = drawerId
+          }
+          persist({ ...baseState, membership: membership })
+        },
+        [persist],
+      )
+      const moveCard = React.useCallback(
+        (cardId, drawerId) => applyMove([cardId], drawerId, state),
+        [applyMove, state],
+      )
+      // 批量移动单次 persist（逐张 moveCard 会各读同一 stale state 相互覆盖）。
+      const moveCards = React.useCallback(
+        (cardIds, drawerId) => applyMove(cardIds, drawerId, state),
+        [applyMove, state],
+      )
+      return {
+        drawers: state.drawers,
+        membership: state.membership,
+        createDrawer: createDrawer,
+        updateDrawer: updateDrawer,
+        deleteDrawer: deleteDrawer,
+        setDrawerHidden: setDrawerHidden,
+        revealDrawerToFront: revealDrawerToFront,
+        moveCard: moveCard,
+        moveCards: moveCards,
+      }
+    }
+
+    /** 标签输入按中英文逗号切分（工作台 parseTags 同式）。 */
+    function parseCardTags(input) {
+      return String(input == null ? '' : input)
+        .split(/[,，]/)
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+    }
+
+    /** 归属抽屉 id：无映射或映射指向已不存在的抽屉 ⇒ null（未分组）。 */
+    function cardOwnerDrawerId(membership, drawerIds, cardId) {
+      const owner = membership[cardId]
+      return owner !== undefined && drawerIds.has(owner) ? owner : null
+    }
+
+    /** 当前标签的卡片（首页＝未分组；抽屉＝归属该抽屉）。 */
+    function cardsForDrawer(cards, membership, drawerIds, activeDrawerId) {
+      return cards.filter((card) => {
+        const owner = cardOwnerDrawerId(membership, drawerIds, card.id)
+        return activeDrawerId === null ? owner === null : owner === activeDrawerId
+      })
+    }
+
+    /** 选中集是否已全部落在目标条目（目标项置灰判据；null＝未分组）。 */
+    function allCardsInDrawer(cardIds, membership, drawerIds, drawerId) {
+      return (
+        cardIds.length > 0 &&
+        cardIds.every((cardId) => cardOwnerDrawerId(membership, drawerIds, cardId) === drawerId)
+      )
+    }
+
+    /** 抽屉/菜单图标：lucide 节点（path/circle/rect）通用渲染，默认 16px。 */
+    function renderLucideNodes(nodes, size, color) {
+      return h(
+        'svg',
+        {
+          width: size || 16,
+          height: size || 16,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          style: color ? { color: color } : undefined,
+          'aria-hidden': 'true',
+        },
+        nodes.map((node, index) => h(node[0], { ...node[1], key: index })),
+      )
+    }
+
+    /** 卡片管理面自用图标（工作台 lucide 真值；宿主无对应件档）。 */
+    const CARD_UI_ICON_NODES = {
+      layoutList: [
+        ['rect', { width: 7, height: 7, x: 3, y: 3, rx: 1 }],
+        ['rect', { width: 7, height: 7, x: 3, y: 14, rx: 1 }],
+        ['path', { d: 'M14 4h7' }],
+        ['path', { d: 'M14 9h7' }],
+        ['path', { d: 'M14 15h7' }],
+        ['path', { d: 'M14 20h7' }],
+      ],
+      searchCheck: [
+        ['path', { d: 'm8 11 2 2 4-4' }],
+        ['circle', { cx: 11, cy: 11, r: 8 }],
+        ['path', { d: 'm21 21-4.3-4.3' }],
+      ],
+      searchX: [
+        ['path', { d: 'm13.5 8.5-5 5' }],
+        ['path', { d: 'm8.5 8.5 5 5' }],
+        ['circle', { cx: 11, cy: 11, r: 8 }],
+        ['path', { d: 'm21 21-4.3-4.3' }],
+      ],
+      folderPlus: [
+        ['path', { d: 'M12 10v6' }],
+        ['path', { d: 'M9 13h6' }],
+        ['path', { d: 'M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z' }],
+      ],
+      folderInput: [
+        ['path', { d: 'M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1' }],
+        ['path', { d: 'M2 13h10' }],
+        ['path', { d: 'm9 16 3-3-3-3' }],
+      ],
+    }
+
+    function cardUiIcon(name, size) {
+      return renderLucideNodes(CARD_UI_ICON_NODES[name] || CARD_UI_ICON_NODES.folderPlus, size)
+    }
+
+    /** 抽屉图标：12 键之一；未知键回退 folder。 */
+    function cardDrawerIcon(key, size, color) {
+      return renderLucideNodes(
+        CARD_DRAWER_ICON_NODES[CARD_DRAWER_ICON_SET.has(key) ? key : CARD_DRAWER_DEFAULT_ICON],
+        size,
+        color,
+      )
+    }
+
     /** 百科视图（Task 9）：统一搜索＋「生成条目」「我的条目」双卡分高（照工作台
         wiki-tab 定高分屏语义：都展开各半、收起一个让位另一个）；⋯ 承接更新/重建
         （重建走确认闸）；条目状态轮询（generating 3s＋触发后 12s 力度窗）；drain 边
@@ -12101,25 +12699,35 @@ window.__ModuleLoader__.load({
       const tk = (key, ...args) => evText(t(key), args)
       const [query, setQuery] = React.useState('')
       const [entriesCollapsed, setEntriesCollapsed] = React.useState(false)
-      const [cardsCollapsed, setCardsCollapsed] = React.useState(false)
       const [selectedIds, setSelectedIds] = React.useState(() => new Set())
       const [deleteTargets, setDeleteTargets] = React.useState(null)
+      const [entryCtx, setEntryCtx] = React.useState(null)
+      const [editingEntry, setEditingEntry] = React.useState(null)
+      const [entrySaving, setEntrySaving] = React.useState(false)
+      const entryEditRef = React.useRef(0)
       const [regeneratingIds, setRegeneratingIds] = React.useState([])
       const [pending, setPending] = React.useState(false)
       const [busy, setBusy] = React.useState(false)
       const [rebuildOpen, setRebuildOpen] = React.useState(false)
+      const [cardCommand, setCardCommand] = React.useState(null)
       const pollUntilRef = React.useRef(0)
       const manualRunRef = React.useRef(false)
+      const cardCommandNonceRef = React.useRef(0)
 
       React.useEffect(() => {
         setQuery('')
         setSelectedIds(new Set())
         setDeleteTargets(null)
+        setEntryCtx(null)
+        entryEditRef.current += 1
+        setEditingEntry(null)
+        setEntrySaving(false)
         setRegeneratingIds([])
         manualRunRef.current = false
       }, [kbId])
 
       const notify = (text, isError) => showToast(text, { error: Boolean(isError) })
+      const sendCardCommand = (kind) => setCardCommand({ kind: kind, nonce: ++cardCommandNonceRef.current })
 
       const entriesQ = useEvalCall(kbId, enabled, 'listWikiEntries', null, (payload) =>
         Boolean(payload && (payload.generation === 'generating' || Date.now() < pollUntilRef.current)),
@@ -12128,7 +12736,6 @@ window.__ModuleLoader__.load({
 
       const entries = entriesQ.data && Array.isArray(entriesQ.data.entries) ? entriesQ.data.entries : []
       const generation = entriesQ.data ? entriesQ.data.generation : null
-      const cards = cardsQ.data && Array.isArray(cardsQ.data.items) ? cardsQ.data.items : []
 
       // drain 边（照工作台 page.tsx）：generating→idle；清局部目标；手动 run 真话提示。
       const prevGenerationRef = React.useRef(null)
@@ -12176,6 +12783,47 @@ window.__ModuleLoader__.load({
         setRegeneratingIds(entryIds)
         triggerWiki('entries', entryIds)
       }
+      // 条目编辑（E3 收口）：列表只有摘要，先取详情再开弹层（请求防串）。
+      const openEditEntry = (entry) => {
+        const requestId = ++entryEditRef.current
+        callOp('wikiEntry', { kb_id: kbId, entry_id: entry.id })
+          .then((data) => {
+            if (entryEditRef.current !== requestId) return
+            if (!data) {
+              notify(tk('wk.loadFailed'), true)
+              return
+            }
+            setEditingEntry(data)
+          })
+          .catch((error) => {
+            if (entryEditRef.current !== requestId) return
+            notify(errorDetail(error) || tk('wk.loadFailed'), true)
+          })
+      }
+      const closeEditEntry = () => {
+        entryEditRef.current += 1
+        setEditingEntry(null)
+        setEntrySaving(false)
+      }
+      const handleSaveEntry = (content, supplementContent) => {
+        if (!editingEntry) return Promise.resolve()
+        setEntrySaving(true)
+        return callOp('updateWikiEntry', {
+          kb_id: kbId,
+          entry_id: editingEntry.id,
+          body: { content: content, supplement_content: supplementContent },
+        })
+          .then(() => {
+            notify(tk('wk.wikiEntryUpdated'))
+            closeEditEntry()
+            entriesQ.refresh()
+          })
+          .catch((error) => {
+            notify(errorDetail(error) || tk('wk.wikiEntryUpdateFailed'), true)
+            throw error
+          })
+          .finally(() => setEntrySaving(false))
+      }
 
       // 壳级菜单指令线（菜单批 Task 1）：菜单项先切百科、再以 nonce 发令，同令只消费一次。
       const commandNonceRef = React.useRef(0)
@@ -12189,7 +12837,7 @@ window.__ModuleLoader__.load({
         if (onBusyChange) onBusyChange(updating)
       }, [updating, onBusyChange])
 
-      // 过滤（照工作台：条目标题+摘要、卡片标题+摘要+标签，客户端包含匹配）。
+      // 过滤（照工作台：条目标题+摘要；卡片过滤在 ManualCardsSection 内，仍限当前标签）。
       const needle = query.trim().toLowerCase()
       const visibleEntries = needle
         ? entries.filter(
@@ -12198,17 +12846,8 @@ window.__ModuleLoader__.load({
               String(entry.summary).toLowerCase().indexOf(needle) >= 0,
           )
         : entries
-      const visibleCards = needle
-        ? cards.filter(
-            (card) =>
-              String(card.title).toLowerCase().indexOf(needle) >= 0 ||
-              String(card.summary).toLowerCase().indexOf(needle) >= 0 ||
-              (card.tags || []).some((tag) => String(tag).toLowerCase().indexOf(needle) >= 0),
-          )
-        : cards
       const searching = needle.length > 0
       const entriesExpanded = !entriesCollapsed || (searching && visibleEntries.length > 0)
-      const cardsExpanded = !cardsCollapsed || (searching && visibleCards.length > 0)
 
       // 过滤即清选择（照工作台：批量动作不触达看不见的行）。
       const lastQueryRef = React.useRef(query)
@@ -12245,6 +12884,63 @@ window.__ModuleLoader__.load({
       const rowUpdating = (entryId) =>
         regeneratingIds.indexOf(entryId) >= 0 || (updating && regeneratingIds.length === 0)
 
+      // 生成条目右键两态（照工作台 wiki-panel 10-16 前形态）：未选中行＝单选它；
+      // 已选中且多选＝批量态；批量条退役，更新/删除/取消全由右键承载。
+      const openEntryContextMenu = (event, entry) => {
+        event.preventDefault()
+        event.stopPropagation()
+        const already = selectedIds.has(entry.id)
+        const next = already ? selectedIds : new Set([entry.id])
+        if (!already) setSelectedIds(next)
+        setEntryCtx({
+          x: event.clientX,
+          y: event.clientY,
+          entry: entry,
+          batch: already && next.size > 1,
+        })
+      }
+      const entryContextItems = () => {
+        if (!entryCtx) return []
+        if (entryCtx.batch) {
+          return [
+            { type: 'label', id: 'sel', text: tk('wk.selectedCount', selectedIds.size) },
+            {
+              id: 'update-selected',
+              label: tk('wk.updateSelected'),
+              icon: refreshIcon(),
+              disabled: updating,
+            },
+            { id: 'cancel', label: tk('wk.cancelSelection'), icon: dshCloseIcon() },
+            { type: 'separator', id: 'batch-sep' },
+            { id: 'delete-selected', label: tk('wk.deleteSelected'), icon: dshTrashIcon(), danger: true },
+          ]
+        }
+        const items = [
+          { id: 'open', label: tk('wk.openEntry'), icon: wikiBookIcon() },
+          { id: 'edit', label: tk('wk.editEntry'), icon: dshEditIcon() },
+          { id: 'update', label: tk('wk.updateEntry'), icon: refreshIcon(), disabled: updating },
+        ]
+        if (selectedIds.has(entryCtx.entry.id)) {
+          items.push({ id: 'cancel', label: tk('wk.cancelSelection'), icon: dshCloseIcon() })
+        }
+        items.push({ type: 'separator', id: 'row-sep' })
+        items.push({ id: 'delete', label: tk('wk.deleteEntry'), icon: dshTrashIcon(), danger: true })
+        return items
+      }
+      const handleEntryContextAction = (id) => {
+        if (!entryCtx) return
+        const entry = entryCtx.entry
+        if (id === 'open') onOpenEntry(entry.id)
+        else if (id === 'edit') openEditEntry(entry)
+        else if (id === 'update') handleRegenerateEntries([entry.id])
+        else if (id === 'update-selected') handleRegenerateEntries([...selectedIds])
+        else if (id === 'cancel') setSelectedIds(new Set())
+        else if (id === 'delete') setDeleteTargets([entry])
+        else if (id === 'delete-selected') {
+          setDeleteTargets(entries.filter((item) => selectedIds.has(item.id)))
+        }
+      }
+
       const entryRowMenu = (entry) =>
         h(EvalMenu, {
           className: 'hrag-ev-rowmenu',
@@ -12255,6 +12951,7 @@ window.__ModuleLoader__.load({
               EvalMenuItem,
               {
                 key: 'open',
+                icon: wikiBookIcon(),
                 onSelect: () => {
                   close()
                   onOpenEntry(entry.id)
@@ -12265,7 +12962,20 @@ window.__ModuleLoader__.load({
             h(
               EvalMenuItem,
               {
+                key: 'edit',
+                icon: dshEditIcon(),
+                onSelect: () => {
+                  close()
+                  openEditEntry(entry)
+                },
+              },
+              tk('wk.editEntry'),
+            ),
+            h(
+              EvalMenuItem,
+              {
                 key: 'update',
+                icon: refreshIcon(),
                 disabled: updating,
                 onSelect: () => {
                   close()
@@ -12279,6 +12989,7 @@ window.__ModuleLoader__.load({
               EvalMenuItem,
               {
                 key: 'del',
+                icon: dshTrashIcon(),
                 danger: true,
                 onSelect: () => {
                   close()
@@ -12307,7 +13018,7 @@ window.__ModuleLoader__.load({
               'aria-expanded': entriesExpanded,
               onClick: () => setEntriesCollapsed((value) => !value),
             },
-            h('span', { className: 'hrag-ev-caret' + (entriesExpanded ? ' hrag-ev-caret-open' : '') }, '▾'),
+            h('span', { className: 'hrag-ev-caret hrag-wk-chev' + (entriesExpanded ? ' hrag-ev-caret-open' : '') }, lucideChevronDownIcon(1)),
             h('span', { className: 'hrag-wk-secticon' }, wikiBookIcon()),
             h('span', { className: 'hrag-wk-secttitle' }, tk('wk.entries')),
             h('span', { className: 'hrag-ev-badge hrag-ev-tabnums' }, String(entries.length)),
@@ -12352,7 +13063,12 @@ window.__ModuleLoader__.load({
                       const rowBusy = rowUpdating(entry.id)
                       return h(
                         'div',
-                        { key: entry.id, className: 'hrag-wk-row' + (isSelected ? ' hrag-wk-row-on' : '') },
+                        {
+                          key: entry.id,
+                          className: 'hrag-wk-row' + (isSelected ? ' hrag-wk-row-on' : ''),
+                          'data-selected': isSelected,
+                          onContextMenu: (event) => openEntryContextMenu(event, entry),
+                        },
                         h('input', {
                           type: 'checkbox',
                           className: 'hrag-ev-check',
@@ -12393,66 +13109,15 @@ window.__ModuleLoader__.load({
           : null,
       )
 
-      const cardsSection = h(
-        'section',
-        { className: 'hrag-wk-sect' + (cardsExpanded ? ' hrag-wk-sect-open' : '') },
-        h(
-          'div',
-          { className: 'hrag-wk-secthead' },
-          h(
-            'button',
-            {
-              type: 'button',
-              className: 'hrag-wk-secttoggle',
-              'aria-expanded': cardsExpanded,
-              onClick: () => setCardsCollapsed((value) => !value),
-            },
-            h('span', { className: 'hrag-ev-caret' + (cardsExpanded ? ' hrag-ev-caret-open' : '') }, '▾'),
-            h('span', { className: 'hrag-wk-secticon' }, wikiNoteIcon()),
-            h('span', { className: 'hrag-wk-secttitle' }, tk('wk.cards')),
-            h('span', { className: 'hrag-ev-badge hrag-ev-tabnums' }, String(cards.length)),
-          ),
-        ),
-        cardsExpanded
-          ? cardsQ.failure
-            ? h(
-                'div',
-                { className: 'hrag-ev-hint hrag-ev-hint-error hrag-wk-inset' },
-                tk('wk.loadFailed'),
-              )
-            : cardsQ.data === null
-              ? h('div', { className: 'hrag-ev-hint hrag-wk-inset' }, tk('wk.loading'))
-              : visibleCards.length === 0
-                ? sectionEmpty(wikiNoteIcon(28), cards.length === 0 ? tk('wk.cardsEmpty') : tk('wk.cardsNoMatch'))
-                : h(
-                    'div',
-                    { className: 'hrag-wk-list' },
-                    visibleCards.map((card) =>
-                      h(
-                        'button',
-                        {
-                          key: card.id,
-                          type: 'button',
-                          className: 'hrag-wk-row hrag-wk-cardrow',
-                          title: tk('wk.openCard'),
-                          onClick: () => onOpenCard(card.id),
-                        },
-                        h('span', { className: 'hrag-wk-rowicon' }, wikiNoteIcon()),
-                        h('span', { className: 'hrag-wk-rowtitle', title: card.title }, card.title),
-                        h('span', { className: 'hrag-wk-rowsummary' }, card.summary),
-                        card.include_in_wiki_search
-                          ? h('span', { className: 'hrag-ev-badge' }, tk('wk.includeInSearch'))
-                          : null,
-                        h(
-                          'span',
-                          { className: 'hrag-wk-rowtime hrag-ev-tabnums', title: evFmtFullTime(card.updated_at) },
-                          evFmtRunTime(card.updated_at),
-                        ),
-                      ),
-                    ),
-                  )
-          : null,
-      )
+      const cardsSection = h(ManualCardsSection, {
+        t: t,
+        kbId: kbId,
+        cardsQ: cardsQ,
+        query: query,
+        onOpenCard: onOpenCard,
+        command: cardCommand,
+        notify: notify,
+      })
 
       return h(
         'div',
@@ -12523,6 +13188,29 @@ window.__ModuleLoader__.load({
                   },
                   h(React.Fragment, null, refreshIcon(), tk('wk.rebuildWiki')),
                 ),
+                h('div', { key: 'sep', className: 'hrag-ev-menu-sep' }),
+                h(
+                  EvalMenuItem,
+                  {
+                    key: 'newDrawer',
+                    onSelect: () => {
+                      close()
+                      sendCardCommand('drawer')
+                    },
+                  },
+                  h(React.Fragment, null, cardUiIcon('folderPlus', 14), tk('wk.drawerNew')),
+                ),
+                h(
+                  EvalMenuItem,
+                  {
+                    key: 'newCard',
+                    onSelect: () => {
+                      close()
+                      sendCardCommand('card')
+                    },
+                  },
+                  h(React.Fragment, null, dshPlusIcon(), tk('wk.cardNew')),
+                ),
               ],
             }),
           ),
@@ -12532,38 +13220,27 @@ window.__ModuleLoader__.load({
           { className: 'hrag-wk-canvas' },
           entriesSection,
           cardsSection,
-          selectedIds.size > 0
-            ? h(
-                'div',
-                { className: 'hrag-ev-bulkbar' },
-                h('span', { className: 'hrag-ev-muted hrag-ev-tabnums' }, tk('wk.selectedCount', selectedIds.size)),
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'hrag-btn hrag-ev-graybtn',
-                    disabled: updating,
-                    onClick: () => handleRegenerateEntries([...selectedIds]),
-                  },
-                  tk('wk.updateSelected'),
-                ),
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'hrag-btn hrag-btn-danger',
-                    onClick: () => setDeleteTargets(entries.filter((entry) => selectedIds.has(entry.id))),
-                  },
-                  tk('wk.deleteSelected'),
-                ),
-                h(
-                  'button',
-                  { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: () => setSelectedIds(new Set()) },
-                  tk('wk.cancelSelection'),
-                ),
-              )
-            : null,
         ),
+        entryCtx
+          ? h(DocContextMenu, {
+              t: t,
+              x: entryCtx.x,
+              y: entryCtx.y,
+              items: entryContextItems(),
+              onSelect: handleEntryContextAction,
+              onClose: () => setEntryCtx(null),
+            })
+          : null,
+        editingEntry
+          ? h(WikiEditDialog, {
+              key: editingEntry.id,
+              t: t,
+              entry: editingEntry,
+              saving: entrySaving,
+              onClose: closeEditEntry,
+              onSave: handleSaveEntry,
+            })
+          : null,
         rebuildOpen
           ? h(ConfirmDialog, {
               t,
@@ -12593,6 +13270,961 @@ window.__ModuleLoader__.load({
               confirmKey: 'doc.confirmDelete',
               onCancel: () => setDeleteTargets(null),
               onConfirm: handleDeleteConfirm,
+            })
+          : null,
+      )
+    }
+
+    /** 表单弹层壳（面板内自绘；Esc/遮罩关闭，busy 时锁住）。 */
+    function CardDialog({ title, description, wide, busy, onClose, footer, children }) {
+      React.useEffect(() => {
+        const onKey = (event) => {
+          if (event.key === 'Escape' && !busy) onClose()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+      }, [busy, onClose])
+      return h(
+        'div',
+        {
+          className: 'hrag-overlay',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget && !busy) onClose()
+          },
+        },
+        h(
+          'div',
+          {
+            className:
+              'hrag-dialog ' +
+              (wide === 'drawer' ? 'hrag-dialog-drawer' : wide === 'wiki' ? 'hrag-dialog-wiki' : 'hrag-dialog-card'),
+            role: 'dialog',
+            'aria-modal': 'true',
+            'aria-label': title,
+          },
+          h('div', { className: 'hrag-dialog-title' }, title),
+          description ? h('div', { className: 'hrag-dialog-body' }, description) : null,
+          children,
+          h('div', { className: 'hrag-dialog-actions' }, footer),
+        ),
+      )
+    }
+
+    /** 混搜开关：宿主 Switch 直用；缺件回退同形自绘（无 portal）。 */
+    function CardSwitch({ checked, onChange, label }) {
+      if (HostSwitch) return h(HostSwitch, { checked: checked, onChange: onChange, label: label })
+      return h(
+        'button',
+        {
+          type: 'button',
+          role: 'switch',
+          'aria-checked': checked,
+          'aria-label': label,
+          className: 'hrag-switch' + (checked ? ' hrag-switch-on' : ''),
+          onClick: () => onChange(!checked),
+        },
+        h('span', { className: 'hrag-switch-thumb' }),
+      )
+    }
+
+    /** 卡片新建/编辑弹层（照工作台 ManualCardEditor；标题+正文非空才可存）。 */
+    function CardEditorDialog({ t, initial, saving, onClose, onSave }) {
+      const tk = (key, ...args) => evText(t(key), args)
+      const [title, setTitle] = React.useState(initial ? initial.title : '')
+      const [content, setContent] = React.useState(initial ? initial.content : '')
+      const [tagsInput, setTagsInput] = React.useState(initial && Array.isArray(initial.tags) ? initial.tags.join(', ') : '')
+      const [include, setInclude] = React.useState(Boolean(initial && initial.include_in_wiki_search))
+      const canSave = title.trim().length > 0 && content.trim().length > 0 && !saving
+      const submit = () => {
+        if (!canSave) return
+        Promise.resolve(
+          onSave({
+            title: title.trim(),
+            content: content.trim(),
+            tags: parseCardTags(tagsInput),
+            include_in_wiki_search: include,
+          }),
+        ).catch(() => {})
+      }
+      return h(
+        CardDialog,
+        {
+          title: initial ? tk('wk.cardEditorEdit') : tk('wk.cardEditorCreate'),
+          description: tk('wk.cardEditorDesc'),
+          busy: saving,
+          onClose: onClose,
+          footer: [
+            h(
+              'button',
+              { key: 'cancel', type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: saving, onClick: onClose },
+              t('doc.cancel'),
+            ),
+            h(
+              'button',
+              { key: 'save', type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: !canSave, onClick: submit },
+              saving ? tk('wk.cardSaving') : tk('wk.cardSave'),
+            ),
+          ],
+        },
+        h(
+          'div',
+          { className: 'hrag-ev-form' },
+          h(
+            'label',
+            { className: 'hrag-ev-field' },
+            h('span', { className: 'hrag-ev-fieldlabel' }, tk('wk.cardTitleLabel')),
+            h('input', {
+              type: 'text',
+              className: 'hrag-input',
+              autoFocus: true,
+              'aria-label': tk('wk.cardTitleLabel'),
+              placeholder: tk('wk.cardTitlePlaceholder'),
+              value: title,
+              onChange: (event) => setTitle(event.target.value),
+            }),
+          ),
+          h(
+            'label',
+            { className: 'hrag-ev-field' },
+            h('span', { className: 'hrag-ev-fieldlabel' }, tk('wk.cardContentLabel')),
+            h('textarea', {
+              className: 'hrag-input hrag-ev-textarea hrag-cardcontent',
+              'aria-label': tk('wk.cardContentLabel'),
+              placeholder: tk('wk.cardContentPlaceholder'),
+              value: content,
+              onChange: (event) => setContent(event.target.value),
+            }),
+          ),
+          h(
+            'label',
+            { className: 'hrag-ev-field' },
+            h('span', { className: 'hrag-ev-fieldlabel' }, tk('wk.cardTagsLabel')),
+            h('input', {
+              type: 'text',
+              className: 'hrag-input',
+              'aria-label': tk('wk.cardTagsLabel'),
+              placeholder: tk('wk.cardTagsPlaceholder'),
+              value: tagsInput,
+              onChange: (event) => setTagsInput(event.target.value),
+            }),
+          ),
+          h(
+            'div',
+            { className: 'hrag-card-switchrow' },
+            h(CardSwitch, { checked: include, onChange: setInclude, label: tk('wk.includeInSearch') }),
+            h('span', { className: 'hrag-card-switchlabel' }, tk('wk.includeInSearch')),
+            h('span', { className: 'hrag-ev-muted hrag-card-switchhint' }, tk('wk.cardIncludeHint')),
+          ),
+        ),
+      )
+    }
+
+    /** 抽屉新建/编辑弹层（照工作台 DrawerEditor：名称+12 图标+12 色）。 */
+    function CardDrawerEditorDialog({ t, initial, onClose, onSubmit }) {
+      const tk = (key, ...args) => evText(t(key), args)
+      const [name, setName] = React.useState(initial ? initial.name : '')
+      const [icon, setIcon] = React.useState(initial ? initial.icon : CARD_DRAWER_DEFAULT_ICON)
+      const [color, setColor] = React.useState(initial ? initial.color : CARD_DRAWER_DEFAULT_COLOR)
+      const canSave = name.trim().length > 0
+      const submit = () => {
+        if (!canSave) return
+        onSubmit(name.trim(), icon, color)
+      }
+      const accent = CARD_DRAWER_COLORS[color].accent
+      return h(
+        CardDialog,
+        {
+          title: initial ? tk('wk.drawerEdit') : tk('wk.drawerNew'),
+          wide: 'drawer',
+          onClose: onClose,
+          footer: [
+            h(
+              'button',
+              { key: 'cancel', type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: onClose },
+              t('doc.cancel'),
+            ),
+            h(
+              'button',
+              { key: 'save', type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: !canSave, onClick: submit },
+              initial ? tk('wk.drawerSave') : tk('wk.drawerCreate'),
+            ),
+          ],
+        },
+        h(
+          'div',
+          { className: 'hrag-ev-form' },
+          h(
+            'label',
+            { className: 'hrag-ev-field' },
+            h('span', { className: 'hrag-ev-fieldlabel' }, tk('wk.drawerNameLabel')),
+            h('input', {
+              type: 'text',
+              className: 'hrag-input',
+              autoFocus: true,
+              'aria-label': tk('wk.drawerNameLabel'),
+              placeholder: tk('wk.drawerNamePlaceholder'),
+              value: name,
+              onChange: (event) => setName(event.target.value),
+              onKeyDown: (event) => {
+                if (event.key === 'Enter') submit()
+              },
+            }),
+          ),
+          h(
+            'div',
+            { className: 'hrag-ev-field' },
+            h('span', { className: 'hrag-ev-fieldlabel' }, tk('wk.drawerIconLabel')),
+            h(
+              'div',
+              { className: 'hrag-drawer-grid' },
+              CARD_DRAWER_ICON_KEYS.map((key) =>
+                h(
+                  'button',
+                  {
+                    key: key,
+                    type: 'button',
+                    className: 'hrag-drawer-cell' + (icon === key ? ' hrag-drawer-cell-on' : ''),
+                    'aria-label': key,
+                    'aria-pressed': icon === key,
+                    style:
+                      icon === key
+                        ? { backgroundColor: accent + '1F', borderColor: accent, color: accent }
+                        : undefined,
+                    onClick: () => setIcon(key),
+                  },
+                  cardDrawerIcon(key, 18),
+                ),
+              ),
+            ),
+          ),
+          h(
+            'div',
+            { className: 'hrag-ev-field' },
+            h('span', { className: 'hrag-ev-fieldlabel' }, tk('wk.drawerColorLabel')),
+            h(
+              'div',
+              { className: 'hrag-drawer-grid' },
+              CARD_DRAWER_COLOR_KEYS.map((key) =>
+                h(
+                  'div',
+                  { key: key, className: 'hrag-drawer-colorwrap' },
+                  h('button', {
+                    type: 'button',
+                    className: 'hrag-drawer-colorcell',
+                    'aria-label': key,
+                    'aria-pressed': color === key,
+                    style: {
+                      backgroundColor: CARD_DRAWER_COLORS[key].accent,
+                      outline: color === key ? '2px solid ' + CARD_DRAWER_COLORS[key].accent : undefined,
+                      outlineOffset: color === key ? '2px' : undefined,
+                    },
+                    onClick: () => setColor(key),
+                  }),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+    }
+
+    /** 条目编辑弹层（照工作台 wiki-edit-dialog，E3）：主内容区可被下次生成覆盖；
+        补充层永久保留并作为每次生成的方向。 */
+    function WikiEditDialog({ t, entry, saving, onClose, onSave }) {
+      const tk = (key, ...args) => evText(t(key), args)
+      const [content, setContent] = React.useState(entry ? entry.content : '')
+      const [supplement, setSupplement] = React.useState(entry && entry.supplement_content ? entry.supplement_content : '')
+      const canSave = content.trim().length > 0 && !saving
+      const submit = () => {
+        if (!canSave) return
+        Promise.resolve(onSave(content.trim(), supplement.trim() || null)).catch(() => {})
+      }
+      return h(
+        CardDialog,
+        {
+          title: tk('wk.wikiEditTitle'),
+          description: tk('wk.wikiEditDesc'),
+          wide: 'wiki',
+          busy: saving,
+          onClose: onClose,
+          footer: [
+            h(
+              'button',
+              { key: 'cancel', type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: saving, onClick: onClose },
+              t('doc.cancel'),
+            ),
+            h(
+              'button',
+              { key: 'save', type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: !canSave, onClick: submit },
+              saving ? tk('wk.wikiEditSaving') : tk('wk.wikiEditSave'),
+            ),
+          ],
+        },
+        h(
+          'div',
+          { className: 'hrag-ev-form' },
+          h(
+            'label',
+            { className: 'hrag-ev-field' },
+            h('span', { className: 'hrag-ev-fieldlabel' }, tk('wk.wikiEditMainLabel')),
+            h('textarea', {
+              className: 'hrag-input hrag-ev-textarea hrag-wiki-editarea',
+              'aria-label': tk('wk.wikiEditMainLabel'),
+              placeholder: tk('wk.wikiEditMainPlaceholder'),
+              value: content,
+              onChange: (event) => setContent(event.target.value),
+            }),
+            h('span', { className: 'hrag-ev-muted hrag-wiki-edithint' }, tk('wk.wikiEditMainHint')),
+          ),
+          h(
+            'label',
+            { className: 'hrag-ev-field' },
+            h('span', { className: 'hrag-ev-fieldlabel' }, tk('wk.wikiEditSupplementLabel')),
+            h('textarea', {
+              className: 'hrag-input hrag-ev-textarea hrag-wiki-editarea',
+              'aria-label': tk('wk.wikiEditSupplementLabel'),
+              placeholder: tk('wk.wikiEditSupplementPlaceholder'),
+              value: supplement,
+              onChange: (event) => setSupplement(event.target.value),
+            }),
+            h('span', { className: 'hrag-ev-muted hrag-wiki-edithint' }, tk('wk.wikiEditSupplementHint')),
+          ),
+          entry.updated_at
+            ? h(
+                'div',
+                { className: 'hrag-ev-muted hrag-wiki-editmeta' },
+                tk('wk.wikiEditLastEdited') + ': ' + evFmtFullTime(entry.updated_at),
+              )
+            : null,
+        ),
+      )
+    }
+
+    /** 我的条目管理面（②档丙对，2026-10-18）：列表＋CRUD＋抽屉分组。
+        照工作台 manual-card-panel 的逻辑与文案；批量走右键（无批量条）；
+        弹层留在面板内。cardsQ 由 WikiView 持有（百科 drain 时统一刷新）。 */
+    function ManualCardsSection({ t, kbId, cardsQ, query, onOpenCard, command, notify }) {
+      const tk = (key, ...args) => evText(t(key), args)
+      const [expanded, setExpanded] = React.useState(true)
+      const [activeTab, setActiveTab] = React.useState(null)
+      const [selectedIds, setSelectedIds] = React.useState(() => new Set())
+      const [deleteTargets, setDeleteTargets] = React.useState(null)
+      const [editorOpen, setEditorOpen] = React.useState(false)
+      const [editingId, setEditingId] = React.useState(null)
+      const [editingCard, setEditingCard] = React.useState(null)
+      const [saving, setSaving] = React.useState(false)
+      const [busy, setBusy] = React.useState(false)
+      const [drawerEditor, setDrawerEditor] = React.useState({ open: false, editing: null })
+      const [ctxMenu, setCtxMenu] = React.useState(null)
+      const selectAllRef = React.useRef(null)
+      const editRequestRef = React.useRef(0)
+      const {
+        drawers,
+        membership,
+        createDrawer,
+        updateDrawer,
+        deleteDrawer,
+        setDrawerHidden,
+        revealDrawerToFront,
+        moveCard,
+        moveCards,
+      } = useCardDrawers(kbId)
+
+      // 切库：清局部交互态（卡片数据与抽屉存储各自重载）。
+      const [loadedKb, setLoadedKb] = React.useState(kbId)
+      if (loadedKb !== kbId) {
+        setLoadedKb(kbId)
+        setActiveTab(null)
+        setSelectedIds(new Set())
+        setDeleteTargets(null)
+        setEditorOpen(false)
+        setEditingId(null)
+        setEditingCard(null)
+        setDrawerEditor({ open: false, editing: null })
+        setCtxMenu(null)
+      }
+
+      const cards = cardsQ.data && Array.isArray(cardsQ.data.items) ? cardsQ.data.items : []
+      const total = cardsQ.data && Number.isFinite(cardsQ.data.total) ? cardsQ.data.total : cards.length
+      const drawerIds = new Set(drawers.map((drawer) => drawer.id))
+      const activeDrawerId = activeTab !== null && drawerIds.has(activeTab) ? activeTab : null
+      const visibleDrawers = drawers.filter((drawer) => !drawer.hidden)
+      const searching = String(query || '').trim().length > 0
+      const effectiveExpanded = expanded || searching
+      const needle = String(query || '').trim().toLowerCase()
+      const matchingCards = needle
+        ? cards.filter(
+            (card) =>
+              String(card.title).toLowerCase().indexOf(needle) >= 0 ||
+              String(card.summary).toLowerCase().indexOf(needle) >= 0 ||
+              (card.tags || []).some((tag) => String(tag).toLowerCase().indexOf(needle) >= 0),
+          )
+        : cards
+      const activeCards = cardsForDrawer(matchingCards, membership, drawerIds, activeDrawerId)
+      const visibleIds = activeCards.map((card) => card.id)
+      const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id))
+      const someVisibleSelected = visibleIds.some((id) => selectedIds.has(id))
+
+      React.useEffect(() => {
+        if (selectAllRef.current) {
+          selectAllRef.current.indeterminate = !allVisibleSelected && someVisibleSelected
+        }
+      }, [allVisibleSelected, someVisibleSelected, effectiveExpanded])
+
+      // 过滤即清选择（照工作台：批量动作不触达看不见的行）。
+      const [lastQuery, setLastQuery] = React.useState(query)
+      if (lastQuery !== query) {
+        setLastQuery(query)
+        if (selectedIds.size > 0) setSelectedIds(new Set())
+      }
+
+      const closeEditor = () => {
+        editRequestRef.current += 1
+        setEditorOpen(false)
+        setEditingId(null)
+        setEditingCard(null)
+      }
+      const openCreateFor = (drawerId) => {
+        editRequestRef.current += 1
+        setActiveTab(drawerId)
+        setSelectedIds(new Set())
+        setEditingId(null)
+        setEditingCard(null)
+        setEditorOpen(true)
+        setExpanded(true)
+      }
+      const openEdit = (card) => {
+        const requestId = ++editRequestRef.current
+        setEditingId(card.id)
+        callOp('manualCard', { kb_id: kbId, card_id: card.id })
+          .then((data) => {
+            if (editRequestRef.current !== requestId) return
+            if (!data) {
+              notify(tk('wk.loadFailed'), true)
+              setEditingId(null)
+              return
+            }
+            setEditingCard(data)
+            setEditorOpen(true)
+          })
+          .catch((error) => {
+            if (editRequestRef.current !== requestId) return
+            notify(errorDetail(error) || tk('wk.loadFailed'), true)
+            setEditingId(null)
+          })
+      }
+
+      // 壳级 ⋯ 的新建指令（卡片/抽屉）；只消费一次。
+      const commandRef = React.useRef(0)
+      React.useEffect(() => {
+        if (!command || !command.nonce || commandRef.current === command.nonce) return
+        commandRef.current = command.nonce
+        if (command.kind === 'drawer') {
+          setDrawerEditor({ open: true, editing: null })
+          setExpanded(true)
+        } else {
+          openCreateFor(activeDrawerId)
+        }
+      }, [command])
+
+      const selectTab = (next) => {
+        setActiveTab(next)
+        setSelectedIds(new Set())
+      }
+      const toggleSelect = (cardId, checked) => {
+        const next = new Set(selectedIds)
+        if (checked) next.add(cardId)
+        else next.delete(cardId)
+        setSelectedIds(next)
+      }
+      const toggleSelectAll = () => {
+        setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))
+      }
+      const selectedCards = () => cards.filter((card) => selectedIds.has(card.id))
+      const removeFromSelection = (cardIds) => {
+        setSelectedIds((current) => {
+          const next = new Set(current)
+          for (const cardId of cardIds) next.delete(cardId)
+          return next
+        })
+      }
+
+      const handleSave = (body) => {
+        setSaving(true)
+        const request =
+          editingId !== null
+            ? callOp('updateManualCard', { kb_id: kbId, card_id: editingId, body: body })
+            : callOp('createManualCard', { kb_id: kbId, body: body })
+        return request
+          .then((created) => {
+            if (editingId !== null) {
+              notify(tk('wk.cardUpdateSuccess'))
+            } else {
+              if (activeDrawerId !== null && created && created.id) moveCard(created.id, activeDrawerId)
+              notify(tk('wk.cardCreateSuccess'))
+            }
+            closeEditor()
+            cardsQ.refresh()
+          })
+          .catch((error) => {
+            notify(errorDetail(error) || tk('wk.cardSaveFailed'), true)
+            throw error
+          })
+          .finally(() => setSaving(false))
+      }
+
+      const handleToggle = (card, next) => {
+        callOp('updateManualCard', {
+          kb_id: kbId,
+          card_id: card.id,
+          body: { include_in_wiki_search: next },
+        })
+          .then(() => cardsQ.refresh())
+          .catch((error) => notify(errorDetail(error) || tk('wk.cardSaveFailed'), true))
+      }
+
+      const handleDeleteConfirm = () => {
+        if (!deleteTargets || deleteTargets.length === 0) return
+        setBusy(true)
+        const removed = new Set(deleteTargets.map((card) => card.id))
+        Promise.allSettled(deleteTargets.map((card) => callOp('deleteManualCard', { kb_id: kbId, card_id: card.id })))
+          .then((results) => {
+            notify(
+              results.some((result) => result.status === 'rejected') ? tk('wk.cardDeleteFailed') : tk('wk.cardDeleteSuccess'),
+              results.some((result) => result.status === 'rejected'),
+            )
+            setSelectedIds((current) => new Set([...current].filter((id) => !removed.has(id))))
+            setDeleteTargets(null)
+            cardsQ.refresh()
+          })
+          .finally(() => setBusy(false))
+      }
+
+      const handleHideDrawer = (drawerId) => {
+        setDrawerHidden(drawerId, true)
+        if (activeDrawerId === drawerId) selectTab(null)
+      }
+      const handleDeleteDrawer = (drawerId) => {
+        deleteDrawer(drawerId)
+        if (activeDrawerId === drawerId) selectTab(null)
+      }
+      const doMove = (cardIds, drawerId) => {
+        moveCards(cardIds, drawerId)
+        removeFromSelection(cardIds)
+      }
+
+      const moveTargetItems = (cardIds) => {
+        const items = [
+          {
+            id: 'move-none',
+            label: tk('wk.drawerUnfiled'),
+            icon: allCardsInDrawer(cardIds, membership, drawerIds, null) ? dshCheckIcon() : null,
+            disabled: allCardsInDrawer(cardIds, membership, drawerIds, null),
+          },
+        ]
+        for (const drawer of drawers) {
+          const on = allCardsInDrawer(cardIds, membership, drawerIds, drawer.id)
+          items.push({
+            id: 'move-' + drawer.id,
+            label: drawer.name,
+            icon: on ? dshCheckIcon() : cardDrawerIcon(drawer.icon, 14, CARD_DRAWER_COLORS[drawer.color].accent),
+            disabled: on,
+          })
+        }
+        items.push({ type: 'separator', id: 'move-sep' })
+        items.push({ id: 'move-new', label: tk('wk.drawerNewFromMenu'), icon: cardUiIcon('folderPlus', 14) })
+        return items
+      }
+
+      const cardMenuItems = (card, batch) => {
+        if (batch) {
+          const ids = selectedCards().map((item) => item.id)
+          return [
+            { type: 'label', id: 'sel', text: tk('wk.selectedCount', ids.length) },
+            { id: 'move', label: tk('wk.drawerMoveTo'), icon: cardUiIcon('folderInput', 14), submenu: moveTargetItems(ids) },
+            { id: 'cancel', label: tk('wk.cancelSelection'), icon: dshCloseIcon() },
+            { type: 'separator', id: 'batch-sep' },
+            { id: 'delete', label: tk('wk.deleteSelected'), icon: dshTrashIcon(), danger: true },
+          ]
+        }
+        return [
+          { id: 'open', label: tk('wk.openCard'), icon: wikiNoteIcon() },
+          { id: 'edit', label: tk('wk.cardEdit'), icon: dshEditIcon() },
+          {
+            id: 'toggle',
+            label: card.include_in_wiki_search ? tk('wk.cardIncludeOff') : tk('wk.cardIncludeOn'),
+            icon: card.include_in_wiki_search ? cardUiIcon('searchX', 14) : cardUiIcon('searchCheck', 14),
+          },
+          { id: 'move', label: tk('wk.drawerMoveTo'), icon: cardUiIcon('folderInput', 14), submenu: moveTargetItems([card.id]) },
+          { type: 'separator', id: 'row-sep' },
+          { id: 'delete', label: tk('wk.cardDelete'), icon: dshTrashIcon(), danger: true },
+        ]
+      }
+
+      const handleCardAction = (id, card, batch) => {
+        const targets = batch ? selectedCards() : [card]
+        const ids = targets.map((item) => item.id)
+        if (id === 'open') onOpenCard(card.id)
+        else if (id === 'edit') openEdit(card)
+        else if (id === 'toggle') handleToggle(card, !card.include_in_wiki_search)
+        else if (id === 'cancel') setSelectedIds(new Set())
+        else if (id === 'delete') setDeleteTargets(targets)
+        else if (id === 'move-none') doMove(ids, null)
+        else if (id === 'move-new') setDrawerEditor({ open: true, editing: null })
+        else if (id.indexOf('move-') === 0) doMove(ids, id.slice(5))
+      }
+
+      const openRowContextMenu = (event, card) => {
+        event.preventDefault()
+        event.stopPropagation()
+        const already = selectedIds.has(card.id)
+        const next = already ? selectedIds : new Set([card.id])
+        if (!already) setSelectedIds(next)
+        setCtxMenu({
+          x: event.clientX,
+          y: event.clientY,
+          kind: 'card',
+          card: card,
+          batch: already && next.size > 1,
+        })
+      }
+
+      const contextItems = () => {
+        if (!ctxMenu) return []
+        if (ctxMenu.kind === 'card') return cardMenuItems(ctxMenu.card, ctxMenu.batch)
+        if (ctxMenu.kind === 'drawer') {
+          return [
+            { id: 'new-card', label: tk('wk.cardNew'), icon: dshPlusIcon() },
+            { id: 'edit-drawer', label: tk('wk.drawerEdit'), icon: dshEditIcon() },
+            { type: 'separator', id: 'drawer-sep' },
+            { id: 'delete-drawer', label: tk('wk.drawerDelete'), icon: dshTrashIcon(), danger: true },
+          ]
+        }
+        if (ctxMenu.kind === 'spacer') {
+          return [{ id: 'new-drawer', label: tk('wk.drawerNew'), icon: cardUiIcon('folderPlus', 14) }]
+        }
+        return [{ id: 'new-card', label: tk('wk.cardNew'), icon: dshPlusIcon() }]
+      }
+
+      const handleContextAction = (id) => {
+        if (!ctxMenu) return
+        if (ctxMenu.kind === 'card') {
+          handleCardAction(id, ctxMenu.card, ctxMenu.batch)
+          return
+        }
+        if (id === 'new-card') openCreateFor(ctxMenu.kind === 'drawer' ? ctxMenu.drawer.id : ctxMenu.kind === 'home' ? null : activeDrawerId)
+        else if (id === 'new-drawer') setDrawerEditor({ open: true, editing: null })
+        else if (id === 'edit-drawer') setDrawerEditor({ open: true, editing: ctxMenu.drawer })
+        else if (id === 'delete-drawer') handleDeleteDrawer(ctxMenu.drawer.id)
+      }
+
+      const allDrawerItems = () => {
+        const items = drawers.map((drawer) => ({
+          id: 'reveal-' + drawer.id,
+          label: drawer.name,
+          icon:
+            activeDrawerId === drawer.id
+              ? dshCheckIcon()
+              : cardDrawerIcon(drawer.icon, 14, CARD_DRAWER_COLORS[drawer.color].accent),
+        }))
+        items.push({ type: 'separator', id: 'all-sep' })
+        items.push({ id: 'all-new', label: tk('wk.drawerNew'), icon: cardUiIcon('folderPlus', 14) })
+        return items
+      }
+      const handleAllDrawerAction = (id) => {
+        if (id === 'all-new') {
+          setDrawerEditor({ open: true, editing: null })
+          return
+        }
+        if (id.indexOf('reveal-') === 0) {
+          const drawerId = id.slice(7)
+          revealDrawerToFront(drawerId)
+          selectTab(drawerId)
+        }
+      }
+
+      const header = h(
+        'div',
+        { className: 'hrag-wk-secthead hrag-wk-cardhead' },
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'hrag-wk-cardcaret',
+            'aria-expanded': effectiveExpanded,
+            'aria-label': tk('wk.cards'),
+            onClick: () => setExpanded((value) => !value),
+          },
+          h('span', { className: 'hrag-ev-caret hrag-wk-chev' + (effectiveExpanded ? ' hrag-ev-caret-open' : '') }, lucideChevronDownIcon(1)),
+        ),
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'hrag-wk-cardhome' + (activeDrawerId !== null ? ' hrag-wk-cardhome-dim' : ''),
+            'aria-label': tk('wk.cards'),
+            onClick: () => selectTab(null),
+            onContextMenu: (event) => {
+              event.preventDefault()
+              setCtxMenu({ x: event.clientX, y: event.clientY, kind: 'home' })
+            },
+          },
+          h('span', { className: 'hrag-wk-secticon' }, wikiNoteIcon()),
+          h('span', { className: 'hrag-wk-secttitle' }, tk('wk.cards')),
+          total > 0 ? h('span', { className: 'hrag-ev-badge hrag-ev-tabnums' }, String(total)) : null,
+        ),
+        effectiveExpanded
+          ? h(
+              'div',
+              { className: 'hrag-wk-drawers' },
+              visibleDrawers.map((drawer) =>
+                h(
+                  React.Fragment,
+                  { key: drawer.id },
+                  h('span', { className: 'hrag-wk-drawersep', 'aria-hidden': 'true' }),
+                  h(
+                    'div',
+                    {
+                      className: 'hrag-wk-drawertab' + (activeDrawerId === drawer.id ? ' hrag-wk-drawertab-on' : ''),
+                      'data-active': activeDrawerId === drawer.id,
+                      onContextMenu: (event) => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        setCtxMenu({ x: event.clientX, y: event.clientY, kind: 'drawer', drawer: drawer })
+                      },
+                    },
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-wk-drawertabmain',
+                        style:
+                          activeDrawerId === drawer.id
+                            ? { color: CARD_DRAWER_COLORS[drawer.color].accent }
+                            : undefined,
+                        onClick: () => selectTab(activeDrawerId === drawer.id ? null : drawer.id),
+                      },
+                      cardDrawerIcon(drawer.icon, 16, CARD_DRAWER_COLORS[drawer.color].accent),
+                      h('span', { className: 'hrag-wk-drawertablabel', title: drawer.name }, drawer.name),
+                    ),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-wk-drawertabclose',
+                        'aria-label': tk('wk.drawerClose'),
+                        onClick: (event) => {
+                          event.stopPropagation()
+                          handleHideDrawer(drawer.id)
+                        },
+                      },
+                      '✕',
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
+        effectiveExpanded
+          ? h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-wk-draweradd',
+                'aria-label': tk('wk.drawerNew'),
+                onClick: () => setDrawerEditor({ open: true, editing: null }),
+              },
+              dshPlusIcon(),
+            )
+          : null,
+        effectiveExpanded
+          ? h('div', {
+              className: 'hrag-wk-drawerspacer',
+              onContextMenu: (event) => {
+                event.preventDefault()
+                setCtxMenu({ x: event.clientX, y: event.clientY, kind: 'spacer' })
+              },
+            })
+          : null,
+        effectiveExpanded
+          ? h(
+              'div',
+              { className: 'hrag-wk-cardctl' },
+              h(DshMenu, {
+                title: tk('wk.drawerAll'),
+                className: 'hrag-wk-cardctlbtn',
+                align: 'end',
+                trigger: cardUiIcon('layoutList', 16),
+                items: allDrawerItems(),
+                onSelect: handleAllDrawerAction,
+              }),
+              cards.length > 0
+                ? h('input', {
+                    type: 'checkbox',
+                    className: 'hrag-ev-check',
+                    ref: selectAllRef,
+                    'aria-label': tk('wk.selectAllCards'),
+                    checked: allVisibleSelected,
+                    onChange: toggleSelectAll,
+                  })
+                : null,
+            )
+          : null,
+      )
+
+      let body = null
+      if (effectiveExpanded) {
+        if (cardsQ.failure) {
+          body = h(
+            'div',
+            { className: 'hrag-ev-hint hrag-ev-hint-error hrag-wk-inset' },
+            tk('wk.loadFailed'),
+          )
+        } else if (cardsQ.data === null) {
+          body = h('div', { className: 'hrag-ev-hint hrag-wk-inset' }, tk('wk.loading'))
+        } else if (activeCards.length === 0) {
+          body = h(
+            'div',
+            { className: 'hrag-wk-empty' },
+            h('span', { className: 'hrag-wk-empty-icon' }, wikiNoteIcon(28)),
+            h('p', null, cards.length > 0 && searching ? tk('wk.cardsNoMatch') : tk('wk.cardsEmpty')),
+          )
+        } else {
+          body = h(
+            'div',
+            { className: 'hrag-wk-list' + (selectedIds.size > 0 ? ' hrag-wk-list-selecting' : '') },
+            activeCards.map((card) => {
+              const isSelected = selectedIds.has(card.id)
+              const ownerId = cardOwnerDrawerId(membership, drawerIds, card.id)
+              const owner = ownerId === null ? null : drawers.find((drawer) => drawer.id === ownerId)
+              const timeLabel = tk('wk.updatedAt') + ' ' + evFmtFullTime(card.updated_at)
+              const timeNode = h(
+                'span',
+                { className: 'hrag-wk-rowtime hrag-wk-cardtime hrag-ev-tabnums', title: HostTooltip ? undefined : timeLabel },
+                evFmtRunTime(card.updated_at),
+              )
+              return h(
+                'div',
+                {
+                  key: card.id,
+                  className: 'hrag-wk-row hrag-wk-cardrow' + (isSelected ? ' hrag-wk-row-on' : ''),
+                  'data-selected': isSelected,
+                  onContextMenu: (event) => openRowContextMenu(event, card),
+                },
+                h('input', {
+                  type: 'checkbox',
+                  className: 'hrag-ev-check',
+                  'aria-label': tk('wk.cardSelect') + ': ' + card.title,
+                  checked: isSelected,
+                  onClick: (event) => event.stopPropagation(),
+                  onChange: (event) => toggleSelect(card.id, event.target.checked),
+                }),
+                h(
+                  'button',
+                  { type: 'button', className: 'hrag-wk-row-main', onClick: () => onOpenCard(card.id) },
+                  h(
+                    'span',
+                    { className: 'hrag-wk-rowicon' },
+                    owner ? cardDrawerIcon(owner.icon, 16, CARD_DRAWER_COLORS[owner.color].accent) : wikiNoteIcon(),
+                  ),
+                  h('span', { className: 'hrag-wk-rowtitle', title: card.title }, card.title),
+                  h('span', { className: 'hrag-wk-rowsummary' }, stripSummaryHeading(card.summary)),
+                ),
+                card.include_in_wiki_search
+                  ? h('span', { className: 'hrag-ev-badge' }, tk('wk.includeInSearch'))
+                  : null,
+                HostTooltip
+                  ? h(HostTooltip, { label: timeLabel, side: 'top', delayMs: 150, portal: true }, timeNode)
+                  : timeNode,
+                h(
+                  'span',
+                  { className: 'hrag-ev-rowmenu-wrap' },
+                  h(DshMenu, {
+                    title: tk('wk.cardMoreActions'),
+                    className: 'hrag-ev-iconbtn hrag-cardrow-more',
+                    align: 'end',
+                    trigger: '⋯',
+                    items: cardMenuItems(card, false),
+                    onSelect: (id) => handleCardAction(id, card, false),
+                  }),
+                ),
+              )
+            }),
+          )
+        }
+      }
+
+      return h(
+        React.Fragment,
+        null,
+        h(
+          'section',
+          {
+            className: 'hrag-wk-sect hrag-wk-cardsect' + (effectiveExpanded ? ' hrag-wk-sect-open' : ''),
+          },
+          header,
+          effectiveExpanded
+            ? h(
+                'div',
+                {
+                  className: 'hrag-wk-cardbody',
+                  onContextMenu: (event) => {
+                    event.preventDefault()
+                    setCtxMenu({ x: event.clientX, y: event.clientY, kind: 'content' })
+                  },
+                },
+                body,
+              )
+            : null,
+        ),
+        editorOpen && (editingId === null || editingCard !== null)
+          ? h(CardEditorDialog, {
+              key: editingId === null ? 'create' : editingId,
+              t: t,
+              initial: editingCard,
+              saving: saving,
+              onClose: closeEditor,
+              onSave: handleSave,
+            })
+          : null,
+        drawerEditor.open
+          ? h(CardDrawerEditorDialog, {
+              key: drawerEditor.editing ? drawerEditor.editing.id : 'drawer-new',
+              t: t,
+              initial: drawerEditor.editing,
+              onClose: () => setDrawerEditor({ open: false, editing: null }),
+              onSubmit: (name, icon, color) => {
+                if (drawerEditor.editing) updateDrawer(drawerEditor.editing.id, { name: name, icon: icon, color: color })
+                else createDrawer({ name: name, icon: icon, color: color })
+                setDrawerEditor({ open: false, editing: null })
+              },
+            })
+          : null,
+        deleteTargets !== null
+          ? h(ConfirmDialog, {
+              t: t,
+              title:
+                deleteTargets.length > 1
+                  ? tk('wk.cardDeleteBatchTitle', deleteTargets.length)
+                  : tk('wk.cardDeleteTitle'),
+              description: tk('wk.cardDeleteDesc'),
+              busy: busy,
+              cancelKey: 'doc.cancel',
+              confirmKey: 'doc.confirmDelete',
+              onCancel: () => {
+                if (!busy) setDeleteTargets(null)
+              },
+              onConfirm: handleDeleteConfirm,
+            })
+          : null,
+        ctxMenu
+          ? h(DocContextMenu, {
+              t: t,
+              x: ctxMenu.x,
+              y: ctxMenu.y,
+              items: contextItems(),
+              onSelect: handleContextAction,
+              onClose: () => setCtxMenu(null),
             })
           : null,
       )
@@ -12815,9 +14447,9 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** 人工卡片抽屉（Task 9，照工作台 manual-card-drawer）：头部便签图标＋标题＋
-        「我的卡片」/「混入搜索」徽章；正文卡（标签行 border-b 分隔 ＋ pre-wrap
-        正文）；更新时间行。只读档（卡片编辑不做＝另案）。 */
+    /** 人工卡片抽屉（Task 9，照工作台 manual-card-drawer）：头部归属图标＋标题＋
+        「我的卡片」/抽屉名/「混入搜索」徽章；正文卡（标签行 border-b 分隔 ＋
+        pre-wrap 正文）；更新时间行。阅读档（编辑在列表管理面）。 */
     function ManualCardDrawer({ t, kbId, cardId, onClose }) {
       const tk = (key, ...args) => evText(t(key), args)
       const [card, setCard] = React.useState(null)
@@ -12847,6 +14479,15 @@ window.__ModuleLoader__.load({
           cancelled = true
         }
       }, [kbId, cardId])
+
+      // 归属抽屉（②档丙对）：打开时直读 localStorage（与列表管理面同源）。
+      const ownerDrawer = React.useMemo(() => {
+        if (!card) return null
+        const state = readCardDrawers(kbId)
+        const ownerId = state.membership[card.id]
+        if (!ownerId) return null
+        return state.drawers.find((drawer) => drawer.id === ownerId) || null
+      }, [kbId, card])
 
       let body
       if (phase === 'loading') {
@@ -12901,9 +14542,16 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'hrag-drawer-head' },
-            h('span', { className: 'hrag-wk-secticon' }, wikiNoteIcon()),
+            h(
+              'span',
+              { className: 'hrag-wk-secticon' },
+              ownerDrawer
+                ? cardDrawerIcon(ownerDrawer.icon, 16, CARD_DRAWER_COLORS[ownerDrawer.color].accent)
+                : wikiNoteIcon(),
+            ),
             h('span', { className: 'hrag-drawer-title', title: card ? String(card.title) : '' }, card ? String(card.title) : tk('wk.loading')),
             card ? h('span', { className: 'hrag-ev-badge hrag-wk-dirty' }, tk('wk.cardType')) : null,
+            ownerDrawer ? h('span', { className: 'hrag-ev-badge hrag-headbadge-soft' }, ownerDrawer.name) : null,
             card && card.include_in_wiki_search
               ? h('span', { className: 'hrag-ev-badge' }, tk('wk.includeInSearch'))
               : null,
