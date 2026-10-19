@@ -2,7 +2,7 @@
 
 **Harness RAG for DeepSeek Harness (DSH)** — 三路检索（混合/图谱/wiki）+ 文档续读 + 知识库管理面板，后端为 Harness RAG knowledge 服务（最小 Python 服务）。
 
-> Status: **T2–T6 已实装并在真栈验收** — 工具面（三检索＋文档两件套：单路 recall-test / 中心窗续读 / 半开输出）、右栏管理面板（T3）、摄取通道后台任务（T4）、子槽声明契约＋命名空间四防（T5）、等价对照表＋原创图标＋三检索真跑（T6）；隔离提供「知识预设」可选件。未配后端时返回结构化错误。
+> Status: **T2–T6 已实装并在真栈验收** — 工具面（三检索＋文档两件套：单路 recall-test / 中心窗续读 / 半开输出）、右栏管理面板（T3）、摄取通道后台任务（T4）、子槽声明契约＋命名空间四防（T5）、等价对照表＋原创图标＋三检索真跑（T6）；隔离提供「知识预设」可选件。后端已切到主体二 `harness-rag` 最小知识服务（`127.0.0.1:8020`）。未配后端时返回结构化错误。
 
 ## 隔离与 kb_id 解析
 
@@ -25,7 +25,7 @@ Host 半在宿主世界注册模型可见工具；Client 半在浏览器世界�
 
 ## 安装
 
-前置：DSH（Node `^22.19.0 || >=24.0.0`）；Harness RAG knowledge 服务已起（默认 `http://127.0.0.1:8001`）。
+前置：DSH（Node `^22.19.0 || >=24.0.0`）；Harness RAG knowledge 服务已起（默认 `http://127.0.0.1:8020`）。
 
 ```sh
 dsh plugin --profile <name> add link:<本仓绝对路径>
@@ -36,24 +36,24 @@ dsh plugin --profile <name> add link:<本仓绝对路径>
 
 | 配置 | 说明 |
 |---|---|
-| `backendUrl` | knowledge 服务地址（默认 `http://127.0.0.1:8001`） |
+| `backendUrl` | knowledge 服务地址（默认 `http://127.0.0.1:8020`） |
 | `apiToken` | 可选 Bearer token；空=不带鉴权头 |
 | `defaultKbId` | 默认知识库 id；空=每次调用必须传 `kb_id` |
 
 ## 后端最小形态（部署）
 
-本插件只需要 **Harness RAG knowledge 服务**＝DeerFlow 后端的单进程 Gateway：**不启 nginx、前端、IM 通道**即最小形态（零改动路线；`/api/knowledge-bases/*` 路由就在这个进程里）。
+本插件只需要 **Harness RAG knowledge 服务**（主体二 `harness-rag` 仓）：只挂知识库 API 的单进程服务，不含 agent 运行时、IM 通道、调度器与前端。
 
 ```sh
-# 最小形态：只起 Gateway（端口 8001）
-cd <deer-flow>/backend && make gateway
-# 它跑的就是（backend/Makefile）：uvicorn app.gateway.app:app --host 0.0.0.0 --port 8001
-
-# 要完整工作台时才用：make dev（Gateway+前端+nginx 全家桶）
+# 最小形态：只起 knowledge 服务（端口 8020）
+cd <harness-rag>/backend && make gateway
+# 它跑的就是（backend/Makefile）：
+# uvicorn app.gateway.knowledge_app:app --host 127.0.0.1 --port 8020
 ```
 
-- **精简启动入口＝不做**（spec §3 裁定「可裁不加」）：`make gateway` 已是既有命令、比给 serve 脚本加一个 gateway-only 档更省；本仓不改 DeerFlow 的启动面。
-- 部署姿势不变：知识库数据在 DeerFlow 侧本地（Qdrant/存储）；插件只是它的一个客户端。远程部署时把 `backendUrl` 指过去即可（鉴权走 `apiToken`）。
+- 服务启动前需就绪：Python 3.12 ＋ `uv sync --inexact`；外部 Qdrant（默认 `127.0.0.1:6333`）；`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`。数据在 `backend/.deer-flow/`。
+- 本机验收态用 `DEER_FLOW_AUTH_DISABLED=1`（只绑回环）；远程部署把 `backendUrl` 指过去即可（鉴权走 `apiToken`）。
+- 部署姿势不变：知识库数据在服务侧本地（Qdrant/存储）；插件只是它的一个客户端。
 
 ## 模型可见工具（`hrag_` 命名空间）
 

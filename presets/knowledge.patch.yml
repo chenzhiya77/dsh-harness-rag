@@ -21,6 +21,6 @@
           - id: harness-rag-tools
             name: 'dsh-harness-rag'
             config:
-              backendUrl: 'http://127.0.0.1:8001'
+              backendUrl: 'http://127.0.0.1:8020'
               apiToken: ''
               defaultKbId: ''

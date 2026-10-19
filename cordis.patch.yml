@@ -8,7 +8,7 @@
       name: dsh-harness-rag
       config:
         # Harness RAG knowledge service endpoint (the minimal Python service).
-        backendUrl: 'http://127.0.0.1:8001'
+        backendUrl: 'http://127.0.0.1:8020'
         # Optional API token sent as Bearer; empty = no auth header.
         apiToken: ''
         # Default knowledge-base id; empty = the tool call must pass kb_id.
