@@ -13142,6 +13142,11 @@ window.__ModuleLoader__.load({
     }
 
     function cardDrawersKey(kbId) {
+      return 'hrag-card-drawers.' + String(kbId) + '.v1'
+    }
+
+    /** 旧键（T5 前；工作台 `card-drawers.ts` 串逐字复制）——仅一次性迁移读用，勿删。 */
+    function legacyCardDrawersKey(kbId) {
       return 'deerflow.knowledge.card-drawers.' + String(kbId) + '.v1'
     }
 
@@ -13177,7 +13182,21 @@ window.__ModuleLoader__.load({
 
     function readCardDrawers(kbId) {
       try {
-        const raw = window.localStorage.getItem(cardDrawersKey(kbId))
+        let raw = window.localStorage.getItem(cardDrawersKey(kbId))
+        if (!raw) {
+          // 一次性迁移（T5）：新键缺＋旧键在 ⇒ 旧值原样搬入新键、旧键删净
+          // （坏值走既有容错回退空态；写失败则旧键保留、下次读重试）。
+          const legacy = window.localStorage.getItem(legacyCardDrawersKey(kbId))
+          if (legacy) {
+            raw = legacy
+            try {
+              window.localStorage.setItem(cardDrawersKey(kbId), legacy)
+              window.localStorage.removeItem(legacyCardDrawersKey(kbId))
+            } catch (error) {
+              // Best effort; the legacy key stays readable and is retried next read.
+            }
+          }
+        }
         if (!raw) return { drawers: [], membership: {} }
         return sanitizeCardDrawers(JSON.parse(raw))
       } catch (error) {
