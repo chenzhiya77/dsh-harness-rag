@@ -8498,16 +8498,23 @@ window.__ModuleLoader__.load({
         writeDocPrefs(kbIdRef.current, prefs)
       }, [prefs])
 
+      const loadedKbRef = React.useRef(null)
       const load = React.useCallback(() => {
-        setPhase('loading')
+        // 首载/切库才翻 loading；同库刷新（上传后 refreshToken）静默保留当前清单，
+        // 照 react-query refetch 语义与下方 poll（同文件切片抽屉同款 hasDataRef 先例）。
+        const initial = loadedKbRef.current !== kbId
+        if (initial) setPhase('loading')
         setFailure(null)
         callOp('listDocuments', { kb_id: kbId })
           .then((rows) => {
             const list = Array.isArray(rows) ? rows : []
+            loadedKbRef.current = kbId
             setDocs(list)
             setPhase(list.length === 0 ? 'empty' : 'ready')
           })
           .catch((error) => {
+            // 后台刷新失败保留旧清单（下一拍轮询/下次刷新手动重试）；首载才落错误整页。
+            if (!initial) return
             setFailure(error)
             setPhase('error')
           })
