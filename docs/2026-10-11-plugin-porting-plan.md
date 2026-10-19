@@ -1,6 +1,6 @@
 # Harness RAG → DSH 插件线（dsh-harness-rag）· 步骤记录
 
-- Status: T1 ✅ 收官（冒烟复验三条 10-11 实测全过）· T2 ✅ 收官（2026-10-12 真栈两半全过）· T3 ✅ 收官（10-15 真栈验收全过）· 菜单对 ✅ 收官（10-15，Task 0–8 全交付）· A 对 ✅ 收官（10-15，A 档余项六件全交付）· B–K 小件批 ✅ 收官（10-15 开跑，10-16 全交付：①档全量；D1–D3 已拍＝全甲；Task 0–8 全毕、八组真跑全过；代码九笔全落〔`9a36851`…`687c214`，含 spinner 插队 `864f15c`〕＋定稿一笔〔本提交〕；宿主遮罩定性＝甲〔潜伏层保留〕；销定已落＝T3 plan B–K 审计节补销＋E1③ 勘误〔注记早已落，`0007c03`〕）· T4 ✅ 收官（10-19：观察型 job——host `src/jobs.ts`＋kb_proxy 上传/重建两接线＋client 会话采集；`probe-t4` 6/6＋冒烟各 78 PASS＋`probe-menu` 13/13；真跑已过（10-19 他手验四格）；定稿提交 `af6bb38`）· 全部未推（仓暂无 remote）
+- Status: T1 ✅ 收官（冒烟复验三条 10-11 实测全过）· T2 ✅ 收官（2026-10-12 真栈两半全过）· T3 ✅ 收官（10-15 真栈验收全过）· 菜单对 ✅ 收官（10-15，Task 0–8 全交付）· A 对 ✅ 收官（10-15，A 档余项六件全交付）· B–K 小件批 ✅ 收官（10-15 开跑，10-16 全交付：①档全量；D1–D3 已拍＝全甲；Task 0–8 全毕、八组真跑全过；代码九笔全落〔`9a36851`…`687c214`，含 spinner 插队 `864f15c`〕＋定稿一笔〔本提交〕；宿主遮罩定性＝甲〔潜伏层保留〕；销定已落＝T3 plan B–K 审计节补销＋E1③ 勘误〔注记早已落，`0007c03`〕）· T4 ✅ 收官（10-19：观察型 job——host `src/jobs.ts`＋kb_proxy 上传/重建两接线＋client 会话采集；`probe-t4` 6/6＋冒烟各 78 PASS＋`probe-menu` 13/13；真跑已过（10-19 他手验四格）；定稿提交 `af6bb38`）· T5 ✅ 实施完成＋真跑通过（10-19：子槽契约化＋命名空间四防；Task 0–4 全落；双语法＋冒烟双 78＋neuter 三针恰红；真跑已过（10-19 他手验）；定稿 `ef2d564`）· T6 ✅ 实施完成＋真跑通过（10-20：等价对照表＋原创 icon＋三检索真跑；Task 0–4 全落；双语法＋冒烟双 78；D5 四条全过；定稿笔为本笔）· 全部未推（仓暂无 remote）
 - Date: 2026-10-11
 - 形态（10-11 他拍）：**spec↔plan 一一配对**——`docs/specs/*-spec.md` 与 `docs/plans/*-plan.md` 同名成对（T2 对=`2026-10-11-equivalence-freeze-{spec,plan}.md`）；本档=全线路**步骤记录**（落 `docs/` 根），只记进度与决策，执行步骤进各配对 plan、不重复。
 - 每步一个复选框；Status 随交付更新。
@@ -23,7 +23,7 @@
 | T3 | 管理面板（功能面＝工作台知识库页全部：管理＋可视化） | ✅ 收官（2026-10-15 真栈验收全过：Task 0–12 全毕；一条龙他手点走完；10-12 冻清单 D1–D6，详见 T3 plan） |
 | T4 | 摄取通道（`ctx.jobs`） | ✅ 收官（2026-10-19；[spec](specs/2026-10-19-t4-ingest-jobs-spec.md)＋[plan](plans/2026-10-19-t4-ingest-jobs-plan.md) 对；Task 0–4 全落；`probe-t4` 6/6＋冒烟双 78；真跑已过（10-19 他手验）） |
 | T5 | 丙′ 子槽契约化+命名空间四防 | ✅ 实施完成＋真跑通过（2026-10-19；[spec](specs/2026-10-19-t5-slot-contract-spec.md)＋[plan](plans/2026-10-19-t5-slot-contract-plan.md) 对；Task 0–4 全落；双语法＋冒烟双 78＋neuter 三针恰红；真跑已过（10-19 他手验）；定稿 `ef2d564`（未推）） |
-| T6 | 验收（等价移植对照表+文档+icon） | 未开工 |
+| T6 | 验收（等价移植对照表+文档+icon） | ✅ 实施完成＋真跑通过（10-20；[spec](specs/2026-10-19-t6-acceptance-spec.md)＋[plan](plans/2026-10-19-t6-acceptance-plan.md) 对；Task 0–4 全落；`docs/equivalence.md` 12 节 76 行；原创 icon 母题 A＋manifest；三检索真跑 D5 四条全过；双语法＋冒烟双 78；定稿笔为本笔） |
 
 **待排（未编 T 号，2026-10-13 登记）**：
 - **模型面归属与分项目治理**——T3 期间现场提出的题：设置→「模型」页（对话模型｜功能模型双视图）的归属重整——功能模型视图＋重建索引入口移入知识库详情 ⋯ 菜单为候选方案；对话主模型＝各自宿主治理（DSH 对话用 DSH 配置），功能模型（嵌入/重排/抽取/裁判/多模态）归 deer-flow 服务侧（现状切分的显式化）。**程序＝先占位，到位再立 spec/plan 对**。**10-13 他令动工（到位）**：面板顶栏加 DSH 同款 ⋯ 菜单——工作台库级菜单项落脚（更新/重建百科、重命名/删除库）＋**功能模型设置并入**＋顶栏「刷新/上传/重建索引」三钮移入菜单（**重建索引进一步落入功能模型设置界面中**，工作台同构）；host 半需补 `createKb`/重命名/删除库/`ragConfig`/模型目录 op。**10-14 四拍已定、已立对**：`docs/specs/2026-10-14-menu-model-settings-spec.md`＋`docs/plans/2026-10-14-menu-model-settings-plan.md`（结构照拟稿〔刷新→刷新界面、每项带图标〕／皮肤＝DSH 真值 Menu／设置面＝照工作台全量拆四批／新对；Task 0 只读核实起）。**10-15 收官（Task 0–8 全交付；A 组乙档余项另转 A 对，四方并至此收清）**。
@@ -92,11 +92,17 @@
 
 **实施（2026-10-19，Task 0–4 全落）**：①`client.js`——`cardDrawersKey` → `hrag-card-drawers.<kbId>.v1`（旧串入 `legacyCardDrawersKey` 仅迁移读用）＋读路一次性迁移（新键缺＋旧键在 ⇒ 旧值原样写新键、删旧键、写失败保旧键下次重试；新键在 ⇒ 无视旧键；坏值 ⇒ 既有容错回退）；②`README.md`——新「子槽声明契约」节（四层承诺表＋命名空间四防清单）＋Status/形态/占位件/开发四处陈旧修正；③仓外冒烟——`sidebarRightTabs` 桩改捕获＋「T5 契约标识」8 断言（id/kind/guide id/NS/slot name/key/body locale）＋三键行为探＋`cardDrawersKey` 新串＋迁移三例＋旧键 fixtures 迁移；④门禁：`node --check client.js`＋全部 6 个 `src/*.ts` strip-types 过；冒烟默认 **78 PASS/0 FAIL**、`SMOKE_HOSTLESS=1` **78 PASS/0 FAIL**；neuter 三针（`SMOKE_SRC` 换件法）恰红——`kind` 坏→`tab kind`／`LAST_KB_KEY` 坏→`T5 contract: last-kb key`／迁移 `removeItem` 拆→`legacy key is removed after adoption`。RED→GREEN：Task 1 后旧键断言（1738）恰红，Task 3 迁断言后复绿。**真跑（2026-10-19 他手验，Task 4 清单）**：①迁移保真——基线＝旧键 3 抽屉（`1` target/emerald、`1` star/teal、`测试` star/emerald hidden）＋2 条归属；DSH 21:58 整启（client 半已新），面板重连后端后 **22:44:01** 新键写入（值**逐字节相同**：457 字符 JSON、UTF-16 跨 32KB 块记录重建核过）＋旧键删除记录落地；22:44:40 百科数据加载（entries＋manual cards 200）；他截图核「我的条目（3）」三枚抽屉 chip 名称/图标/色逐一吻合、选中抽屉空态正确；**22:55:20** 一笔 UI 写入（`测试` hidden 标记清除）落**新键**——写路同证。②README「子槽声明契约」节他核读**通过**。真跑期间 :8001 起 auth-off 实例（我起，跑完停）。定稿一笔已落（`ef2d564`，未推）；真跑回写一笔（本笔，未推）。
 
-## 7. T6 验收（未开工）
+## 7. T6 验收（✅ 实施完成＋真跑通过）
 
-- [ ] 真 DSH 会话跑三检索工具（原甲档价值验证并入乙验收）
-- [ ] 等价移植对照表（harness RAG 现面 ↔ 插件面逐项）+ 文档
-- [ ] icon 原创（现缺=回退默认图）
+- [x] 真 DSH 会话跑三检索工具（原甲档价值验证并入乙验收）
+- [x] 等价移植对照表（harness RAG 现面 ↔ 插件面逐项）+ 文档
+- [x] icon 原创（现缺=回退默认图）
+
+**立对（2026-10-19）**：[spec](specs/2026-10-19-t6-acceptance-spec.md)＋[plan](plans/2026-10-19-t6-acceptance-plan.md) 成对；D1＝记录形对照表（四状态、不做带理由）／D2＝`docs/equivalence.md`＋README 指路／D3＝原创 SVG 母题 A「一路三检」／D4＝他手跑固定题面／D5＝四条判据（hybrid＝vector 基线、graph 实体证据非空、wiki 带 source_type、同库）／D6＝表→icon→真跑→收口。
+
+**实施（2026-10-19，Task 0–2）**：①Task 0 侦察——icon 契约（manifest `icon`／`./icon`，缺失回退默认；官方 36×36 描边 SVG；行 40px／卡 48px）、工作台 56 件组件与插件面清点、三检索端点（recall-test `path=vector|graph|wiki`）；②Task 1——`docs/equivalence.md` 12 节 76 行、四状态（等价/精简/不做/宿主侧），9 处精简带差异说明、4 处不做带理由；README 指路＋`files` 收录；③Task 2——`icon.svg`（36×36，渐变源点＋三分支＋三绿端点，纯 XML）＋`package.json` `icon` 字段与 `files`；门禁（XML/JSON/files）过；Plugins 页「已安装插件」行实测显示新图。
+
+**真跑（2026-10-20，Task 3–4）**：①auth-off :8001（`GET /api/threads` 405 证绕过），库 `t3-panel-acceptance`＝`9141e58dee8a4a08a32c5758395d720a`；基线三路 vector 3／graph 8 实体＋2 证据／wiki 3（manual 1＋wiki 2）。②他手跑新会话（`session-cde7ccda…`）按固定题面三调用（query／kb_id／top_k=3 逐字一致），后端日志 01:02:38／01:02:40／01:02:42 三条 recall-test 均 200，下游分别落 chunks＋rerank／entities／wiki_entries＋manual_cards。③判据：hybrid 三命中 `chunk_id`＋分数与基线全等；graph 8 实体与 2 证据逐名逐 id 全等＋1 条关系；wiki 3 条 source_type＝manual 1／wiki 2（wiki 带 `source_chunk_ids`）；三调用同库。缺陷登记：无；跑完已停 :8001。④门禁：`node --check client.js`＋6 个 `src/*.ts` strip-types 过；冒烟默认/hostless 各 **78 PASS/0 FAIL**；README Status 改 T2–T6、删 icon 占位句；spec/plan Status 同步。收口笔为本笔。
 
 ## 8. 环境与安装面（速查）
 

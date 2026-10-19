@@ -2,7 +2,7 @@
 
 **Harness RAG for DeepSeek Harness (DSH)** — 三路检索（混合/图谱/wiki）+ 文档续读 + 知识库管理面板，后端为 Harness RAG knowledge 服务（最小 Python 服务）。
 
-> Status: **T2–T4 已实装并在真栈验收；T5 已实装（真栈复验待做）** — 工具面（三检索＋文档两件套：单路 recall-test / 中心窗续读 / 半开输出）、右栏管理面板（T3）、摄取通道后台任务（T4）、子槽声明契约＋命名空间四防（T5）；隔离提供「知识预设」可选件。T6（终验）未开工。未配后端时返回结构化错误。
+> Status: **T2–T6 已实装并在真栈验收** — 工具面（三检索＋文档两件套：单路 recall-test / 中心窗续读 / 半开输出）、右栏管理面板（T3）、摄取通道后台任务（T4）、子槽声明契约＋命名空间四防（T5）、等价对照表＋原创图标＋三检索真跑（T6）；隔离提供「知识预设」可选件。未配后端时返回结构化错误。
 
 ## 隔离与 kb_id 解析
 
@@ -89,7 +89,7 @@ pnpm run typecheck
 
 改动后重载：Client 半（`client.js`）随窗口重开即生效；Host 半（`src/`）须桌面端托盘完整退出重启才换代（`link:` 开发安装无须重装，改码即被读取）。
 
-已知占位件（T6 收口）：插件清单 icon 未随包（回退默认图）。面板文案走内联字典（`ctx.locale.register('harnessRag', …)`，三方插件官方模式）；`locale/*.json` 只承载清单显示元数据（title/description），不是词条文件。
+面板文案走内联字典（`ctx.locale.register('harnessRag', …)`，三方插件官方模式）；`locale/*.json` 只承载清单显示元数据（title/description），不是词条文件。
 
 ## License
 
