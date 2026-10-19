@@ -22,7 +22,7 @@
 | T2 | 工具面等价移植（端点对齐+召回测试缝） | ✅ 收官（2026-10-12；两笔后端跟进笔＋Task 3–6＋真栈两半；含真栈咬出的 list_documents 形状修复） |
 | T3 | 管理面板（功能面＝工作台知识库页全部：管理＋可视化） | ✅ 收官（2026-10-15 真栈验收全过：Task 0–12 全毕；一条龙他手点走完；10-12 冻清单 D1–D6，详见 T3 plan） |
 | T4 | 摄取通道（`ctx.jobs`） | ✅ 收官（2026-10-19；[spec](specs/2026-10-19-t4-ingest-jobs-spec.md)＋[plan](plans/2026-10-19-t4-ingest-jobs-plan.md) 对；Task 0–4 全落；`probe-t4` 6/6＋冒烟双 78；真跑已过（10-19 他手验）） |
-| T5 | 丙′ 子槽契约化+命名空间四防 | ✅ 实施完成（2026-10-19；[spec](specs/2026-10-19-t5-slot-contract-spec.md)＋[plan](plans/2026-10-19-t5-slot-contract-plan.md) 对；Task 0–4 全落；双语法＋冒烟双 78＋neuter 三针恰红；真跑待他手验；提交候令） |
+| T5 | 丙′ 子槽契约化+命名空间四防 | ✅ 实施完成＋真跑通过（2026-10-19；[spec](specs/2026-10-19-t5-slot-contract-spec.md)＋[plan](plans/2026-10-19-t5-slot-contract-plan.md) 对；Task 0–4 全落；双语法＋冒烟双 78＋neuter 三针恰红；真跑已过（10-19 他手验）；定稿 `ef2d564`（未推）） |
 | T6 | 验收（等价移植对照表+文档+icon） | 未开工 |
 
 **待排（未编 T 号，2026-10-13 登记）**：
@@ -90,7 +90,7 @@
 
 **立对（2026-10-19）**：[spec](specs/2026-10-19-t5-slot-contract-spec.md)＋[plan](plans/2026-10-19-t5-slot-contract-plan.md) 已成对（D1–D6 已拍＝全甲 10-19）。侦察结论：四防三件已命名空间化，唯一实修＝card-drawers 存储键族外（工作台逐字复制；他 leveldb 实查有真实抽屉数据 ⇒ 带一次性迁移）；README 五处陈旧（Status/形态/占位件/开发）同轮修正；四层承诺配冒烟「契约标识」断言块作机械保证。
 
-**实施（2026-10-19，Task 0–4 全落）**：①`client.js`——`cardDrawersKey` → `hrag-card-drawers.<kbId>.v1`（旧串入 `legacyCardDrawersKey` 仅迁移读用）＋读路一次性迁移（新键缺＋旧键在 ⇒ 旧值原样写新键、删旧键、写失败保旧键下次重试；新键在 ⇒ 无视旧键；坏值 ⇒ 既有容错回退）；②`README.md`——新「子槽声明契约」节（四层承诺表＋命名空间四防清单）＋Status/形态/占位件/开发四处陈旧修正；③仓外冒烟——`sidebarRightTabs` 桩改捕获＋「T5 契约标识」8 断言（id/kind/guide id/NS/slot name/key/body locale）＋三键行为探＋`cardDrawersKey` 新串＋迁移三例＋旧键 fixtures 迁移；④门禁：`node --check client.js`＋全部 6 个 `src/*.ts` strip-types 过；冒烟默认 **78 PASS/0 FAIL**、`SMOKE_HOSTLESS=1` **78 PASS/0 FAIL**；neuter 三针（`SMOKE_SRC` 换件法）恰红——`kind` 坏→`tab kind`／`LAST_KB_KEY` 坏→`T5 contract: last-kb key`／迁移 `removeItem` 拆→`legacy key is removed after adoption`。RED→GREEN：Task 1 后旧键断言（1738）恰红，Task 3 迁断言后复绿。**真跑待他手验**（重开面板即可）：既有抽屉保真＋README 契约节核读。提交候令。
+**实施（2026-10-19，Task 0–4 全落）**：①`client.js`——`cardDrawersKey` → `hrag-card-drawers.<kbId>.v1`（旧串入 `legacyCardDrawersKey` 仅迁移读用）＋读路一次性迁移（新键缺＋旧键在 ⇒ 旧值原样写新键、删旧键、写失败保旧键下次重试；新键在 ⇒ 无视旧键；坏值 ⇒ 既有容错回退）；②`README.md`——新「子槽声明契约」节（四层承诺表＋命名空间四防清单）＋Status/形态/占位件/开发四处陈旧修正；③仓外冒烟——`sidebarRightTabs` 桩改捕获＋「T5 契约标识」8 断言（id/kind/guide id/NS/slot name/key/body locale）＋三键行为探＋`cardDrawersKey` 新串＋迁移三例＋旧键 fixtures 迁移；④门禁：`node --check client.js`＋全部 6 个 `src/*.ts` strip-types 过；冒烟默认 **78 PASS/0 FAIL**、`SMOKE_HOSTLESS=1` **78 PASS/0 FAIL**；neuter 三针（`SMOKE_SRC` 换件法）恰红——`kind` 坏→`tab kind`／`LAST_KB_KEY` 坏→`T5 contract: last-kb key`／迁移 `removeItem` 拆→`legacy key is removed after adoption`。RED→GREEN：Task 1 后旧键断言（1738）恰红，Task 3 迁断言后复绿。**真跑（2026-10-19 他手验，Task 4 清单）**：①迁移保真——基线＝旧键 3 抽屉（`1` target/emerald、`1` star/teal、`测试` star/emerald hidden）＋2 条归属；DSH 21:58 整启（client 半已新），面板重连后端后 **22:44:01** 新键写入（值**逐字节相同**：457 字符 JSON、UTF-16 跨 32KB 块记录重建核过）＋旧键删除记录落地；22:44:40 百科数据加载（entries＋manual cards 200）；他截图核「我的条目（3）」三枚抽屉 chip 名称/图标/色逐一吻合、选中抽屉空态正确；**22:55:20** 一笔 UI 写入（`测试` hidden 标记清除）落**新键**——写路同证。②README「子槽声明契约」节他核读**通过**。真跑期间 :8001 起 auth-off 实例（我起，跑完停）。定稿一笔已落（`ef2d564`，未推）；真跑回写一笔（本笔，未推）。
 
 ## 7. T6 验收（未开工）
 

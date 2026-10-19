@@ -3,8 +3,8 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
 **Spec:** [2026-10-19-t5-slot-contract-spec.md](../specs/2026-10-19-t5-slot-contract-spec.md)
-**Status:** ✅ 实施完成（2026-10-19 全甲已拍）——Task 0–4 全落；门禁：双语法全过＋冒烟默认/hostless 各 **78 PASS/0 FAIL**＋neuter 三针恰红；真跑待他手验（重开面板：既有抽屉保真＋README 契约节核读）；提交候令。
-**Parent:** 步骤记录 §6 T5（未开工；本对＝开工前置）。
+**Status:** ✅ 实施完成并真跑通过（2026-10-19）——Task 0–4 全落；门禁：双语法全过＋冒烟默认/hostless 各 **78 PASS/0 FAIL**＋neuter 三针恰红；真跑已过（他手验：迁移保真——新键值与旧值逐字节相同、旧键删除、UI 三抽屉 chip 吻合＋写路落新键；README 契约节核读通过）；定稿一笔已落（`ef2d564`，未推）；真跑回写一笔（本笔，未推）。
+**Parent:** 步骤记录 §6 T5（✅ 实施完成 2026-10-19）。
 **步骤记录:** [2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)。
 
 **Architecture:** 契约化＝README 新节（四层承诺＋四防清单，与代码逐字一致）；四防实修＝`client.js` card-drawers 键入 `hrag-` 族＋一次性迁移；保证机制＝仓外冒烟「契约标识」断言块（钉死 id/kind/key/NS＋四存储键）。零宿主/零后端/零面板行为改动（迁移除外且对用户不可见）。
@@ -67,10 +67,13 @@
 - [x] 回写：本 plan 各 Task 实测、步骤记录 §6 T5 两格勾＋总览行、spec Status。
 - [x] 真跑清单交付（重开面板即可）：既有抽屉仍在（迁移保真）＋README 契约节人工核读；提交候令。
 
-**实测**：门禁 `node --check client.js` 过＋全部 6 个 `src/*.ts`（http/index/jobs/kb_proxy/settings/tools）strip-types 过。冒烟默认 **78 PASS/0 FAIL**、`SMOKE_HOSTLESS=1` **78 PASS/0 FAIL**（契约断言在既有块内，计数不涨）。**neuter 三针**（`SMOKE_SRC` 换件法：坏值副本跑冒烟、真件零动）：①`kind` 改坏→恰红 `tab kind`（actual `harness-rag-broken`）；②`LAST_KB_KEY` 改坏→恰红 `T5 contract: last-kb key is hrag-last-kb`；③迁移 `removeItem` 拆除→恰红 `legacy key is removed after adoption`——三处断言均承重。真跑清单交付（重开面板即可，client 半改动随窗口重开生效、无须整重启）：①既有卡片抽屉仍在（旧键数据经迁移保真；如已有抽屉分组，重开后应原样可见）；②README「子槽声明契约」节人工核读（四层承诺表＋四防清单）。提交候令。
+**实测**：门禁 `node --check client.js` 过＋全部 6 个 `src/*.ts`（http/index/jobs/kb_proxy/settings/tools）strip-types 过。冒烟默认 **78 PASS/0 FAIL**、`SMOKE_HOSTLESS=1` **78 PASS/0 FAIL**（契约断言在既有块内，计数不涨）。**neuter 三针**（`SMOKE_SRC` 换件法：坏值副本跑冒烟、真件零动）：①`kind` 改坏→恰红 `tab kind`（actual `harness-rag-broken`）；②`LAST_KB_KEY` 改坏→恰红 `T5 contract: last-kb key is hrag-last-kb`；③迁移 `removeItem` 拆除→恰红 `legacy key is removed after adoption`——三处断言均承重。真跑清单交付（重开面板即可，client 半改动随窗口重开生效、无须整重启）：①既有卡片抽屉仍在（旧键数据经迁移保真；如已有抽屉分组，重开后应原样可见）；②README「子槽声明契约」节人工核读（四层承诺表＋四防清单）。
+
+**真跑（2026-10-19 他手验）**：①迁移保真——基线＝旧键 3 抽屉（`1` target/emerald、`1` star/teal、`测试` star/emerald hidden）＋2 条归属；DSH 21:58 整启（client 半已新），面板重连后端后 **22:44:01** 新键写入（值**逐字节相同**：457 字符 JSON，UTF-16 跨 32KB 块记录重建核过）＋旧键删除记录落地；22:44:40 百科数据加载（entries＋manual cards 200）；他截图核「我的条目（3）」三枚抽屉 chip 名称/图标/色逐一吻合、选中抽屉空态正确；**22:55:20** 一笔 UI 写入（`测试` hidden 标记清除）落**新键**——写路同证。②README「子槽声明契约」节他核读**通过**。真跑期间 :8001 起 auth-off 实例（我起，跑完停）。
 
 ---
 
 ## 提交链（滚动记实）
 
-- [ ] 定稿一笔（英文 Conventional；本笔）。**未推**（仓暂无 remote；前笔 tip＝`a4e3451`）——回写已毕，候令；定稿前 README Status 行微修（T5 子句「实施中」→「T5 已实装（真栈复验待做）」——防定稿笔自带陈旧文案）。
+- [x] 定稿一笔（2026-10-19；英文 Conventional；本笔 `ef2d564`）。**未推**（仓暂无 remote；前笔 tip＝`a4e3451`）；定稿前 README Status 行微修（T5 子句「实施中」→「已实装（真栈复验待做）」，防定稿笔自带陈旧文案）。
+- [x] 真跑回写一笔（2026-10-19；英文 Conventional；本笔）。**未推**（前笔 tip＝`ef2d564`）。
