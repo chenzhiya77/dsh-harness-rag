@@ -65,6 +65,8 @@ cd <deer-flow>/backend && make gateway
 | `hrag_list_documents` | 文档清单与状态计数 |
 | `hrag_read_document` | 按 doc_id 分页读切片，或围绕 chunk_id 开窗续读 |
 
+完整的功能面等价对照（DeerFlow 工作台 ↔ 本插件，含差异理由）见 [docs/equivalence.md](docs/equivalence.md)。
+
 ## 子槽声明契约
 
 界面以「右栏 tab」形态挂入宿主（不新开槽位、不占其他槽）。以下为稳定承诺（重命名＝破坏性变更）：

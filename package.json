@@ -19,6 +19,7 @@
     "client.js",
     "cordis.patch.yml",
     "locale",
+    "docs/equivalence.md",
     "README.md"
   ],
   "scripts": {
