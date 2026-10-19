@@ -113,7 +113,7 @@
 - profile `~/.dsh/profiles/desktop/pnpm-workspace.yaml` 已配 `allowBuilds`+fetch 旋钮（备份 `.bak-1011`；两闸=pnpm 并发下载中断+构建脚本许可）。
 - 源码取证通道=`gh api`（DSH 默认分支 **master**；raw 直连不稳）。
 - 本地 `pnpm install` 装不通 @deepseek-ai 依赖图是设计使然（`dsh-type-meta` 未公开、仅随 DSH 发行）；typecheck/冒烟须在 DSH profile 语境。
-- **主体二（插件引擎仓，2026-10-13 已立；2026-10-20 裁剪＋接管）**：`E:\app\python\agent\harness-rag`。最小入口＝`backend/app/gateway/knowledge_app.py`（只挂知识三 router＋`/health`）@ `127.0.0.1:8020`，插件默认 `backendUrl` 已指 8020；数据＝主体一 SQLite backup 快照＋路径改写＋`knowledge/` 拷贝，Qdrant 仍共享 `127.0.0.1:6333`。裁剪 2,025 件（frontend/docker/skills/contracts/channels/scheduler/gateway-github/非知识 routers/monolith/非知识测试/部署与产品文档），保留 harness 依赖。真栈验收过；两项现场发现已修：①DocsView 同库刷新翻 loading 造成白屏（照切片抽屉 `hasDataRef` 改静默）；②`qwen3.8-flash` 在 DashScope 默认开思考、抽取腿每片烧数千 reasoning token（4–5 分钟），模型条目补 `enable_thinking: false` 后同文本 27.8 秒。提交候令。
+- **主体二（插件引擎仓，2026-10-13 已立；2026-10-20 裁剪＋接管）**：`E:\app\python\agent\harness-rag`。最小入口＝`backend/app/gateway/knowledge_app.py`（只挂知识三 router＋`/health`）@ `127.0.0.1:8020`，插件默认 `backendUrl` 已指 8020；数据＝主体一 SQLite backup 快照＋路径改写＋`knowledge/` 拷贝，Qdrant 仍共享 `127.0.0.1:6333`。裁剪 2,025 件（frontend/docker/skills/contracts/channels/scheduler/gateway-github/非知识 routers/monolith/非知识测试/部署与产品文档），保留 harness 依赖。真栈验收过；两项现场发现已修：①DocsView 同库刷新翻 loading 造成白屏（照切片抽屉 `hasDataRef` 改静默）；②`qwen3.8-flash` 在 DashScope 默认开思考、抽取腿每片烧数千 reasoning token（4–5 分钟），模型条目补 `enable_thinking: false` 后同文本 27.8 秒。两仓已提交（引擎 `2eb49e54d`…`27bf9e006`；插件 `c2dd542`／`4761a42`），本段为回写跟进笔。
 
 ## 9. 明确不做 / 另案
 
