@@ -665,6 +665,22 @@ window.__ModuleLoader__.load({
       'set.form.save': '保存',
       'set.form.saved': '功能模型配置已保存',
       'set.form.noChanges': '没有需要保存的改动',
+      'set.form.dshHint': '功能模型由 DSH 发布到 RAG（取自 DSH 已配置的模型）；RAG 侧不保存 provider key，DSH 未运行时这些条目的调用会失败。',
+      'set.form.dshMainModel': 'DSH 主模型',
+      'set.form.dshMainModelNone': '未读取到',
+      'set.form.dshLoading': '正在读取 DSH 模型…',
+      'set.form.dshStatusUnavailable': 'DSH 模型服务不可用',
+      'set.form.dshStatusLoadFailed': 'DSH 模型状态读取失败',
+      'set.form.dshStatusPublished': '已发布 {0} 个模型',
+      'set.form.dshStatusSyncedAt': '上次同步 {0}',
+      'set.form.dshStatusError': '原因码：{0}',
+      'set.form.dshSync': '立即同步',
+      'set.form.dshSyncing': '同步中…',
+      'set.form.dshSynced': 'DSH 模型已同步',
+      'set.form.dshSyncFailed': 'DSH 模型同步失败',
+      'set.form.dshUnavailableToggle': '不可用的 DSH 提供方（{0}）',
+      'set.form.dshUnavailableRow': '{0} · {1}',
+      'set.form.thinkingModelFixed': '由 DSH 模型能力决定',
       'set.form.defaultHint': '用于图谱抽取、评测裁判、图片与视频配文未单独指定模型时的选择，不影响聊天主模型及其他功能；此项留空时使用配置中的 RAG 默认，配置也未指定则使用模型列表第一项。',
       'set.form.defaultNone': '（使用配置默认）',
       'set.form.thinkingMenuLabel': '思考跟随对话模型',
@@ -742,6 +758,7 @@ window.__ModuleLoader__.load({
       'set.migrationSucceeded': '维度迁移已完成，新宽度已生效。',
       'set.migrationFailed': '维度迁移失败：',
       'set.group.default': 'RAG 默认模型',
+      'set.group.dsh': 'DSH 模型',
       'set.group.retrieval': '检索',
       'set.group.extraction': '图谱抽取',
       'set.group.evaluation': '评测裁判',
@@ -1424,6 +1441,23 @@ window.__ModuleLoader__.load({
       'set.form.save': 'Save',
       'set.form.saved': 'Functional model configuration saved',
       'set.form.noChanges': 'No changes to save',
+      'set.form.dshHint':
+        'Function models are published to RAG by DSH from the models configured in DSH; RAG stores no provider key, so calls to these entries fail while DSH is not running.',
+      'set.form.dshMainModel': 'DSH main model',
+      'set.form.dshMainModelNone': 'Not detected',
+      'set.form.dshLoading': 'Reading DSH models\u2026',
+      'set.form.dshStatusUnavailable': 'DSH model service unavailable',
+      'set.form.dshStatusLoadFailed': 'Could not read DSH model status',
+      'set.form.dshStatusPublished': '{0} models published',
+      'set.form.dshStatusSyncedAt': 'Last synced {0}',
+      'set.form.dshStatusError': 'Reason code: {0}',
+      'set.form.dshSync': 'Sync now',
+      'set.form.dshSyncing': 'Syncing\u2026',
+      'set.form.dshSynced': 'DSH models synced',
+      'set.form.dshSyncFailed': 'DSH model sync failed',
+      'set.form.dshUnavailableToggle': 'Unavailable DSH providers ({0})',
+      'set.form.dshUnavailableRow': '{0} \u00b7 {1}',
+      'set.form.thinkingModelFixed': 'Determined by DSH model capabilities',
       'set.form.defaultHint':
         'Used when graph extraction, evaluation judging, image captioning or video captioning has no separate model selection. It does not affect chat models or other features. Leave this unset to inherit the configured RAG default, or the first model in the list if none is configured.',
       'set.form.defaultNone': '(config default)',
@@ -1516,6 +1550,7 @@ window.__ModuleLoader__.load({
       'set.migrationSucceeded': 'Dimension migration finished; the new width is in effect.',
       'set.migrationFailed': 'Dimension migration failed:',
       'set.group.default': 'RAG default model',
+      'set.group.dsh': 'DSH models',
       'set.group.retrieval': 'Retrieval',
       'set.group.extraction': 'Graph extraction',
       'set.group.evaluation': 'Evaluation judge',
@@ -2180,6 +2215,7 @@ window.__ModuleLoader__.load({
           '.hrag-mm-tcheck-on { background: var(--dsw-alias-state-business-primary); border-color: var(--dsw-alias-state-business-primary); }',
           '.hrag-mm-trole { position: relative; padding-left: 28px; white-space: nowrap; }',
           '.hrag-mm-tmodel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-mm-tnote { grid-column: 1 / -1; padding: 4px 8px 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
           '.hrag-set-thinkingwrap { margin-top: 0; }',
           // 设置表单纵距：12px 节间距、14px 侧衬（覆盖 drawer-body 的 8/12），底部留 16。
           '.hrag-drawer-body.hrag-set-body { display: flex; flex-direction: column; gap: 12px; padding: 12px 14px 16px; }',
@@ -2238,6 +2274,7 @@ window.__ModuleLoader__.load({
           '.hrag-set-adv:hover { color: var(--dsw-alias-label-secondary); }',
           '.hrag-set-adv-chev { display: inline-flex; transform: rotate(-90deg); transition: transform 0.15s ease; }',
           '.hrag-set-adv-chev-open { transform: rotate(0deg); }',
+          '.hrag-set-dshlist { display: flex; flex-direction: column; gap: 4px; padding: 2px 0 0 22px; }',
           '.hrag-set-saverow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }',
           '.hrag-set-savehint { color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-set-saveerr { color: var(--dsw-alias-state-error-primary); font-size: 12px; }',
@@ -15371,6 +15408,12 @@ window.__ModuleLoader__.load({
       const [saveWarning, setSaveWarning] = React.useState(null)
       const [savedNotice, setSavedNotice] = React.useState(false)
       const [dimensionConfirmOpen, setDimensionConfirmOpen] = React.useState(false)
+      // DSH 模型（丙）：状态查询与手动同步。宿主激活时已自动发布；打开设置页再做一次
+      // 幂等同步，覆盖「DSH 在面板关闭期间改过模型」的窗口。
+      const dshStatusQ = useEvalCall(kbId, true, 'dshModelStatus', null)
+      const [dshSyncBusy, setDshSyncBusy] = React.useState(false)
+      const [dshUnavailableOpen, setDshUnavailableOpen] = React.useState(false)
+      const dshAutoSyncedRef = React.useRef(false)
       // Rebuild-index card (10-15: add the target-library picker, per the workbench
       // ReindexDialog): pick a library -> confirm -> rebuild that one; the status line
       // follows the picked library (3s poll while in flight, immediate + 1s re-sample).
@@ -15472,6 +15515,46 @@ window.__ModuleLoader__.load({
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
       }, [onClose])
+
+      const refreshDshLists = () => {
+        dshStatusQ.refresh()
+        modelsQ.refresh()
+        modelsConfigQ.refresh()
+      }
+
+      React.useEffect(() => {
+        if (dshAutoSyncedRef.current) return
+        dshAutoSyncedRef.current = true
+        callOp('dshModelSync', {})
+          .then(() => refreshDshLists())
+          .catch(() => dshStatusQ.refresh())
+      }, [])
+
+      const runDshSync = () => {
+        if (dshSyncBusy) return
+        setDshSyncBusy(true)
+        callOp('dshModelSync', {})
+          .then((data) => {
+            const status = data && typeof data === 'object' ? data : null
+            setDshSyncBusy(false)
+            if (status && status.available !== false && !status.lastError) {
+              showToast(t('set.form.dshSynced'))
+            } else {
+              const reason = status && status.lastError ? String(status.lastError) : ''
+              showToast(
+                reason
+                  ? t('set.form.dshSyncFailed') + ' · ' + t('set.form.dshStatusError', { 0: reason })
+                  : t('set.form.dshSyncFailed'),
+                { error: true },
+              )
+            }
+            refreshDshLists()
+          })
+          .catch(() => {
+            setDshSyncBusy(false)
+            showToast(t('set.form.dshSyncFailed'), { error: true })
+          })
+      }
 
       const probeFailure = (kind, key, detail) => {
         if (kind === 'capability') return { key: key, status: 'unverifiable', detail: detail }
@@ -15937,11 +16020,21 @@ window.__ModuleLoader__.load({
                 ? ragVisionReferenceOptions(managedModels, modelValue, t('set.form.defaultNone'))
                 : ragModelReferenceOptions(models, modelValue, t('set.form.defaultNone'))
             const found = options.find((option) => option.value === (modelValue || RAG_MODEL_NONE))
+            // 生效模型＝本槽位指向，否则配置默认，再否则列表首行（引擎的解析口径）。
+            // DSH 发布的条目能力由 DSH 决定：无思考能力的条目置灰，开关不再可勾。
+            const effective = modelValue || values.default_model || (models[0] ? models[0].name : '')
+            const resolved = models.find((item) => item && item.name === effective)
+            const fixed = Boolean(
+              resolved &&
+                String(resolved.name).indexOf('dsh:') === 0 &&
+                resolved.supports_thinking === false,
+            )
             return {
               key: key,
               label: t(labelKey),
               modelLabel: found ? found.label : modelValue || t('set.form.defaultNone'),
               checked: Boolean(values[key]),
+              fixed: fixed,
             }
           })
         : []
@@ -15978,8 +16071,14 @@ window.__ModuleLoader__.load({
                       type: 'button',
                       role: 'menuitemcheckbox',
                       'aria-checked': row.checked,
-                      'aria-label': row.label + ' · ' + row.modelLabel,
+                      'aria-label':
+                        row.label +
+                        ' · ' +
+                        row.modelLabel +
+                        (row.fixed ? ' · ' + t('set.form.thinkingModelFixed') : ''),
                       className: 'hrag-mm-item hrag-mm-checkrow',
+                      disabled: row.fixed,
+                      title: row.fixed ? t('set.form.thinkingModelFixed') : undefined,
                       onClick: () => update(row.key, !row.checked),
                     },
                     h(
@@ -15991,10 +16090,111 @@ window.__ModuleLoader__.load({
                     h('span', { className: 'hrag-mm-tmodel', title: row.modelLabel }, row.modelLabel),
                   ),
                 ),
+                thinkingRows.some((row) => row.fixed)
+                  ? h('div', { className: 'hrag-mm-tnote' }, t('set.form.thinkingModelFixed'))
+                  : null,
               ),
             }),
           )
         : null
+
+      const dshStatus =
+        dshStatusQ.data && typeof dshStatusQ.data === 'object' ? dshStatusQ.data : null
+      const dshUnavailable = dshStatus && Array.isArray(dshStatus.unavailable) ? dshStatus.unavailable : []
+      let dshStatusText = ''
+      let dshStatusError = false
+      if (dshStatusQ.failure) {
+        dshStatusText = t('set.form.dshStatusLoadFailed')
+        dshStatusError = true
+      } else if (!dshStatus) {
+        dshStatusText = t('set.form.dshLoading')
+      } else {
+        const parts = []
+        if (dshStatus.available === false) {
+          dshStatusError = true
+          parts.push(t('set.form.dshStatusUnavailable'))
+        } else {
+          parts.push(t('set.form.dshStatusPublished', { 0: String(dshStatus.published || 0) }))
+        }
+        if (dshStatus.lastSyncAt) {
+          parts.push(t('set.form.dshStatusSyncedAt', { 0: evFmtRunTime(dshStatus.lastSyncAt) }))
+        }
+        if (dshStatus.lastError) {
+          dshStatusError = true
+          parts.push(t('set.form.dshStatusError', { 0: String(dshStatus.lastError) }))
+        }
+        dshStatusText = parts.join(' · ')
+      }
+      const dshMainModel =
+        dshStatus && dshStatus.mainModel
+          ? String(dshStatus.mainModel.provider) + ' / ' + String(dshStatus.mainModel.model)
+          : t('set.form.dshMainModelNone')
+
+      const dshGroup = h(
+        'div',
+        { className: 'hrag-set-group' },
+        h('div', { className: 'hrag-set-grouptitle', title: t('set.form.dshHint') }, t('set.group.dsh')),
+        h('p', { className: 'hrag-set-hint' }, t('set.form.dshHint')),
+        fieldRow(t('set.form.dshMainModel'), h('div', { className: 'hrag-set-locked' }, dshMainModel)),
+        h(
+          'div',
+          { className: 'hrag-set-saverow' },
+          h('span', { className: dshStatusError ? 'hrag-set-saveerr' : 'hrag-set-savehint', role: 'status' }, dshStatusText),
+          h(
+            'div',
+            { style: { display: 'flex', gap: '10px', marginLeft: 'auto' } },
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-outline hrag-btn-sm',
+                disabled: dshSyncBusy,
+                onClick: runDshSync,
+              },
+              dshSyncBusy ? t('set.form.dshSyncing') : t('set.form.dshSync'),
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline hrag-btn-sm', onClick: refreshDshLists },
+              t('shell.refresh'),
+            ),
+          ),
+        ),
+        dshUnavailable.length > 0
+          ? h(
+              React.Fragment,
+              null,
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-set-adv',
+                  'aria-expanded': dshUnavailableOpen,
+                  onClick: () => setDshUnavailableOpen((prev) => !prev),
+                },
+                h(
+                  'span',
+                  { className: 'hrag-set-adv-chev' + (dshUnavailableOpen ? ' hrag-set-adv-chev-open' : '') },
+                  dshChevronDownIcon(),
+                ),
+                t('set.form.dshUnavailableToggle', { 0: dshUnavailable.length }),
+              ),
+              dshUnavailableOpen
+                ? h(
+                    'div',
+                    { className: 'hrag-set-dshlist' },
+                    dshUnavailable.map((item) =>
+                      h(
+                        'div',
+                        { key: String(item.provider), className: 'hrag-set-hint' },
+                        t('set.form.dshUnavailableRow', { 0: String(item.provider), 1: String(item.code) }),
+                      ),
+                    ),
+                  )
+                : null,
+            )
+          : null,
+      )
 
       const defaultModelGroup = view && values
         ? h(
@@ -16570,6 +16770,7 @@ window.__ModuleLoader__.load({
                 : h(
                     React.Fragment,
                     null,
+                    dshGroup,
                     defaultModelGroup,
                     retrievalGroup,
                     extractionGroup,
