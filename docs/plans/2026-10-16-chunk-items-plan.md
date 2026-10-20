@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-16-chunk-items-spec.md](../specs/2026-10-16-chunk-items-spec.md)（范围＋D1＋验收）
-**Status:** 🟢 开跑（2026-10-16 他令「开②档乙对」＋「按甲方案直接开跑」）——**D1＝甲（已拍 10-16）**；**Task 0–5 全毕**（T1 门禁 11/11＋真栈 5/5；T2–T4 冒烟 69 PASS＋缺件二跑全绿；**真跑整批已过**——10-18 他手验：渲染/原始切换、图片通道、视频镜头条＋真视频 seek、编辑保存、重抽）。销定已落、门禁四项全绿——**定稿一笔落地**。
+**Status:** ✅ 收官（2026-10-16 他令「开②档乙对」＋「按甲方案直接开跑」；10-20 回填）——**D1＝甲（已拍 10-16）**；**Task 0–5 全毕**（T1 门禁 11/11＋真栈 5/5；T2–T4 冒烟 69 PASS＋缺件二跑全绿；**真跑整批已过**——10-18 他手验：渲染/原始切换、图片通道、视频镜头条＋真视频 seek、编辑保存、重抽）。销定已落、门禁四项全绿——**定稿一笔落地**（`a90db41`）。
 **Parent:** ②档批（10-16 他令「都做」；档位表见会话）× 甲对 doc-columns 收官（`4d9a7d0`）。
 **步骤记录:** [2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)。
 
