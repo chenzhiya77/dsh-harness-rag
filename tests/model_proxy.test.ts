@@ -7,11 +7,14 @@ import {
   buildGenerateOptions,
   collectCompletion,
   isLoopbackAddress,
+  LLM_PROXY_ROUTE,
   mapFailure,
+  registerModelProxy,
   selectEffort,
   toChatCompletion,
   type LlmHostLike,
   type PromptPart,
+  type ProxyHostContextLike,
   type StreamChunkLike,
 } from '../src/model_proxy.ts'
 
@@ -304,6 +307,118 @@ test('collectCompletion surfaces a terminal failure without a finish marker as s
     yield { type: 'text-delta', index: 0, text: 'partial' } as StreamChunkLike
   })())
   assert.equal(truncated.finish, 'stop')
+})
+
+function fakeResponse(): {
+  state: { status: number; body: string }
+  writeHead(status: number, _headers: Record<string, unknown>): void
+  end(body?: string | Buffer): void
+} {
+  const state = { status: 0, body: '' }
+  return {
+    state,
+    writeHead(status) {
+      state.status = status
+    },
+    end(body) {
+      state.body = body === undefined ? '' : String(body)
+    },
+  }
+}
+
+function fakeRequest(method: string, url: string, body?: unknown, authorization?: string) {
+  const text = body === undefined ? undefined : JSON.stringify(body)
+  return {
+    method,
+    url,
+    headers: authorization ? { authorization } : {},
+    socket: { remoteAddress: '127.0.0.1' },
+    async *[Symbol.asyncIterator]() {
+      if (text !== undefined) yield Buffer.from(text)
+    },
+  }
+}
+
+function makeProxy(): { handler: (req: unknown, res: unknown) => Promise<void>; ready: Promise<unknown> } {
+  let handler: ((req: unknown, res: unknown) => Promise<void>) | undefined
+  const llm = {
+    listProviders: () => [{ id: 'p', name: 'P' }],
+    async listModels(provider: string) {
+      return [{ provider, id: 'm', name: 'M' }]
+    },
+    async resolveModelInfo(provider: string, model: string) {
+      return { provider, id: model, name: model, reasoning: { efforts: [{ id: 'low' }, { id: 'high' }] } }
+    },
+    async *stream(_options: unknown) {
+      yield { type: 'text-delta', index: 0, text: 'hello' }
+      yield { type: 'usage', usage: { inputTokens: 3, outputTokens: 1, totalTokens: 4 } }
+      yield { type: 'finish', reason: { kind: 'stop' } }
+    },
+  }
+  const ctx = {
+    inject(_deps: string[], callback: (fresh: unknown) => void) {
+      callback({
+        webServer: {
+          getOrigin: () => 'http://127.0.0.1:3080',
+          register(route: { handler: (req: unknown, res: unknown) => Promise<void> }) {
+            handler = route.handler
+            return () => {}
+          },
+        },
+        llm,
+        effect(callback: () => unknown) {
+          return callback()
+        },
+      })
+    },
+    get() {
+      return undefined
+    },
+    effect(callback: () => unknown) {
+      return callback()
+    },
+  }
+  const proxy = registerModelProxy(ctx as unknown as ProxyHostContextLike, { apiToken: TOKEN })
+  return {
+    ready: proxy.whenReady,
+    handler: (req, res) => {
+      if (handler === undefined) throw new Error('proxy route was not registered')
+      return handler(req, res)
+    },
+  }
+}
+
+test('registerModelProxy serves the model list and one chat completion', async () => {
+  const proxy = makeProxy()
+  await proxy.ready
+
+  const list = fakeResponse()
+  await proxy.handler(fakeRequest('GET', `${LLM_PROXY_ROUTE}/models`, undefined, `Bearer ${TOKEN}`), list)
+  assert.equal(list.state.status, 200)
+  const listed = JSON.parse(list.state.body) as { data: Array<{ id: string }> }
+  assert.deepEqual(listed.data.map((entry) => entry.id), ['dsh:p/m'])
+
+  const completion = fakeResponse()
+  await proxy.handler(
+    fakeRequest(
+      'POST',
+      `${LLM_PROXY_ROUTE}/chat/completions`,
+      { model: 'dsh:p/m', messages: [{ role: 'user', content: 'hi' }], max_tokens: 16 },
+      `Bearer ${TOKEN}`,
+    ),
+    completion,
+  )
+  assert.equal(completion.state.status, 200)
+  const parsed = JSON.parse(completion.state.body) as {
+    choices: Array<{ message: { content: string } }>
+    usage: { total_tokens: number }
+  }
+  assert.equal(parsed.choices[0].message.content, 'hello')
+  assert.equal(parsed.usage.total_tokens, 4)
+
+  const denied = fakeResponse()
+  await proxy.handler(fakeRequest('GET', `${LLM_PROXY_ROUTE}/models`), denied)
+  assert.equal(denied.state.status, 401)
 })
 
 test('mapFailure maps known codes and never echoes provider detail', () => {

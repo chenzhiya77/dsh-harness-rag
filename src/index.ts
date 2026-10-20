@@ -2,6 +2,8 @@ import type { Context } from 'cordis'
 import type {} from '@deepseek-ai/dsh-tools'
 import { defaultConfig, type Config } from './settings.ts'
 import { registerKbProxy } from './kb_proxy.ts'
+import { registerModelProxy, type ProxyHostContextLike } from './model_proxy.ts'
+import { registerModelSync, type SyncHostContextLike } from './model_sync.ts'
 import { registerTools } from './tools.ts'
 
 export const name = 'dsh-harness-rag'
@@ -14,5 +16,7 @@ export function apply(ctx: Context, config: Config = defaultConfig): void {
   registerTools(ctx, merged)
   // The panel's data seam (T3 Task 1): a named route on the browser-facing
   // web server, skipped where that service does not exist (headless).
-  registerKbProxy(ctx, merged)
+  const modelProxy = registerModelProxy(ctx as unknown as ProxyHostContextLike, merged)
+  const modelSync = registerModelSync(ctx as unknown as SyncHostContextLike, merged, modelProxy)
+  registerKbProxy(ctx, merged, modelSync)
 }

@@ -7,6 +7,8 @@ import { api, HarnessRagError } from './http.ts'
 import type { ApiError } from './http.ts'
 import { registerIngestJobs } from './jobs.ts'
 import type { IngestJobs } from './jobs.ts'
+import { unavailableModelStatus } from './model_sync.ts'
+import type { ModelSyncHandle } from './model_sync.ts'
 import type { Config } from './settings.ts'
 
 /**
@@ -52,7 +54,11 @@ function projectionQueryParams(args: unknown): Record<string, unknown> {
   return query
 }
 
-function buildOps(config: Config, ingestJobs: IngestJobs): Record<string, (args: unknown) => Promise<unknown>> {
+function buildOps(
+  config: Config,
+  ingestJobs: IngestJobs,
+  modelSync?: ModelSyncHandle,
+): Record<string, (args: unknown) => Promise<unknown>> {
   const needString = (args: unknown, key: string): string => {
     const value = (args as Record<string, unknown> | null | undefined)?.[key]
     if (typeof value !== 'string' || !value.trim()) {
@@ -276,6 +282,10 @@ function buildOps(config: Config, ingestJobs: IngestJobs): Record<string, (args:
     listModels: () => api(config, '/api/models'),
     // 配置条目面（带声明能力，如 supports_vision）——caption 选择器的合规源（照工作台 modelsConfig）。
     listModelsConfig: () => api(config, '/api/models/config'),
+    // DSH 模型同步（丙）：只读状态与手动重发布；响应不含代理 token。
+    dshModelStatus: async () => modelSync?.status() ?? unavailableModelStatus(config.autoSyncModels),
+    dshModelSync: async () =>
+      modelSync ? modelSync.syncNow() : unavailableModelStatus(config.autoSyncModels),
     // ── 设置面批 2（Task 2）：RAG 配置保存 ＋ 四枚只读探针（探针是真实调用但零写入）──
     ragConfigPut: (args) => api(config, '/api/rag/config', { method: 'PUT', body: bodyOf(args) }),
     probeEmbedding: (args) => api(config, '/api/rag/config/probe-embedding', { method: 'POST', body: bodyOf(args) }),
@@ -549,9 +559,9 @@ const forwardRelay = async (
   await pipeline(Readable.fromWeb(upstream.body as unknown as WebReadableStream<Uint8Array>), res).catch(() => {})
 }
 
-export function registerKbProxy(ctx: Context, config: Config): void {
+export function registerKbProxy(ctx: Context, config: Config, modelSync?: ModelSyncHandle): void {
   const ingestJobs = registerIngestJobs(ctx, config)
-  const ops = buildOps(config, ingestJobs)
+  const ops = buildOps(config, ingestJobs, modelSync)
 
   const handler = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     try {

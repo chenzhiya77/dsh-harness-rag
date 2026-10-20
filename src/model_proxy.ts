@@ -622,8 +622,8 @@ export interface ProxyHostContextLike {
 }
 
 export interface ModelProxyRuntime {
-  origin: string
-  baseUrl: string
+  getOrigin(): string
+  getBaseUrl(): string
   refresh(): Promise<ProxyCatalog>
   getCatalog(): ProxyCatalog | undefined
 }
@@ -695,8 +695,6 @@ export function registerModelProxy(
 
   ctx.inject(['webServer', 'llm'], (fresh) => {
     try {
-      const origin = fresh.webServer.getOrigin()
-      const baseUrl = `${origin}${LLM_PROXY_ROUTE}`
       const attachments = (() => {
         try {
           return ctx.get('attachments') as AttachmentsLike | undefined
@@ -705,11 +703,27 @@ export function registerModelProxy(
         }
       })()
 
+      // Injection can resolve before the listener binds; wait briefly so the
+      // activation sync and the first request see a real origin.
+      const waitForOrigin = async (): Promise<string> => {
+        for (let attempt = 0; attempt < 100; attempt += 1) {
+          try {
+            return fresh.webServer.getOrigin()
+          } catch {
+            await new Promise((resolve) => setTimeout(resolve, 50))
+          }
+        }
+        throw new Error('webserver origin is unavailable')
+      }
+      const getOrigin = (): string => fresh.webServer.getOrigin()
+      const getBaseUrl = (): string => `${getOrigin()}${LLM_PROXY_ROUTE}`
+
       let current: ProxyCatalog | undefined
       let inFlight: Promise<ProxyCatalog> | undefined
       const refresh = (): Promise<ProxyCatalog> => {
         if (inFlight !== undefined) return inFlight
-        inFlight = buildCatalog(fresh.llm, origin)
+        inFlight = waitForOrigin()
+          .then((origin) => buildCatalog(fresh.llm, origin))
           .then((catalog) => {
             current = catalog
             return catalog
@@ -833,7 +847,7 @@ export function registerModelProxy(
         'harness-rag: model proxy route',
       )
       void refresh().catch(() => {})
-      resolveRuntime({ origin, baseUrl, refresh, getCatalog })
+      resolveRuntime({ getOrigin, getBaseUrl, refresh, getCatalog })
     } catch (error) {
       rejectRuntime(error)
     }
