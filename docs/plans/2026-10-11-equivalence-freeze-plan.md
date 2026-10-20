@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-11-equivalence-freeze-spec.md](../specs/2026-10-11-equivalence-freeze-spec.md)
-**Status:** 未开工 · 未提交（Task 0–7 均未开始）——2026-10-11 立账（冻结清单已整批拍板：D1乙/D2乙/D3丙/D4三级序/D5甲/D6进）；提交链执行期落定（各格实测后回填哈希，两仓各自成笔）。
+**Status:** ✅ 已交付（2026-10-11 立账；Task 0–7 全勾，31/31；2026-10-12 真栈收官）——冻结清单 D1乙/D2乙/D3丙/D4三级序/D5甲/D6进；提交链见文末（插件 `7c6ee3a`…`b8eb29a`／DeerFlow `8f118c64d`、`b650e2496`）。
 **来源**：侧聊产出；spec 冻结（2026-10-11）的执行账；全线索进度见 [2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)（步骤记录）——全勾后回写 T2 行。
 
 **Architecture:** 三处——**① DeerFlow 后端**（两笔「只加不改」跟进笔：recall-test 可选 `path` / chunks 可选 `chunk_id`＋窗口）**② 插件仓**（`src/tools.ts` 端点映射、output schema 半开收窄、kb_id 三级解析＋隔离两件）**③ 部署面**（README 最小服务形态）＋真栈验收。逐面清单见 spec **§3 落点**。
