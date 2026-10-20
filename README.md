@@ -37,7 +37,7 @@ dsh plugin --profile <name> add link:<本仓绝对路径>
 | 配置 | 说明 |
 |---|---|
 | `backendUrl` | knowledge 服务地址（默认 `http://127.0.0.1:8020`） |
-| `apiToken` | 可选 Bearer token；空=不带鉴权头 |
+| `apiToken` | Bearer token；引擎开启鉴权时必填（与服务端 `DEER_FLOW_API_TOKEN` 一致）；空=仅对 auth-off 引擎有效 |
 | `defaultKbId` | 默认知识库 id；空=每次调用必须传 `kb_id` |
 
 ## 后端最小形态（部署）
@@ -52,7 +52,7 @@ cd <harness-rag>/backend && make gateway
 ```
 
 - 服务启动前需就绪：Python 3.12 ＋ `uv sync --inexact`；外部 Qdrant（默认 `127.0.0.1:6333`）；`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`。数据在 `backend/.deer-flow/`。
-- 本机验收态用 `DEER_FLOW_AUTH_DISABLED=1`（只绑回环）；远程部署把 `backendUrl` 指过去即可（鉴权走 `apiToken`）。
+- 本机验收态可用 `DEER_FLOW_AUTH_DISABLED=1`（只绑回环）；引擎开启 token 鉴权时，插件 `apiToken` 填与服务端一致的 token；远程部署把 `backendUrl` 指过去即可。
 - 部署姿势不变：知识库数据在服务侧本地（Qdrant/存储）；插件只是它的一个客户端。
 
 ## 模型可见工具（`hrag_` 命名空间）
