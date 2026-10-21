@@ -1,10 +1,10 @@
 # 面板容器底色统一（全 tab） Plan
 
 **Spec:** [2026-10-21-panel-surface-spec.md](../specs/2026-10-21-panel-surface-spec.md)
-**Status:** 已实现·已手验（2026-10-21，D1–D4 按建议拍定；Task 0–4 全落，Task 5 文档已回写、提交候令；未提交）。
+**Status:** 主体已提交·已手验（2026-10-21，D1–D4 按建议拍定；`53697ba`／`6978d49`；10-21 追加三处已手验，随本笔提交）。
 **Architecture:** 纯 CSS。`.hrag-root` 落两个插件别名（`--hrag-surface` / `--hrag-surface-head`）；百科两容器、评测卡片、召回三通道、图谱/百科抽屉内卡与切片源统一体色/头色。浅色用提亮定值 `#FCFDFE` / `#F3F5F7`（B−R 与宿主同比例 2 / 4），深色经 `[data-ds-dark-theme]` 覆盖回宿主 token。零 JS、零几何、零 host 半。
 
-**硬约束**：只改插件仓 `E:\app\python\agent\dsh-harness-rag`；主树 `deer-flow` 只读；后端零改动；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。并行未提交件（`src/*.ts`、`tests/*`、`2026-10-21-dsh-model-proxy-*`、`2026-10-21-rag-leg-effort-*`）不触碰、不纳入。**10-21 新增并行面**：`client.js` 里也出现 rag-leg-effort 线的思考档位/i18n 改动，提交本对时必须按 hunk 分段，只取 surface 别名/各容器规则与评测「参考切片」卡补齐的 hunk。几何以真浏览器实测为准，不靠估算。
+**硬约束**：只改插件仓 `E:\app\python\agent\dsh-harness-rag`；主树 `deer-flow` 只读；后端零改动；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。并行未提交件（`src/*.ts`、`tests/*`、`2026-10-21-dsh-model-proxy-*`、`2026-10-21-rag-leg-effort-*`）不触碰、不纳入。**10-21 新增并行面**：`client.js` 里也出现 rag-leg-effort 线的思考档位/i18n 改动，提交本对时必须按 hunk 分段，只取 surface 别名/各容器规则、评测「参考切片」卡补齐与本轮追加三处的 hunk。几何以真浏览器实测为准，不靠估算。
 
 ---
 
@@ -107,12 +107,26 @@
 > 动到的文件：本对。
 
 - [x] 回写 spec Status 与各 Task 实测；plan 勾选与实测回填；equivalence 不登记（纯观感，无功能面变化），README/维护说明不改。
-- [ ] 逐文件核 hunk（含本轮评测「参考切片」卡补齐），排除并行工作区与仓外探针；提交链候令后执行。
+- [x] 逐文件核 hunk（含评测「参考切片」卡补齐与追加三处），排除并行工作区与仓外探针；追加批随本笔提交。
 
-**实测**：10-21 文档回写完成；提交未执行（候令）。
+**实测**：10-21 追加批文档回写完成；主体两笔已提交 `53697ba`／`6978d49`；追加批随本笔提交。
+
+## Task 6 — 追加（10-21 手验后）
+
+> 动到的文件：`client.js`（Styles()＋文档切片抽屉/模型设置渲染）。
+
+- [x] 文档切片抽屉：每片加 `.hrag-chunkcard` 卡壳（border-l3／radius-md／8×10／surface）＋列表 8px 间距；行分隔/内衬清零。照主树 `ChunkCard` 形态，保留面板密度、无阴影。
+- [x] 模型设置弹窗：`.hrag-set-group`／`.hrag-set-card` 体色 surface；`.hrag-set-grouptitle` 通栏头带（上圆角）／`.hrag-set-cardhead` 头带 surface-head；弹窗外壳、菜单、浮层不染。
+- [x] 两态钮收档：宿主 `SegmentedControl` 36→28px 高、段内距 16→6px、图标 14px；自绘回退维持 32×28。
+- [x] 门禁：`node --check client.js`；冒烟默认与 `SMOKE_HOSTLESS=1` 各 80 PASS。
+- [x] 真栈手验：10-21 他手验通过（文档切片卡／模型设置卡／两态钮）。
+
+**实测**：复刻页实测设置卡体 `#FCFDFE`／头 `#F3F5F7`、头带 28px；切片卡间 8px；两态钮 58×28（段 26×24）。
 
 ---
 
 ## 提交链（滚动记实）
 
-（待提交后回填）
+- `53697ba` feat(panel): unify container surfaces across tabs
+- `6978d49` fix(eval): align question-detail reference chunks with the workbench
+- 追加批（文档切片卡壳／模型设置卡／两态钮）：随本笔提交

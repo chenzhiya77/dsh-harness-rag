@@ -1861,6 +1861,7 @@ window.__ModuleLoader__.load({
           // 「就绪 N」汇总行撤除，改挂工作台同款底栏统计行（document-stats-row
           // 同构——左总量可缩省略号、右端仅可动作态彩点，永不换行）。
           '.hrag-docs { display: flex; flex-direction: column; }',
+          '.hrag-chunklist { gap: 8px; }',
           // 10-16 第五轮：统计行是文档面板的收尾行（工作台同姿），以 -12px 抵消
           // 壳层下衬，让统计行底缘贴到面板底缘，不再拖一条空带。
           '.hrag-docsbody { display: flex; flex-direction: column; min-width: 0; min-height: 0; flex: 1; margin-bottom: -12px; }',
@@ -2244,11 +2245,11 @@ window.__ModuleLoader__.load({
           '.hrag-set-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-set-migration { padding: 6px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
           '.hrag-set-migration-failed { color: var(--dsw-alias-state-error-primary); border-color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 40%, transparent); }',
-          '.hrag-set-card { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; }',
-          '.hrag-set-cardhead { padding: 8px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
+          '.hrag-set-card { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; background: var(--hrag-surface); }',
+          '.hrag-set-cardhead { padding: 8px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; background: var(--hrag-surface-head); }',
           '.hrag-set-cardbody { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 10px 12px; }',
-          '.hrag-set-group { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px 12px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); }',
-          '.hrag-set-grouptitle { margin-bottom: 0; padding-bottom: 6px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; }',
+          '.hrag-set-group { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px 12px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--hrag-surface); }',
+          '.hrag-set-grouptitle { margin: -10px -12px 0; padding: 6px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md) var(--dsw-radius-md) 0 0; background: var(--hrag-surface-head); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; }',
           '.hrag-set-row { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 32px; font-size: 12px; line-height: 20px; }',
           '.hrag-set-label { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-set-value { color: var(--dsw-alias-label-primary); word-break: break-word; }',
@@ -2328,6 +2329,8 @@ window.__ModuleLoader__.load({
           '.hrag-btn-danger:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover-danger); }',
           '.hrag-chunkrow { display: flex; flex-direction: column; gap: 4px; padding: 8px 2px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); min-width: 0; }',
           '.hrag-chunkrow:last-child { border-bottom: none; }',
+          '.hrag-chunkcard { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); padding: 8px 10px; background: var(--hrag-surface); min-width: 0; }',
+          '.hrag-chunkcard .hrag-chunkrow { border-bottom: none; padding: 0; }',
           '.hrag-chunkrow-top { display: flex; align-items: center; gap: 6px; min-width: 0; }',
           '.hrag-chunkrow-idx { font-family: ui-monospace, monospace; color: var(--dsw-alias-label-tertiary); font-size: 12px; flex-shrink: 0; }',
           '.hrag-chunkrow-path { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
@@ -2356,6 +2359,12 @@ window.__ModuleLoader__.load({
           // 渲染/原始两态钮（②档乙对 Task 2）：宿主 SegmentedControl 直用（居行尾）；
           // 缺件回退＝outline 边框双钮（工作台 h-7 形态），按下＝宿主 hover 底＋主色。
           '.hrag-chunkrow-view { display: inline-flex; align-items: center; margin-left: auto; flex-shrink: 0; }',
+          // 宿主两态钮收一档（照工作台 h-7）：36px 高→28px（2px 内衬＋24px 段高），
+          // 段内距 16→6px；指示块尺寸随内衬/间距重算。
+          '.hrag-chunkrow-view [role="tablist"] { padding: 2px; gap: 2px; border-radius: var(--dsw-radius-sm); }',
+          '.hrag-chunkrow-view [role="tablist"] > span[aria-hidden="true"] { top: 2px; left: 2px; height: calc(100% - 4px); width: calc((100% - 4px - 2px * (var(--dsh-segment-count) - 1)) / var(--dsh-segment-count)); }',
+          '.hrag-chunkrow-view [role="tab"] { display: inline-flex; align-items: center; justify-content: center; height: 24px; padding: 0 6px; font-size: 12px; line-height: 18px; }',
+          '.hrag-chunkrow-view svg { width: 14px; height: 14px; }',
           '.hrag-viewseg { display: inline-flex; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; flex-shrink: 0; }',
           '.hrag-viewseg-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 28px; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); font-family: inherit; cursor: pointer; }',
           ".hrag-viewseg-btn[aria-pressed='true'] { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }",
@@ -4750,35 +4759,38 @@ window.__ModuleLoader__.load({
           null,
           h(
             'div',
-            { className: 'hrag-docs' },
+            { className: 'hrag-docs hrag-chunklist' },
             items.map((chunk) =>
-              h(ChunkRow, {
-                key: chunk.chunk_id,
-                t,
-                kbId,
-                docId,
-                chunk,
-                flash: flashId === chunk.chunk_id,
-                shotActive:
-                  activeShotIndex != null && chunk.media === 'video' && chunk.shot_index === activeShotIndex,
-                busy,
-                expanded: expandedEntities.has(chunk.chunk_id),
-                reExtracting: reExtractingChunkId === chunk.chunk_id,
-                reExtractDisabled: reExtractingChunkId !== null && reExtractingChunkId !== chunk.chunk_id,
-                onExpand: (chunkId) =>
-                  setExpandedEntities((prev) => {
-                    const next = new Set(prev)
-                    next.add(chunkId)
-                    return next
-                  }),
-                onDelete: startDelete,
-                onEdit: handleEditChunk,
-                onReExtract: handleReExtractChunk,
-                onSeekShot: seekShot,
-                rowRef: (node) => {
-                  rowRefs.current[chunk.chunk_id] = node
-                },
-              }),
+              h(
+                'div',
+                { key: chunk.chunk_id, className: 'hrag-chunkcard' },
+                h(ChunkRow, {
+                  t,
+                  kbId,
+                  docId,
+                  chunk,
+                  flash: flashId === chunk.chunk_id,
+                  shotActive:
+                    activeShotIndex != null && chunk.media === 'video' && chunk.shot_index === activeShotIndex,
+                  busy,
+                  expanded: expandedEntities.has(chunk.chunk_id),
+                  reExtracting: reExtractingChunkId === chunk.chunk_id,
+                  reExtractDisabled: reExtractingChunkId !== null && reExtractingChunkId !== chunk.chunk_id,
+                  onExpand: (chunkId) =>
+                    setExpandedEntities((prev) => {
+                      const next = new Set(prev)
+                      next.add(chunkId)
+                      return next
+                    }),
+                  onDelete: startDelete,
+                  onEdit: handleEditChunk,
+                  onReExtract: handleReExtractChunk,
+                  onSeekShot: seekShot,
+                  rowRef: (node) => {
+                    rowRefs.current[chunk.chunk_id] = node
+                  },
+                }),
+              ),
             ),
           ),
           items.length < total

@@ -1,6 +1,6 @@
 # 面板容器底色统一（全 tab） —— spec
 
-**Status:** 已实现·已手验（2026-10-21，D1–D4 按建议拍定；Task 1–3＋2b 已落 `client.js` 工作区、未提交；召回／图谱／抽屉内卡已并入本对）。
+**Status:** 已实现·已手验（2026-10-21，D1–D4 按建议拍定；主体两笔已提交 `53697ba`/`6978d49`；10-21 追加三处已手验，随本笔提交）。
 **Date:** 2026-10-21
 **来源:** 他提出「容器底层用 DSH 左侧边栏底色、标题行用会话选中色」，随后令「立 spec/plan，先改 wiki＋评测两块」。
 **承接:** 纯视觉口径（不改功能面与几何）；与 [2026-10-16-doc-columns-spec.md](2026-10-16-doc-columns-spec.md) 的列宽体系无关。
@@ -73,12 +73,19 @@
 
 ## 6. 影响面
 
-**改的（插件仓）**：`client.js` Styles() 的 token 别名与 `.hrag-wk-sect`／`.hrag-wk-secthead`／`.hrag-ev-card`／`.hrag-ev-cardhead`、`.hrag-recall-section`／`.hrag-recall-head`、`.hrag-gcard`／`.hrag-gcard-head`、`.hrag-wk-linitem`／`.hrag-wk-linhead` 规则；本对 spec/plan。
+**改的（插件仓）**：`client.js` Styles() 的 token 别名与 `.hrag-wk-sect`／`.hrag-wk-secthead`／`.hrag-ev-card`／`.hrag-ev-cardhead`、`.hrag-recall-section`／`.hrag-recall-head`、`.hrag-gcard`／`.hrag-gcard-head`、`.hrag-wk-linitem`／`.hrag-wk-linhead`、`.hrag-chunkcard`／`.hrag-chunklist`、`.hrag-set-group`／`.hrag-set-grouptitle`／`.hrag-set-card`／`.hrag-set-cardhead`、`.hrag-chunkrow-view` 收档规则；本对 spec/plan。
 
 **不改的**：几何、交互、数据面、host 半、后端、工作台。
 
 ## 7. 后置与不做
 
 - 阶段二已并入本对：召回三通道、图谱实体详情卡、百科条目抽屉内卡（10-21 他点名核过，同一套别名）。
-- 不做：抽屉外壳/菜单/弹窗染色；给内层 tile 再加一层 tint；把选中色用在真正的选中行之外的其他语义面。
+- 不做：抽屉外壳/菜单/浮层染色；模型设置弹窗只染卡体与卡头，弹窗外壳不染；给内层 tile 再加一层 tint；把选中色用在真正的选中行之外的其他语义面。
 - **不做标题行的内缩胶囊化**（10-21 他明令回退）：标题行保持容器原形态，只换色；「像会话行」仅指取色，不是改形。
+
+## 8. 追加（10-21 手验后）
+
+- **文档切片抽屉**：每个切片加卡壳（`.hrag-chunkcard`：`0.5px border-l3`＋`radius-md`＋`8px 10px` 内衬＋体色 surface），列表间距 8px；行分隔线与行内衬在卡内清零。照主树 `ChunkCard` 的卡片形态，保留面板密度、无阴影。
+- **模型设置弹窗**：`.hrag-set-group` / `.hrag-set-card` 体色改 surface；`.hrag-set-grouptitle` 改通栏头带（上圆角）／`.hrag-set-cardhead` 改 surface-head。弹窗外壳、菜单、浮层仍不染。
+- **两态钮收档**：宿主 `SegmentedControl` 由 36px 高收到 28px（2px 内衬＋24px 段高）、段内距 16→6px、图标 14px；自绘回退维持原 32×28。
+- 验收：10-21 他手验通过（文档切片卡、模型设置卡、两态钮）。
