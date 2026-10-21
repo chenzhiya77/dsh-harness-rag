@@ -25,7 +25,6 @@ function model(overrides: Partial<ProxyModel> = {}): ProxyModel {
     contextWindow: 128000,
     maxTokens: 8192,
     efforts: ['low', 'medium', 'high', 'xhigh'],
-    defaultEffort: 'medium',
     ...overrides,
   }
 }
@@ -61,16 +60,19 @@ function viewAfter(payload: EngineModelsPayload, extra: EngineModelsView['models
   }
 }
 
-test('publishEfforts maps DSH efforts into the engine subset', () => {
+test('publishEfforts maps six DSH levels into the engine subset', () => {
   assert.deepEqual(publishEfforts(['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']), [
     'minimal',
     'low',
     'medium',
     'high',
+    'xhigh',
+    'max',
   ])
-  assert.deepEqual(publishEfforts(['xhigh', 'max']), ['high'])
+  assert.deepEqual(publishEfforts(['max', 'xhigh']), ['xhigh', 'max'])
   assert.deepEqual(publishEfforts(['high', 'low']), ['low', 'high'])
   assert.deepEqual(publishEfforts(['off']), [])
+  assert.deepEqual(publishEfforts(['turbo', 'high']), ['high'])
 })
 
 test('toEngineEntry writes one thin alias and no provider material', () => {
@@ -85,19 +87,19 @@ test('toEngineEntry writes one thin alias and no provider material', () => {
     supports_vision: true,
     supports_thinking: true,
     supports_reasoning_effort: true,
-    supported_reasoning_efforts: ['low', 'medium', 'high'],
-    reasoning_effort: 'medium',
+    supported_reasoning_efforts: ['low', 'medium', 'high', 'xhigh'],
     context_window: 128000,
     max_tokens: 8192,
     use_responses_api: false,
-    when_thinking_enabled: { reasoning_effort: 'high' },
     when_thinking_disabled: { reasoning_effort: 'low' },
   })
+  assert.equal('reasoning_effort' in entry, false, 'follow means send no value; DSH applies its default at call time')
+  assert.equal('when_thinking_enabled' in entry, false, 'thinking on follows the host default, not a forced level')
 })
 
 test('toEngineEntry omits reasoning shapes for a model without efforts', () => {
   const entry = toEngineEntry(
-    model({ efforts: [], defaultEffort: undefined, inputModalities: ['text'], contextWindow: undefined, maxTokens: undefined }),
+    model({ efforts: [], inputModalities: ['text'], contextWindow: undefined, maxTokens: undefined }),
     { ...RUNTIME, token: '' },
   )
   assert.equal(entry.api_key, 'local-proxy')
@@ -112,11 +114,17 @@ test('toEngineEntry omits reasoning shapes for a model without efforts', () => {
   assert.equal('max_tokens' in entry, false)
 })
 
-test('toEngineEntry keeps the default effort only when it is published', () => {
-  const entry = toEngineEntry(model({ efforts: ['low', 'high'], defaultEffort: 'medium' }), RUNTIME)
+test('toEngineEntry never writes a default effort so thinking-on follows DSH at call time', () => {
+  const entry = toEngineEntry(model({ efforts: ['low', 'medium', 'high', 'max'] }), RUNTIME)
   assert.equal('reasoning_effort' in entry, false)
-  assert.deepEqual(entry.when_thinking_enabled, { reasoning_effort: 'high' })
-  assert.deepEqual(entry.when_thinking_disabled, { reasoning_effort: 'low' })
+  assert.equal('when_thinking_enabled' in entry, false)
+  assert.deepEqual(entry.supported_reasoning_efforts, ['low', 'medium', 'high', 'max'])
+})
+
+test('toEngineEntry disables thinking with the host off effort when declared', () => {
+  const entry = toEngineEntry(model({ efforts: ['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'] }), RUNTIME)
+  assert.deepEqual(entry.supported_reasoning_efforts, ['minimal', 'low', 'medium', 'high', 'xhigh', 'max'])
+  assert.deepEqual(entry.when_thinking_disabled, { reasoning_effort: 'off' })
 })
 
 test('collectPublishedModels maps the catalog in order', () => {
@@ -199,6 +207,16 @@ test('mergeModels refuses to silently drop an unrepresentable manual entry', () 
     () => mergeModels(view, []),
     (error: unknown) => error instanceof ModelSyncError && error.code === 'manual_entry_unrepresentable',
   )
+})
+
+test('syncModels never wipes aliases when the host catalog is empty', async () => {
+  const { api, puts } = apiWith({
+    models: [{ name: 'dsh:old/x', model: 'dsh:old/x', provider: 'openai-compatible', source: 'ui', hidden_in_chat: true }],
+  })
+  const result = await syncModels(api, [])
+  assert.equal(result.error, 'catalog_unavailable')
+  assert.equal(result.changed, false)
+  assert.equal(puts.length, 0)
 })
 
 test('syncModels skips an unchanged PUT, forces on request and returns readable errors', async () => {

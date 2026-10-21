@@ -66,17 +66,19 @@ test('authorizeProxy falls back to loopback when the token is empty', () => {
   expectSyncError(() => authorizeProxy({}, '10.0.0.5', ''), 403, 'loopback_only')
 })
 
-test('selectEffort maps and clamps against the model effort list', () => {
-  const full = ['off', 'minimal', 'low', 'medium', 'high']
+test('selectEffort maps six levels and clamps against the model effort list', () => {
+  const full = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']
   assert.equal(selectEffort('none', full), 'off')
   assert.equal(selectEffort('off', full), 'off')
   assert.equal(selectEffort('minimal', full), 'minimal')
-  assert.equal(selectEffort('max', full), 'high')
-  assert.equal(selectEffort('xhigh', full), 'high')
+  assert.equal(selectEffort('xhigh', full), 'xhigh')
+  assert.equal(selectEffort('max', full), 'max')
 
   const noMinimal = ['low', 'medium', 'high']
   assert.equal(selectEffort('minimal', noMinimal), 'low')
   assert.equal(selectEffort('none', noMinimal), 'low')
+  assert.equal(selectEffort('xhigh', noMinimal), 'high')
+  assert.equal(selectEffort('max', noMinimal), 'high')
 
   const sparse = ['low', 'high']
   assert.equal(selectEffort('medium', sparse), 'low')
@@ -109,7 +111,12 @@ test('buildCatalog maps providers, filters failed ones and sorts by alias', asyn
         context: { contextWindow: 128000 },
         defaultMaxTokens: 8192,
         ...(provider === 'xiaomi'
-          ? { reasoning: { efforts: [{ id: 'low' }, { id: 'medium' }, { id: 'high' }], defaultEffort: 'medium' } }
+          ? {
+              reasoning: {
+                efforts: [{ id: 'low' }, { id: 'medium' }, { id: 'high' }, { id: 'xhigh' }, { id: 'max' }],
+                defaultEffort: 'medium',
+              },
+            }
           : {}),
       }
     },
@@ -124,7 +131,8 @@ test('buildCatalog maps providers, filters failed ones and sorts by alias', asyn
   const xiaomi = catalog.byAlias.get('dsh:xiaomi/mimo-v2.6-flash')
   assert.equal(xiaomi?.contextWindow, 128000)
   assert.equal(xiaomi?.maxTokens, 8192)
-  assert.deepEqual(xiaomi?.efforts, ['low', 'medium', 'high'])
+  assert.deepEqual(xiaomi?.efforts, ['low', 'medium', 'high', 'xhigh', 'max'])
+  assert.equal('defaultEffort' in (xiaomi ?? {}), false, 'the catalog carries no default-effort field')
   assert.deepEqual(catalog.unavailable, [{ provider: 'broken', code: 'catalog_failed' }])
 })
 
@@ -150,7 +158,7 @@ test('buildGenerateOptions lifts system, maps text and keeps images admitted', a
       stop: ['END'],
     },
     target,
-    { efforts: ['low', 'medium', 'high'], defaultEffort: 'medium' },
+    { efforts: ['low', 'medium', 'high'] },
     async (parts) => {
       admitted.push([...parts])
       return admitEcho(parts)
@@ -182,7 +190,7 @@ test('buildGenerateOptions lifts system, maps text and keeps images admitted', a
   assert.deepEqual(options.messages[2], { role: 'user', content: [{ type: 'text', text: 'next' }] })
 })
 
-test('buildGenerateOptions clamps a requested effort', async () => {
+test('buildGenerateOptions clamps a requested effort to the model subset', async () => {
   const options = await buildGenerateOptions(
     { messages: [{ role: 'user', content: 'hi' }], reasoning_effort: 'max' },
     target,
@@ -190,6 +198,18 @@ test('buildGenerateOptions clamps a requested effort', async () => {
     admitEcho,
   )
   assert.equal(options.reasoningEffort, 'high')
+})
+
+test('buildGenerateOptions passes xhigh and max through when the model declares them', async () => {
+  for (const level of ['xhigh', 'max'] as const) {
+    const options = await buildGenerateOptions(
+      { messages: [{ role: 'user', content: 'hi' }], reasoning_effort: level },
+      target,
+      { efforts: ['low', 'medium', 'high', 'xhigh', 'max'] },
+      admitEcho,
+    )
+    assert.equal(options.reasoningEffort, level)
+  }
 })
 
 test('buildGenerateOptions rejects unsupported request shapes', async () => {

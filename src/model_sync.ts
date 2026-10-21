@@ -95,12 +95,11 @@ export interface MergeResult {
   changed: boolean
 }
 
-const EFFORT_ORDER = ['minimal', 'low', 'medium', 'high'] as const
+const EFFORT_ORDER = ['minimal', 'low', 'medium', 'high', 'xhigh', 'max'] as const
 const MANAGED_PREFIX = 'dsh:'
 
 function mappedEffort(value: string | undefined): string | undefined {
   if (value === undefined) return undefined
-  if (value === 'xhigh' || value === 'max') return 'high'
   return EFFORT_ORDER.includes(value as (typeof EFFORT_ORDER)[number]) ? value : undefined
 }
 
@@ -115,7 +114,11 @@ export function publishEfforts(efforts: readonly string[]): string[] {
 
 export function toEngineEntry(model: ProxyModel, runtime: SyncRuntime): EngineModelInput {
   const efforts = publishEfforts(model.efforts)
-  const defaultEffort = mappedEffort(model.defaultEffort)
+  // "Thinking off" is not the lowest thinking level: some providers reject
+  // `minimal` outright (measured on xiaomi), while the host's own `off` works.
+  // The engine sends this declared shape verbatim, so `off` may leave the
+  // published subset.
+  const disableEffort = model.efforts.includes('off') ? 'off' : efforts[0]
   return {
     provider: 'openai-compatible',
     name: model.alias,
@@ -131,11 +134,11 @@ export function toEngineEntry(model: ProxyModel, runtime: SyncRuntime): EngineMo
     ...(efforts.length > 0
       ? {
           supported_reasoning_efforts: efforts,
-          when_thinking_enabled: { reasoning_effort: efforts[efforts.length - 1] },
-          when_thinking_disabled: { reasoning_effort: efforts[0] },
+          when_thinking_disabled: { reasoning_effort: disableEffort },
         }
       : {}),
-    ...(defaultEffort && efforts.includes(defaultEffort) ? { reasoning_effort: defaultEffort } : {}),
+    // Thinking on sends no level: "follow" means DSH applies its own default at
+    // call time, so this entry carries no reasoning_effort.
     ...(model.contextWindow ? { context_window: model.contextWindow } : {}),
     ...(model.maxTokens ? { max_tokens: model.maxTokens } : {}),
   }
@@ -233,6 +236,18 @@ export async function syncModels(
   options?: { force?: boolean },
 ): Promise<SyncResult> {
   const syncedAt = new Date().toISOString()
+  // An empty catalog is indistinguishable from "the host is still loading its
+  // providers" and must never be read as "every model was removed": that would
+  // wipe the aliases minutes before the host becomes ready.
+  if (published.length === 0) {
+    return {
+      synced_at: syncedAt,
+      published: 0,
+      removed: 0,
+      changed: false,
+      error: 'catalog_unavailable',
+    }
+  }
   try {
     const view = await api.get()
     const merged = mergeModels(view, published)
@@ -336,6 +351,8 @@ export function registerModelSync(
   let readyError: string | undefined
   let syncing: Promise<DshModelStatus> | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
+  let emptyRetryTimer: ReturnType<typeof setTimeout> | undefined
+  let emptyRetries = 0
 
   const status = (): DshModelStatus => {
     const mainModel = readMainModel(ctx)
@@ -395,6 +412,19 @@ export function registerModelSync(
         collectPublishedModels(catalog, { baseUrl, token: proxy.token }),
         { force: options?.force === true },
       )
+      // Providers register a moment after activation; an empty first catalog is
+      // the normal startup race, not a decision to remove every alias.
+      if (last.error === 'catalog_unavailable' && config.autoSyncModels && emptyRetries < 10) {
+        emptyRetries += 1
+        if (emptyRetryTimer !== undefined) clearTimeout(emptyRetryTimer)
+        emptyRetryTimer = setTimeout(() => {
+          emptyRetryTimer = undefined
+          void syncNow()
+        }, 3000)
+        ;(emptyRetryTimer as { unref?: () => void }).unref?.()
+      } else if (last.error !== 'catalog_unavailable') {
+        emptyRetries = 0
+      }
       return status()
     })().finally(() => {
       syncing = undefined
@@ -420,6 +450,7 @@ export function registerModelSync(
         offAdapters()
         offVolatile()
         if (timer !== undefined) clearTimeout(timer)
+        if (emptyRetryTimer !== undefined) clearTimeout(emptyRetryTimer)
       }
     },
     'harness-rag: model sync listeners',

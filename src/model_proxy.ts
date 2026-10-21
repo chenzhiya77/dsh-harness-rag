@@ -13,14 +13,14 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 
 export const LLM_PROXY_ROUTE = '/dsh-harness-rag/llm/v1'
 
-const EFFORT_ORDER = ['minimal', 'low', 'medium', 'high'] as const
+const EFFORT_ORDER = ['minimal', 'low', 'medium', 'high', 'xhigh', 'max'] as const
 const CANONICAL_EFFORT = new Map<string, string>([
   ['minimal', 'minimal'],
   ['low', 'low'],
   ['medium', 'medium'],
   ['high', 'high'],
-  ['xhigh', 'high'],
-  ['max', 'high'],
+  ['xhigh', 'xhigh'],
+  ['max', 'max'],
 ])
 
 function digest(value: string): Buffer {
@@ -78,7 +78,6 @@ export interface ProxyModel {
   contextWindow?: number
   maxTokens?: number
   efforts: string[]
-  defaultEffort?: string
 }
 
 export interface ProxyCatalog {
@@ -122,7 +121,6 @@ export interface RequestTarget {
 
 export interface CatalogModelLike {
   efforts: string[]
-  defaultEffort?: string
 }
 
 export interface GenerateOptionsLike {
@@ -279,7 +277,6 @@ export async function buildCatalog(llm: LlmHostLike, origin: string): Promise<Pr
           ...(info.context?.contextWindow ? { contextWindow: info.context.contextWindow } : {}),
           ...(info.defaultMaxTokens ? { maxTokens: info.defaultMaxTokens } : {}),
           efforts,
-          ...(info.reasoning?.defaultEffort ? { defaultEffort: info.reasoning.defaultEffort } : {}),
         })
       } catch {
         noteUnavailable(provider.id, 'model_failed')
@@ -806,7 +803,7 @@ export function registerModelProxy(
             const options = await buildGenerateOptions(
               body,
               { provider: model.provider, model: model.model },
-              { efforts: model.efforts, defaultEffort: model.defaultEffort },
+              { efforts: model.efforts },
               admit,
             )
             let result: CompletionResult
