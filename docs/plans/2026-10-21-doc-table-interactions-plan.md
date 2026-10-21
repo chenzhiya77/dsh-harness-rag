@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
 **Spec:** [2026-10-21-doc-table-interactions-spec.md](../specs/2026-10-21-doc-table-interactions-spec.md)
-**Status:** 实施中（2026-10-21，**D1–D4 已拍：全甲**；Task 0–3 已实现并提交（`0fc9a32`，未推）、Task 4 门禁半绿；真栈手验候整重启）。
+**Status:** ✅ 收官（2026-10-21，**D1–D4 已拍：全甲**；Task 0–5 全毕；他手验真栈全过；实现／文档两笔已提交 `0fc9a32`／`3f85613`，收口回写为本笔；仓无 remote，未推）。
 **Architecture:** 纯前端。列头修＝定宽与 chevron 几何；行拖拽＝排序状态增加「手动」模式＋per-kb localStorage＋HTML5 DnD（照库下拉拖拽先例）；零后端、零 API、零 host 半改动。
 
 **硬约束**：只改插件仓 `E:\app\python\agent\dsh-harness-rag`；主树 `deer-flow` 只读零改动；后端零改动；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。工作区并行未提交件（`src/model_sync.ts`、`tests/model_sync.test.ts`、`2026-10-21-dsh-model-proxy-*`）不触碰、不纳入。几何以真浏览器实测为准，不靠估算。
@@ -93,17 +93,18 @@
 > 动到的文件：无（探针与截图仓外）。
 
 - [x] `node --check client.js`；全部 `src/*.ts` 跑 `--experimental-strip-types --check`；冒烟默认与 `SMOKE_HOSTLESS=1` 全绿。
-- [ ] DSH 整重启（候令）后真跑：570／740／满宽逐个开列菜单；拖动一行→重开面板／切 tab／切库；字段排序→手动恢复；手动模式上传新文档；删除后顺序；搜索／多选禁用；轮询期间拖动。
-- [ ] 回归：列偏好持久、表头右键、「列」总控、行 ⋯／右键、批量选择／删除、抽屉点击、上传链。
+- [x] DSH 整重启（候令）后真跑：570／740／满宽逐个开列菜单；拖动一行→重开面板／切 tab／切库；字段排序→手动恢复；手动模式上传新文档；删除后顺序；搜索／多选禁用；轮询期间拖动。
+- [x] 回归：列偏好持久、表头右键、「列」总控、行 ⋯／右键、批量选择／删除、抽屉点击、上传链。
 - [x] 确认 `git status` 仅含本对文件；deer-flow 主树与后端零 diff。
 
-**实测**（Task 4 门禁半，2026-10-21；未提交）：
+**实测**（Task 4 门禁＋真跑，2026-10-21；未提交）：
 - **语法**：`node --check client.js` 过；`src/*.ts` 六件 strip-types 全过。
 - **冒烟**：默认与 `SMOKE_HOSTLESS=1` 各 **79 PASS／0 FAIL**；`probe-doc-order.mjs` **14/14 PASS**。
 - **工作区**：插件仓本对只动 `client.js`＋本对 spec/plan；`src/*.ts`、`package.json`、`tests/*`、模型代理/rag-leg-effort 未跟踪文档均为他线未提交件，未触碰（`git diff --stat` 与常量清单逐一核对）。
 - **主树**：`deer-flow` 代码零 diff——唯一 `M README.md` 的 mtime＝**2026-10-10 21:20**（早于本对，为他线存货）；其余为未跟踪研究/计划稿，均未动。
-- **模块代**：DSH 进程启动 06:51／09:37，`client.js` mtime 10:31 ⇒ 运行中实例早于本对改动，真跑前须整重启。
-- **待办**：真栈手验（整重启后按下方清单）＋回归项。
+- **模块代**：真跑时进程启动 10:47、最终码 mtime 11:04（client 半随窗口重载，非整启换代）；若拖宽观感与清单不符，整重启后复核。
+
+**真跑（他手验，2026-10-21）**：他复「都过了」——按下方清单 1–6 全过（三档列头、拖拽即时生效＋菜单同步、重开／切 tab／切库持久、字段↔手动往返、新旧文档增删、搜索／选择集禁拖、行点击与 ⋯／右键不串、轮询不跳序、拖宽无台阶、回归项）。本环境无截图/CDP，证据为他复述。
 
 **真跑清单（他手验）**：
 1. 文档 tab 三档（570／740／满宽）逐个悬停可隐藏列表头：chevron 完整可见、可点开菜单；悬停/展开无列宽跳动；名称列省略正常。
@@ -117,15 +118,20 @@
 
 > 动到的文件：本对＋`docs/equivalence.md`。
 
-- [ ] 回写 spec Status 与各 Task 实测；plan 勾选与实测回填。
-- [ ] `docs/equivalence.md` 增行：文档行拖拽＝插件自有能力，工作台无对应功能（有意偏离）。
+- [x] 回写 spec Status 与各 Task 实测；plan 勾选与实测回填。
+- [x] `docs/equivalence.md` 增行：文档行拖拽＝插件自有能力，工作台无对应功能（有意偏离）。
 - [ ] 逐文件核 hunk，排除并行工作区与仓外探针；提交链候令后执行（拟两笔：实现＋收口，或按实测合并）。
 
-**实测**：
+**实测**（Task 5，2026-10-21；收口回写＝本笔）：
+- **回写**：spec Status→✅ 收官；plan Task 0–5 勾选与各 Task 实测、真跑清单与代际备注齐。
+- **等价表**：`docs/equivalence.md` §2 增两行——「排序」插件面补手动排序；新增「行拖拽／手动排序＝插件增加（有意偏离，工作台无此能力）」。
+- **收口 diff**：仅 `docs/specs/2026-10-21-doc-table-interactions-spec.md`、`docs/plans/2026-10-21-doc-table-interactions-plan.md`、`docs/equivalence.md` 三件；并行工作区（`src/*`、`package.json`、`tests/*`、model-proxy/rag-leg-effort 文档）与仓外探针均未入。
+- **提交**：实现/文档两笔已落（`0fc9a32`／`3f85613`）；本笔为收官回写。
 
 ---
 
 ## 提交链（滚动记实）
 
 - `0fc9a32` feat(panel): reorder document rows and rebalance table columns（实现：列头修＋手动排序＋行拖拽＋连续列宽；未推）
-- 本笔 docs(panel): add the document table interaction plan（spec/plan 与实测；未推）
+- `3f85613` docs(panel): add the document table interaction plan（spec/plan 与实测；未推）
+- 本笔 docs(panel): close out the document table interaction pair（收官回写：spec Status＋plan 勾选/实测＋equivalence 行）

@@ -33,7 +33,8 @@
 | 下载原文 | 行 ⋯ → 下载原文（源文件路由） | 同（raw 中继下载，`downloadDocument` op） | 等价 |
 | 列显示与持久化 | `use-doc-table-prefs` | 列菜单＋`hrag-doc-table-prefs.<kb>` | 等价 |
 | 搜索（名称过滤） | 有 | 有（工具栏搜索框） | 等价 |
-| 排序 | 有 | 有（排序列菜单） | 等价 |
+| 排序 | 有 | 有（排序列菜单＋手动排序） | 等价 |
+| 行拖拽／手动排序 | 无（仅字段排序） | 行拖拽定序，落点即切「手动排序」；per-kb `hrag-doc-order.<kb>` | 插件增加（有意偏离；工作台无此能力） |
 | 上传（多文件） | 有 | 有（⋯ 菜单上传文档；多选） | 等价 |
 | 上传格式白名单 | `supported-formats` | 同（`supportedFormats` op＋前端拦截） | 等价 |
 | 重复上传检测 | 同名/同哈希判定＋拷贝命名 | 同（`dupVerdict`/`dupNextCopyName`，先算哈希） | 等价 |
