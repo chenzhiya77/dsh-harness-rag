@@ -2712,12 +2712,15 @@ window.__ModuleLoader__.load({
           '.hrag-ev-anchor-title { font-weight: 600; }',
           '.hrag-ev-anchor-btn { align-self: flex-start; border: 0.5px solid color-mix(in srgb, #f59e0b 45%, transparent); background: color-mix(in srgb, #f59e0b 15%, transparent); color: #b45309; border-radius: var(--dsw-radius-sm); padding: 3px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }',
           '.hrag-ev-anchor-btn:disabled { opacity: 0.5; cursor: not-allowed; }',
-          '.hrag-ev-anchorgroup { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }',
+          '.hrag-ev-anchorgroup { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }',
+          '.hrag-ev-anchorgroup:last-child { margin-bottom: 0; }',
           '.hrag-ev-anchordoc { font-size: 11px; font-weight: 500; color: var(--dsw-alias-label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
           '.hrag-ev-anchorchunk { display: flex; flex-direction: column; gap: 4px; }',
           '.hrag-ev-anchorchunk-trigger { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; border: none; background: transparent; color: var(--dsw-alias-label-primary); cursor: pointer; padding: 2px 0; text-align: left; width: 100%; font-family: inherit; }',
-          '.hrag-ev-anchorchunk-preview { font-size: 11px; color: var(--dsw-alias-label-tertiary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-left: 16px; }',
-          '.hrag-ev-anchorchunk-body { font-size: 11px; color: var(--dsw-alias-label-secondary); white-space: pre-wrap; word-break: break-word; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: 6px; padding: 6px 8px; max-height: 180px; overflow-y: auto; margin-left: 16px; }',
+          '.hrag-ev-anchorchunk-row { display: flex; align-items: center; gap: 6px; min-width: 0; }',
+          '.hrag-ev-anchorchunk-preview { font-size: 11px; color: var(--dsw-alias-label-tertiary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-left: 18px; }',
+          '.hrag-ev-anchorchunk-body { border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); padding: 8px 10px; min-width: 0; }',
+          '.hrag-ev-anchorchunk-body .hrag-chunkrow { border-bottom: none; padding: 0; }',
           '.hrag-ev-danglingrow { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-caret { display: inline-block; font-size: 10px; color: var(--dsw-alias-label-tertiary); transition: transform 120ms ease; flex-shrink: 0; }',
           '.hrag-ev-caret-open { transform: rotate(180deg); }',
@@ -4181,6 +4184,8 @@ window.__ModuleLoader__.load({
       onReExtract,
       onSeekShot,
       rowRef,
+      showIndex = true,
+      showVideoBar = true,
     }) {
       const [viewMode, setViewMode] = React.useState('rendered')
       const [imageTick, setImageTick] = React.useState(0)
@@ -4270,11 +4275,11 @@ window.__ModuleLoader__.load({
         },
         // 镜头条（Task 3）：视频行顶置（照工作台镜头条在卡上方）；播放头命中行由抽屉
         // 经 shotActive 传回（琥珀环，只改边框不抢滚动）。
-        isVideo ? h(VideoShotBar, { t, kbId, docId, chunk, onSeek: onSeekShot }) : null,
+        showVideoBar && isVideo ? h(VideoShotBar, { t, kbId, docId, chunk, onSeek: onSeekShot }) : null,
         h(
           'div',
           { className: 'hrag-chunkrow-top' },
-          h('span', { className: 'hrag-chunkrow-idx' }, '#' + String(Number(chunk.chunk_index) + 1)),
+          showIndex ? h('span', { className: 'hrag-chunkrow-idx' }, '#' + String(Number(chunk.chunk_index) + 1)) : null,
           h(
             'span',
             { className: 'hrag-chunkrow-path' },
@@ -12440,6 +12445,7 @@ window.__ModuleLoader__.load({
       const questionId = question ? question.id : null
       const [chunks, setChunks] = React.useState(null)
       const [openChunks, setOpenChunks] = React.useState(() => new Set())
+      const [expandedEntityChunks, setExpandedEntityChunks] = React.useState(() => new Set())
       const [editing, setEditing] = React.useState(false)
       const [draft, setDraft] = React.useState([])
       const [docs, setDocs] = React.useState(null)
@@ -12452,6 +12458,7 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         setChunks(null)
         setOpenChunks(new Set())
+        setExpandedEntityChunks(new Set())
         setEditing(false)
         setDraft([])
         setExpandedDocs(new Set())
@@ -12567,6 +12574,14 @@ window.__ModuleLoader__.load({
           return next
         })
       }
+      const toggleEntityExpand = (chunkId) => {
+        setExpandedEntityChunks((current) => {
+          const next = new Set(current)
+          if (next.has(chunkId)) next.delete(chunkId)
+          else next.add(chunkId)
+          return next
+        })
+      }
       const submitAnchors = (ack) =>
         callOp('updateEvalQuestion', {
           kb_id: kbId,
@@ -12623,17 +12638,34 @@ window.__ModuleLoader__.load({
                         title: suspect && concern ? concern.miss_terms.join(' ') : null,
                         onClick: () => toggleChunk(chunkId),
                       },
-                      h('span', { className: 'hrag-ev-caret' + (open ? ' hrag-ev-caret-open' : '') }, '▾'),
-                      h('span', { className: 'hrag-ev-badge hrag-ev-tabnums' }, '#' + sequence),
-                      suspect
-                        ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-amber' }, tk('ev.questions.mismatchBadge'))
-                        : null,
+                      h(
+                        'span',
+                        { className: 'hrag-ev-anchorchunk-row' },
+                        h('span', { className: 'hrag-ev-caret' + (open ? ' hrag-ev-caret-open' : '') }, '▾'),
+                        h('span', { className: 'hrag-ev-badge hrag-ev-tabnums' }, '#' + sequence),
+                        suspect
+                          ? h('span', { className: 'hrag-ev-badge hrag-ev-badge-amber' }, tk('ev.questions.mismatchBadge'))
+                          : null,
+                      ),
                       !open && chunk !== undefined
                         ? h('span', { className: 'hrag-ev-anchorchunk-preview' }, preview(chunk.text))
                         : null,
                     ),
                     open && chunk !== undefined
-                      ? h('div', { className: 'hrag-ev-anchorchunk-body' }, String(chunk.text))
+                      ? h(
+                          'div',
+                          { className: 'hrag-ev-anchorchunk-body' },
+                          h(ChunkRow, {
+                            t,
+                            kbId,
+                            docId: chunk.doc_id,
+                            chunk,
+                            expanded: expandedEntityChunks.has(chunkId),
+                            showIndex: false,
+                            showVideoBar: false,
+                            onExpand: toggleEntityExpand,
+                          }),
+                        )
                       : null,
                   )
                 }),
