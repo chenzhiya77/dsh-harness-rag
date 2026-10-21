@@ -100,6 +100,7 @@ window.__ModuleLoader__.load({
       'doc.sortChunks': '切片数',
       'doc.sortAsc': '升序',
       'doc.sortDesc': '降序',
+      'doc.sortManual': '手动排序',
       // 列体系（doc-columns 对 Task 1）：表头列名（照工作台 table.* 逐字）。
       'doc.thName': '名称',
       'doc.thStatus': '状态',
@@ -869,6 +870,7 @@ window.__ModuleLoader__.load({
       'doc.sortChunks': 'Chunks',
       'doc.sortAsc': 'Ascending',
       'doc.sortDesc': 'Descending',
+      'doc.sortManual': 'Manual order',
       'doc.thName': 'Name',
       'doc.thStatus': 'Status',
       'doc.thUploader': 'Uploader',
@@ -1862,7 +1864,7 @@ window.__ModuleLoader__.load({
           // 10-16 第五轮：统计行是文档面板的收尾行（工作台同姿），以 -12px 抵消
           // 壳层下衬，让统计行底缘贴到面板底缘，不再拖一条空带。
           '.hrag-docsbody { display: flex; flex-direction: column; min-width: 0; min-height: 0; flex: 1; margin-bottom: -12px; }',
-          '.hrag-docscroll { flex: 1; min-height: 0; overflow: auto; }',
+          '.hrag-docscroll { flex: 1; min-height: 0; overflow: auto; container-type: inline-size; }',
           '.hrag-docsbody > .hrag-docempty { flex: 1; }',
           // 统计行横向内衬同 docbar（10-16 第四轮复测）——与表格/工具栏同左轴。
           // 行高 16（10-16 第五轮）：对齐工作台 text-xs 口径（12/16、py-2 → 32px 高），
@@ -1931,19 +1933,30 @@ window.__ModuleLoader__.load({
           '.hrag-doctable { width: 100%; min-width: 552px; table-layout: fixed; border-collapse: separate; border-spacing: 0; }',
           '.hrag-doctable th, .hrag-docrow td { box-sizing: border-box; }',
           '.hrag-doctable th { position: sticky; top: 0; z-index: 10; height: 36px; padding: 0 8px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-tertiary); font-size: 12px; font-weight: 500; line-height: 18px; text-align: left; white-space: nowrap; box-shadow: inset 0 -0.5px 0 var(--dsw-alias-border-l2); }',
-          '.hrag-doccolhead { display: inline-flex; align-items: center; gap: 2px; }',
+          '.hrag-doccolhead { display: inline-flex; align-items: center; gap: 0; }',
           // 列宽（fixed 布局的定宽面；内容宽＝定宽−16 内衬）：状态/上传者/时间/大小/
           // 切片数照各列最长字面定；名称列 auto＝吃余宽。10-16 复测再配平（他报
           // 「名称太短、其余偏长」）：时间列随格式档双值（相对式字面短——相对 88／
           // 绝对 124）；上传者/大小/切片数各收 4-6px 让给名称列。
           '.hrag-docth-status { width: 80px; }',
-          '.hrag-docth-uploader { width: 52px; }',
-          '.hrag-docth-createdAt { width: 124px; }',
-          '.hrag-docth-createdAt-rel { width: 88px; }',
+          // 短列按「标签＋gap 0＋chevron 盒 14＋左右内衬 16」配足（10-21 Task 0 实测：
+          // 旧 52/56 让 chevron 溢出；68 时内容 52 vs 需求 50，余 2px）。时间列改
+          // clamp 随容器宽连续收放（552→680 之间 120→124／相对 72→88，两端封顶）：
+          // 缩窄由时间列与名称列共同承担，既做缓冲又无断点台阶。min-width 维持 552；
+          // 英文界面 Uploader/Chunks 仍按现状截断（差异已登记）。
+          '.hrag-docth-uploader { width: 68px; }',
+          '.hrag-docth-createdAt { width: clamp(120px, calc(102.75px + 3.125cqw), 124px); }',
+          '.hrag-docth-createdAt-rel { width: clamp(72px, calc(3px + 12.5cqw), 88px); }',
           '.hrag-docth-size { width: 74px; }',
-          '.hrag-docth-chunks { width: 56px; }',
+          '.hrag-docth-chunks { width: 68px; }',
           '.hrag-docrow { cursor: pointer; }',
           '.hrag-docrow:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          // 行拖拽（10-21 Task 3，D4 甲）：可拖时抓手指针；拖动源降透明；落点行用
+          // 上/下 2px 插入线（逐 td inset 阴影——border 会改行高）。
+          '.hrag-docrow-draggable { cursor: grab; }',
+          '.hrag-docrow-dragging { opacity: 0.45; }',
+          '.hrag-docrow-drop-before td { box-shadow: inset 0 2px 0 var(--dsw-alias-button-primary-fill); }',
+          '.hrag-docrow-drop-after td { box-shadow: inset 0 -2px 0 var(--dsw-alias-button-primary-fill); }',
           '.hrag-docrow td { padding: 8px; vertical-align: middle; }',
           // 复选框列（Task 3.6 批量版收编，照工作台 w-8）：行 checkbox 悬停/勾选/有选中
           // 项时显形（照 wk 行先例）；选中行加底色（工作台 bg-muted/60 与悬停同档）。
@@ -1967,7 +1980,10 @@ window.__ModuleLoader__.load({
           '.hrag-docopscell { display: flex; align-items: center; justify-content: flex-end; }',
           '.hrag-docrow-more, .hrag-doccolbtn, .hrag-doccolchev { display: inline-flex; align-items: center; justify-content: center; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; opacity: 0; transition: opacity 120ms ease; }',
           '.hrag-docrow-more, .hrag-doccolbtn { width: 24px; height: 24px; }',
-          '.hrag-doccolchev { width: 18px; height: 18px; }',
+          '.hrag-doccolchev { width: 14px; height: 14px; }',
+          // 内层图标统一 12（回退 svg 原生 14；宿主件默认可能 16）——14 盒内居中，
+          // 常驻占位、仅 opacity 变化，悬停不引起列宽跳动。
+          '.hrag-doccolchev svg { width: 12px; height: 12px; }',
           '.hrag-docrow:hover .hrag-docrow-more, .hrag-docrow-more:focus-visible, .hrag-docrow-more[aria-expanded="true"] { opacity: 1; }',
           '.hrag-doctable th:hover .hrag-doccolbtn, .hrag-doccolbtn:focus-visible, .hrag-doccolbtn[aria-expanded="true"] { opacity: 1; }',
           '.hrag-doctable th:hover .hrag-doccolchev, .hrag-doccolchev:focus-visible, .hrag-doccolchev[aria-expanded="true"] { opacity: 1; }',
@@ -1983,6 +1999,7 @@ window.__ModuleLoader__.load({
           '.hrag-doccell-status { overflow: visible; }',
           '.hrag-doccell-time { font-variant-numeric: tabular-nums; }',
           '.hrag-doccell-right { text-align: right; font-variant-numeric: tabular-nums; }',
+          // （10-21 补：原 680px 断点紧凑档已改为上面的 clamp 连续档——无台阶。）
           '.hrag-docrow-status-failed { color: var(--dsw-alias-state-error-primary); }',
           // 状态点（10-16 他截图对照补，照工作台 DocumentStatusCell/STATUS_DOT_CLASS）：
           // 6px 圆点悬挂在文字左缘外 10px（＝点 6px＋间隙 4px，与 td px-2 配对，文字左缘
@@ -8126,6 +8143,68 @@ window.__ModuleLoader__.load({
       })
     }
 
+    // ── 手动排序（10-21 doc-table-interactions Task 2，D2／D3）：per-kb localStorage
+    // `{ mode, ids }`——mode 为四字段键之一或 'manual'，ids 只存文档 id。「手动」模式
+    // 下显示序＝ids 序取现存行，未登记的新文档按默认序（创建时间降序）排末尾；已删
+    // id 自然剔除。脏数据/缺失一律回退默认（本地 UI 偏好永不崩）。
+    const DOC_ORDER_KEY_PREFIX = 'hrag-doc-order.'
+    const DOC_SORT_KEYS = ['created_at', 'name', 'size_bytes', 'chunk_count']
+    function docOrderSanitize(parsed) {
+      const fallback = { mode: DOC_SORT_DEFAULT.key, ids: [] }
+      if (!parsed || typeof parsed !== 'object') return fallback
+      const mode = parsed.mode === 'manual' || DOC_SORT_KEYS.indexOf(parsed.mode) !== -1 ? parsed.mode : fallback.mode
+      const ids = []
+      const seen = new Set()
+      if (Array.isArray(parsed.ids)) {
+        for (const raw of parsed.ids) {
+          if (typeof raw !== 'string' && typeof raw !== 'number') continue
+          const id = String(raw)
+          if (seen.has(id)) continue
+          seen.add(id)
+          ids.push(id)
+        }
+      }
+      return { mode, ids }
+    }
+    function readDocOrder(kbId) {
+      try {
+        const raw = window.localStorage.getItem(DOC_ORDER_KEY_PREFIX + kbId)
+        return raw ? docOrderSanitize(JSON.parse(raw)) : docOrderSanitize(null)
+      } catch (cause) {
+        return docOrderSanitize(null)
+      }
+    }
+    function writeDocOrder(kbId, order) {
+      try {
+        window.localStorage.setItem(DOC_ORDER_KEY_PREFIX + kbId, JSON.stringify({ mode: order.mode, ids: order.ids }))
+      } catch (cause) {
+        /* best effort */
+      }
+    }
+    function applyManualOrder(list, ids) {
+      const rank = new Map()
+      for (const id of ids) {
+        const key = String(id)
+        if (!rank.has(key)) rank.set(key, rank.size)
+      }
+      const pinned = []
+      const fresh = []
+      for (const doc of list) (rank.has(String(doc.id)) ? pinned : fresh).push(doc)
+      pinned.sort((a, b) => rank.get(String(a.id)) - rank.get(String(b.id)))
+      return pinned.concat(docsSort(fresh, DOC_SORT_DEFAULT.key, DOC_SORT_DEFAULT.direction))
+    }
+    // 拖拽落点重排（纯函数）：把 fromId 从原位移到 targetId 前/后；任一 id 不在
+    // 列表或同 id 时原样返回（同一引用，调用方据此判无操作）。
+    function moveDocId(ids, fromId, targetId, after) {
+      if (fromId === targetId) return ids
+      const fromIndex = ids.indexOf(fromId)
+      if (fromIndex === -1 || ids.indexOf(targetId) === -1) return ids
+      const next = ids.slice()
+      next.splice(fromIndex, 1)
+      next.splice(next.indexOf(targetId) + (after ? 1 : 0), 0, fromId)
+      return next
+    }
+
     // 列格式化（doc-columns 对 Task 1，照工作台 format.ts / document-stats.ts 口径）：
     // 绝对时间走 Intl（locale 取宿主 <html lang>——dsh-client-locale 维护它，
     // zh→zh-CN、余 en-US，与工作台 locale 映射同式）；KB 千分位整数、子 1KB 进位 1
@@ -8562,9 +8641,20 @@ window.__ModuleLoader__.load({
       const [busy, setBusy] = React.useState(false)
       const [ctxMenu, setCtxMenu] = React.useState(null)
       const [colCtxMenu, setColCtxMenu] = React.useState(null)
-      // 工具栏（小件批 Task 1）：检索词/排序均为会话态（照工作台 useState，不持久）。
+      // 工具栏（小件批 Task 1）：检索词为会话态；排序模式与手动序 per-kb 持久
+      // （10-21 Task 2，D2／D3）——方向仍随字段模式走、不落盘。
       const [query, setQuery] = React.useState('')
-      const [sort, setSort] = React.useState(DOC_SORT_DEFAULT)
+      const [docOrder, setDocOrder] = React.useState(() => readDocOrder(kbId))
+      const [direction, setDirection] = React.useState(DOC_SORT_DEFAULT.direction)
+      // 行拖拽（10-21 Task 3，D4 甲）：dragId/dropTarget 只驱动视觉（透明行＋插入线）；
+      // 命中判定走 ref，避免每次 dragover 都渲染；拖动期间挂起 3s 轮询、落点补一拍。
+      const [dragId, setDragId] = React.useState(null)
+      const [dropTarget, setDropTarget] = React.useState(null)
+      const dragIdRef = React.useRef(null)
+      const dropRef = React.useRef(null)
+      const dragActiveRef = React.useRef(false)
+      const pendingPollRef = React.useRef(false)
+      const suppressClickUntilRef = React.useRef(0)
       // 列偏好（doc-columns 对 Task 2）：per-kb 持久（照工作台 useDocTablePrefs——
       // kbIdRef 锁最新库，避免切换库时「用旧库偏好写新库键」的 race）。
       const [prefs, setPrefs] = React.useState(() => readDocPrefs(kbId))
@@ -8576,6 +8666,21 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         writeDocPrefs(kbIdRef.current, prefs)
       }, [prefs])
+      // 排序模式/手动序随库切换重读（写侧同走 kbIdRef，避免旧库状态写进新库键）。
+      React.useEffect(() => {
+        setDocOrder(readDocOrder(kbId))
+        setDirection(DOC_SORT_DEFAULT.direction)
+        // 切库即清拖拽态（拖拽中的旧库行不得把落点带进新库）。
+        dragIdRef.current = null
+        dropRef.current = null
+        dragActiveRef.current = false
+        pendingPollRef.current = false
+        setDragId(null)
+        setDropTarget(null)
+      }, [kbId])
+      React.useEffect(() => {
+        writeDocOrder(kbIdRef.current, docOrder)
+      }, [docOrder])
 
       const loadedKbRef = React.useRef(null)
       const load = React.useCallback(() => {
@@ -8607,6 +8712,11 @@ window.__ModuleLoader__.load({
       // 或任一篇的 wiki 腿仍 generating（库级镜像，索引结束后还会动），
       // 每 3s 静默重取；静默＝不翻 phase、失败保当前视图（下一拍重试）。
       const poll = React.useCallback(() => {
+        // 拖动期间行序由拖拽态掌舵：本拍挂起，落点（finishDrag）补一拍。
+        if (dragActiveRef.current) {
+          pendingPollRef.current = true
+          return
+        }
         callOp('listDocuments', { kb_id: kbId })
           .then((rows) => {
             const list = Array.isArray(rows) ? rows : []
@@ -8653,8 +8763,37 @@ window.__ModuleLoader__.load({
 
       // 可见集（过滤＋排序）与选择态派生（Task 3.6，照工作台）：全选/缩进/联合出题
       // 判据随可见集与选择集现算。
-      const visibleDocs = docsSort(docsFilter(docs, query), sort.key, sort.direction)
+      const filteredDocs = docsFilter(docs, query)
+      // 手动模式对子集（搜索命中）同样可用：先按 ids 取序，未登记的尾随默认序。
+      const visibleDocs =
+        docOrder.mode === 'manual'
+          ? applyManualOrder(filteredDocs, docOrder.ids)
+          : docsSort(filteredDocs, docOrder.mode, direction)
       const visibleIds = visibleDocs.map((doc) => doc.id)
+      // 拖拽边界（D4 甲）：搜索词非空或多选集非空时整表不可拖——避免「只对子集
+      // 排序」与批量上下文歧义。交互件（复选框/⋯/列菜单/链接）上按下不启动拖拽。
+      const canDrag = query.trim() === '' && selectedIds.size === 0
+      const isRowGrabTarget = (target) =>
+        !(target && target.closest && target.closest('input, button, a, select, textarea, [contenteditable="true"]'))
+      const finishDrag = () => {
+        dragIdRef.current = null
+        dropRef.current = null
+        dragActiveRef.current = false
+        setDragId(null)
+        setDropTarget(null)
+        // HTML5 DnD 落点后一般不再派发 click；留 300ms 抑制窗兜底（行点击开抽屉）。
+        suppressClickUntilRef.current = Date.now() + 300
+        if (pendingPollRef.current) {
+          pendingPollRef.current = false
+          poll()
+        }
+      }
+      const moveDoc = (fromId, targetId, after) => {
+        const ids = visibleDocs.map((doc) => String(doc.id))
+        const next = moveDocId(ids, String(fromId), String(targetId), after)
+        if (next === ids) return
+        setDocOrder({ mode: 'manual', ids: next })
+      }
       const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id))
       const someVisibleSelected = visibleIds.some((id) => selectedIds.has(id))
       const allSelectedReady =
@@ -8843,8 +8982,11 @@ window.__ModuleLoader__.load({
             ...DOC_SORT_OPTIONS.map((option) => ({
               id: 'sort-key-' + option.key,
               label: t(option.labelKey),
-              icon: sort.key === option.key ? dshCheckIcon() : null,
+              icon: docOrder.mode === option.key ? dshCheckIcon() : null,
             })),
+            // 手动排序与字段键同组勾选（D2：拖动即切此模式并写盘）；方向组在手动
+            // 模式置灰且不显勾（方向对手动序无意义）。
+            { id: 'sort-key-manual', label: t('doc.sortManual'), icon: docOrder.mode === 'manual' ? dshCheckIcon() : null },
             { type: 'separator', id: 'sort-sep' },
             ...[
               { id: 'sort-dir-asc', label: t('doc.sortAsc'), direction: 'asc' },
@@ -8852,15 +8994,17 @@ window.__ModuleLoader__.load({
             ].map((entry) => ({
               id: entry.id,
               label: entry.label,
-              icon: sort.direction === entry.direction ? dshCheckIcon() : null,
+              disabled: docOrder.mode === 'manual',
+              icon: docOrder.mode === 'manual' ? null : direction === entry.direction ? dshCheckIcon() : null,
             })),
           ],
           onSelect: (id) => {
-            if (id.indexOf('sort-key-') === 0) {
-              setSort((current) => ({ ...current, key: id.slice('sort-key-'.length) }))
+            if (id === 'sort-key-manual') {
+              setDocOrder((current) => ({ ...current, mode: 'manual' }))
+            } else if (id.indexOf('sort-key-') === 0) {
+              setDocOrder((current) => ({ ...current, mode: id.slice('sort-key-'.length) }))
             } else if (id.indexOf('sort-dir-') === 0) {
-              const direction = id.slice('sort-dir-'.length)
-              setSort((current) => ({ ...current, direction }))
+              setDirection(id.slice('sort-dir-'.length))
             }
           },
         }),
@@ -9045,9 +9189,60 @@ window.__ModuleLoader__.load({
             return h(
               'tr',
               {
-                className: 'hrag-docrow' + (isSelected ? ' hrag-docrow-selected' : ''),
+                className:
+                  'hrag-docrow' +
+                  (isSelected ? ' hrag-docrow-selected' : '') +
+                  (canDrag ? ' hrag-docrow-draggable' : '') +
+                  (dragId === String(doc.id) ? ' hrag-docrow-dragging' : '') +
+                  (dropTarget && dropTarget.id === String(doc.id) && dropTarget.id !== dragId
+                    ? dropTarget.after
+                      ? ' hrag-docrow-drop-after'
+                      : ' hrag-docrow-drop-before'
+                    : ''),
                 key: String(doc.id),
+                draggable: canDrag || undefined,
+                onDragStart: (event) => {
+                  if (!canDrag || !isRowGrabTarget(event.target)) {
+                    event.preventDefault()
+                    return
+                  }
+                  const id = String(doc.id)
+                  dragIdRef.current = id
+                  dropRef.current = null
+                  dragActiveRef.current = true
+                  setDragId(id)
+                  setDropTarget(null)
+                  if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = 'move'
+                    event.dataTransfer.setData('text/plain', id)
+                  }
+                },
+                onDragOver: (event) => {
+                  if (!dragIdRef.current) return
+                  event.preventDefault()
+                  if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+                  const rect = event.currentTarget.getBoundingClientRect()
+                  const after = event.clientY > rect.top + rect.height / 2
+                  const id = String(doc.id)
+                  const current = dropRef.current
+                  if (!current || current.id !== id || current.after !== after) {
+                    const next = { id, after }
+                    dropRef.current = next
+                    setDropTarget(next)
+                  }
+                },
+                onDragEnd: finishDrag,
+                onDrop: (event) => {
+                  event.preventDefault()
+                  const from = dragIdRef.current
+                  const target = dropRef.current
+                  finishDrag()
+                  if (!from || !target) return
+                  moveDoc(from, target.id, target.after)
+                },
                 onClick: () => {
+                  // 拖拽收尾的 click 兜底抑制（原生 DnD 通常已不派发）。
+                  if (Date.now() < suppressClickUntilRef.current) return
                   if (onOpenChunks) onOpenChunks(doc)
                 },
                 // 右键即选中（照工作台文件管理器惯例）：未选中的行改为单选它；已选中的
