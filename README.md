@@ -23,6 +23,16 @@ Host 半在宿主世界注册模型可见工具；Client 半在浏览器世界�
 
 本包不含 RAG 逻辑；解析、切片、图谱、wiki、评测、存储全部在 Python 服务侧。
 
+## RAG 功能模型来自 DSH
+
+面板里的功能模型列表由 DSH 当前可用的模型发布而来。插件宿主半在本机起一个 OpenAI 兼容代理（`/dsh-harness-rag/llm/v1`），引擎为每个 DSH 模型只保存一条指向该代理的别名（`dsh:<provider>/<model>`）；provider 的 endpoint 与 key 留在 DSH 内，引擎侧只拿代理地址和本地 token。
+
+- DSH 需在运行。DSH 停止时别名调用返回可读错误；引擎侧仍配置的手动模型条目不受影响。
+- 账号模型（`deepseek-account`）与 API-key provider 都能发布；视觉、思考与档位子集随别名同步。
+- 模型目录变化或插件激活时自动同步，也可在「功能模型设置」的「DSH 模型」卡片手动同步。
+- 功能模型是全局作用域：设置对所有知识库生效。
+- 逐腿思考档位（Off / Default / 六档）取该模型声明的档位子集；不选档位即跟随 DSH 默认。
+
 ## 安装
 
 前置：DSH（Node `^22.19.0 || >=24.0.0`）；Harness RAG knowledge 服务已起（默认 `http://127.0.0.1:8020`）。

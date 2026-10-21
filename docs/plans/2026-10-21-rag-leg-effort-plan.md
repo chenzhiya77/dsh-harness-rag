@@ -173,22 +173,22 @@
 
 ---
 
-## 提交链（候令）
+## 提交链（已落）
 
-> 未获点名不提交；提交信息英文 Conventional ASCII；文档随代码走，不单落空文档笔。
+> 提交信息英文 Conventional ASCII；文档随代码走，不单落空文档笔。
 
 **引擎仓（`E:\app\python\agent\harness-rag`）**
 
-1. `feat(models): add xhigh and max reasoning-effort levels` — 词表、排序/夹取、ModelConfig 与 models API 的描述和错误句、Anthropic 名表、测试；Codex 白名单不动。
-2. `feat(rag): add per-leg reasoning-effort fields to rag config` — 配置双入口、API 往返、来源、保存校验、黄金文件、example。
-3. `feat(rag): pass per-leg reasoning effort to the langchain legs` — `create_rag_chat_model` + 四个调用点 + 测试。
-4. `feat(rag): apply per-leg reasoning effort to the caption legs` — VLM target 子集、两协议请求体、共用夹取/翻译、测试。
+1. `cf9a99fda` `feat(models): add xhigh and max reasoning-effort levels` — 词表、排序/夹取、ModelConfig 与 models API 的描述和错误句、Anthropic 名表、测试；Codex 白名单不动。
+2. `41cf1cb67` `feat(rag): add per-leg reasoning-effort fields to rag config` — 配置双入口、API 往返、来源、保存校验、黄金文件、example。
+3. `3ff54ca5f` `feat(rag): pass per-leg reasoning effort to the langchain legs` — `create_rag_chat_model` + 四个调用点 + 测试。
+4. `b36e39e16` `feat(rag): apply per-leg reasoning effort to the caption legs` — VLM target 子集、两协议请求体、共用夹取/翻译、测试。
 
 **插件仓（`E:\app\python\agent\dsh-harness-rag`）**
 
-5. `chore(types): align the plugin with the host cordis types` — **前置笔**：`package.json` 增 devDeps（typescript、`@types/node`、`@deepseek-ai/cordis`）并把 typecheck 改为 `tsc -p tsconfig.json --pretty false`；四个 `Context` 的 type-only 导入改 scoped 包；`tools.ts` 的 `defineTool` 输出泛型、`required: true as const`、`JsonValue` 返回；`model_proxy` 文本段收窄。零运行时行为变化，`node --test` 与 `typecheck` 双绿。
-6. `feat(models): keep xhigh and max effort levels end to end` — 代理六档词表＋发布保留两项＋去掉默认档写入；并入当前未提交的三处修正（Task 0 裁定：同属 D8，不拆笔）＋测试。
-7. `feat(panel): pick a thinking effort per rag leg` — 五腿选择器、删旧思考菜单与主模型行、文案、仓外冒烟。
-8. `docs(rag): record per-leg effort design and acceptance` — 本对 spec/plan＋旧 spec 修订（若与第 7 笔同批则压合）。
+5. `943c6b9` `chore(types): align the plugin with the host cordis types` — **前置笔**：`package.json` 增 devDeps（typescript、`@types/node`、`@deepseek-ai/cordis`）并把 typecheck 改为 `tsc -p tsconfig.json --pretty false`；四个 `Context` 的 type-only 导入改 scoped 包；`tools.ts` 的 `defineTool` 输出泛型、`required: true as const`、`JsonValue` 返回；`model_proxy` 文本段收窄。零运行时行为变化，`node --test` 与 `typecheck` 双绿。
+6. `faf85a4` `feat(models): keep xhigh and max effort levels end to end` — 代理六档词表＋发布保留两项＋去掉默认档写入；并入当前未提交的三处修正（Task 0 裁定：同属 D8，不拆笔）＋测试。
+7. `1c33548` `feat(panel): pick a thinking effort per rag leg` — 五腿选择器、删旧思考菜单与主模型行、文案、仓外冒烟。
+8. 本对 spec/plan 已按压合口径并入第 7 笔；`dsh-model-proxy` 的文档收口见其 plan 提交链。
 
 **压合口径**：同仓相邻、同主题的文档笔并入代码笔；引擎仓第 1–4 笔各自独立成笔（词表、配置/API、LangChain、caption 四层可分别回退）；插件仓第 5 笔是唯一与功能无关的前置笔，单独可回退。提交前逐笔看 hunk，不把 `models_config.json`、`rag_config.json`、`node_modules/`、日志、探针产物带入。
