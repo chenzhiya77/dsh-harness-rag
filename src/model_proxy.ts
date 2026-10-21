@@ -478,7 +478,9 @@ export async function buildGenerateOptions(
           throw admissionError(error)
         }
       } else {
-        admitted = parts.map((part) => ({ type: 'text', text: part.text }))
+        admitted = parts
+          .filter((part): part is Extract<PromptPart, { type: 'text' }> => part.type === 'text')
+          .map((part) => ({ type: 'text', text: part.text }))
       }
       messages.push({ role: 'user', content: admittedContent(admitted) })
       continue

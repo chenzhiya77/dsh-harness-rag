@@ -1,5 +1,5 @@
-import type { Context } from 'cordis'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import type { Context } from '@deepseek-ai/cordis'
+import { defineTool, type JsonValue } from '@deepseek-ai/dsh-tools'
 import { api, HarnessRagError } from './http.ts'
 import type { Config } from './settings.ts'
 
@@ -14,7 +14,7 @@ const jsonRender = (_args: unknown, value: unknown) => [
  * node; `json` nodes are annotation-only containers. */
 const open = { type: 'json' as const }
 
-const output = (properties: Record<string, { type: 'string' | 'number' | 'json' }>) => ({
+const output = <const P extends Record<string, { type: 'string' | 'number' | 'json' }>>(properties: P) => ({
   schema: { type: 'object' as const, additionalProperties: true as const, properties },
   render: jsonRender,
 })
@@ -41,12 +41,13 @@ async function recallTest(config: Config, kbId: string, path: 'vector' | 'graph'
 }
 
 /** Shared envelope metadata, passed through verbatim when present. */
-function envelopeMeta(envelope: Record<string, unknown>, path: 'vector' | 'graph' | 'wiki') {
+function envelopeMeta(envelope: Record<string, unknown>, path: 'vector' | 'graph' | 'wiki'): { query: string; score_type: JsonValue; elapsed_ms: JsonValue; message?: string } {
+  const message = segmentOf(envelope, path).message
   return {
-    query: envelope.query,
-    score_type: envelope.score_type,
-    elapsed_ms: envelope.elapsed_ms,
-    message: segmentOf(envelope, path).message as string | undefined,
+    query: envelope.query as string,
+    score_type: envelope.score_type as JsonValue,
+    elapsed_ms: envelope.elapsed_ms as JsonValue,
+    ...(typeof message === 'string' ? { message } : {}),
   }
 }
 
@@ -71,7 +72,7 @@ export function registerTools(ctx: Context, config: Config) {
   }
 
   const searchParams = () => ({
-    query: { type: 'string' as const, required: true, description: 'Search query' },
+    query: { type: 'string' as const, required: true as const, description: 'Search query' },
     kb_id: { type: 'string' as const, description: 'Knowledge base id; falls back to the configured default' },
     top_k: { type: 'number' as const, description: 'Max hits to return (1–20, default 5)' },
     doc_id: { type: 'string' as const, description: 'Optional document id; when set, retrieval is scoped to that single document' },
@@ -90,7 +91,7 @@ export function registerTools(ctx: Context, config: Config) {
     }),
     async execute(args, exec) {
       const envelope = await recallTest(config, kb(args), 'vector', args, exec.signal)
-      return { ...envelopeMeta(envelope, 'vector'), results: segmentOf(envelope, 'vector').hits ?? [] }
+      return { ...envelopeMeta(envelope, 'vector'), results: (segmentOf(envelope, 'vector').hits ?? []) as JsonValue }
     },
   }))
 
@@ -115,10 +116,10 @@ export function registerTools(ctx: Context, config: Config) {
         query: base.query,
         score_type: base.score_type,
         elapsed_ms: base.elapsed_ms,
-        message: segment.message,
-        entities: segment.entities ?? [],
-        relations: segment.relations ?? [],
-        evidence: segment.evidence ?? [],
+        ...(typeof segment.message === 'string' ? { message: segment.message } : {}),
+        entities: (segment.entities ?? []) as JsonValue,
+        relations: (segment.relations ?? []) as JsonValue,
+        evidence: (segment.evidence ?? []) as JsonValue,
       }
     },
   }))
@@ -136,7 +137,7 @@ export function registerTools(ctx: Context, config: Config) {
     }),
     async execute(args, exec) {
       const envelope = await recallTest(config, kb(args), 'wiki', args, exec.signal)
-      return { ...envelopeMeta(envelope, 'wiki'), entries: segmentOf(envelope, 'wiki').hits ?? [] }
+      return { ...envelopeMeta(envelope, 'wiki'), entries: (segmentOf(envelope, 'wiki').hits ?? []) as JsonValue }
     },
   }))
 
@@ -153,7 +154,7 @@ export function registerTools(ctx: Context, config: Config) {
     }),
     async execute(args, exec) {
       const payload = await api<unknown>(config, `/api/knowledge-bases/${kb(args)}/documents`, { signal: exec.signal })
-      return { documents: Array.isArray(payload) ? payload : [payload] }
+      return { documents: (Array.isArray(payload) ? payload : [payload]) as JsonValue }
     },
   }))
 

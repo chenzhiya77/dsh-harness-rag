@@ -25,7 +25,7 @@
     "README.md"
   ],
   "scripts": {
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -p tsconfig.json --pretty false"
   },
   "license": "Apache-2.0",
   "peerDependencies": {
@@ -33,6 +33,7 @@
     "cordis": ">=4.0.0-rc.7"
   },
   "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.5",
     "@types/node": "^22.20.0",
     "typescript": "^6.0.3"
   },

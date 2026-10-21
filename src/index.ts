@@ -1,4 +1,4 @@
-import type { Context } from 'cordis'
+import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-tools'
 import { defaultConfig, type Config } from './settings.ts'
 import { registerKbProxy } from './kb_proxy.ts'

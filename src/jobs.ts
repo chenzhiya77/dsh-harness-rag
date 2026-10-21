@@ -1,4 +1,4 @@
-import type { Context } from 'cordis'
+import type { Context } from '@deepseek-ai/cordis'
 import { api } from './http.ts'
 import type { Config } from './settings.ts'
 
