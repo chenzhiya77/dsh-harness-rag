@@ -287,6 +287,8 @@ export interface DshModelStatus {
   lastError?: string
   autoSync: boolean
   mainModel?: { provider: string; model: string; reasoningEffort?: string }
+  /** Alias -> host default effort id, for the panel to resolve "Default". */
+  defaults?: Record<string, string>
   unavailable: Array<{ provider: string; code: string }>
 }
 
@@ -318,6 +320,15 @@ function runtimeOrigin(runtime: ModelProxyRuntime): string | undefined {
   } catch {
     return undefined
   }
+}
+
+/** Alias -> host default effort, display only; publishing stays level-free. */
+export function catalogDefaults(catalog: ProxyCatalog | undefined): Record<string, string> {
+  const defaults: Record<string, string> = {}
+  for (const model of catalog?.models ?? []) {
+    if (typeof model.defaultEffort === 'string' && model.defaultEffort) defaults[model.alias] = model.defaultEffort
+  }
+  return defaults
 }
 
 function readMainModel(ctx: SyncHostContextLike): DshModelStatus['mainModel'] {
@@ -358,6 +369,7 @@ export function registerModelSync(
     const mainModel = readMainModel(ctx)
     const error = last?.error ?? readyError
     const origin = runtime ? runtimeOrigin(runtime) : undefined
+    const defaults = catalogDefaults(catalog)
     return {
       available: runtime !== undefined && readyError === undefined,
       ...(origin ? { origin } : {}),
@@ -368,6 +380,7 @@ export function registerModelSync(
       ...(error ? { lastError: error } : {}),
       autoSync: config.autoSyncModels,
       ...(mainModel ? { mainModel } : {}),
+      ...(Object.keys(defaults).length > 0 ? { defaults } : {}),
       unavailable: catalog?.unavailable ?? [],
     }
   }

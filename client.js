@@ -15729,7 +15729,7 @@ window.__ModuleLoader__.load({
 
     /** 单框双配置（照 DSH 模型选择）：触发器＝模型＋档位；根面板两格
         （模型／思考档位）→ 点格下钻到对应列表；模型页按厂商分组并带搜索。 */
-    function LegPicker({ t, leg, values, models, modelOptions, currentModelValue, update, onModelPicked, effortLabel, modelsOnly }) {
+    function LegPicker({ t, leg, values, models, modelOptions, currentModelValue, update, onModelPicked, effortLabel, resolveEffortLabel, modelsOnly }) {
       const [open, setOpen] = React.useState(false)
       const [pane, setPane] = React.useState('root')
       const [query, setQuery] = React.useState('')
@@ -15748,7 +15748,7 @@ window.__ModuleLoader__.load({
       const effectiveModel = ragLegModel(modelList, effectiveName)
       const effortOptions = ragEffortOptionsForModel(effectiveModel)
       const currentEffort = ragLegEffortValue(values, effectiveModel, leg)
-      const currentEffortLabel = effortLabel(currentEffort)
+      const currentEffortLabel = (resolveEffortLabel || effortLabel)(currentEffort, effectiveName)
       const note =
         effectiveModel && (effectiveModel.supports_thinking === false || effectiveModel.supports_reasoning_effort === false)
           ? t('set.form.effortFixedNote')
@@ -16691,6 +16691,20 @@ window.__ModuleLoader__.load({
         return RAG_EFFORT_LABELS[value] || value
       }
 
+      // 照 DSH：跟随态显示宿主默认档的名字；没有声明默认档才显示 Default。
+      const dshDefaults =
+        dshStatusQ.data &&
+        typeof dshStatusQ.data === 'object' &&
+        dshStatusQ.data.defaults &&
+        typeof dshStatusQ.data.defaults === 'object'
+          ? dshStatusQ.data.defaults
+          : {}
+      const resolveEffortLabel = (value, modelName) => {
+        if (value !== RAG_EFFORT_FOLLOW) return effortLabel(value)
+        const level = modelName && typeof dshDefaults[modelName] === 'string' ? dshDefaults[modelName] : ''
+        return level ? RAG_EFFORT_LABELS[level] || level : effortLabel(value)
+      }
+
       const reconcileLegModel = (leg, nextModel) => {
         const name = nextModel || values.default_model || (models[0] ? models[0].name : '')
         const model = ragLegModel(models, name)
@@ -16725,6 +16739,7 @@ window.__ModuleLoader__.load({
             update,
             onModelPicked,
             effortLabel,
+            resolveEffortLabel,
           }),
           options,
         )
@@ -16843,6 +16858,7 @@ window.__ModuleLoader__.load({
           update,
           onModelPicked: (next) => update('default_model', next),
           effortLabel,
+          resolveEffortLabel,
           modelsOnly: true,
         }),
       )

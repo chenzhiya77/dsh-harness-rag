@@ -132,7 +132,7 @@ test('buildCatalog maps providers, filters failed ones and sorts by alias', asyn
   assert.equal(xiaomi?.contextWindow, 128000)
   assert.equal(xiaomi?.maxTokens, 8192)
   assert.deepEqual(xiaomi?.efforts, ['low', 'medium', 'high', 'xhigh', 'max'])
-  assert.equal('defaultEffort' in (xiaomi ?? {}), false, 'the catalog carries no default-effort field')
+  assert.equal(xiaomi?.defaultEffort, 'medium', 'the catalog carries the host default for display')
   assert.deepEqual(catalog.unavailable, [{ provider: 'broken', code: 'catalog_failed' }])
 })
 

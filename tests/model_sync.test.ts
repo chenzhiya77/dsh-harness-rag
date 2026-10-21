@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  catalogDefaults,
   collectPublishedModels,
   mergeModels,
   ModelSyncError,
@@ -73,6 +74,22 @@ test('publishEfforts maps six DSH levels into the engine subset', () => {
   assert.deepEqual(publishEfforts(['high', 'low']), ['low', 'high'])
   assert.deepEqual(publishEfforts(['off']), [])
   assert.deepEqual(publishEfforts(['turbo', 'high']), ['high'])
+})
+
+test('catalogDefaults exposes host defaults for the panel without publishing them', () => {
+  const catalog: ProxyCatalog = {
+    origin: 'http://127.0.0.1:3080',
+    models: [
+      model({ alias: 'dsh:xiaomi/one', defaultEffort: 'high' }),
+      model({ alias: 'dsh:xiaomi/two' }),
+      model({ alias: 'dsh:xiaomi/three', defaultEffort: '' }),
+    ],
+    byAlias: new Map(),
+    unavailable: [],
+    builtAt: 0,
+  }
+  assert.deepEqual(catalogDefaults(catalog), { 'dsh:xiaomi/one': 'high' })
+  assert.deepEqual(catalogDefaults(undefined), {})
 })
 
 test('toEngineEntry writes one thin alias and no provider material', () => {

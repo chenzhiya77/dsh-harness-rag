@@ -169,6 +169,7 @@
 - [x] 清理非 DSH 模型（用户点令，2026-10-21）：删掉 UI 手工条目 `deepseek-flash`、`mimo-v2.6-flash`；移除 `config.yaml` 的 `qwen3.8-flash`/`deepseek-v4-flash`/`qwen3.7-flash` 三条；五腿改指 DSH 同名模型（default/vlm→`dsh:xiaomi/mimo-v2.6-flash`，wiki/judge/synthesis→`dsh:opencode-go/qwen3.8-flash`）。备份在 `E:/appdevelop/hrag-probe/_cleanup-backup-20261021/`；引擎按配置签名热重载，免重启。API 复核：models 35 条全为 `dsh:`，五腿值均为 `dsh:`。
 - [x] 默认项文案去掉括号：`使用配置默认`（en `Use config default`），腿选择器、默认模型、VLM 空值三处同步。
 - [x] 「RAG 默认模型」换用同一套模型菜单：触发盒只显示模型名，打开即模型页（厂商分组/搜索/空值项），无根页与档位格；菜单宽度封顶 420px。
+- [x] 默认档显示照 DSH（2026-10-22）：跟随态在触发器显示宿主默认档名，未声明默认档才显示 `Default`；`defaultEffort` 仅经 `dshModelStatus.defaults` 供显示，不进引擎条目。门禁：插件 28 单测、`tsc` exit 0、冒烟全绿（新增默认档断言）。
 - [x] 真面板复验：DSH 整启后五腿点按（根面板/模型页/档位页/搜索/换模型），2026-10-21 用户复验通过。
 
 ---

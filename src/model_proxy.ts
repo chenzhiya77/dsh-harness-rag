@@ -78,6 +78,8 @@ export interface ProxyModel {
   contextWindow?: number
   maxTokens?: number
   efforts: string[]
+  /** Host default level; display only — never published to engine entries. */
+  defaultEffort?: string
 }
 
 export interface ProxyCatalog {
@@ -277,6 +279,9 @@ export async function buildCatalog(llm: LlmHostLike, origin: string): Promise<Pr
           ...(info.context?.contextWindow ? { contextWindow: info.context.contextWindow } : {}),
           ...(info.defaultMaxTokens ? { maxTokens: info.defaultMaxTokens } : {}),
           efforts,
+          ...(typeof info.reasoning?.defaultEffort === 'string' && info.reasoning.defaultEffort
+            ? { defaultEffort: info.reasoning.defaultEffort }
+            : {}),
         })
       } catch {
         noteUnavailable(provider.id, 'model_failed')

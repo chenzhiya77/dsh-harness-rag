@@ -117,6 +117,7 @@ RAG 的生产搭配是多模型：抽取常用便宜快模型、裁判/百科用
 ```
 
 - 触发盒＝模型名（不带厂商后缀）＋当前档位＋下箭头。点开先见根面板两格（「模型」/「思考档位」，左标签、右当前值、右侧右箭头）；点格下钻；下钻页顶部有返回箭头与页名，Escape 先退一页再关闭。
+- 跟随态照 DSH 显示**宿主默认档的名字**（如 `High`）；模型未声明默认档时才显示 `Default`。该解析只用于显示，存档值仍是「跟随」；映射由 `dshModelStatus.defaults` 提供。
 - 模型页：候选超过 4 条时出现搜索框（照 DSH 的阈值）；`dsh:<provider>/<model>` 条目按 provider 分组，组标题＝厂商显示名（`deepseek-account` 用本地化 `DeepSeek 账号`，其余用 provider id），条目名只用模型名（显示名去掉「 · provider」后缀），手动条目归末组，默认项单独置顶；选中项打勾，选中即写值并关闭。组标题样式取宿主 `MenuGroup`：11px/16px、`4px 7px 2px`、默认透明、滚到钉住时（`data-stuck`）填 `--dsw-alias-menu-group-header-fill`、组间 3px；每组包一层 section 以限定吸顶范围。
 - 档位页：值域 `Off / Default / Minimal / Low / Medium / High / Xhigh / Max`（`off`/跟随/六档）；标签用宿主适配器给出的英文名（pi-ai 即首字母大写，不随界面语言翻译）。模型声明子集时只列子集；`supports_thinking=false` 时只留 `Off`，`supports_reasoning_effort=false` 时只留 `Off / Default`，页脚用「由模型能力决定」说明。
 - 「RAG 默认模型」复用同一套模型菜单：触发盒只显示模型名；打开即模型页（无根页/无档位格），厂商分组、搜索、空值项与腿选择器一致；菜单宽度封顶 420px。
@@ -133,7 +134,7 @@ RAG 的生产搭配是多模型：抽取常用便宜快模型、裁判/百科用
 - 插件 `toEngineEntry` 不再写 `reasoning_effort`；保留 `supported_reasoning_efforts`、`supports_reasoning_effort`、`supports_thinking`、`when_thinking_disabled`。
 - 「跟随模型默认」在 `dsh:` 别名上等于「不发值 → DSH 默认」，DSH 改默认或默认是 `xhigh/max` 时都能原样生效。
 - 手动条目完全不受发布逻辑影响；其条目默认档就是「跟随」的目标。
-- 代理目录里的 `defaultEffort` 随 D8 失去读点（`buildGenerateOptions` 从不读它），同批删掉采集与传参，不留只供测试断言的字段。
+- 代理目录保留 `defaultEffort`，只经 `dshModelStatus.defaults` 供面板把「跟随」显示成宿主默认档名；`buildGenerateOptions` 仍不读它，引擎条目也不写它。
 
 ## 5. 语义与边界
 
@@ -172,7 +173,7 @@ RAG 的生产搭配是多模型：抽取常用便宜快模型、裁判/百科用
 - **引擎改动成本**：丙方案的「引擎零改动」在本项目不再成立；这是逐腿持久化的必要代价。主树/切片树不同步，后续若要回移另立一步。
 - **Anthropic caption 翻译**：工厂已有 `minimal→low` 表；caption 直发体必须共用同一份映射，否则两条腿的档位语义会分叉。
 - **保存期 vs 运行期**：保存期严格校验会拒绝「模型暂时从目录消失」时的显式档位；这是有意的（宁可让用户先选回跟随），需要在错误句子里说清。
-- **DSH 默认不可见**：面板的「跟随模型默认」不显示 DSH 实际默认档；若后续要显示，需在 `dshModelStatus` 增加别名默认映射，不在本期。
+- **DSH 默认显示**（2026-10-22 已修）：`dshModelStatus.defaults` 提供别名→默认档映射，跟随态在触发器显示该档名（未声明时仍显示 `Default`）；映射只用于显示，不写引擎条目。
 - **配置漂移**：operator 直接改 config.yaml 可写入当前模型不支持的档位；运行期夹取 + warning 是兜底，不阻断。
 - **升级次序**：两仓必须同批升级，**引擎先起、插件后起**——插件把六档子集写进 `models_config.json` 后，旧引擎的 `ReasoningEffort` Literal 会在加载期拒收整个文件，表现为模型配置整体不可用。回退时顺序相反：先回退插件（条目子集回到四档），再回退引擎。
 - **选择器选项滞后于实时档位**：面板选项取自已发布条目（上次同步的快照），不是 DSH 的实时 `resolveModelInfo`；DSH 事后增删档位要等下一次同步（`llm/adapters-updated` 或手动同步）才进选择器，期间发出的越界档由代理就近夹取。
