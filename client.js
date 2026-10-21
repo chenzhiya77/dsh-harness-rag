@@ -2098,10 +2098,12 @@ window.__ModuleLoader__.load({
           '.hrag-docs-slot { flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-recall-slot { flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-wk-canvas { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }',
-          '.hrag-wk-sect { display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); }',
+          '.hrag-wk-sect { display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--hrag-surface); }',
           '.hrag-wk-sect-open { flex: 1 1 0; min-height: 0; }',
-          '.hrag-wk-secthead { display: flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; flex-shrink: 0; }',
-          '.hrag-wk-secthead:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-wk-secthead { display: flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; flex-shrink: 0; background: var(--hrag-surface-head); }',
+          // 分隔用 inset 阴影而非 border：不参与盒高，展开态零几何位移。
+          '.hrag-wk-sect-open .hrag-wk-secthead { box-shadow: inset 0 -0.5px 0 var(--dsw-alias-border-l2); }',
+          // 头带已是“选中”色，hover 不再加深——与宿主选中会话行同行为（悬停不换色）。
           '.hrag-wk-secttoggle { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; padding: 6px 6px 6px 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; font-family: inherit; cursor: pointer; text-align: left; }',
           // 与「我的条目」头对齐：箭头槽同为 22px（居中）＋2px 补距，图标/标题同 x。
           '.hrag-wk-secttoggle .hrag-ev-caret { width: 22px; text-align: center; margin-right: 2px; }',
@@ -2187,8 +2189,8 @@ window.__ModuleLoader__.load({
           '.hrag-wk-srcbtn { height: 24px; padding: 0 8px; font-size: 11px; }',
           '.hrag-wk-metaline { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-wk-lin { display: flex; flex-direction: column; gap: 6px; }',
-          '.hrag-wk-linitem { border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); overflow: hidden; }',
-          '.hrag-wk-linhead { display: flex; width: 100%; align-items: center; gap: 6px; padding: 5px 8px; border: none; border-bottom: 0.5px solid var(--dsw-alias-border-l2); background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-wk-linitem { border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); overflow: hidden; background: var(--hrag-surface); }',
+          '.hrag-wk-linhead { display: flex; width: 100%; align-items: center; gap: 6px; padding: 5px 8px; border: none; border-bottom: 0.5px solid var(--dsw-alias-border-l2); background: var(--hrag-surface-head); color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; text-align: left; cursor: pointer; }',
           '.hrag-wk-linhead:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-wk-linhead:disabled { cursor: default; }',
           '.hrag-wk-linname { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }',
@@ -2301,8 +2303,8 @@ window.__ModuleLoader__.load({
           '.hrag-graph-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
           '.hrag-gchips { display: flex; flex-wrap: wrap; gap: 6px; }',
           '.hrag-gchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 11px; }',
-          '.hrag-gcard { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; }',
-          '.hrag-gcard-head { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; }',
+          '.hrag-gcard { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; background: var(--hrag-surface); }',
+          '.hrag-gcard-head { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); font-size: 12px; background: var(--hrag-surface-head); }',
           '.hrag-gcard-count { margin-left: auto; color: var(--dsw-alias-label-tertiary); font-variant-numeric: tabular-nums; }',
           '.hrag-gcard-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-left: auto; padding: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 6px; background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
           '.hrag-gcard-iconbtn:hover { color: var(--dsw-alias-label-primary); background: color-mix(in srgb, var(--dsw-alias-label-primary) 8%, transparent); }',
@@ -2436,9 +2438,9 @@ window.__ModuleLoader__.load({
           // 召回面（小件批 Task 7，照工作台 three-path panel）：三路并列各占 1/3 高
           // （flex 均分＋行区内滚）；整栏点击收起（收起路 shrink 让高位）；图谱路
           // 段控＋内嵌迷你图；耗时档色三档（宿主静态色板最邻近色）；存为考题悬浮栏。
-          '.hrag-recall-section { display: flex; flex-direction: column; flex: 1 1 0; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); min-width: 0; min-height: 0; overflow: hidden; }',
+          '.hrag-recall-section { display: flex; flex-direction: column; flex: 1 1 0; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); min-width: 0; min-height: 0; overflow: hidden; background: var(--hrag-surface); }',
           '.hrag-recall-section-collapsed { flex: 0 0 auto; }',
-          '.hrag-recall-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px; min-width: 0; border-bottom: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; }',
+          '.hrag-recall-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px; min-width: 0; border-bottom: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; background: var(--hrag-surface-head); }',
           '.hrag-recall-section-collapsed .hrag-recall-head { border-bottom: none; }',
           '.hrag-recall-toggle { display: inline-flex; align-items: center; gap: 6px; min-width: 0; padding: 2px 6px; margin: -2px -6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }',
           '.hrag-recall-toggle:hover { background: var(--dsw-alias-interactive-bg-hover); }',
@@ -2481,7 +2483,10 @@ window.__ModuleLoader__.load({
           '.hrag-hitselect-on { opacity: 1; }',
           '.hrag-recall-rows-selecting .hrag-hitselect { opacity: 1; }',
           '.hrag-recall-sections { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }',
-          '.hrag-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 100%; }',
+          // 容器底纹（10-21 surface 对）：浅色按「提亮但保持 B−R」取定值——体 #FCFDFE、头 #F3F5F7
+          // （B−R 仍为 2 / 4，与宿主同比例）；深色沿用宿主 token 原值。
+          '.hrag-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 100%; --hrag-surface: #FCFDFE; --hrag-surface-head: #F3F5F7; }',
+          '[data-ds-dark-theme] .hrag-root { --hrag-surface: var(--dsw-specific-sidebar-fill, var(--dsw-alias-bg-layer-1)); --hrag-surface-head: var(--dsw-alias-interactive-bg-hover, color-mix(in srgb, var(--dsw-alias-label-primary) 6%, transparent)); }',
           // 原生 title 已由 NativeTipLayer 接管；这是统一暗泡（主树/DSH 同款黑底白字）。
           '.hrag-native-tip { position: fixed; z-index: 2147483000; max-width: min(340px, calc(100vw - 24px)); max-height: 60vh; overflow: hidden; padding: 6px 8px; border-radius: 6px; background: #1f1f1f; color: #fff; font-family: inherit; font-size: 12px; line-height: 18px; white-space: pre-line; word-break: break-word; pointer-events: none; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24); }',
           '@keyframes hrag-fade-in { from { opacity: 0; } to { opacity: 1; } }',
@@ -2533,8 +2538,8 @@ window.__ModuleLoader__.load({
           '.hrag-ev-chev:hover:not(:disabled) { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
           '.hrag-ev-chev-armed { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-scroll { display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1; overflow-y: auto; padding-right: 2px; }',
-          '.hrag-ev-card { background: var(--dsw-alias-bg-layer-1); border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; flex-shrink: 0; }',
-          '.hrag-ev-cardhead { display: flex; align-items: center; gap: 6px; padding: 6px 10px; color: var(--dsw-alias-label-secondary); font-size: 12px; min-width: 0; }',
+          '.hrag-ev-card { background: var(--hrag-surface); border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; flex-shrink: 0; }',
+          '.hrag-ev-cardhead { display: flex; align-items: center; gap: 6px; padding: 6px 10px; color: var(--dsw-alias-label-secondary); font-size: 12px; min-width: 0; background: var(--hrag-surface-head); }',
           '.hrag-ev-cardhead-open { border-bottom: 0.5px solid var(--dsw-alias-border-l2); }',
           '.hrag-ev-cardhead-side { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }',
           '.hrag-ev-cardtoggle { border: none; background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; padding: 0; }',
@@ -2735,7 +2740,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-docrow-on { background: var(--dsw-alias-interactive-bg-active); }',
           '.hrag-ev-docrow-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }',
           '.hrag-ev-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }',
-          '.hrag-ev-chipwrap { display: flex; flex-wrap: wrap; gap: 5px; }',
+          '.hrag-ev-chipwrap { display: flex; flex-wrap: wrap; gap: 6px; }',
           '.hrag-ev-inforow { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 8px; margin-bottom: 6px; }',
           '.hrag-ev-inforow:last-child { margin-bottom: 0; }',
           '.hrag-ev-infolabel { font-size: 11px; color: var(--dsw-alias-label-tertiary); }',
@@ -12793,7 +12798,7 @@ window.__ModuleLoader__.load({
                   ),
                   h(
                     'div',
-                    { className: 'hrag-ev-chipwrap' },
+                    { className: 'hrag-ev-chipwrap hrag-ev-cardbody' },
                     question.relevant_entities.map((entity) => h('span', { key: entity, className: 'hrag-ev-badge' }, entity)),
                   ),
                 )
