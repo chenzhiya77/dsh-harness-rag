@@ -667,8 +667,6 @@ window.__ModuleLoader__.load({
       'set.form.saved': '功能模型配置已保存',
       'set.form.noChanges': '没有需要保存的改动',
       'set.form.dshHint': '功能模型由 DSH 发布到 RAG（取自 DSH 已配置的模型）；RAG 侧不保存 provider key，DSH 未运行时这些条目的调用会失败。',
-      'set.form.dshMainModel': 'DSH 主模型',
-      'set.form.dshMainModelNone': '未读取到',
       'set.form.dshLoading': '正在读取 DSH 模型…',
       'set.form.dshStatusUnavailable': 'DSH 模型服务不可用',
       'set.form.dshStatusLoadFailed': 'DSH 模型状态读取失败',
@@ -681,14 +679,21 @@ window.__ModuleLoader__.load({
       'set.form.dshSyncFailed': 'DSH 模型同步失败',
       'set.form.dshUnavailableToggle': '不可用的 DSH 提供方（{0}）',
       'set.form.dshUnavailableRow': '{0} · {1}',
-      'set.form.thinkingModelFixed': '由 DSH 模型能力决定',
+      'set.form.effortAria': '{0} · 思考档位',
+      'set.form.effortFixedNote': '由模型能力决定',
+      'set.form.legPickerAria': '{0} · 模型 {1}，思考档位 {2}',
+      'set.form.modelPickerAria': '选择模型，当前 {0}',
+      'set.form.legPickerModel': '模型',
+      'set.form.legPickerEffort': '思考档位',
+      'set.form.legPickerBack': '返回',
+      'set.form.legPickerSearch': '搜索模型…',
+      'set.form.legPickerNoMatch': '没有匹配的模型',
+      'set.form.legPickerManual': '手动条目',
       'set.form.defaultHint': '用于图谱抽取、评测裁判、图片与视频配文未单独指定模型时的选择，不影响聊天主模型及其他功能；此项留空时使用配置中的 RAG 默认，配置也未指定则使用模型列表第一项。',
-      'set.form.defaultNone': '（使用配置默认）',
-      'set.form.thinkingMenuLabel': '思考跟随对话模型',
-      'set.form.thinkingMenuState': '思考跟随对话模型（已选 {0} 项）',
-      'set.form.thinkingMenuStateNone': '思考跟随对话模型（未选择）',
+      'set.form.defaultNone': '使用配置默认',
       'set.form.retrievalHint': '检索时使用：向量模型与重排模型。更换向量模型、提供方、接口地址或稀疏来源后，已用旧配置入库的知识库需要重建索引，否则检索质量会下降。',
       'set.form.provider': '提供商',
+      'set.form.providerAccount': 'DeepSeek 账号',
       'set.form.model': 'Model ID',
       'set.form.apiKey': 'API Key',
       'set.form.endpoint': '接口地址',
@@ -1445,8 +1450,6 @@ window.__ModuleLoader__.load({
       'set.form.noChanges': 'No changes to save',
       'set.form.dshHint':
         'Function models are published to RAG by DSH from the models configured in DSH; RAG stores no provider key, so calls to these entries fail while DSH is not running.',
-      'set.form.dshMainModel': 'DSH main model',
-      'set.form.dshMainModelNone': 'Not detected',
       'set.form.dshLoading': 'Reading DSH models\u2026',
       'set.form.dshStatusUnavailable': 'DSH model service unavailable',
       'set.form.dshStatusLoadFailed': 'Could not read DSH model status',
@@ -1459,15 +1462,21 @@ window.__ModuleLoader__.load({
       'set.form.dshSyncFailed': 'DSH model sync failed',
       'set.form.dshUnavailableToggle': 'Unavailable DSH providers ({0})',
       'set.form.dshUnavailableRow': '{0} \u00b7 {1}',
-      'set.form.thinkingModelFixed': 'Determined by DSH model capabilities',
+      'set.form.effortAria': '{0} \u00b7 Thinking effort',
+      'set.form.effortFixedNote': 'Determined by model capability',
+      'set.form.legPickerAria': '{0} \u00b7 Model {1}, thinking effort {2}',
+      'set.form.legPickerModel': 'Model',
+      'set.form.legPickerEffort': 'Thinking effort',
+      'set.form.legPickerBack': 'Back',
+      'set.form.legPickerSearch': 'Search models\u2026',
+      'set.form.legPickerNoMatch': 'No matching models',
+      'set.form.legPickerManual': 'Manual entries',
       'set.form.defaultHint':
         'Used when graph extraction, evaluation judging, image captioning or video captioning has no separate model selection. It does not affect chat models or other features. Leave this unset to inherit the configured RAG default, or the first model in the list if none is configured.',
-      'set.form.defaultNone': '(config default)',
-      'set.form.thinkingMenuLabel': 'Thinking follows the chat model',
-      'set.form.thinkingMenuState': 'Thinking follows the chat model ({0} selected)',
-      'set.form.thinkingMenuStateNone': 'Thinking follows the chat model (none selected)',
+      'set.form.defaultNone': 'Use config default',
       'set.form.retrievalHint': 'Used at retrieval time: the embedding model and the rerank model. Changing the embedding model, provider, endpoint or sparse source requires re-indexing the knowledge bases already ingested with the previous one, or their retrieval quality will degrade.',
       'set.form.provider': 'Provider',
+      'set.form.providerAccount': 'DeepSeek Account',
       'set.form.model': 'Model ID',
       'set.form.apiKey': 'API key',
       'set.form.endpoint': 'Endpoint',
@@ -2226,17 +2235,6 @@ window.__ModuleLoader__.load({
           '.hrag-mm-sub { padding-left: 18px; }',
           '.hrag-mm-sep { height: 1px; margin: 4px 0; background: var(--dsw-alias-border-l2); }',
           '.hrag-mm-label { padding: 4px 8px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
-          // 思考跟随菜单行（10-15 他复跑调参）：勾选盒**移进角色格内**（绝对定位＋28px 头距＝勾文距 12px）——
-          // 网格只留两列（角色｜该槽当前模型，subgrid 共享列＝逐行对齐）；独立勾选列在 subgrid 下
-          // 首轨间距不可控（浏览器实测钉死）。行高＝宿主 item 34px。
-          '.hrag-mm-tgrid { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 12px; row-gap: 0; }',
-          '.hrag-mm-checkrow { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; column-gap: 12px; row-gap: 0; }',
-          '.hrag-mm-tcheck { position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; box-sizing: border-box; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 5px; color: var(--dsw-alias-label-primary-foreground); }',
-          '.hrag-mm-tcheck-on { background: var(--dsw-alias-state-business-primary); border-color: var(--dsw-alias-state-business-primary); }',
-          '.hrag-mm-trole { position: relative; padding-left: 28px; white-space: nowrap; }',
-          '.hrag-mm-tmodel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); }',
-          '.hrag-mm-tnote { grid-column: 1 / -1; padding: 4px 8px 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
-          '.hrag-set-thinkingwrap { margin-top: 0; }',
           // 设置表单纵距：12px 节间距、14px 侧衬（覆盖 drawer-body 的 8/12），底部留 16。
           '.hrag-drawer-body.hrag-set-body { display: flex; flex-direction: column; gap: 12px; padding: 12px 14px 16px; }',
           // 滚动体是 flex 列时，子项必须禁缩——否则带 overflow:hidden 的卡（自动最小
@@ -2251,6 +2249,44 @@ window.__ModuleLoader__.load({
           '.hrag-set-group { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px 12px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--hrag-surface); }',
           '.hrag-set-grouptitle { margin: -10px -12px 0; padding: 6px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md) var(--dsw-radius-md) 0 0; background: var(--hrag-surface-head); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; }',
           '.hrag-set-row { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 32px; font-size: 12px; line-height: 20px; }',
+          // 模型＋思考档位单框（照 DSH 模型选择）：触发器显示模型与档位，菜单根层两格下钻。
+          '.hrag-legpick { position: relative; display: flex; min-width: 0; }',
+          '.hrag-legpick-trigger { gap: 8px; }',
+          '.hrag-legpick-effort { flex: none; color: var(--dsw-alias-label-caption, var(--dsw-alias-label-tertiary)); font-size: 12px; line-height: 20px; white-space: nowrap; }',
+          '.hrag-legpick-backdrop { position: fixed; inset: 0; z-index: 78; }',
+          '.hrag-legpick-pop { z-index: 79; display: flex; flex-direction: column; overflow: hidden; }',
+          '.hrag-legpick-root { padding: 0; }',
+          '.hrag-legpick-cell { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 34px; padding: 0 8px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-legpick-cell:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-legpick-cell-label { flex: none; white-space: nowrap; }',
+          '.hrag-legpick-cell-value { flex: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-legpick-cell-chev { display: inline-flex; flex: none; color: var(--dsw-alias-menu-icon, var(--dsw-alias-label-tertiary)); }',
+          '.hrag-legpick-cell-chev svg { width: 12px; height: 12px; }',
+          '.hrag-legpick-head { display: flex; align-items: center; gap: 4px; padding: 0 0 2px; }',
+          '.hrag-legpick-back { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
+          '.hrag-legpick-back:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-legpick-back svg { width: 12px; height: 12px; }',
+          '.hrag-legpick-head-title { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; font-weight: 500; }',
+          '.hrag-legpick-searchrow { flex-shrink: 0; margin: 2px 0 3px; position: relative; }',
+          '.hrag-legpick-search { width: 100%; box-sizing: border-box; height: 30px; padding: 0 7px; border: 0 solid transparent; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; font-family: inherit; }',
+          '.hrag-legpick-search:focus { outline: none; }',
+          '.hrag-legpick-search::placeholder { color: var(--dsw-alias-label-caption, var(--dsw-alias-label-tertiary)); }',
+          '.hrag-legpick-list { flex: 1; min-height: 0; max-height: 320px; overflow-y: auto; padding: 0; }',
+          '.hrag-legpick-section { position: relative; }',
+          '.hrag-legpick-section + .hrag-legpick-section { margin-top: 3px; }',
+          // 组标题照宿主 MenuGroup：默认透明，滚到钉住时才填色。
+          '.hrag-legpick-group { position: sticky; top: 0; z-index: 1; padding: 4px 7px 2px; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; font-weight: 500; }',
+          '.hrag-legpick-group[data-stuck] { background: var(--dsw-alias-menu-group-header-fill, var(--dsw-alias-bg-layer-1)); }',
+          '.hrag-legpick-opt { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 34px; padding: 5px 7px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 18px; font-family: inherit; text-align: left; cursor: pointer; }',
+          '.hrag-legpick-opt:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          // 「使用配置默认」不是模型：降一档文字色，并用细分隔线与厂商组分开。
+          '.hrag-legpick-opt.hrag-legpick-default { color: var(--dsw-alias-label-secondary); }',
+          '.hrag-legpick-sep { margin: 3px 7px 5px; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-legpick-opt-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-legpick-opt-check { display: inline-flex; flex: none; color: var(--dsw-alias-label-primary); }',
+          '.hrag-legpick-opt-check svg { width: 14px; height: 14px; }',
+          '.hrag-legpick-empty { padding: 8px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-legpick-note { padding: 2px 7px 6px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
           '.hrag-set-label { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-set-value { color: var(--dsw-alias-label-primary); word-break: break-word; }',
           // 下拉选择器＝与 Model ID 输入框同款外观（宿主 Input 真值：l4 边框／layer-1 底／32 高／
@@ -2273,6 +2309,10 @@ window.__ModuleLoader__.load({
           // 包含块——菜单被放到「trail 左上 + 按钮视口坐标」的错位处（面板内不可见、还把
           // 滚动体撑出横竖滚动条）。改 top/bottom 拉伸 + flex 居中：几何等价、不产生包含块。
           '.hrag-set-trail { position: absolute; top: 0; bottom: 0; right: 28px; display: flex; align-items: center; pointer-events: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          // 框内下拉件的中轴对齐：宿主 Menu 包裹层保持 flex，图标本身块级居中。
+          '.hrag-set-trail .hrag-mmhost, .hrag-set-trail .hrag-mmhost > span { display: inline-flex; align-items: center; justify-content: center; }',
+          '.hrag-set-trail .hrag-set-tierbtn { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; }',
+          '.hrag-set-trail svg { display: block; }',
           // 穿透壳里的可点件必须显式取回事件（工作台 pointer-events-auto 同款）——按钮自身
           // 也要带上：pointer-events 系继承属性，只给包裹层不覆盖 ASR 那枚无包裹类的菜单。
           // outer button reset：免得吃 UA/宿主 preflight 差异，露出默认描边。
@@ -9772,6 +9812,23 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 单框双配置（照 DSH 模型选择）的右/左箭头：根面板两格用右箭头，下钻页返回用左箭头。 */
+    function lucideChevronRightIcon(opacity = 0.5) {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', opacity, 'aria-hidden': 'true' },
+        h('path', { d: 'm9 18 6-6-6-6', stroke: 'currentColor' }),
+      )
+    }
+
+    function lucideChevronLeftIcon() {
+      return h(
+        'svg',
+        { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        h('path', { d: 'm15 18-6-6 6-6', stroke: 'currentColor' }),
+      )
+    }
+
     /** 评测表头排序钮（照工作台 ArrowUpDown；图标钮＝无边框，与行 ⋯ 同语汇）。 */
     function lucideSortIcon() {
       return h(
@@ -15670,6 +15727,359 @@ window.__ModuleLoader__.load({
       }
     }
 
+    /** 单框双配置（照 DSH 模型选择）：触发器＝模型＋档位；根面板两格
+        （模型／思考档位）→ 点格下钻到对应列表；模型页按厂商分组并带搜索。 */
+    function LegPicker({ t, leg, values, models, modelOptions, currentModelValue, update, onModelPicked, effortLabel, modelsOnly }) {
+      const [open, setOpen] = React.useState(false)
+      const [pane, setPane] = React.useState('root')
+      const [query, setQuery] = React.useState('')
+      const [box, setBox] = React.useState(null)
+      const btnRef = React.useRef(null)
+      const searchRef = React.useRef(null)
+      const listRef = React.useRef(null)
+      const popRef = React.useRef(null)
+      const modelList = Array.isArray(models) ? models : []
+      const options = Array.isArray(modelOptions) ? modelOptions : []
+      const found = options.find((option) => option.value === currentModelValue)
+      const currentModelLabel = found
+        ? ragModelNameLabel(currentModelValue, found.label)
+        : String(currentModelValue || '')
+      const effectiveName = values[leg.model] || values.default_model || (modelList[0] ? modelList[0].name : '')
+      const effectiveModel = ragLegModel(modelList, effectiveName)
+      const effortOptions = ragEffortOptionsForModel(effectiveModel)
+      const currentEffort = ragLegEffortValue(values, effectiveModel, leg)
+      const currentEffortLabel = effortLabel(currentEffort)
+      const note =
+        effectiveModel && (effectiveModel.supports_thinking === false || effectiveModel.supports_reasoning_effort === false)
+          ? t('set.form.effortFixedNote')
+          : ''
+      const showSearch = options.length > 4
+      const grouped = ragModelOptionGroups(options, t('set.form.legPickerManual'), {
+        'deepseek-account': t('set.form.providerAccount'),
+      })
+      const needle = query.trim().toLowerCase()
+      const groupViews = grouped.groups
+        .map((group) => ({
+          ...group,
+          options:
+            needle === ''
+              ? group.options
+              : group.options.filter((option) =>
+                  (option.label + ' ' + option.fullLabel + ' ' + group.label).toLowerCase().includes(needle),
+                ),
+        }))
+        .filter((group) => group.options.length > 0)
+      const defaultVisible =
+        grouped.defaultOption && (needle === '' || String(grouped.defaultOption.label).toLowerCase().includes(needle))
+          ? grouped.defaultOption
+          : null
+      const firstVisible = groupViews.length > 0 ? groupViews[0].options[0] : null
+
+      const close = () => {
+        setOpen(false)
+        setPane('root')
+        setQuery('')
+      }
+      // 翻不翻转按这一页的实际内容高度算：根页只有两格，不能按模型页的 360 预估，
+      // 否则靠底部的腿会把菜单甩到很上面（VLM 腿必现）。
+      const placeBox = (rect, contentHeight) => {
+        const width = Math.min(Math.max(rect.width, 320), 420, window.innerWidth - 16)
+        const maxHeight = Math.min(420, window.innerHeight - 16)
+        const below = rect.bottom + 4
+        const top =
+          below + contentHeight <= window.innerHeight - 8
+            ? below
+            : Math.max(8, rect.top - contentHeight - 4)
+        return { top, left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)), width, maxHeight }
+      }
+      const openPicker = () => {
+        const rect = btnRef.current ? btnRef.current.getBoundingClientRect() : null
+        if (rect) setBox(placeBox(rect, 84))
+        setPane(modelsOnly ? 'model' : 'root')
+        setQuery('')
+        setOpen(true)
+      }
+      const toggle = () => {
+        if (open) close()
+        else openPicker()
+      }
+
+      React.useEffect(() => {
+        if (!open) return undefined
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return
+          event.stopPropagation()
+          if (pane === 'root' || modelsOnly) close()
+          else {
+            setPane('root')
+            setQuery('')
+          }
+        }
+        const onResize = () => close()
+        document.addEventListener('keydown', onKey, true)
+        window.addEventListener('resize', onResize)
+        return () => {
+          document.removeEventListener('keydown', onKey, true)
+          window.removeEventListener('resize', onResize)
+        }
+      }, [open, pane])
+
+      React.useEffect(() => {
+        if (open && pane === 'model' && showSearch && searchRef.current) searchRef.current.focus()
+      }, [open, pane, showSearch])
+
+      // 组标题只有钉住时才填色（宿主 MenuGroup 的 data-stuck 行为）。
+      const syncStuck = () => {
+        const list = listRef.current
+        if (!list) return
+        const top = list.getBoundingClientRect().top
+        for (const section of list.querySelectorAll('.hrag-legpick-section')) {
+          const heading = section.firstElementChild
+          if (!heading) continue
+          const stuck =
+            section.getBoundingClientRect().top < top - 0.5 && heading.getBoundingClientRect().top <= top + 0.5
+          if (stuck) heading.setAttribute('data-stuck', '')
+          else heading.removeAttribute('data-stuck')
+        }
+      }
+      React.useEffect(() => {
+        if (open && pane === 'model') syncStuck()
+      }, [open, pane, query])
+
+      // 下钻后内容变高/变矮：按实测高度重放一次位置，避免按旧估值溢出或悬空。
+      React.useLayoutEffect(() => {
+        if (!open) return
+        const pop = popRef.current
+        const btn = btnRef.current
+        if (!pop || !btn) return
+        const height = pop.getBoundingClientRect().height
+        if (!height) return
+        const next = placeBox(btn.getBoundingClientRect(), height)
+        setBox((prev) =>
+          prev && Math.abs(prev.top - next.top) < 1 && Math.abs(prev.left - next.left) < 1 ? prev : next,
+        )
+      }, [open, pane, query])
+
+      const pickModel = (value) => {
+        onModelPicked(value === RAG_MODEL_NONE ? '' : value)
+        close()
+      }
+      const pickEffort = (value) => {
+        const changes = ragLegEffortChange(leg, value)
+        for (const key of Object.keys(changes)) update(key, changes[key])
+        close()
+      }
+      const modelOptionButton = (value, label, title, extraClass) =>
+        h(
+          'button',
+          {
+            type: 'button',
+            role: 'menuitemradio',
+            'aria-checked': value === currentModelValue,
+            className:
+              'hrag-legpick-opt' +
+              (value === currentModelValue ? ' hrag-legpick-opt-on' : '') +
+              (extraClass ? ' ' + extraClass : ''),
+            title: title || label,
+            onClick: () => pickModel(value),
+          },
+          h('span', { className: 'hrag-legpick-opt-label' }, label),
+          value === currentModelValue ? h('span', { className: 'hrag-legpick-opt-check' }, dshCheckIcon()) : null,
+        )
+
+      let body = null
+      if (open && box && pane === 'root') {
+        body = h(
+          'div',
+          { className: 'hrag-legpick-root' },
+          h(
+            'button',
+            { type: 'button', role: 'menuitem', className: 'hrag-legpick-cell', onClick: () => setPane('model') },
+            h('span', { className: 'hrag-legpick-cell-label' }, t('set.form.legPickerModel')),
+            h('span', { className: 'hrag-legpick-cell-value', title: currentModelLabel }, currentModelLabel),
+            h('span', { className: 'hrag-legpick-cell-chev' }, lucideChevronRightIcon()),
+          ),
+          h(
+            'button',
+            { type: 'button', role: 'menuitem', className: 'hrag-legpick-cell', onClick: () => setPane('effort') },
+            h('span', { className: 'hrag-legpick-cell-label' }, t('set.form.legPickerEffort')),
+            h('span', { className: 'hrag-legpick-cell-value', title: currentEffortLabel }, currentEffortLabel),
+            h('span', { className: 'hrag-legpick-cell-chev' }, lucideChevronRightIcon()),
+          ),
+        )
+      } else if (open && box && pane === 'model') {
+        body = h(
+          React.Fragment,
+          null,
+          modelsOnly
+            ? null
+            : h(
+                'div',
+                { className: 'hrag-legpick-head' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-legpick-back',
+                    'aria-label': t('set.form.legPickerBack'),
+                    onClick: () => {
+                      setPane('root')
+                      setQuery('')
+                    },
+                  },
+                  lucideChevronLeftIcon(),
+                ),
+                h('span', { className: 'hrag-legpick-head-title' }, t('set.form.legPickerModel')),
+              ),
+          showSearch
+            ? h(
+                'div',
+                { className: 'hrag-legpick-searchrow' },
+                h('input', {
+                  ref: searchRef,
+                  type: 'text',
+                  role: 'searchbox',
+                  className: 'hrag-legpick-search',
+                  'aria-label': t('set.form.legPickerSearch'),
+                  placeholder: t('set.form.legPickerSearch'),
+                  value: query,
+                  onChange: (event) => setQuery(event.target.value),
+                  onKeyDown: (event) => {
+                    if (event.key === 'Enter' && needle !== '' && firstVisible) {
+                      event.preventDefault()
+                      pickModel(firstVisible.value)
+                    }
+                  },
+                }),
+              )
+            : null,
+          h(
+            'div',
+            {
+              ref: listRef,
+              className: 'hrag-legpick-list',
+              role: 'menu',
+              'aria-label': t('set.form.legPickerModel'),
+              onScroll: syncStuck,
+            },
+            defaultVisible
+              ? h(
+                  React.Fragment,
+                  null,
+                  modelOptionButton(defaultVisible.value, defaultVisible.label, undefined, 'hrag-legpick-default'),
+                  h('div', { className: 'hrag-legpick-sep' }),
+                )
+              : null,
+            ...groupViews.map((group) =>
+              h(
+                'section',
+                { key: group.key, className: 'hrag-legpick-section', role: 'group', 'aria-label': group.label },
+                h('div', { className: 'hrag-legpick-group' }, group.label),
+                ...group.options.map((option) => modelOptionButton(option.value, option.label, option.fullLabel)),
+              ),
+            ),
+            !defaultVisible && groupViews.length === 0
+              ? h('div', { className: 'hrag-legpick-empty' }, t('set.form.legPickerNoMatch'))
+              : null,
+          ),
+        )
+      } else if (open && box) {
+        body = h(
+          React.Fragment,
+          null,
+          h(
+            'div',
+            { className: 'hrag-legpick-head' },
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-legpick-back',
+                'aria-label': t('set.form.legPickerBack'),
+                onClick: () => setPane('root'),
+              },
+              lucideChevronLeftIcon(),
+            ),
+            h('span', { className: 'hrag-legpick-head-title' }, t('set.form.legPickerEffort')),
+          ),
+          h(
+            'div',
+            { className: 'hrag-legpick-list', role: 'menu', 'aria-label': t('set.form.legPickerEffort') },
+            effortOptions.map((option) =>
+              h(
+                'button',
+                {
+                  key: option === RAG_EFFORT_FOLLOW ? 'follow' : option,
+                  type: 'button',
+                  role: 'menuitemradio',
+                  'aria-checked': option === currentEffort,
+                  className: 'hrag-legpick-opt' + (option === currentEffort ? ' hrag-legpick-opt-on' : ''),
+                  onClick: () => pickEffort(option),
+                },
+                h('span', { className: 'hrag-legpick-opt-label' }, effortLabel(option)),
+                option === currentEffort ? h('span', { className: 'hrag-legpick-opt-check' }, dshCheckIcon()) : null,
+              ),
+            ),
+            note ? h('div', { className: 'hrag-legpick-note' }, note) : null,
+          ),
+        )
+      }
+
+      return h(
+        'div',
+        { className: 'hrag-legpick' },
+        h(
+          'button',
+          {
+            type: 'button',
+            ref: btnRef,
+            className: 'hrag-set-picker hrag-legpick-trigger',
+            'aria-haspopup': 'menu',
+            'aria-expanded': open,
+            'aria-label': modelsOnly
+              ? t('set.form.modelPickerAria', { 0: currentModelLabel })
+              : t('set.form.legPickerAria', {
+                  0: t(leg.labelKey),
+                  1: currentModelLabel,
+                  2: currentEffortLabel,
+                }),
+            title: modelsOnly ? currentModelLabel : currentModelLabel + ' · ' + currentEffortLabel,
+            onClick: toggle,
+          },
+          h('span', { className: 'hrag-set-picker-label' }, currentModelLabel),
+          modelsOnly ? null : h('span', { className: 'hrag-legpick-effort' }, currentEffortLabel),
+          lucideChevronDownIcon(),
+        ),
+        open && box
+          ? h(
+              React.Fragment,
+              null,
+              h('div', { className: 'hrag-legpick-backdrop', onMouseDown: close }),
+              h(
+                'div',
+                {
+                  ref: popRef,
+                  className: 'hrag-mm hrag-legpick-pop',
+                  role: 'menu',
+                  'aria-label': t('set.form.legPickerAria', {
+                    0: t(leg.labelKey),
+                    1: currentModelLabel,
+                    2: currentEffortLabel,
+                  }),
+                  style: {
+                    top: box.top + 'px',
+                    left: box.left + 'px',
+                    width: box.width + 'px',
+                    maxHeight: box.maxHeight + 'px',
+                  },
+                },
+                body,
+              ),
+            )
+          : null,
+      )
+    }
+
     function ModelSettingsPanel({ t, kbId, kbs, onClose }) {
       const configQ = useEvalCall(kbId, true, 'ragConfigGet', null)
       const migrationQ = useEvalCall(kbId, true, 'ragMigration', null, (payload) =>
@@ -16273,116 +16683,52 @@ window.__ModuleLoader__.load({
         )
       }
 
-      /** 模型引用选择器（工作台 modelReferenceOptions 口径）：无值＝（使用配置默认）、
-          孤儿值列尾；选「默认」即清空本行覆盖。 */
-      const referencePicker = (ariaLabel, field, current) =>
-        pickerControl(
-          ariaLabel,
-          current || RAG_MODEL_NONE,
-          ragModelReferenceOptions(models, current, t('set.form.defaultNone')).map((option) => option.value),
-          (option) => {
-            const found = ragModelReferenceOptions(models, current, t('set.form.defaultNone')).find(
-              (o) => o.value === option,
-            )
-            return found ? found.label : option
-          },
-          (next) => update(field, next === RAG_MODEL_NONE ? '' : next),
-        )
+      /** 每腿一个合并选择器（spec 2026-10-21 D4）：关 / 跟随 / 六档；选项取该腿
+          生效模型的能力与声明子集。模型与档位同列，换模型时就地清回跟随。 */
+      const effortLabel = (value) => {
+        if (value === RAG_EFFORT_OFF) return 'Off'
+        if (value === RAG_EFFORT_FOLLOW) return 'Default'
+        return RAG_EFFORT_LABELS[value] || value
+      }
 
-      /** 思考跟随菜单（工作台 default 组，spec §6 登记后他裁「做」）：五槽位（抽取/百科/
-          裁判/合成/VLM）勾选；菜单常开不关（连点五项＝一个决定）、两列对齐（角色｜该槽位
-          当前指向的模型）；勾选即写 `*_thinking`（保存链早已全程携带）。 */
-      const thinkingRows = values
-        ? [
-            ['extract_thinking', 'set.field.extractModel', 'extract_model'],
-            ['wiki_thinking', 'set.field.wikiModel', 'wiki_model'],
-            ['judge_thinking', 'set.field.judgeModel', 'judge_model'],
-            ['synthesis_thinking', 'set.field.synthesisModel', 'synthesis_model'],
-            ['vlm_thinking', 'set.field.captionModel', 'vlm_model'],
-          ].map(([key, labelKey, modelField]) => {
-            const modelValue = values[modelField]
-            const options =
-              modelField === 'vlm_model'
-                ? ragVisionReferenceOptions(managedModels, modelValue, t('set.form.defaultNone'))
-                : ragModelReferenceOptions(models, modelValue, t('set.form.defaultNone'))
-            const found = options.find((option) => option.value === (modelValue || RAG_MODEL_NONE))
-            // 生效模型＝本槽位指向，否则配置默认，再否则列表首行（引擎的解析口径）。
-            // DSH 发布的条目能力由 DSH 决定：无思考能力的条目置灰，开关不再可勾。
-            const effective = modelValue || values.default_model || (models[0] ? models[0].name : '')
-            const resolved = models.find((item) => item && item.name === effective)
-            const fixed = Boolean(
-              resolved &&
-                String(resolved.name).indexOf('dsh:') === 0 &&
-                resolved.supports_thinking === false,
-            )
-            return {
-              key: key,
-              label: t(labelKey),
-              modelLabel: found ? found.label : modelValue || t('set.form.defaultNone'),
-              checked: Boolean(values[key]),
-              fixed: fixed,
-            }
+      const reconcileLegModel = (leg, nextModel) => {
+        const name = nextModel || values.default_model || (models[0] ? models[0].name : '')
+        const model = ragLegModel(models, name)
+        const nextEffort = ragEffortAfterModelChange(model, values[leg.effort], ragOwned(view, leg.effort))
+        if (nextEffort !== values[leg.effort]) update(leg.effort, nextEffort)
+        const nextThinking = ragThinkingAfterModelChange(model, values[leg.thinking], ragOwned(view, leg.thinking))
+        if (nextThinking !== values[leg.thinking]) update(leg.thinking, nextThinking)
+      }
+
+      const legModelRow = (leg, options, picker) => {
+        const label = t(leg.labelKey)
+        const extra = picker || {}
+        const modelOptions =
+          extra.modelOptions || ragModelReferenceOptions(models, values[leg.model], t('set.form.defaultNone'))
+        const currentModelValue =
+          extra.currentModelValue !== undefined ? extra.currentModelValue : values[leg.model] || RAG_MODEL_NONE
+        const onModelPicked =
+          extra.onModelPicked ||
+          ((next) => {
+            update(leg.model, next)
+            reconcileLegModel(leg, next)
           })
-        : []
-      const thinkingCount = thinkingRows.filter((row) => row.checked).length
-      const thinkingMenu = values
-        ? h(
-            'div',
-            { className: 'hrag-set-field hrag-set-thinkingwrap' },
-            h(DshMenu, {
-              title: t('set.form.thinkingMenuLabel'),
-              align: 'start',
-              anchor: 'field',
-              className: 'hrag-set-picker',
-              trigger: h(
-                React.Fragment,
-                null,
-                h(
-                  'span',
-                  { className: 'hrag-set-picker-label' },
-                  thinkingCount > 0
-                    ? t('set.form.thinkingMenuState', { 0: thinkingCount })
-                    : t('set.form.thinkingMenuStateNone'),
-                ),
-                lucideChevronDownIcon(),
-              ),
-              children: h(
-                'div',
-                { className: 'hrag-mm-tgrid' },
-                thinkingRows.map((row) =>
-                  h(
-                    'button',
-                    {
-                      key: row.key,
-                      type: 'button',
-                      role: 'menuitemcheckbox',
-                      'aria-checked': row.checked,
-                      'aria-label':
-                        row.label +
-                        ' · ' +
-                        row.modelLabel +
-                        (row.fixed ? ' · ' + t('set.form.thinkingModelFixed') : ''),
-                      className: 'hrag-mm-item hrag-mm-checkrow',
-                      disabled: row.fixed,
-                      title: row.fixed ? t('set.form.thinkingModelFixed') : undefined,
-                      onClick: () => update(row.key, !row.checked),
-                    },
-                    h(
-                      'span',
-                      { className: 'hrag-mm-trole' },
-                      h('span', { className: 'hrag-mm-tcheck' + (row.checked ? ' hrag-mm-tcheck-on' : '') }, row.checked ? dshCheckIcon() : null),
-                      row.label,
-                    ),
-                    h('span', { className: 'hrag-mm-tmodel', title: row.modelLabel }, row.modelLabel),
-                  ),
-                ),
-                thinkingRows.some((row) => row.fixed)
-                  ? h('div', { className: 'hrag-mm-tnote' }, t('set.form.thinkingModelFixed'))
-                  : null,
-              ),
-            }),
-          )
-        : null
+        return fieldRow(
+          label,
+          h(LegPicker, {
+            t,
+            leg,
+            values,
+            models,
+            modelOptions,
+            currentModelValue,
+            update,
+            onModelPicked,
+            effortLabel,
+          }),
+          options,
+        )
+      }
 
       const dshStatus =
         dshStatusQ.data && typeof dshStatusQ.data === 'object' ? dshStatusQ.data : null
@@ -16411,17 +16757,10 @@ window.__ModuleLoader__.load({
         }
         dshStatusText = parts.join(' · ')
       }
-      const dshMainModel =
-        dshStatus && dshStatus.mainModel
-          ? String(dshStatus.mainModel.provider) + ' / ' + String(dshStatus.mainModel.model)
-          : t('set.form.dshMainModelNone')
-
       const dshGroup = h(
         'div',
         { className: 'hrag-set-group' },
         h('div', { className: 'hrag-set-grouptitle', title: t('set.form.dshHint') }, t('set.group.dsh')),
-        h('p', { className: 'hrag-set-hint' }, t('set.form.dshHint')),
-        fieldRow(t('set.form.dshMainModel'), h('div', { className: 'hrag-set-locked' }, dshMainModel)),
         h(
           'div',
           { className: 'hrag-set-saverow' },
@@ -16487,8 +16826,25 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'hrag-set-group' },
         h('div', { className: 'hrag-set-grouptitle', title: t('set.form.defaultHint') }, t('set.group.default')),
-        referencePicker(t('set.field.defaultModel'), 'default_model', values.default_model),
-        thinkingMenu,
+        h(LegPicker, {
+          t,
+          // 「RAG 默认模型」只需要模型一层：复用同一套厂商分组/搜索/空值项，
+          // 不显示档位格与下钻根页。
+          leg: {
+            model: 'default_model',
+            thinking: 'default_thinking',
+            effort: 'default_reasoning_effort',
+            labelKey: 'set.field.defaultModel',
+          },
+          values,
+          models,
+          modelOptions: ragModelReferenceOptions(models, values.default_model, t('set.form.defaultNone')),
+          currentModelValue: values.default_model || RAG_MODEL_NONE,
+          update,
+          onModelPicked: (next) => update('default_model', next),
+          effortLabel,
+          modelsOnly: true,
+        }),
       )
         : null
 
@@ -16683,10 +17039,8 @@ window.__ModuleLoader__.load({
             'div',
             { className: 'hrag-set-group' },
             h('div', { className: 'hrag-set-grouptitle', title: t('set.form.extractModelHint') }, t('set.group.extraction')),
-            fieldRow(t('set.field.extractModel'), referencePicker(t('set.field.extractModel'), 'extract_model', values.extract_model)),
-            fieldRow(t('set.field.wikiModel'), referencePicker(t('set.field.wikiModel'), 'wiki_model', values.wiki_model), {
-              info: t('set.form.wikiModelHint'),
-            }),
+            legModelRow(RAG_LEGS[0]),
+            legModelRow(RAG_LEGS[1], { info: t('set.form.wikiModelHint') }),
           )
         : null
 
@@ -16695,12 +17049,8 @@ window.__ModuleLoader__.load({
             'div',
             { className: 'hrag-set-group' },
             h('div', { className: 'hrag-set-grouptitle', title: t('set.form.groupEvaluationHint') }, t('set.group.evaluation')),
-            fieldRow(t('set.field.judgeModel'), referencePicker(t('set.field.judgeModel'), 'judge_model', values.judge_model)),
-            fieldRow(
-              t('set.field.synthesisModel'),
-              referencePicker(t('set.field.synthesisModel'), 'synthesis_model', values.synthesis_model),
-              { info: t('set.form.synthesisModelHint') },
-            ),
+            legModelRow(RAG_LEGS[2]),
+            legModelRow(RAG_LEGS[3], { info: t('set.form.synthesisModelHint') }),
           )
         : null
 
@@ -16832,46 +17182,27 @@ window.__ModuleLoader__.load({
         const found = captionOptions.find((option) => option.value === value)
         return found ? found.label : value
       }
+      const captionPickerOptions = captionOptions.map((option) => ({
+        value: option.value,
+        label: captionLabel(option.value),
+      }))
 
       const multimodalGroup = view && values
         ? h(
             'div',
             { className: 'hrag-set-group' },
             h('div', { className: 'hrag-set-grouptitle', title: t('set.form.multimodalHint') }, t('set.group.multimodal')),
-            fieldRow(
-              t('set.field.captionModel'),
-              h(
-                'div',
-                { className: 'hrag-set-field' },
-                h(DshMenu, {
-                  title: t('set.field.captionModel'),
-                  align: 'end',
-                  anchor: 'field',
-                  className: 'hrag-set-picker',
-                  trigger: h(
-                    React.Fragment,
-                    null,
-                    h('span', { className: 'hrag-set-picker-label' }, captionLabel(values.vlm_model || RAG_MODEL_NONE)),
-                    lucideChevronDownIcon(),
-                  ),
-                  items: [
-                    { type: 'label', id: 'label', text: t('set.field.captionModel') },
-                    ...captionOptions.map((option, index) => ({
-                      id: String(index),
-                      label: captionLabel(option.value),
-                    })),
-                  ],
-                  selectedId:
-                    captionOptions.findIndex((option) => option.value === (values.vlm_model || RAG_MODEL_NONE)) >= 0
-                      ? String(captionOptions.findIndex((option) => option.value === (values.vlm_model || RAG_MODEL_NONE)))
-                      : undefined,
-                  onSelect: (id) => {
-                    const option = captionOptions[Number(id)]
-                    if (option) update('vlm_model', option.value === RAG_MODEL_NONE ? '' : option.value)
-                  },
-                }),
-              ),
+            legModelRow(
+              RAG_LEGS[4],
               { info: t('set.form.captionHint') },
+              {
+                modelOptions: captionPickerOptions,
+                currentModelValue: values.vlm_model || RAG_MODEL_NONE,
+                onModelPicked: (next) => {
+                  update('vlm_model', next)
+                  reconcileLegModel(RAG_LEGS[4], next)
+                },
+              },
             ),
             fieldRow(
               t('set.form.asrRowLabel'),
@@ -17179,6 +17510,29 @@ window.__ModuleLoader__.load({
       'parse_provider', 'parse_tier', 'parse_language', 'parse_model_version',
     ]
     const RAG_THINKING_FIELDS = ['extract_thinking', 'wiki_thinking', 'judge_thinking', 'synthesis_thinking', 'vlm_thinking']
+    const RAG_EFFORT_FIELDS = [
+      'extract_reasoning_effort', 'wiki_reasoning_effort', 'judge_reasoning_effort',
+      'synthesis_reasoning_effort', 'vlm_reasoning_effort',
+    ]
+    const RAG_EFFORT_LEVELS = ['minimal', 'low', 'medium', 'high', 'xhigh', 'max']
+    const RAG_EFFORT_OFF = 'off'
+    const RAG_EFFORT_FOLLOW = ''
+    // 档位标签照 DSH：宿主按适配器给的英文名展示（pi-ai 即首字母大写），不随界面语言翻译。
+    const RAG_EFFORT_LABELS = {
+      minimal: 'Minimal',
+      low: 'Low',
+      medium: 'Medium',
+      high: 'High',
+      xhigh: 'Xhigh',
+      max: 'Max',
+    }
+    const RAG_LEGS = [
+      { key: 'extract', thinking: 'extract_thinking', effort: 'extract_reasoning_effort', model: 'extract_model', labelKey: 'set.field.extractModel' },
+      { key: 'wiki', thinking: 'wiki_thinking', effort: 'wiki_reasoning_effort', model: 'wiki_model', labelKey: 'set.field.wikiModel' },
+      { key: 'judge', thinking: 'judge_thinking', effort: 'judge_reasoning_effort', model: 'judge_model', labelKey: 'set.field.judgeModel' },
+      { key: 'synthesis', thinking: 'synthesis_thinking', effort: 'synthesis_reasoning_effort', model: 'synthesis_model', labelKey: 'set.field.synthesisModel' },
+      { key: 'vlm', thinking: 'vlm_thinking', effort: 'vlm_reasoning_effort', model: 'vlm_model', labelKey: 'set.field.captionModel' },
+    ]
 
     function ragAsEnum(value, options, fallback) {
       return typeof value === 'string' && options.indexOf(value) !== -1 ? value : fallback
@@ -17224,6 +17578,10 @@ window.__ModuleLoader__.load({
         },
       }
       for (const key of RAG_THINKING_FIELDS) values[key] = Boolean(config[key])
+      for (const key of RAG_EFFORT_FIELDS) {
+        const level = config[key]
+        values[key] = typeof level === 'string' && RAG_EFFORT_LEVELS.indexOf(level) !== -1 ? level : RAG_EFFORT_FOLLOW
+      }
       return values
     }
 
@@ -17299,6 +17657,17 @@ window.__ModuleLoader__.load({
         }
         input[key] = next
       }
+      for (const key of RAG_EFFORT_FIELDS) {
+        const next = values[key]
+        const previous = view && view.config && typeof view.config[key] === 'string' ? view.config[key] : RAG_EFFORT_FOLLOW
+        if (next === previous) {
+          if (next !== RAG_EFFORT_FOLLOW && ragOwned(view, key)) input[key] = next
+          continue
+        }
+        if (next !== RAG_EFFORT_FOLLOW || ragOwned(view, key)) {
+          input[key] = next === RAG_EFFORT_FOLLOW ? null : next
+        }
+      }
       const video = {}
       const loadedVideo = view && view.config && view.config.video ? view.config.video : {}
       const nextModel = values.video.asr_model.trim()
@@ -17324,8 +17693,57 @@ window.__ModuleLoader__.load({
       if (RAG_SECRET_FIELDS.some((key) => edited(values[key], seeded[key]))) return true
       if (RAG_SELECT_FIELDS.some((key) => values[key] !== seeded[key])) return true
       if (RAG_THINKING_FIELDS.some((key) => values[key] !== seeded[key])) return true
+      if (RAG_EFFORT_FIELDS.some((key) => values[key] !== seeded[key])) return true
       return edited(values.video.asr_provider, seeded.video.asr_provider) ||
         edited(values.video.asr_model, seeded.video.asr_model)
+    }
+
+    function ragLegModel(models, name) {
+      return Array.isArray(models) ? models.find((item) => item && item.name === name) || null : null
+    }
+
+    /** 可选值域：关 / 跟随 / 该模型声明的档位子集；未声明子集＝六档全开。 */
+    function ragEffortOptionsForModel(model) {
+      if (model && model.supports_thinking === false) return [RAG_EFFORT_OFF]
+      if (model && model.supports_reasoning_effort === false) return [RAG_EFFORT_OFF, RAG_EFFORT_FOLLOW]
+      const declared =
+        model && Array.isArray(model.supported_reasoning_efforts)
+          ? model.supported_reasoning_efforts.filter(
+              (level, index, list) => RAG_EFFORT_LEVELS.indexOf(level) !== -1 && list.indexOf(level) === index,
+            )
+          : []
+      return [RAG_EFFORT_OFF, RAG_EFFORT_FOLLOW, ...(declared.length > 0 ? declared : RAG_EFFORT_LEVELS)]
+    }
+
+    /** 选择器显示值：思考关＝关；不能思考的模型也显示关；对该模型无效的档位显示跟随。 */
+    function ragLegEffortValue(values, model, leg) {
+      if (model && model.supports_thinking === false) return RAG_EFFORT_OFF
+      const value = values[leg.thinking] ? values[leg.effort] || RAG_EFFORT_FOLLOW : RAG_EFFORT_OFF
+      if (value === RAG_EFFORT_OFF || value === RAG_EFFORT_FOLLOW) return value
+      if (model && model.supports_reasoning_effort === false) return RAG_EFFORT_FOLLOW
+      return value
+    }
+
+    /** 一个选择决定两件事：关→thinking=false＋档位清空；跟随→thinking=true＋空档；档位→thinking=true。 */
+    function ragLegEffortChange(leg, next) {
+      if (next === RAG_EFFORT_OFF) {
+        return { [leg.thinking]: false, [leg.effort]: RAG_EFFORT_FOLLOW }
+      }
+      if (next === RAG_EFFORT_FOLLOW) {
+        return { [leg.thinking]: true, [leg.effort]: RAG_EFFORT_FOLLOW }
+      }
+      return { [leg.thinking]: true, [leg.effort]: next }
+    }
+
+    /** 换模型：只清本面板持有的档位；config.yaml 声明的不动。 */
+    function ragEffortAfterModelChange(model, current, owned) {
+      if (!owned || !current) return current
+      return ragEffortOptionsForModel(model).indexOf(current) !== -1 ? current : RAG_EFFORT_FOLLOW
+    }
+
+    function ragThinkingAfterModelChange(model, thinking, owned) {
+      if (!owned || !thinking) return thinking
+      return model && model.supports_thinking === false ? false : thinking
     }
 
     function ragEffectiveDimension(raw) {
@@ -17421,6 +17839,57 @@ window.__ModuleLoader__.load({
         options.push({ value: current, label: current })
       }
       return options
+    }
+
+    /** 模型显示名（照 DSH 只用模型名）：`dsh:` 条目去掉显示名里的「 · provider」后缀。 */
+    function ragModelNameLabel(value, label) {
+      const raw = String(value || '')
+      const text = String(label || raw)
+      if (!raw.startsWith('dsh:')) return text
+      const rest = raw.slice(4)
+      const slash = rest.indexOf('/')
+      const provider = slash > 0 ? rest.slice(0, slash) : rest
+      const suffix = ' · ' + provider
+      return text.endsWith(suffix) ? text.slice(0, -suffix.length) : text
+    }
+
+    /** 模型选项按厂商分组（照 DSH 模型选择）：`dsh:<provider>/<model>` 的 provider
+        成为组标题（deepseek-account 用本地化名），条目名去掉「 · provider」后缀；
+        手动条目归末组，默认项单独置顶。 */
+    function ragModelOptionGroups(options, manualLabel, providerLabels) {
+      const groups = []
+      const byKey = new Map()
+      let defaultOption = null
+      for (const option of options) {
+        if (!option) continue
+        if (option.value === RAG_MODEL_NONE) {
+          defaultOption = option
+          continue
+        }
+        const raw = String(option.value || '')
+        let key = '__manual__'
+        let label = manualLabel
+        if (raw.startsWith('dsh:')) {
+          const rest = raw.slice(4)
+          const slash = rest.indexOf('/')
+          key = slash > 0 ? rest.slice(0, slash) : rest
+          label = (providerLabels && providerLabels[key]) || key
+        }
+        let group = byKey.get(key)
+        if (!group) {
+          group = { key, label, options: [] }
+          byKey.set(key, group)
+          groups.push(group)
+        }
+        group.options.push({
+          value: option.value,
+          label: ragModelNameLabel(raw, option.label || raw),
+          fullLabel: String(option.label || raw),
+        })
+      }
+      const aliases = groups.filter((group) => group.key !== '__manual__')
+      const manual = groups.find((group) => group.key === '__manual__')
+      return { defaultOption, groups: manual ? [...aliases, manual] : aliases }
     }
 
     /** 档位快捷项：① 型＝探到的有效档；② 型＝≤ 原生的候选；③ 型没有档位区。 */
