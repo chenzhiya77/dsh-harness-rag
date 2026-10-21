@@ -2568,6 +2568,9 @@ window.__ModuleLoader__.load({
           '.hrag-ev-th-sort { width: 30px; text-align: right; }',
           '.hrag-ev-tr-muted td { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-ev-tr-summary { border-top: 1.5px solid var(--dsw-alias-border-l3); font-weight: 600; }',
+          // 数值列表头要压过 `.hrag-ev-table th` 的 text-align:left（特异性）；汇总胶囊 6px 内衬需补回（10-21 对齐修）。
+          '.hrag-ev-table th.hrag-ev-th-num, .hrag-ev-table th.hrag-ev-th-sort { text-align: right; }',
+          '.hrag-ev-tr-summary .hrag-ev-capsule { margin-right: -6px; }',
           '.hrag-ev-tr { cursor: pointer; }',
           '.hrag-ev-tr:hover td { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-ev-tr-on td { background: var(--dsw-alias-interactive-bg-active); }',
@@ -4944,7 +4947,7 @@ window.__ModuleLoader__.load({
         缩放锚光标＋拖拽平移）、节点可拖（拖动中钉住＋近邻沉降）、节点悬停 tooltip
         （名＋描述）、边标签＝关系名与节点名随缩放档隐藏；无 LOD/叠加/搜索（迷你
         语义）。力场内核与大图共用（graphForceStep，参数迷你化）。 */
-    function RecallGraphMini({ entities, relations }) {
+    function RecallGraphMini({ entities, relations, onOpenEntity }) {
       const wrapRef = React.useRef(null)
       const canvasRef = React.useRef(null)
       const simRef = React.useRef(null)
@@ -5174,6 +5177,7 @@ window.__ModuleLoader__.load({
         if (drag) {
           const dx = event.clientX - drag.x
           const dy = event.clientY - drag.y
+          if (Math.abs(event.clientX - drag.startX) + Math.abs(event.clientY - drag.startY) > 3) drag.moved = true
           drag.x = event.clientX
           drag.y = event.clientY
           if (drag.kind === 'pan') {
@@ -5214,6 +5218,9 @@ window.__ModuleLoader__.load({
           item: found && simRef.current ? simRef.current.byId.get(found.entry.node.name) : null,
           x: event.clientX,
           y: event.clientY,
+          startX: event.clientX,
+          startY: event.clientY,
+          moved: false,
         }
         setGrabbing(true)
       }
@@ -5227,6 +5234,15 @@ window.__ModuleLoader__.load({
           drag.item.fixed = false
           drag.item.ppx = drag.item.x
           drag.item.ppy = drag.item.y
+        }
+        return drag
+      }
+
+      const handleUp = (event) => {
+        const drag = releaseDrag()
+        if (drag && !drag.moved) {
+          const found = pick(event)
+          if (found && onOpenEntity) onOpenEntity(found.entry.node.name)
         }
       }
 
@@ -5247,7 +5263,7 @@ window.__ModuleLoader__.load({
           style: { cursor: grabbing ? 'grabbing' : tip ? 'pointer' : 'grab' },
           onMouseDown: handleDown,
           onMouseMove: handleMove,
-          onMouseUp: releaseDrag,
+          onMouseUp: handleUp,
           onMouseLeave: handleLeave,
         }),
         tip
@@ -5300,7 +5316,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function RecallView({ t, kbId, onOpenChunk, onViewInVectorSpace, onViewInGraphSpace, prefill, onOpenWikiEntry, onOpenManualCard }) {
+    function RecallView({ t, kbId, onOpenChunk, onViewInVectorSpace, onViewInGraphSpace, prefill, onOpenWikiEntry, onOpenManualCard, onOpenEntity }) {
       const [query, setQuery] = React.useState('')
       const [topK, setTopK] = React.useState(5)
       const [pending, setPending] = React.useState(false)
@@ -5661,6 +5677,7 @@ window.__ModuleLoader__.load({
                     h(RecallGraphMini, {
                       entities: result.paths.graph.entities || [],
                       relations: result.paths.graph.relations || [],
+                      onOpenEntity,
                     }),
                   )
                 : h(
@@ -6399,7 +6416,7 @@ window.__ModuleLoader__.load({
     /** 投影视图（Task 6）：工具栏（四类 chips／2D·3D／算法／重算）＋画布＋
         图例＋叠加徽标；三态与提示行照面板既有口径。keep-alive 挂载——enabled
         门控首次取数，切走不丢配置与叠加。 */
-    function VectorView({ t, kbId, enabled, overlayRequest, onOpenChunk }) {
+    function VectorView({ t, kbId, enabled, overlayRequest, onOpenChunk, onOpenWikiEntry, onOpenManualCard, onOpenEntity }) {
       const [collections, setCollections] = React.useState(VEC_COLLECTIONS)
       const [algo, setAlgo] = React.useState('pca')
       const [dims, setDims] = React.useState(2)
@@ -6828,8 +6845,14 @@ window.__ModuleLoader__.load({
             onPick: (point) => {
               if (point.source_type === 'chunk' && onOpenChunk) {
                 onOpenChunk(point.color_key, point.id, point.label)
+              } else if (point.source_type === 'wiki' && onOpenWikiEntry) {
+                onOpenWikiEntry(point.id)
+              } else if (point.source_type === 'card' && onOpenManualCard) {
+                onOpenManualCard(point.id)
+              } else if (point.source_type === 'entity' && onOpenEntity) {
+                // entity id＝实体名，与图谱节点同键（D2 同走丙）。
+                onOpenEntity(point.id)
               }
-              // wiki/card 点 → 条目/卡片抽屉随 Task 9 接线；entity 照工作台惰性。
             },
           }),
           activeOverlay && overlayHitCounts
@@ -7515,7 +7538,7 @@ window.__ModuleLoader__.load({
     /** 图谱视图（Task 7）：工具栏（实体搜索／着色切换）＋画布＋统计/叠加徽标；
         点击实体开「实体抽屉」（描述＋关联切片 #K → 切片抽屉，链式复用）；召回
         「在图谱中查看」叠加三层路径高亮。keep-alive；enabled 门控首次取数。 */
-    function GraphView({ t, kbId, enabled, overlayRequest, onOpenChunk }) {
+    function GraphView({ t, kbId, enabled, overlayRequest, entityRequest, onOpenChunk }) {
       const [phase, setPhase] = React.useState('idle')
       const [graph, setGraph] = React.useState(null)
       const [failure, setFailure] = React.useState(null)
@@ -7532,6 +7555,7 @@ window.__ModuleLoader__.load({
       // 显示邻居子图、去掉「查看局部图」行钮——标题栏图标钮一点，卡内图直接重裁）。
       const [hopDraft, setHopDraft] = React.useState(1)
       const overlayNonceRef = React.useRef(null)
+      const entityNonceRef = React.useRef(null)
       const graphFp = graph ? graph.stats.node_count + ':' + graph.stats.edge_count : null
       const communityColorMap = React.useMemo(
         () => (graph ? buildGraphColorMap(graph.nodes, graph.edges) : new Map()),
@@ -7565,6 +7589,7 @@ window.__ModuleLoader__.load({
         setDocNames(null)
         setRenderTier('full')
         overlayNonceRef.current = null
+        entityNonceRef.current = null
       }, [kbId])
 
       const load = React.useCallback(() => {
@@ -7606,6 +7631,18 @@ window.__ModuleLoader__.load({
         overlayNonceRef.current = overlayRequest.nonce
         setActiveOverlay({ text: overlayRequest.text, trace: overlayRequest.trace, fingerprint: graphFp })
       }, [enabled, overlayRequest, graph, graphFp])
+
+      // 实体定位消费（召回实体点击，D1 丙）：图就绪后按 id 选中开抽屉并定位；同一请求只消费一次。
+      React.useEffect(() => {
+        if (!enabled || !entityRequest || !graph) return
+        if (String(entityRequest.kbId) !== String(kbId)) return
+        if (entityNonceRef.current === entityRequest.nonce) return
+        entityNonceRef.current = entityRequest.nonce
+        const node = graph.nodes.find((item) => String(item.id) === String(entityRequest.id))
+        if (!node) return
+        setSelected(node)
+        setFocusNode({ id: node.id, token: Date.now() })
+      }, [enabled, entityRequest, graph, kbId])
 
       // 指纹漂移（文档增删改）→ 旧叠加留在图上是误导：清除并提示（照工作台）。
       React.useEffect(() => {
@@ -17827,6 +17864,12 @@ window.__ModuleLoader__.load({
       const [recallPrefill, setRecallPrefill] = React.useState(null)
       // 图谱联动叠加（Task 7「在图谱中查看」）：召回触发 → 切图谱分区并高亮路径。
       const [graphOverlayRequest, setGraphOverlayRequest] = React.useState(null)
+      // 召回／投影实体点击（D1／D2 丙）：切图谱分区并选中实体开抽屉。
+      const [graphEntityRequest, setGraphEntityRequest] = React.useState(null)
+      const openEntityInGraph = React.useCallback((name) => {
+        setGraphEntityRequest({ kbId, id: name, nonce: Date.now() })
+        setSection('graph')
+      }, [kbId])
       const fileInputRef = React.useRef(null)
       // 库排序拖拽：本地序 → 下拉库序；跨行挪槽即持久（照工作台 kb-order）。
       const [kbOrder, setKbOrder] = React.useState(() => readKbOrderIds())
@@ -17888,6 +17931,7 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         setOverlayRequest(null)
         setGraphOverlayRequest(null)
+        setGraphEntityRequest(null)
         setWikiDrawer(null)
       }, [kbId])
 
@@ -18298,6 +18342,7 @@ window.__ModuleLoader__.load({
                 const docId = String(chunkId).split('#')[0]
                 setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
               },
+              onOpenEntity: openEntityInGraph,
               onViewInVectorSpace: (request) => {
                 setOverlayRequest(Object.assign({}, request, { nonce: Date.now() }))
                 setSection('vectors')
@@ -18336,6 +18381,9 @@ window.__ModuleLoader__.load({
               onOpenChunk: (docId, chunkId, docName) => {
                 setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
               },
+              onOpenWikiEntry: (entryId) => setWikiDrawer({ kind: 'entry', id: entryId }),
+              onOpenManualCard: (cardId) => setWikiDrawer({ kind: 'card', id: cardId }),
+              onOpenEntity: openEntityInGraph,
             })),
           ),
           // 图谱视图 keep-alive（同投影口径）：切走不丢视口与叠加。
@@ -18347,6 +18395,7 @@ window.__ModuleLoader__.load({
               kbId,
               enabled: section === 'graph',
               overlayRequest: graphOverlayRequest,
+              entityRequest: graphEntityRequest,
               onOpenChunk: (docId, chunkId, docName) => {
                 setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
               },
