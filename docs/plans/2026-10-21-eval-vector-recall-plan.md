@@ -48,6 +48,11 @@
 - **门禁**：`node --check client.js` 过；冒烟默认 **79 PASS／0 FAIL**、`SMOKE_HOSTLESS=1` **79 PASS／0 FAIL**，末尾 `ALL CLIENT SMOKE CHECKS PASSED`。
 - **未做**：真机截图与题库／历史表视觉回归留 Task 4 真跑；两表共用同一套类，本修只改表头对齐方向。
 
+**收官后补修（2026-10-21，跟进笔）**：真机宽栏下首列与数值列之间空档过大（对齐正确但分布难看）。
+- **落法**：检索质量表加 `hrag-ev-quality` 类——首列表头 `width:1%`＋`nowrap` 收内容宽（只挂 `th`：n=0 行是 `colSpan=5` 的 `td:first-child`，给 td 设宽会拖歪整行）；整表 `max-width:560px; margin:0 auto`。题库／历史两表不加类，维持满宽。
+- **几何**（同一复刻页，740）：首列→命中率文本空档 225.3→81.8；数值列间距 92.6／109.1／98.1→89.7／79.5／98.7；表宽 560 居中（左右各 90）。360／480／559／560 档表随容器收窄、无溢出，表头文字右缘−数值右缘四列恒 0；900 档封顶 560。
+- **门禁**：`node --check client.js` 过；冒烟默认与 `SMOKE_HOSTLESS=1` 均 79 PASS／0 FAIL。
+
 ## Task 2 — 投影点点击补线（4.2）
 
 > 动到的文件：`client.js`（`VectorView` props／`onPick` 分发／父级接线）。

@@ -2571,6 +2571,11 @@ window.__ModuleLoader__.load({
           // 数值列表头要压过 `.hrag-ev-table th` 的 text-align:left（特异性）；汇总胶囊 6px 内衬需补回（10-21 对齐修）。
           '.hrag-ev-table th.hrag-ev-th-num, .hrag-ev-table th.hrag-ev-th-sort { text-align: right; }',
           '.hrag-ev-tr-summary .hrag-ev-capsule { margin-right: -6px; }',
+          // 检索质量窄表（10-21 宽栏空档修）：首列收到内容宽（1% 固定技法，只挂 th——
+          // n=0 行是 colSpan=5 的 td:first-child，给 td 设宽会拖歪整行），多余额度
+          // 让给四个数值列；整表封顶 560 居中，宽栏下不再无限摊开。
+          '.hrag-ev-quality { max-width: 560px; margin: 0 auto; }',
+          '.hrag-ev-quality th:first-child { width: 1%; white-space: nowrap; }',
           '.hrag-ev-tr { cursor: pointer; }',
           '.hrag-ev-tr:hover td { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-ev-tr-on td { background: var(--dsw-alias-interactive-bg-active); }',
@@ -10343,7 +10348,7 @@ window.__ModuleLoader__.load({
           ? h('div', { className: 'hrag-ev-hint' }, tk('ev.emptyLayer1'))
           : h(
               'table',
-              { className: 'hrag-ev-table' },
+              { className: 'hrag-ev-table hrag-ev-quality' },
               h(
                 'thead',
                 null,
