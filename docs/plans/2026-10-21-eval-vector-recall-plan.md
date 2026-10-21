@@ -59,7 +59,7 @@
 
 - [x] `VectorView` 增 `onOpenWikiEntry`／`onOpenManualCard`／`onOpenEntity`；父级挂载处接到 `wikiDrawer` 与 `openEntityInGraph`。
 - [x] `onPick` 按 `source_type` 分发：chunk 走既有切片抽屉；wiki／card 开面板级条目／卡片抽屉；entity 同走丙（D2）。
-- [ ] 手验四类点；图例显隐、搜索叠加、hover 聚焦、keep-alive 状态回归。
+- [x] 手验四类点；图例显隐、搜索叠加、hover 聚焦、keep-alive 状态回归。— 2026-10-21 他手验真跑全过（Task 4 清单）。
 - [x] 门禁：`node --check client.js`；冒烟默认与 `SMOKE_HOSTLESS=1`。
 
 **实测**（Task 2，2026-10-21）：
@@ -75,7 +75,7 @@
 - [x] 迷你图补「拖拽 vs 点击」判别（照大图 `drag.moved`），命中节点且未拖动才触发 `onOpenEntity`。
 - [x] 父级发实体定位请求（nonce 去重）并切到 `graph`；`GraphView` 在图就绪后按 id 开抽屉＋`focusNode` 定位，同一请求只消费一次。
 - [x] 边界：图加载中等待就绪；图空／失败停既有态；目标缺失不开抽屉。
-- [ ] 手验：点实体→切 tab 并开抽屉；拖节点／平移／缩放松手不误触；tooltip 不变；返回召回 tab 结果与选择集保持。
+- [x] 手验：点实体→切 tab 并开抽屉；拖节点／平移／缩放松手不误触；tooltip 不变；返回召回 tab 结果与选择集保持。— 2026-10-21 他手验真跑全过（Task 4 清单）。
 - [x] 门禁：`node --check client.js`；冒烟默认与 `SMOKE_HOSTLESS=1`。
 
 **实测**（Task 3，2026-10-21）：
