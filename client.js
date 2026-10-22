@@ -101,6 +101,56 @@ window.__ModuleLoader__.load({
       'doc.sortAsc': '升序',
       'doc.sortDesc': '降序',
       'doc.sortManual': '手动排序',
+      'doc.sortByName': '按名称排序',
+      // 文档文件夹（doc-folders 对）：本地分组；未分类有 ⋯/右键（新建文件夹、收起/展开），不可改名/删除。
+      'doc.folderNew': '新建文件夹',
+      'doc.folderUnfiled': '未分类',
+      'doc.folderEmpty': '此文件夹为空',
+      'doc.folderRename': '重命名',
+      'doc.folderDelete': '删除文件夹',
+      'doc.folderDeleteTitle': '删除文件夹？',
+      'doc.folderDeleteDescription': '其中 {0} 篇文档会移到{1}，文档不会被删除。',
+      'doc.folderMoveTo': '移动到文件夹',
+      'doc.folderNamePlaceholder': '文件夹名称',
+      'doc.folderNameEmpty': '请输入文件夹名称',
+      'doc.folderNameDuplicate': '已存在同名文件夹',
+      'doc.folderExpand': '展开文件夹',
+      'doc.folderCollapse': '收起文件夹',
+      'doc.folderMenu': '文件夹操作',
+      'doc.folderStyle': '图标与颜色',
+      'doc.folderStyleShape': '样式',
+      'doc.folderStyleColor': '颜色',
+      'doc.folderStyleFolder': '文件夹',
+      'doc.folderStylePizza': '披萨',
+      'doc.folderStyleIceCream': '冰淇淋',
+      'doc.folderStyleCherry': '樱桃',
+      'doc.folderStyleFish': '鱼',
+      'doc.folderStyleBird': '小鸟',
+      'doc.folderStyleRabbit': '兔子',
+      'doc.folderStyleLeaf': '叶子',
+      'doc.folderStyleCloud': '云朵',
+      'doc.folderStyleMoon': '月亮',
+      'doc.folderStyleUmbrella': '雨伞',
+      'doc.folderStyleHeadphones': '耳机',
+      'doc.folderStyleGamepad': '手柄',
+      'doc.folderStylePalette': '调色盘',
+      'doc.folderStyleCamera': '相机',
+      'doc.folderStyleDefault': '默认',
+      'doc.folderStyleReset': '恢复默认',
+      'doc.folderStyleDone': '完成',
+      'doc.folderColorGray': '灰色',
+      'doc.folderColorForest': '墨绿',
+      'doc.folderColorGreen': '绿色',
+      'doc.folderColorBlue': '蓝色',
+      'doc.folderColorAmber': '琥珀',
+      'doc.folderColorRed': '红色',
+      'doc.folderColorPink': '粉色',
+      'doc.folderColorIndigo': '靛蓝',
+      'doc.folderColorOrange': '橙色',
+      'doc.folderColorTeal': '青绿',
+      'doc.unfiledExpand': '展开未分类',
+      'doc.unfiledCollapse': '收起未分类',
+      'doc.unfiledMenu': '未分类操作',
       // 列体系（doc-columns 对 Task 1）：表头列名（照工作台 table.* 逐字）。
       'doc.thName': '名称',
       'doc.thStatus': '状态',
@@ -140,6 +190,7 @@ window.__ModuleLoader__.load({
       'doc.genQuestionBatch': '生成考题（联合）',
       'doc.selectedCount': '已选 {0} 项',
       'doc.selectAll': '全选',
+      'doc.selectGroup': '选择本组文档',
       'doc.selectDocument': '选择文档',
       'doc.deleteSelected': '删除所选',
       'doc.cancelSelection': '取消选择',
@@ -876,6 +927,55 @@ window.__ModuleLoader__.load({
       'doc.sortAsc': 'Ascending',
       'doc.sortDesc': 'Descending',
       'doc.sortManual': 'Manual order',
+      'doc.sortByName': 'Sort by name',
+      'doc.folderNew': 'New folder',
+      'doc.folderUnfiled': 'Unfiled',
+      'doc.folderEmpty': 'This folder is empty',
+      'doc.folderRename': 'Rename',
+      'doc.folderDelete': 'Delete folder',
+      'doc.folderDeleteTitle': 'Delete this folder?',
+      'doc.folderDeleteDescription': '{0} document(s) will move to {1}; the documents themselves are not deleted.',
+      'doc.folderMoveTo': 'Move to folder',
+      'doc.folderNamePlaceholder': 'Folder name',
+      'doc.folderNameEmpty': 'Enter a folder name',
+      'doc.folderNameDuplicate': 'A folder with this name already exists',
+      'doc.folderExpand': 'Expand folder',
+      'doc.folderCollapse': 'Collapse folder',
+      'doc.folderMenu': 'Folder actions',
+      'doc.folderStyle': 'Icon & color',
+      'doc.folderStyleShape': 'Style',
+      'doc.folderStyleColor': 'Color',
+      'doc.folderStyleFolder': 'Folder',
+      'doc.folderStylePizza': 'Pizza',
+      'doc.folderStyleIceCream': 'Ice cream',
+      'doc.folderStyleCherry': 'Cherry',
+      'doc.folderStyleFish': 'Fish',
+      'doc.folderStyleBird': 'Bird',
+      'doc.folderStyleRabbit': 'Rabbit',
+      'doc.folderStyleLeaf': 'Leaf',
+      'doc.folderStyleCloud': 'Cloud',
+      'doc.folderStyleMoon': 'Moon',
+      'doc.folderStyleUmbrella': 'Umbrella',
+      'doc.folderStyleHeadphones': 'Headphones',
+      'doc.folderStyleGamepad': 'Gamepad',
+      'doc.folderStylePalette': 'Palette',
+      'doc.folderStyleCamera': 'Camera',
+      'doc.folderStyleDefault': 'Default',
+      'doc.folderStyleReset': 'Reset to default',
+      'doc.folderStyleDone': 'Done',
+      'doc.folderColorGray': 'Gray',
+      'doc.folderColorForest': 'Forest',
+      'doc.folderColorGreen': 'Green',
+      'doc.folderColorBlue': 'Blue',
+      'doc.folderColorAmber': 'Amber',
+      'doc.folderColorRed': 'Red',
+      'doc.folderColorPink': 'Pink',
+      'doc.folderColorIndigo': 'Indigo',
+      'doc.folderColorOrange': 'Orange',
+      'doc.folderColorTeal': 'Teal',
+      'doc.unfiledExpand': 'Expand unfiled',
+      'doc.unfiledCollapse': 'Collapse unfiled',
+      'doc.unfiledMenu': 'Unfiled actions',
       'doc.thName': 'Name',
       'doc.thStatus': 'Status',
       'doc.thUploader': 'Uploader',
@@ -910,6 +1010,7 @@ window.__ModuleLoader__.load({
       'doc.genQuestionBatch': 'Generate question (joint)',
       'doc.selectedCount': '{0} selected',
       'doc.selectAll': 'Select all',
+      'doc.selectGroup': 'Select group documents',
       'doc.selectDocument': 'Select document',
       'doc.deleteSelected': 'Delete selected',
       'doc.cancelSelection': 'Cancel selection',
@@ -2009,6 +2110,64 @@ window.__ModuleLoader__.load({
           '.hrag-doccell-status { overflow: visible; }',
           '.hrag-doccell-time { font-variant-numeric: tabular-nums; }',
           '.hrag-doccell-right { text-align: right; font-variant-numeric: tabular-nums; }',
+          // 文档文件夹（doc-folders 对）：组行与文档行同高；文件夹图标（14 字形）
+          // 与表头全选框同列（字形 7..21，框 8..21），名称左缘 32 对齐「名称」表头；
+          // 文档行的类型徽章仍在 32、名称仍 60。名称表头排序箭盒常驻占位、默认仅
+          // opacity，hover/focus/激活时显现。
+          '.hrag-docth-name { cursor: pointer; }',
+          '.hrag-docth-name:focus-visible { outline: none; box-shadow: inset 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color), inset 0 -0.5px 0 var(--dsw-alias-border-l2); }',
+          '.hrag-docnamehead { display: inline-flex; align-items: center; gap: 2px; min-width: 0; }',
+          '.hrag-docnamehead-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-docnamehead-sort { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; flex-shrink: 0; opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-docnamehead-sort svg { width: 12px; height: 12px; }',
+          '.hrag-docth-name:hover .hrag-docnamehead-sort, .hrag-docth-name:focus-visible .hrag-docnamehead-sort, .hrag-docnamehead-sort-active { opacity: 1; }',
+          '.hrag-docgroup { cursor: pointer; }',
+          '.hrag-docgroup:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          // 文件夹排序拖拽（10-22 追加六）：组行可拖时抓手；拖动源降透明；
+          // 落点用上/下 2px 插入线（与文档行同口径，逐 td inset——border 会改行高）。
+          '.hrag-docgroup-draggable { cursor: grab; }',
+          '.hrag-docgroup-dragging { opacity: 0.45; }',
+          '.hrag-docgroup-drop-before td { box-shadow: inset 0 2px 0 var(--dsw-alias-button-primary-fill); }',
+          '.hrag-docgroup-drop-after td { box-shadow: inset 0 -2px 0 var(--dsw-alias-button-primary-fill); }',
+          '.hrag-docgroup td { height: 36px; padding: 0 8px; vertical-align: middle; }',
+          '.hrag-docgroup-drop { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-docgroup-drop td { box-shadow: inset 0 0 0 2px var(--dsw-alias-button-primary-fill); }',
+          '.hrag-docgroupcell { display: flex; align-items: center; min-width: 0; height: 36px; padding-left: 0; }',
+          '.hrag-docgroup-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; margin-left: -4px; margin-right: 8px; flex-shrink: 0; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-docgroup-iconbtn { cursor: pointer; }',
+          '.hrag-docgroup-iconbtn:hover { color: var(--dsw-alias-label-primary); background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-docgroup-iconbtn-open, .hrag-docgroup-iconbtn-open:hover { color: var(--dsw-alias-state-business-primary); }',
+          '.hrag-docgroup-iconbtn:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          '.hrag-docgroup-iconbtn:disabled { cursor: default; opacity: 0.45; }',
+          // 文件夹图标配色（每库每文件夹可选）：形态走三套 path，颜色只改 currentColor。
+          '.hrag-folder-style-pop.hrag-mm { width: min(536px, calc(100vw - 16px)); min-width: 0; padding: 12px; }',
+          '.hrag-folder-style-title { color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 18px; font-weight: 600; }',
+          '.hrag-folder-style-rowlabel { margin: 10px 0 6px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-folder-style-styles { display: flex; flex-wrap: wrap; gap: 4px; }',
+          '.hrag-folder-glyph { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 5px; line-height: 0; }',
+          '.hrag-folder-style-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; box-sizing: border-box; }',
+          '.hrag-folder-style-btn:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-folder-style-btn-active { border-color: var(--dsw-alias-state-business-primary); color: var(--dsw-alias-state-business-primary); background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 8%, transparent); }',
+          '.hrag-folder-style-colors { display: flex; align-items: center; gap: 8px; }',
+          '.hrag-folder-style-swatch { width: 20px; height: 20px; padding: 0; border: 1px solid var(--dsw-alias-border-l2); border-radius: 50%; background: var(--dsw-alias-label-tertiary); cursor: pointer; box-sizing: border-box; }',
+          '.hrag-folder-style-swatch-default { background: linear-gradient(135deg, var(--dsw-alias-label-tertiary) 0 50%, var(--dsw-alias-state-business-primary) 50% 100%); }',
+          '.hrag-folder-style-swatch-active { box-shadow: 0 0 0 2px var(--dsw-alias-bg-layer-1), 0 0 0 3px var(--dsw-alias-state-business-primary); }',
+          '.hrag-folder-style-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }',
+          '.hrag-folder-style-reset { padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); font-family: inherit; font-size: 12px; line-height: 18px; cursor: pointer; }',
+          '.hrag-folder-style-reset:hover { color: var(--dsw-alias-label-primary); }',
+          '.hrag-folder-style-done { height: 28px; padding: 0 12px; font-size: 12px; }',
+          '.hrag-folder-style-btn:focus-visible, .hrag-folder-style-swatch:focus-visible, .hrag-folder-style-reset:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          '.hrag-docgroup-check { margin-left: 8px; opacity: 0; transition: opacity 120ms ease; cursor: pointer; }',
+          '.hrag-docgroup-check:disabled { cursor: default; }',
+          '.hrag-docgroup:hover .hrag-docgroup-check, .hrag-docgroup-check:focus-visible, .hrag-docgroup-check:checked, .hrag-docgroup-check:indeterminate { opacity: 1; }',
+          '.hrag-docgroup-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-weight: 500; }',
+          '.hrag-docgroup .hrag-docrow-more { margin-left: 4px; }',
+          '.hrag-docgroup:hover .hrag-docrow-more, .hrag-docgroup .hrag-docrow-more:focus-visible, .hrag-docgroup .hrag-docrow-more[aria-expanded="true"] { opacity: 1; }',
+          '.hrag-docgroup-input { flex: 1; height: 26px; }',
+          '.hrag-docgroup-error td { padding: 0 8px 6px 32px; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }',
+          '.hrag-docgroup-empty td { height: 36px; padding: 0 8px 0 32px; vertical-align: middle; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-docgroup-draft { cursor: default; }',
+          '.hrag-iconbare:disabled { opacity: 0.45; cursor: default; }',
           // （10-21 补：原 680px 断点紧凑档已改为上面的 clamp 连续档——无台阶。）
           '.hrag-docrow-status-failed { color: var(--dsw-alias-state-error-primary); }',
           // 状态点（10-16 他截图对照补，照工作台 DocumentStatusCell/STATUS_DOT_CLASS）：
@@ -2535,8 +2694,8 @@ window.__ModuleLoader__.load({
           '.hrag-recall-sections { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }',
           // 容器底纹（10-21 surface 对）：浅色按「提亮但保持 B−R」取定值——体 #FCFDFE、头 #F3F5F7
           // （B−R 仍为 2 / 4，与宿主同比例）；深色沿用宿主 token 原值。
-          '.hrag-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 100%; --hrag-surface: #FCFDFE; --hrag-surface-head: #F3F5F7; }',
-          '[data-ds-dark-theme] .hrag-root { --hrag-surface: var(--dsw-specific-sidebar-fill, var(--dsw-alias-bg-layer-1)); --hrag-surface-head: var(--dsw-alias-interactive-bg-hover, color-mix(in srgb, var(--dsw-alias-label-primary) 6%, transparent)); }',
+          '.hrag-root { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 100%; --hrag-surface: #FCFDFE; --hrag-surface-head: #F3F5F7; --hrag-folder-tone-gray: #8e8c98; --hrag-folder-tone-forest: #4b6f5a; --hrag-folder-tone-green: #579b6e; --hrag-folder-tone-blue: #3b81e9; --hrag-folder-tone-amber: #efb041; --hrag-folder-tone-red: #ec5b56; --hrag-folder-tone-pink: #da5597; --hrag-folder-tone-indigo: #605ce5; --hrag-folder-tone-orange: #ea873f; --hrag-folder-tone-teal: #55b5a6; }',
+          '[data-ds-dark-theme] .hrag-root { --hrag-surface: var(--dsw-specific-sidebar-fill, var(--dsw-alias-bg-layer-1)); --hrag-surface-head: var(--dsw-alias-interactive-bg-hover, color-mix(in srgb, var(--dsw-alias-label-primary) 6%, transparent)); --hrag-folder-tone-gray: #9a99a5; --hrag-folder-tone-forest: #6d9a80; --hrag-folder-tone-green: #6fbf8c; --hrag-folder-tone-blue: #5b9bf5; --hrag-folder-tone-amber: #f0b957; --hrag-folder-tone-red: #f0736e; --hrag-folder-tone-pink: #e87ab3; --hrag-folder-tone-indigo: #7f7cf0; --hrag-folder-tone-orange: #f09a5b; --hrag-folder-tone-teal: #5fc7b6; }',
           // 原生 title 已由 NativeTipLayer 接管；这是统一暗泡（主树/DSH 同款黑底白字）。
           '.hrag-native-tip { position: fixed; z-index: 2147483000; max-width: min(340px, calc(100vw - 24px)); max-height: 60vh; overflow: hidden; padding: 6px 8px; border-radius: 6px; background: #1f1f1f; color: #fff; font-family: inherit; font-size: 12px; line-height: 18px; white-space: pre-line; word-break: break-word; pointer-events: none; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24); }',
           '@keyframes hrag-fade-in { from { opacity: 0; } to { opacity: 1; } }',
@@ -8423,6 +8582,340 @@ window.__ModuleLoader__.load({
         /* best effort */
       }
     }
+
+    // ── 文档文件夹（2026-10-22 doc-folders）：per-kb 本地分区，照百科卡片抽屉
+    // `hrag-card-drawers` 的 posture——个人归类、只影响视图；删文件夹只掉归属。
+    // 未分类的折叠位是顶层布尔，不混进 folders。
+    const DOC_FOLDER_KEY_PREFIX = 'hrag-doc-folders.'
+    function docFoldersKey(kbId) {
+      return DOC_FOLDER_KEY_PREFIX + String(kbId) + '.v1'
+    }
+    function newDocFolderId() {
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+      } catch (error) {
+        // Fall through to the timestamp id.
+      }
+      return 'folder-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)
+    }
+    const DOC_FOLDER_ICONS = [
+      'folder',
+      'pizza',
+      'iceCream',
+      'cherry',
+      'fish',
+      'bird',
+      'rabbit',
+      'leaf',
+      'cloud',
+      'moon',
+      'umbrella',
+      'headphones',
+      'gamepad',
+      'palette',
+      'camera',
+    ]
+    const DOC_FOLDER_COLORS = ['gray', 'forest', 'green', 'blue', 'amber', 'red', 'pink', 'indigo', 'orange', 'teal']
+    const DOC_UNFILED_ICON_REF = '__unfiled__'
+    /** 改一项、留其余：icon/color 走白名单，null/未知值即删键（回落默认）。 */
+    function docFolderUpdate(folder, patch) {
+      const next = { ...folder, ...patch }
+      if (next.collapsed !== true) delete next.collapsed
+      if (!DOC_FOLDER_ICONS.includes(next.icon)) delete next.icon
+      if (!DOC_FOLDER_COLORS.includes(next.color)) delete next.color
+      return next
+    }
+    function docFoldersSanitize(parsed) {
+      if (!parsed || typeof parsed !== 'object') return { folders: [], membership: {} }
+      const folders = []
+      const seen = new Set()
+      if (Array.isArray(parsed.folders)) {
+        for (const item of parsed.folders) {
+          if (!item || typeof item !== 'object') continue
+          if (typeof item.id !== 'string' || !item.id || typeof item.name !== 'string') continue
+          const name = item.name.trim()
+          if (!name || seen.has(item.id)) continue
+          seen.add(item.id)
+          folders.push(
+            docFolderUpdate(
+              { id: item.id, name: name },
+              {
+                ...(item.collapsed === true ? { collapsed: true } : {}),
+                ...(DOC_FOLDER_ICONS.includes(item.icon) ? { icon: item.icon } : {}),
+                ...(DOC_FOLDER_COLORS.includes(item.color) ? { color: item.color } : {}),
+              },
+            ),
+          )
+        }
+      }
+      const membership = {}
+      if (parsed.membership && typeof parsed.membership === 'object' && !Array.isArray(parsed.membership)) {
+        for (const [docId, folderId] of Object.entries(parsed.membership)) {
+          if (typeof folderId === 'string') membership[docId] = folderId
+        }
+      }
+      const state = { folders: folders, membership: membership }
+      if (folders.length > 0 && parsed.unfiledCollapsed === true) state.unfiledCollapsed = true
+      if (folders.length > 0 && typeof parsed.unfiledName === 'string' && parsed.unfiledName.trim()) {
+        state.unfiledName = parsed.unfiledName.trim()
+      }
+      if (folders.length > 0 && DOC_FOLDER_ICONS.includes(parsed.unfiledIcon)) state.unfiledIcon = parsed.unfiledIcon
+      if (folders.length > 0 && DOC_FOLDER_COLORS.includes(parsed.unfiledColor)) state.unfiledColor = parsed.unfiledColor
+      return state
+    }
+    function readDocFolders(kbId) {
+      try {
+        const raw = window.localStorage.getItem(docFoldersKey(kbId))
+        return raw ? docFoldersSanitize(JSON.parse(raw)) : docFoldersSanitize(null)
+      } catch (error) {
+        return docFoldersSanitize(null)
+      }
+    }
+    function writeDocFolders(kbId, state) {
+      try {
+        window.localStorage.setItem(docFoldersKey(kbId), JSON.stringify(state))
+      } catch (error) {
+        // Best effort only; the in-memory state still applies this session.
+      }
+    }
+    function docFolderOwner(membership, folderIds, docId) {
+      const owner = membership[docId]
+      return owner !== undefined && folderIds.has(owner) ? owner : null
+    }
+    function docFolderDropKey(folderId) {
+      return folderId === null ? '__unfiled__' : String(folderId)
+    }
+    function docFolderNameError(name, folders, excludeId, reservedName) {
+      const trimmed = String(name == null ? '' : name).trim()
+      if (!trimmed) return 'empty'
+      if (reservedName && reservedName === trimmed) return 'duplicate'
+      return folders.some((folder) => folder.id !== excludeId && folder.name === trimmed) ? 'duplicate' : null
+    }
+    function docFolderGroups(docs, folders, membership, query, unfiledCollapsed, unfiledName, unfiledIcon, unfiledColor) {
+      if (!folders || folders.length === 0) return { flat: true, groups: [] }
+      const folderIds = new Set(folders.map((folder) => folder.id))
+      const searching = String(query || '').trim() !== ''
+      const groups = []
+      for (const folder of folders) {
+        const items = docs.filter((doc) => docFolderOwner(membership, folderIds, doc.id) === folder.id)
+        if (searching && items.length === 0) continue
+        groups.push({
+          id: folder.id,
+          name: folder.name,
+          kind: 'folder',
+          docs: items,
+          collapsed: !searching && folder.collapsed === true,
+          icon: folder.icon || null,
+          color: folder.color || null,
+        })
+      }
+      const unfiledDocs = docs.filter((doc) => docFolderOwner(membership, folderIds, doc.id) === null)
+      if (unfiledDocs.length > 0) {
+        groups.push({
+          id: null,
+          name: unfiledName || null,
+          kind: 'unfiled',
+          docs: unfiledDocs,
+          collapsed: !searching && unfiledCollapsed === true,
+          icon: unfiledIcon || null,
+          color: unfiledColor || null,
+        })
+      }
+      return { flat: false, groups: groups }
+    }
+    function docsInFolder(docs, membership, folderIds, folderId) {
+      return docs.filter((doc) => docFolderOwner(membership, folderIds, doc.id) === folderId)
+    }
+    function allDocsInFolder(docIds, membership, folderIds, folderId) {
+      return docIds.length > 0 && docIds.every((docId) => docFolderOwner(membership, folderIds, docId) === folderId)
+    }
+    /** 文件夹前后排序：targetId=null 表示挪到末位（未分类之前）。无变化原样返回。 */
+    function moveDocFolderOrder(folders, fromId, targetId, after) {
+      const fromIndex = folders.findIndex((folder) => folder.id === fromId)
+      if (fromIndex < 0) return folders
+      if (targetId == null) {
+        if (fromIndex === folders.length - 1) return folders
+        const next = folders.slice()
+        const [moved] = next.splice(fromIndex, 1)
+        next.push(moved)
+        return next
+      }
+      if (targetId === fromId) return folders
+      const targetIndex = folders.findIndex((folder) => folder.id === targetId)
+      if (targetIndex < 0) return folders
+      const next = folders.slice()
+      const [moved] = next.splice(fromIndex, 1)
+      let insertAt = targetIndex
+      if (fromIndex < targetIndex) insertAt -= 1
+      if (after) insertAt += 1
+      next.splice(insertAt, 0, moved)
+      if (next.every((folder, index) => folder.id === folders[index].id)) return folders
+      return next
+    }
+    function moveDocFolderMembership(membership, docIds, folderId) {
+      const next = { ...membership }
+      for (const docId of docIds) {
+        if (folderId === null) delete next[docId]
+        else next[docId] = folderId
+      }
+      return next
+    }
+    function deleteDocFolderState(state, folderId) {
+      const membership = {}
+      for (const [docId, owner] of Object.entries(state.membership)) {
+        if (owner !== folderId) membership[docId] = owner
+      }
+      const folders = state.folders.filter((folder) => folder.id !== folderId)
+      const next = { folders: folders, membership: membership }
+      if (folders.length > 0 && state.unfiledName) next.unfiledName = state.unfiledName
+      if (folders.length > 0 && DOC_FOLDER_ICONS.includes(state.unfiledIcon)) next.unfiledIcon = state.unfiledIcon
+      if (folders.length > 0 && DOC_FOLDER_COLORS.includes(state.unfiledColor)) next.unfiledColor = state.unfiledColor
+      return next
+    }
+    function useDocFolders(kbId) {
+      const [state, setState] = React.useState(() => readDocFolders(kbId))
+      const [loadedKb, setLoadedKb] = React.useState(kbId)
+      const kbIdRef = React.useRef(kbId)
+      kbIdRef.current = kbId
+      if (loadedKb !== kbId) {
+        setLoadedKb(kbId)
+        setState(readDocFolders(kbId))
+      }
+      // 旧库动作不得写进新库键：动作携带自己读状态时的 kb，切库后直接丢弃。
+      const persist = React.useCallback((next, baseKb) => {
+        if (baseKb !== kbIdRef.current) return
+        setState(next)
+        writeDocFolders(baseKb, next)
+      }, [])
+      const createFolder = React.useCallback(
+        (name) => {
+          const folder = { id: newDocFolderId(), name: String(name || '').trim() }
+          persist({ ...state, folders: [folder].concat(state.folders) }, loadedKb)
+          return folder.id
+        },
+        [state, loadedKb, persist],
+      )
+      const renameFolder = React.useCallback(
+        (id, name) => {
+          persist(
+            {
+              ...state,
+              folders: state.folders.map((folder) =>
+                folder.id === id ? docFolderUpdate(folder, { name: String(name || '').trim() }) : folder,
+              ),
+            },
+            loadedKb,
+          )
+        },
+        [state, loadedKb, persist],
+      )
+      const setFolderCollapsed = React.useCallback(
+        (id, collapsed) => {
+          persist(
+            {
+              ...state,
+              folders: state.folders.map((folder) =>
+                folder.id === id ? docFolderUpdate(folder, { collapsed: collapsed ? true : null }) : folder,
+              ),
+            },
+            loadedKb,
+          )
+        },
+        [state, loadedKb, persist],
+      )
+      const setUnfiledCollapsed = React.useCallback(
+        (collapsed) => {
+          const next = { ...state }
+          if (collapsed) next.unfiledCollapsed = true
+          else delete next.unfiledCollapsed
+          persist(next, loadedKb)
+        },
+        [state, loadedKb, persist],
+      )
+      const deleteFolder = React.useCallback(
+        (id) => {
+          persist(deleteDocFolderState(state, id), loadedKb)
+        },
+        [state, loadedKb, persist],
+      )
+      const renameUnfiled = React.useCallback(
+        (name) => {
+          const next = { ...state }
+          const trimmed = String(name == null ? '' : name).trim()
+          if (trimmed) next.unfiledName = trimmed
+          else delete next.unfiledName
+          persist(next, loadedKb)
+        },
+        [state, loadedKb, persist],
+      )
+      const setFolderStyle = React.useCallback(
+        (id, patch) => {
+          persist(
+            {
+              ...state,
+              folders: state.folders.map((folder) =>
+                folder.id === id ? docFolderUpdate(folder, patch) : folder,
+              ),
+            },
+            loadedKb,
+          )
+        },
+        [state, loadedKb, persist],
+      )
+      const moveFolder = React.useCallback(
+        (fromId, targetId, after) => {
+          const folders = moveDocFolderOrder(state.folders, fromId, targetId, after)
+          if (folders === state.folders) return
+          persist({ ...state, folders: folders }, loadedKb)
+        },
+        [state, loadedKb, persist],
+      )
+      const setUnfiledStyle = React.useCallback(
+        (patch) => {
+          const next = { ...state }
+          const styled = docFolderUpdate({ icon: next.unfiledIcon, color: next.unfiledColor }, patch)
+          if (styled.icon) next.unfiledIcon = styled.icon
+          else delete next.unfiledIcon
+          if (styled.color) next.unfiledColor = styled.color
+          else delete next.unfiledColor
+          persist(next, loadedKb)
+        },
+        [state, loadedKb, persist],
+      )
+      const moveDocs = React.useCallback(
+        (docIds, folderId) => {
+          const membership = moveDocFolderMembership(state.membership, docIds, folderId)
+          const next = { ...state, membership: membership }
+          if (folderId === null) {
+            delete next.unfiledCollapsed
+          } else {
+            next.folders = state.folders.map((folder) =>
+              folder.id === folderId ? docFolderUpdate(folder, { collapsed: null }) : folder,
+            )
+          }
+          persist(next, loadedKb)
+        },
+        [state, loadedKb, persist],
+      )
+      return {
+        folders: state.folders,
+        membership: state.membership,
+        unfiledCollapsed: state.unfiledCollapsed === true,
+        unfiledName: typeof state.unfiledName === 'string' ? state.unfiledName : null,
+        unfiledIcon: typeof state.unfiledIcon === 'string' ? state.unfiledIcon : null,
+        unfiledColor: typeof state.unfiledColor === 'string' ? state.unfiledColor : null,
+        createFolder: createFolder,
+        renameFolder: renameFolder,
+        setFolderCollapsed: setFolderCollapsed,
+        setUnfiledCollapsed: setUnfiledCollapsed,
+        deleteFolder: deleteFolder,
+        renameUnfiled: renameUnfiled,
+        setFolderStyle: setFolderStyle,
+        setUnfiledStyle: setUnfiledStyle,
+        moveFolder: moveFolder,
+        moveDocs: moveDocs,
+      }
+    }
     // 相对时间（Task 2，照工作台 formatKnowledgeRelativeTime）：Intl.RelativeTimeFormat
     // numeric auto（「昨天/3天前」）；<1 分钟硬编码「刚刚」（Intl 对亚分钟无自然词）；
     // 不可解析值原样返回（同绝对式）。now 可注入便于测试。
@@ -8463,6 +8956,15 @@ window.__ModuleLoader__.load({
       if (doc.status === 'failed' || opts.degraded) {
         items.push({ id: 'retry', label: t('doc.retry'), icon: dshRetryIcon(), disabled: opts.busy })
       }
+      if (opts.moveItems) {
+        items.push({
+          id: 'move',
+          label: t('doc.folderMoveTo'),
+          icon: cardUiIcon('folderInput', 14),
+          submenu: opts.moveItems,
+          disabled: opts.moveDisabled,
+        })
+      }
       items.push({ type: 'separator', id: 'row-sep' })
       items.push({ id: 'delete', label: t('doc.delete'), icon: dshTrashIcon(), danger: true, disabled: opts.busy })
       return items
@@ -8477,6 +8979,15 @@ window.__ModuleLoader__.load({
         if (opts.allSelectedReady) {
           items.push({ id: 'gen-question-batch', label: t('doc.genQuestionBatch'), icon: dshSparkleIcon() })
         }
+        if (opts.moveItems) {
+          items.push({
+            id: 'move',
+            label: t('doc.folderMoveTo'),
+            icon: cardUiIcon('folderInput', 14),
+            submenu: opts.moveItems,
+            disabled: opts.moveDisabled,
+          })
+        }
         items.push({ id: 'cancel-select', label: t('doc.cancelSelection'), icon: dshCloseIcon() })
         items.push({ type: 'separator', id: 'bulk-sep' })
         items.push({ id: 'delete-selected', label: t('doc.deleteSelected'), icon: dshTrashIcon(), danger: true, disabled: opts.busy })
@@ -8489,6 +9000,15 @@ window.__ModuleLoader__.load({
       if (opts.canGenerate) items.push({ id: 'gen-question', label: t('doc.generateQuestion'), icon: dshSparkleIcon() })
       if (doc.status === 'failed' || opts.degraded) {
         items.push({ id: 'retry', label: t('doc.retry'), icon: dshRetryIcon(), disabled: opts.busy })
+      }
+      if (opts.moveItems) {
+        items.push({
+          id: 'move',
+          label: t('doc.folderMoveTo'),
+          icon: cardUiIcon('folderInput', 14),
+          submenu: opts.moveItems,
+          disabled: opts.moveDisabled,
+        })
       }
       items.push({ id: 'cancel-select', label: t('doc.cancelSelection'), icon: dshCloseIcon() })
       items.push({ type: 'separator', id: 'row-sep' })
@@ -8716,12 +9236,40 @@ window.__ModuleLoader__.load({
       const [query, setQuery] = React.useState('')
       const [docOrder, setDocOrder] = React.useState(() => readDocOrder(kbId))
       const [direction, setDirection] = React.useState(DOC_SORT_DEFAULT.direction)
+      const docFolders = useDocFolders(kbId)
+      const UNFILED_RENAME_ID = '__unfiled-rename__'
+      const unfiledLabel = docFolders.unfiledName || t('doc.folderUnfiled')
+      // 文件夹编辑态（草稿/改名/组行菜单/删除确认）只活在当前库；切库由下方
+      // effect 统一清空。名称单击的 220ms 防抖只在双击改名时取消。
+      const [draftFolder, setDraftFolder] = React.useState(null)
+      const [draftFolderError, setDraftFolderError] = React.useState(null)
+      const [renamingFolderId, setRenamingFolderId] = React.useState(null)
+      const [renameFolderDraft, setRenameFolderDraft] = React.useState('')
+      const [renameFolderError, setRenameFolderError] = React.useState(null)
+      const [folderCtxMenu, setFolderCtxMenu] = React.useState(null)
+      const [folderDeleteTarget, setFolderDeleteTarget] = React.useState(null)
+      const [folderStyleTarget, setFolderStyleTarget] = React.useState(null)
+      const folderIconRefs = React.useRef({})
+      const [folderOrderDragId, setFolderOrderDragId] = React.useState(null)
+      const [folderOrderDrop, setFolderOrderDrop] = React.useState(null)
+      const folderOrderDragRef = React.useRef(null)
+      const folderOrderDropRef = React.useRef(null)
+      const styleFolder = folderStyleTarget
+        ? folderStyleTarget.folderId == null
+          ? { id: null, icon: docFolders.unfiledIcon, color: docFolders.unfiledColor }
+          : docFolders.folders.find((folder) => folder.id === folderStyleTarget.folderId) || null
+        : null
+      const nameClickTimerRef = React.useRef(null)
+      const dragFolderRef = React.useRef(null)
+      const prevUnfiledCountRef = React.useRef(null)
       // 行拖拽（10-21 Task 3，D4 甲）：dragId/dropTarget 只驱动视觉（透明行＋插入线）；
       // 命中判定走 ref，避免每次 dragover 都渲染；拖动期间挂起 3s 轮询、落点补一拍。
       const [dragId, setDragId] = React.useState(null)
       const [dropTarget, setDropTarget] = React.useState(null)
+      const [dropGroupKey, setDropGroupKey] = React.useState(null)
       const dragIdRef = React.useRef(null)
       const dropRef = React.useRef(null)
+      const dropGroupRef = React.useRef(null)
       const dragActiveRef = React.useRef(false)
       const pendingPollRef = React.useRef(false)
       const suppressClickUntilRef = React.useRef(0)
@@ -8743,11 +9291,53 @@ window.__ModuleLoader__.load({
         // 切库即清拖拽态（拖拽中的旧库行不得把落点带进新库）。
         dragIdRef.current = null
         dropRef.current = null
+        dropGroupRef.current = null
         dragActiveRef.current = false
+        dragFolderRef.current = null
         pendingPollRef.current = false
         setDragId(null)
         setDropTarget(null)
+        setDropGroupKey(null)
+        folderOrderDragRef.current = null
+        folderOrderDropRef.current = null
+        setFolderOrderDragId(null)
+        setFolderOrderDrop(null)
+        // 编辑态/选择集/菜单同样不得跨库；文件夹状态由 useDocFolders 重读。
+        if (nameClickTimerRef.current) window.clearTimeout(nameClickTimerRef.current)
+        nameClickTimerRef.current = null
+        prevUnfiledCountRef.current = null
+        setSelectedIds(new Set())
+        setCtxMenu(null)
+        setColCtxMenu(null)
+        setDeleteTargets(null)
+        setDialogError(null)
+        setDraftFolder(null)
+        setDraftFolderError(null)
+        setRenamingFolderId(null)
+        setRenameFolderDraft('')
+        setRenameFolderError(null)
+        setFolderCtxMenu(null)
+        setFolderDeleteTarget(null)
+        setFolderStyleTarget(null)
       }, [kbId])
+      React.useEffect(
+        () => () => {
+          if (nameClickTimerRef.current) window.clearTimeout(nameClickTimerRef.current)
+        },
+        [],
+      )
+      // 搜索期间不允许新建/改名（折叠与移动在动作层置灰）；已打开的编辑态随搜索收起。
+      React.useEffect(() => {
+        if (String(query || '').trim() === '') return
+        if (nameClickTimerRef.current) window.clearTimeout(nameClickTimerRef.current)
+        nameClickTimerRef.current = null
+        setDraftFolder(null)
+        setDraftFolderError(null)
+        setRenamingFolderId(null)
+        setRenameFolderDraft('')
+        setRenameFolderError(null)
+        setFolderCtxMenu(null)
+      }, [query])
       React.useEffect(() => {
         writeDocOrder(kbIdRef.current, docOrder)
       }, [docOrder])
@@ -8839,18 +9429,38 @@ window.__ModuleLoader__.load({
         docOrder.mode === 'manual'
           ? applyManualOrder(filteredDocs, docOrder.ids)
           : docsSort(filteredDocs, docOrder.mode, direction)
-      const visibleIds = visibleDocs.map((doc) => doc.id)
+      const folderIds = new Set(docFolders.folders.map((folder) => folder.id))
+      const grouped = docFolderGroups(
+        visibleDocs,
+        docFolders.folders,
+        docFolders.membership,
+        query,
+        docFolders.unfiledCollapsed,
+        docFolders.unfiledName,
+        docFolders.unfiledIcon,
+        docFolders.unfiledColor,
+      )
+      const displayedDocs = grouped.flat
+        ? visibleDocs
+        : grouped.groups.filter((group) => !group.collapsed).flatMap((group) => group.docs)
+      const displayedIds = displayedDocs.map((doc) => doc.id)
       // 拖拽边界（D4 甲）：搜索词非空或多选集非空时整表不可拖——避免「只对子集
       // 排序」与批量上下文歧义。交互件（复选框/⋯/列菜单/链接）上按下不启动拖拽。
       const canDrag = query.trim() === '' && selectedIds.size === 0
+      // 文件夹前后拖拽：搜索/新建草稿/改名期间关闸；只有一个文件夹时无落点。
+      const folderCanDrag =
+        query.trim() === '' && docFolders.folders.length > 1 && draftFolder === null && renamingFolderId === null
       const isRowGrabTarget = (target) =>
         !(target && target.closest && target.closest('input, button, a, select, textarea, [contenteditable="true"]'))
       const finishDrag = () => {
         dragIdRef.current = null
         dropRef.current = null
+        dropGroupRef.current = null
         dragActiveRef.current = false
+        dragFolderRef.current = null
         setDragId(null)
         setDropTarget(null)
+        setDropGroupKey(null)
         // HTML5 DnD 落点后一般不再派发 click；留 300ms 抑制窗兜底（行点击开抽屉）。
         suppressClickUntilRef.current = Date.now() + 300
         if (pendingPollRef.current) {
@@ -8858,14 +9468,21 @@ window.__ModuleLoader__.load({
           poll()
         }
       }
+      const finishFolderOrderDrag = () => {
+        folderOrderDragRef.current = null
+        folderOrderDropRef.current = null
+        setFolderOrderDragId(null)
+        setFolderOrderDrop(null)
+        suppressClickUntilRef.current = Date.now() + 300
+      }
       const moveDoc = (fromId, targetId, after) => {
         const ids = visibleDocs.map((doc) => String(doc.id))
         const next = moveDocId(ids, String(fromId), String(targetId), after)
         if (next === ids) return
         setDocOrder({ mode: 'manual', ids: next })
       }
-      const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id))
-      const someVisibleSelected = visibleIds.some((id) => selectedIds.has(id))
+      const allDisplayedSelected = displayedIds.length > 0 && displayedIds.every((id) => selectedIds.has(id))
+      const someDisplayedSelected = displayedIds.some((id) => selectedIds.has(id))
       const allSelectedReady =
         selectedIds.size > 0 &&
         [...selectedIds].every((id) => {
@@ -8880,7 +9497,300 @@ window.__ModuleLoader__.load({
           return next
         })
       }
-      const toggleSelectAll = () => setSelectedIds(allVisibleSelected ? new Set() : new Set(visibleIds))
+      const toggleSelectAll = () => setSelectedIds(allDisplayedSelected ? new Set() : new Set(displayedIds))
+
+      // 未分类组此前为空被隐藏、随后变为有文档时展开一次；已折叠的非空组保持收起。
+      // 首载/切库的 loading 拍不算「空→有」：此时 docs 尚未到达，若记账会把持久化的
+      // 未分类折叠态在冷启动时误冲成展开。
+      const unfiledCount = docsInFolder(docs, docFolders.membership, folderIds, null).length
+      React.useEffect(() => {
+        if (phase === 'loading' || phase === 'error') return
+        const prev = prevUnfiledCountRef.current
+        prevUnfiledCountRef.current = unfiledCount
+        if (prev === 0 && unfiledCount > 0 && docFolders.folders.length > 0 && docFolders.unfiledCollapsed) {
+          docFolders.setUnfiledCollapsed(false)
+        }
+      }, [unfiledCount, phase, docFolders.folders.length, docFolders.unfiledCollapsed])
+
+      const clearDocsSelection = (items) => {
+        if (!items || items.length === 0) return
+        setSelectedIds((current) => {
+          if (current.size === 0) return current
+          const next = new Set(current)
+          let changed = false
+          for (const doc of items) {
+            if (next.delete(doc.id)) changed = true
+          }
+          return changed ? next : current
+        })
+      }
+      const toggleGroup = (group) => {
+        if (query.trim() !== '') return
+        if (!group.collapsed) clearDocsSelection(group.docs)
+        if (group.kind === 'unfiled') docFolders.setUnfiledCollapsed(!group.collapsed)
+        else docFolders.setFolderCollapsed(group.id, !group.collapsed)
+      }
+      const toggleGroupSelection = (group, checked) => {
+        if (checked && group.collapsed) toggleGroup(group)
+        setSelectedIds((current) => {
+          const next = new Set(current)
+          for (const doc of group.docs) {
+            if (checked) next.add(doc.id)
+            else next.delete(doc.id)
+          }
+          return next
+        })
+      }
+      const startDraftFolder = () => {
+        if (query.trim() !== '') return
+        setDraftFolder('')
+        setDraftFolderError(null)
+      }
+      const cancelDraftFolder = () => {
+        setDraftFolder(null)
+        setDraftFolderError(null)
+      }
+      const submitDraftFolder = () => {
+        const name = String(draftFolder == null ? '' : draftFolder).trim()
+        if (!name) {
+          cancelDraftFolder()
+          return
+        }
+        const error = docFolderNameError(name, docFolders.folders, null, docFolders.unfiledName)
+        if (error) {
+          setDraftFolderError(error)
+          return
+        }
+        docFolders.createFolder(name)
+        cancelDraftFolder()
+      }
+      const startRenameFolder = (folder) => {
+        setDraftFolder(null)
+        setDraftFolderError(null)
+        setRenamingFolderId(folder.id)
+        setRenameFolderDraft(folder.name)
+        setRenameFolderError(null)
+      }
+      const startRenameUnfiled = () => {
+        setDraftFolder(null)
+        setDraftFolderError(null)
+        setRenamingFolderId(UNFILED_RENAME_ID)
+        setRenameFolderDraft(unfiledLabel)
+        setRenameFolderError(null)
+      }
+      const cancelRenameFolder = () => {
+        setRenamingFolderId(null)
+        setRenameFolderDraft('')
+        setRenameFolderError(null)
+      }
+      const submitRenameFolder = () => {
+        const renamingUnfiled = renamingFolderId === UNFILED_RENAME_ID
+        const folder = renamingUnfiled ? null : docFolders.folders.find((item) => item.id === renamingFolderId)
+        if (!renamingUnfiled && !folder) {
+          cancelRenameFolder()
+          return
+        }
+        const name = String(renameFolderDraft == null ? '' : renameFolderDraft).trim()
+        if (!name) {
+          cancelRenameFolder()
+          return
+        }
+        const error = docFolderNameError(
+          name,
+          docFolders.folders,
+          renamingUnfiled ? null : folder.id,
+          renamingUnfiled ? null : docFolders.unfiledName,
+        )
+        if (error) {
+          setRenameFolderError(error)
+          return
+        }
+        if (renamingUnfiled) {
+          docFolders.renameUnfiled(name === t('doc.folderUnfiled') ? null : name)
+        } else if (name !== folder.name) {
+          docFolders.renameFolder(folder.id, name)
+        }
+        cancelRenameFolder()
+      }
+      const handleFolderRowClick = (group, event) => {
+        // 未分类的 group.id 是 null，与 renamingFolderId 初始值同值；改名态用
+        // 独立 sentinel，避免把「未定位改名目标」误当成未分类改名。
+        if (Date.now() < suppressClickUntilRef.current) return
+        const renamingThisGroup =
+          group.kind === 'folder' ? renamingFolderId === group.id : renamingFolderId === UNFILED_RENAME_ID
+        if (renamingThisGroup) return
+        if (event.target && event.target.closest && event.target.closest('button, input, [contenteditable="true"]')) return
+        toggleGroup(group)
+      }
+      const handleFolderNameClick = (group, event) => {
+        event.stopPropagation()
+        if (Date.now() < suppressClickUntilRef.current) return
+        if (query.trim() !== '') return
+        if (nameClickTimerRef.current) window.clearTimeout(nameClickTimerRef.current)
+        nameClickTimerRef.current = window.setTimeout(() => {
+          nameClickTimerRef.current = null
+          toggleGroup(group)
+        }, 220)
+      }
+      const handleFolderNameDoubleClick = (group, event) => {
+        event.stopPropagation()
+        if (nameClickTimerRef.current) window.clearTimeout(nameClickTimerRef.current)
+        nameClickTimerRef.current = null
+        startRenameFolder({ id: group.id, name: group.name })
+      }
+      const handleUnfiledNameClick = (group, event) => {
+        event.stopPropagation()
+        if (Date.now() < suppressClickUntilRef.current) return
+        toggleGroup(group)
+      }
+      const openFolderStylePicker = (folderId, refKey) => {
+        const node = folderIconRefs.current[refKey]
+        const rect = node && node.getBoundingClientRect ? node.getBoundingClientRect() : null
+        setFolderStyleTarget({
+          folderId: folderId,
+          anchor: rect ? { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom } : null,
+        })
+      }
+      const handleFolderMenu = (folder, id) => {
+        if (id === 'folder-style') {
+          openFolderStylePicker(folder.id, folder.id)
+          return
+        }
+        if (id === 'folder-rename') {
+          startRenameFolder(folder)
+          return
+        }
+        if (id === 'folder-delete') setFolderDeleteTarget(folder)
+      }
+      const handleUnfiledMenu = (id, collapsed) => {
+        if (id === 'unfiled-style') {
+          openFolderStylePicker(null, DOC_UNFILED_ICON_REF)
+          return
+        }
+        if (id === 'unfiled-rename') startRenameUnfiled()
+        else if (id === 'unfiled-new') startDraftFolder()
+        else if (id === 'unfiled-toggle') docFolders.setUnfiledCollapsed(!collapsed)
+      }
+      const confirmDeleteFolder = () => {
+        if (!folderDeleteTarget) return
+        const items = docsInFolder(docs, docFolders.membership, folderIds, folderDeleteTarget.id)
+        clearDocsSelection(items)
+        docFolders.deleteFolder(folderDeleteTarget.id)
+        setFolderDeleteTarget(null)
+      }
+      const folderMoveItems = (docIds) => {
+        if (docFolders.folders.length === 0) return null
+        const items = []
+        const unfiledOn = allDocsInFolder(docIds, docFolders.membership, folderIds, null)
+        items.push({
+          id: 'move-unfiled',
+          label: unfiledLabel,
+          icon: unfiledOn ? dshCheckIcon() : null,
+          disabled: unfiledOn,
+        })
+        for (const folder of docFolders.folders) {
+          const on = allDocsInFolder(docIds, docFolders.membership, folderIds, folder.id)
+          items.push({
+            id: 'move-folder-' + folder.id,
+            label: folder.name,
+            icon: on ? dshCheckIcon() : cardDrawerIcon('folder', 14),
+            disabled: on,
+          })
+        }
+        return items
+      }
+      const moveDocsTo = (docIds, folderId) => {
+        if (!docIds || docIds.length === 0) return
+        docFolders.moveDocs(docIds, folderId)
+      }
+      // 跨组拖行（10-22 追加）：组行/空态行都是落点，松手只改 membership；
+      // 目标组由 moveDocs 自动展开（与「移动到文件夹」同口径），不改手动序。
+      // 文件夹排序拖拽（10-22 追加六）复用同一组落点：有 folderOrderDragRef 时
+      // 只算前后插入位，不碰 membership；未分类行＝挪到末位。
+      const groupDropHandlers = (group, options) => {
+        const targetFolder = group.kind === 'unfiled' ? null : group.id
+        const folderOrderTarget = (event) => {
+          if (group.kind === 'unfiled') return { id: null, after: true }
+          if (group.id === folderOrderDragRef.current) return null
+          const rect = event.currentTarget.getBoundingClientRect()
+          const after = options && options.empty ? true : event.clientY > rect.top + rect.height / 2
+          return { id: group.id, after: after }
+        }
+        return {
+          onDragOver: (event) => {
+            if (folderOrderDragRef.current) {
+              const next = folderOrderTarget(event)
+              if (!next) {
+                if (folderOrderDropRef.current) {
+                  folderOrderDropRef.current = null
+                  setFolderOrderDrop(null)
+                }
+                return
+              }
+              event.preventDefault()
+              if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+              const current = folderOrderDropRef.current
+              if (!current || current.id !== next.id || current.after !== next.after) {
+                folderOrderDropRef.current = next
+                setFolderOrderDrop(next)
+              }
+              return
+            }
+            if (!dragIdRef.current) return
+            if (targetFolder === dragFolderRef.current) {
+              if (dropGroupRef.current) {
+                dropGroupRef.current = null
+                setDropGroupKey(null)
+              }
+              return
+            }
+            event.preventDefault()
+            if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+            const key = docFolderDropKey(targetFolder)
+            if (dropGroupRef.current !== key) {
+              dropGroupRef.current = key
+              setDropGroupKey(key)
+              if (dropRef.current) {
+                dropRef.current = null
+                setDropTarget(null)
+              }
+            }
+          },
+          onDragLeave: (event) => {
+            if (folderOrderDragRef.current) {
+              if (event.currentTarget.contains(event.relatedTarget)) return
+              if (folderOrderDropRef.current) {
+                folderOrderDropRef.current = null
+                setFolderOrderDrop(null)
+              }
+              return
+            }
+            if (event.currentTarget.contains(event.relatedTarget)) return
+            if (dropGroupRef.current) {
+              dropGroupRef.current = null
+              setDropGroupKey(null)
+            }
+          },
+          onDrop: (event) => {
+            if (folderOrderDragRef.current) {
+              event.preventDefault()
+              const from = folderOrderDragRef.current
+              const target = folderOrderDropRef.current
+              finishFolderOrderDrag()
+              if (target) docFolders.moveFolder(from, target.id, target.after)
+              return
+            }
+            const from = dragIdRef.current
+            if (!from) return
+            event.preventDefault()
+            const same = targetFolder === dragFolderRef.current
+            finishDrag()
+            if (!same) moveDocsTo([from], targetFolder)
+          },
+        }
+      }
+      const folderNameErrorText = (error) =>
+        error === 'duplicate' ? t('doc.folderNameDuplicate') : error === 'empty' ? t('doc.folderNameEmpty') : ''
 
       // A④ 快捷出题（照工作台 page.tsx:452-466）：单篇 count=1、合并进暂存审核；
       // 工作台 enqueued=success／already_running=info 两档同文案，插件总线无 info 档、合一。
@@ -8967,7 +9877,12 @@ window.__ModuleLoader__.load({
       }
       // 行 ⋯ 与右键两入口（Task 3.6 分流）：⋯＝行内动作（查看切片/下载/重试/删除）；
       // 右键＝选择态菜单（单行态带生成考题＋取消选择；批量态带联合出题＋删除所选）。
-      const handleRowMenu = (doc, id) => {
+      const handleRowMenu = (doc, id, batch) => {
+        if (id === 'move-unfiled' || id.indexOf('move-folder-') === 0) {
+          if (query.trim() !== '') return
+          moveDocsTo(batch ? [...selectedIds] : [doc.id], id === 'move-unfiled' ? null : id.slice('move-folder-'.length))
+          return
+        }
         if (id === 'open-chunks') {
           if (onOpenChunks) onOpenChunks(doc)
           return
@@ -9042,6 +9957,20 @@ window.__ModuleLoader__.load({
               )
             : null,
         ),
+        phase === 'ready'
+          ? h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-iconbare',
+                title: t('doc.folderNew'),
+                'aria-label': t('doc.folderNew'),
+                disabled: query.trim() !== '',
+                onClick: startDraftFolder,
+              },
+              cardUiIcon('folderPlus', 14),
+            )
+          : null,
         h(DshMenu, {
           title: t('doc.sort'),
           align: 'end',
@@ -9150,6 +10079,16 @@ window.__ModuleLoader__.load({
               }),
             ),
           )
+        const nameSortActive = docOrder.mode === 'name'
+        const nameAriaSort = nameSortActive ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'
+        const handleNameSort = () => {
+          if (docOrder.mode === 'name') {
+            setDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
+            return
+          }
+          setDocOrder((current) => ({ ...current, mode: 'name' }))
+          setDirection('asc')
+        }
         body = h(
           'div',
           { className: 'hrag-docsbody' },
@@ -9170,6 +10109,8 @@ window.__ModuleLoader__.load({
                       {
                         onContextMenu: (event) => {
                           event.preventDefault()
+                          setCtxMenu(null)
+                          setFolderCtxMenu(null)
                           setColCtxMenu({ x: event.clientX, y: event.clientY })
                         },
                       },
@@ -9181,14 +10122,48 @@ window.__ModuleLoader__.load({
                           type: 'checkbox',
                           className: 'hrag-ev-check',
                           'aria-label': t('doc.selectAll'),
-                          checked: allVisibleSelected,
+                          checked: allDisplayedSelected,
                           ref: (element) => {
-                            if (element) element.indeterminate = !allVisibleSelected && someVisibleSelected
+                            if (element) element.indeterminate = !allDisplayedSelected && someDisplayedSelected
                           },
                           onChange: toggleSelectAll,
                         }),
                       ),
-                      h('th', { scope: 'col' }, t('doc.thName')),
+                      h(
+                        'th',
+                        {
+                          scope: 'col',
+                          className: 'hrag-docth-name',
+                          tabIndex: 0,
+                          title: t('doc.sortByName'),
+                          'aria-sort': nameAriaSort,
+                          onClick: handleNameSort,
+                          onKeyDown: (event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              handleNameSort()
+                            }
+                          },
+                        },
+                        h(
+                          'span',
+                          { className: 'hrag-docnamehead' },
+                          h('span', { className: 'hrag-docnamehead-label' }, t('doc.thName')),
+                          h(
+                            'span',
+                            {
+                              className:
+                                'hrag-docnamehead-sort' + (nameSortActive ? ' hrag-docnamehead-sort-active' : ''),
+                              'aria-hidden': 'true',
+                            },
+                            nameSortActive
+                              ? direction === 'asc'
+                                ? dshArrowUpIcon()
+                                : dshArrowDownIcon()
+                              : dshChevronsUpDownIcon(),
+                          ),
+                        ),
+                      ),
                       colVisible('status') ? columnHeader('status', t('doc.thStatus')) : null,
                       colVisible('uploader') ? columnHeader('uploader', t('doc.thUploader')) : null,
                       colVisible('createdAt') ? columnHeader('createdAt', t('doc.thTime')) : null,
@@ -9215,7 +10190,8 @@ window.__ModuleLoader__.load({
                   h(
                     'tbody',
                     null,
-                    visibleDocs.map((doc) => {
+                    (() => {
+                      const renderDocRow = (doc) => {
             const degraded = isDegraded(doc)
             const statusKey = DOC_STATUS_KEYS[doc.status]
             let meta = statusKey ? t(statusKey) : String(doc.status)
@@ -9254,7 +10230,12 @@ window.__ModuleLoader__.load({
                 metaNode,
               )
             }
-            const rowItems = docRowMenuItems(t, doc, { degraded, busy })
+            const rowItems = docRowMenuItems(t, doc, {
+              degraded,
+              busy,
+              moveItems: folderMoveItems([doc.id]),
+              moveDisabled: query.trim() !== '',
+            })
             const isSelected = selectedIds.has(doc.id)
             return h(
               'tr',
@@ -9278,10 +10259,13 @@ window.__ModuleLoader__.load({
                   }
                   const id = String(doc.id)
                   dragIdRef.current = id
+                  dragFolderRef.current = docFolderOwner(docFolders.membership, folderIds, doc.id)
                   dropRef.current = null
+                  dropGroupRef.current = null
                   dragActiveRef.current = true
                   setDragId(id)
                   setDropTarget(null)
+                  setDropGroupKey(null)
                   if (event.dataTransfer) {
                     event.dataTransfer.effectAllowed = 'move'
                     event.dataTransfer.setData('text/plain', id)
@@ -9289,6 +10273,26 @@ window.__ModuleLoader__.load({
                 },
                 onDragOver: (event) => {
                   if (!dragIdRef.current) return
+                  const targetFolder = docFolderOwner(docFolders.membership, folderIds, doc.id)
+                  if (targetFolder !== dragFolderRef.current) {
+                    // 跨组：行也是组落点（高亮该组），松手把文档移入该组；不显示插入线。
+                    event.preventDefault()
+                    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+                    const key = docFolderDropKey(targetFolder)
+                    if (dropGroupRef.current !== key) {
+                      dropGroupRef.current = key
+                      setDropGroupKey(key)
+                      if (dropRef.current) {
+                        dropRef.current = null
+                        setDropTarget(null)
+                      }
+                    }
+                    return
+                  }
+                  if (dropGroupRef.current) {
+                    dropGroupRef.current = null
+                    setDropGroupKey(null)
+                  }
                   event.preventDefault()
                   if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
                   const rect = event.currentTarget.getBoundingClientRect()
@@ -9305,9 +10309,22 @@ window.__ModuleLoader__.load({
                 onDrop: (event) => {
                   event.preventDefault()
                   const from = dragIdRef.current
+                  if (!from) {
+                    finishDrag()
+                    return
+                  }
+                  const targetFolder = docFolderOwner(docFolders.membership, folderIds, doc.id)
+                  if (targetFolder !== dragFolderRef.current) {
+                    finishDrag()
+                    moveDocsTo([from], targetFolder)
+                    return
+                  }
                   const target = dropRef.current
+                  if (!target) {
+                    finishDrag()
+                    return
+                  }
                   finishDrag()
-                  if (!from || !target) return
                   moveDoc(from, target.id, target.after)
                 },
                 onClick: () => {
@@ -9320,6 +10337,8 @@ window.__ModuleLoader__.load({
                 onContextMenu: (event) => {
                   event.preventDefault()
                   setSelectedIds((current) => (current.has(doc.id) ? current : new Set([doc.id])))
+                  setFolderCtxMenu(null)
+                  setColCtxMenu(null)
                   setCtxMenu({ x: event.clientX, y: event.clientY, doc })
                 },
               },
@@ -9400,12 +10419,297 @@ window.__ModuleLoader__.load({
                     className: 'hrag-docrow-more',
                     trigger: dshEllipsisIcon(),
                     items: rowItems,
-                    onSelect: (id) => handleRowMenu(doc, id),
+                    onSelect: (id) => handleRowMenu(doc, id, false),
                   }),
                 ),
               ),
             )
-          }),
+                      }
+                      const colSpan = 3 + DOC_HIDEABLE_COLUMNS.filter((id) => colVisible(id)).length
+                      const groupRow = (group) => {
+                        const isFolder = group.kind === 'folder'
+                        const folder = isFolder ? { id: group.id, name: group.name } : null
+                        const dropKey = docFolderDropKey(isFolder ? group.id : null)
+                        const groupSelectedCount = group.docs.reduce(
+                          (count, doc) => count + (selectedIds.has(doc.id) ? 1 : 0),
+                          0,
+                        )
+                        const allGroupSelected = group.docs.length > 0 && groupSelectedCount === group.docs.length
+                        const someGroupSelected = groupSelectedCount > 0 && groupSelectedCount < group.docs.length
+                        const renameOpen = isFolder
+                          ? renamingFolderId === group.id
+                          : renamingFolderId === UNFILED_RENAME_ID
+                        const nameNode = renameOpen
+                          ? h('input', {
+                              className: 'hrag-input hrag-docgroup-input',
+                              value: renameFolderDraft,
+                              'aria-label': t('doc.folderRename'),
+                              autoFocus: true,
+                              onFocus: (event) => event.currentTarget.select(),
+                              onChange: (event) => {
+                                setRenameFolderDraft(event.target.value)
+                                if (renameFolderError) setRenameFolderError(null)
+                              },
+                              onBlur: submitRenameFolder,
+                              onKeyDown: (event) => {
+                                if (event.key === 'Enter') {
+                                  event.preventDefault()
+                                  submitRenameFolder()
+                                } else if (event.key === 'Escape') {
+                                  event.preventDefault()
+                                  cancelRenameFolder()
+                                }
+                              },
+                              onClick: (event) => event.stopPropagation(),
+                              onDoubleClick: (event) => event.stopPropagation(),
+                            })
+                          : h(
+                              'span',
+                              {
+                                className: 'hrag-docgroup-name',
+                                title: isFolder ? group.name : unfiledLabel,
+                                onClick: isFolder
+                                  ? (event) => handleFolderNameClick(group, event)
+                                  : (event) => handleUnfiledNameClick(group, event),
+                                onDoubleClick: isFolder
+                                  ? (event) => handleFolderNameDoubleClick(group, event)
+                                  : undefined,
+                              },
+                              isFolder ? group.name : unfiledLabel,
+                            )
+                        const moreItems = isFolder
+                          ? [
+                              { id: 'folder-style', label: t('doc.folderStyle'), icon: dshFolderStyleIcon() },
+                              { id: 'folder-rename', label: t('doc.folderRename'), icon: dshEditIcon() },
+                              { type: 'separator', id: 'folder-sep' },
+                              { id: 'folder-delete', label: t('doc.folderDelete'), icon: dshTrashIcon(), danger: true },
+                            ]
+                          : [
+                              { id: 'unfiled-style', label: t('doc.folderStyle'), icon: dshFolderStyleIcon() },
+                              { id: 'unfiled-rename', label: t('doc.folderRename'), icon: dshEditIcon() },
+                              { type: 'separator', id: 'unfiled-rename-sep' },
+                              {
+                                id: 'unfiled-new',
+                                label: t('doc.folderNew'),
+                                icon: cardUiIcon('folderPlus', 14),
+                                disabled: query.trim() !== '',
+                              },
+                              { type: 'separator', id: 'unfiled-sep' },
+                              {
+                                id: 'unfiled-toggle',
+                                label: group.collapsed ? t('doc.unfiledExpand') : t('doc.unfiledCollapse'),
+                                icon: dshChevronDownIcon(),
+                                disabled: query.trim() !== '',
+                              },
+                            ]
+                        return h(
+                          'tr',
+                          {
+                            className:
+                              'hrag-docgroup' +
+                              (isFolder ? '' : ' hrag-docgroup-unfiled') +
+                              (folderCanDrag && isFolder ? ' hrag-docgroup-draggable' : '') +
+                              // 未分类的 group.id 是 null，空闲态 folderOrderDragId 也是 null——
+                              // 必须带 isFolder，否则未分类行常驻拖动源降透明。
+                              (isFolder && folderOrderDragId === group.id ? ' hrag-docgroup-dragging' : '') +
+                              (folderOrderDrop && folderOrderDrop.id === group.id
+                                ? folderOrderDrop.after
+                                  ? ' hrag-docgroup-drop-after'
+                                  : ' hrag-docgroup-drop-before'
+                                : '') +
+                              (dropGroupKey === dropKey ? ' hrag-docgroup-drop' : ''),
+                            key: group.id == null ? 'group-unfiled' : 'group-folder-' + group.id,
+                            ...groupDropHandlers(group),
+                            draggable: (folderCanDrag && isFolder) || undefined,
+                            onDragStart: isFolder
+                              ? (event) => {
+                                  if (!folderCanDrag || !isRowGrabTarget(event.target)) {
+                                    event.preventDefault()
+                                    return
+                                  }
+                                  folderOrderDragRef.current = group.id
+                                  folderOrderDropRef.current = null
+                                  setFolderOrderDragId(group.id)
+                                  setFolderOrderDrop(null)
+                                  if (event.dataTransfer) {
+                                    event.dataTransfer.effectAllowed = 'move'
+                                    event.dataTransfer.setData('text/plain', String(group.id))
+                                  }
+                                }
+                              : undefined,
+                            onDragEnd: isFolder ? finishFolderOrderDrag : undefined,
+                            onMouseDown: () => {
+                              if (nameClickTimerRef.current) {
+                                window.clearTimeout(nameClickTimerRef.current)
+                                nameClickTimerRef.current = null
+                              }
+                            },
+                            onClick: (event) => handleFolderRowClick(group, event),
+                            onContextMenu: (event) => {
+                              event.preventDefault()
+                              event.stopPropagation()
+                              setCtxMenu(null)
+                              setColCtxMenu(null)
+                              setFolderCtxMenu({ x: event.clientX, y: event.clientY, folder: folder })
+                            },
+                          },
+                          h(
+                            'td',
+                            { colSpan: colSpan },
+                            h(
+                              'div',
+                              { className: 'hrag-docgroupcell' },
+                              h(
+                                'button',
+                                {
+                                  type: 'button',
+                                  className:
+                                    'hrag-docgroup-icon hrag-docgroup-iconbtn' +
+                                    (group.collapsed ? '' : ' hrag-docgroup-iconbtn-open'),
+                                  'aria-label': group.collapsed
+                                    ? isFolder
+                                      ? t('doc.folderExpand')
+                                      : t('doc.unfiledExpand')
+                                    : isFolder
+                                      ? t('doc.folderCollapse')
+                                      : t('doc.unfiledCollapse'),
+                                  'aria-expanded': !group.collapsed,
+                                  ref: (el) => {
+                                    const key = isFolder ? folder.id : DOC_UNFILED_ICON_REF
+                                    if (el) folderIconRefs.current[key] = el
+                                    else delete folderIconRefs.current[key]
+                                  },
+                                  title: group.collapsed
+                                    ? isFolder
+                                      ? t('doc.folderExpand')
+                                      : t('doc.unfiledExpand')
+                                    : isFolder
+                                      ? t('doc.folderCollapse')
+                                      : t('doc.unfiledCollapse'),
+                                  disabled: query.trim() !== '',
+                                  onClick: (event) => {
+                                    event.stopPropagation()
+                                    if (Date.now() < suppressClickUntilRef.current) return
+                                    if (nameClickTimerRef.current) {
+                                      window.clearTimeout(nameClickTimerRef.current)
+                                      nameClickTimerRef.current = null
+                                    }
+                                    toggleGroup(group)
+                                  },
+                                },
+                                docFolderStateIcon(!group.collapsed, 14, group.icon, group.color),
+                              ),
+                              nameNode,
+                              h('input', {
+                                type: 'checkbox',
+                                className: 'hrag-ev-check hrag-docgroup-check',
+                                'aria-label': t('doc.selectGroup') + ': ' + (isFolder ? group.name : unfiledLabel),
+                                checked: allGroupSelected,
+                                disabled: group.docs.length === 0,
+                                ref: (el) => {
+                                  if (el) el.indeterminate = someGroupSelected
+                                },
+                                onClick: (event) => event.stopPropagation(),
+                                onChange: (event) => toggleGroupSelection(group, event.target.checked),
+                              }),
+                              h(DshMenu, {
+                                title: isFolder ? t('doc.folderMenu') : t('doc.unfiledMenu'),
+                                align: 'end',
+                                className: 'hrag-docrow-more',
+                                trigger: dshEllipsisIcon(),
+                                items: moreItems,
+                                onSelect: (id) => {
+                                  if (isFolder) {
+                                    handleFolderMenu(folder, id)
+                                    return
+                                  }
+                                  handleUnfiledMenu(id, group.collapsed)
+                                },
+                              }),
+                            ),
+                          ),
+                        )
+                      }
+                      const draftRow = () =>
+                        h(
+                          'tr',
+                          { className: 'hrag-docgroup hrag-docgroup-draft', key: 'draft-folder' },
+                          h(
+                            'td',
+                            { colSpan: colSpan },
+                            h(
+                              'div',
+                              { className: 'hrag-docgroupcell' },
+                              h('span', { className: 'hrag-docgroup-icon' }, cardUiIcon('folderPlus', 14)),
+                              h('input', {
+                                className: 'hrag-input hrag-docgroup-input',
+                                value: draftFolder == null ? '' : draftFolder,
+                                placeholder: t('doc.folderNamePlaceholder'),
+                                'aria-label': t('doc.folderNamePlaceholder'),
+                                autoFocus: true,
+                                onChange: (event) => {
+                                  setDraftFolder(event.target.value)
+                                  if (draftFolderError) setDraftFolderError(null)
+                                },
+                                onBlur: submitDraftFolder,
+                                onKeyDown: (event) => {
+                                  if (event.key === 'Enter') {
+                                    event.preventDefault()
+                                    submitDraftFolder()
+                                  } else if (event.key === 'Escape') {
+                                    event.preventDefault()
+                                    cancelDraftFolder()
+                                  }
+                                },
+                              }),
+                            ),
+                          ),
+                        )
+                      const emptyRow = (group) =>
+                        h(
+                          'tr',
+                          {
+                            className:
+                              'hrag-docgroup-empty' +
+                              (folderOrderDrop && folderOrderDrop.id === group.id
+                                ? folderOrderDrop.after
+                                  ? ' hrag-docgroup-drop-after'
+                                  : ' hrag-docgroup-drop-before'
+                                : '') +
+                              (dropGroupKey === docFolderDropKey(group.kind === 'unfiled' ? null : group.id)
+                                ? ' hrag-docgroup-drop'
+                                : ''),
+                            key: 'empty-' + group.id,
+                            ...groupDropHandlers(group, { empty: true }),
+                          },
+                          h('td', { colSpan: colSpan }, t('doc.folderEmpty')),
+                        )
+                      const errorRow = (key, text) =>
+                        h(
+                          'tr',
+                          { className: 'hrag-docgroup-error', key: key },
+                          h('td', { colSpan: colSpan }, text),
+                        )
+                      const rows = []
+                      if (draftFolder !== null && query.trim() === '') {
+                        rows.push(draftRow())
+                        if (draftFolderError) rows.push(errorRow('draft-folder-error', folderNameErrorText(draftFolderError)))
+                      }
+                      if (grouped.flat) {
+                        rows.push(...visibleDocs.map(renderDocRow))
+                      } else {
+                        for (const group of grouped.groups) {
+                          rows.push(groupRow(group))
+                          if (group.kind === 'folder' && renamingFolderId === group.id && renameFolderError) {
+                            rows.push(errorRow('rename-' + group.id, folderNameErrorText(renameFolderError)))
+                          }
+                          if (group.collapsed) continue
+                          if (group.docs.length === 0) rows.push(emptyRow(group))
+                          else rows.push(...group.docs.map(renderDocRow))
+                        }
+                      }
+                      return rows
+                    })(),
                   ),
                 ),
           ),
@@ -9440,20 +10744,91 @@ window.__ModuleLoader__.load({
               onConfirm: confirmDelete,
             })
           : null,
+        folderDeleteTarget
+          ? h(ConfirmDialog, {
+              t,
+              title: t('doc.folderDeleteTitle'),
+              description: evText(t('doc.folderDeleteDescription'), [
+                docsInFolder(docs, docFolders.membership, folderIds, folderDeleteTarget.id).length,
+                unfiledLabel,
+              ]),
+              busy: false,
+              onCancel: () => setFolderDeleteTarget(null),
+              onConfirm: confirmDeleteFolder,
+            })
+          : null,
+        styleFolder
+          ? h(FolderStylePicker, {
+              t,
+              folder: styleFolder,
+              anchorRect: folderStyleTarget.anchor,
+              onChange: (patch) =>
+                styleFolder.id === null
+                  ? docFolders.setUnfiledStyle(patch)
+                  : docFolders.setFolderStyle(styleFolder.id, patch),
+              onClose: () => setFolderStyleTarget(null),
+            })
+          : null,
         ctxMenu
           ? h(DocContextMenu, {
               t,
               x: ctxMenu.x,
               y: ctxMenu.y,
-              items: docContextMenuItems(t, ctxMenu.doc, {
-                degraded: isDegraded(ctxMenu.doc),
-                canGenerate: canGenerateQuestion(ctxMenu.doc),
-                busy,
-                selectedCount: selectedIds.has(ctxMenu.doc.id) ? selectedIds.size : 0,
-                allSelectedReady,
-              }),
-              onSelect: (id) => handleRowMenu(ctxMenu.doc, id),
+              items: (() => {
+                const batch = selectedIds.has(ctxMenu.doc.id) && selectedIds.size > 1
+                return docContextMenuItems(t, ctxMenu.doc, {
+                  degraded: isDegraded(ctxMenu.doc),
+                  canGenerate: canGenerateQuestion(ctxMenu.doc),
+                  busy,
+                  selectedCount: selectedIds.has(ctxMenu.doc.id) ? selectedIds.size : 0,
+                  allSelectedReady,
+                  moveItems: folderMoveItems(batch ? [...selectedIds] : [ctxMenu.doc.id]),
+                  moveDisabled: query.trim() !== '',
+                })
+              })(),
+              onSelect: (id) =>
+                handleRowMenu(ctxMenu.doc, id, selectedIds.has(ctxMenu.doc.id) && selectedIds.size > 1),
               onClose: () => setCtxMenu(null),
+            })
+          : null,
+        folderCtxMenu
+          ? h(DocContextMenu, {
+              t,
+              x: folderCtxMenu.x,
+              y: folderCtxMenu.y,
+              items: folderCtxMenu.folder
+                ? [
+                    { id: 'folder-style', label: t('doc.folderStyle'), icon: dshFolderStyleIcon() },
+                    { id: 'folder-rename', label: t('doc.folderRename'), icon: dshEditIcon() },
+                    { type: 'separator', id: 'folder-sep' },
+                    { id: 'folder-delete', label: t('doc.folderDelete'), icon: dshTrashIcon(), danger: true },
+                  ]
+                : [
+                    { id: 'unfiled-style', label: t('doc.folderStyle'), icon: dshFolderStyleIcon() },
+                    { id: 'unfiled-rename', label: t('doc.folderRename'), icon: dshEditIcon() },
+                    { type: 'separator', id: 'unfiled-rename-sep' },
+                    {
+                      id: 'unfiled-new',
+                      label: t('doc.folderNew'),
+                      icon: cardUiIcon('folderPlus', 14),
+                      disabled: query.trim() !== '',
+                    },
+                    { type: 'separator', id: 'unfiled-sep' },
+                    {
+                      id: 'unfiled-toggle',
+                      label: docFolders.unfiledCollapsed ? t('doc.unfiledExpand') : t('doc.unfiledCollapse'),
+                      icon: dshChevronDownIcon(),
+                      disabled: query.trim() !== '',
+                    },
+                  ],
+              onSelect: (id) => {
+                if (folderCtxMenu.folder) {
+                  handleFolderMenu(folderCtxMenu.folder, id)
+                  return
+                }
+                handleUnfiledMenu(id, docFolders.unfiledCollapsed)
+              },
+              onClose: () => setFolderCtxMenu(null),
             })
           : null,
         colCtxMenu
@@ -9697,6 +11072,7 @@ window.__ModuleLoader__.load({
       ]),
     )
     const dshPlusIcon = dshIconOr('IconPlusOutlineRegular', () => dshMenuIcon([{ d: 'M8 2V14' }, { d: 'M2 8H14' }]))
+    const dshFolderStyleIcon = dshIconOr('IconSlidersTwoOutlineRegular', dshSettingsIcon)
     const dshSparkleIcon = dshIconOr('IconSparkleRegular', () =>
       dshMenuIcon([{ d: 'M8 1.6L9.65 6.35L14.4 8L9.65 9.65L8 14.4L6.35 9.65L1.6 8L6.35 6.35Z' }]),
     )
@@ -9730,6 +11106,19 @@ window.__ModuleLoader__.load({
       dshMenuIcon([
         { d: 'M5.1 6L8 3.1L10.9 6' },
         { d: 'M5.1 10L8 12.9L10.9 10' },
+      ]),
+    )
+    // 名称表头激活态：宿主无对应件时自绘 16 视窗线性箭头。
+    const dshArrowUpIcon = dshIconOr('IconArrowUpOutlineRegular', () =>
+      dshMenuIcon([
+        { d: 'M8 13V3' },
+        { d: 'M4 7L8 3L12 7' },
+      ]),
+    )
+    const dshArrowDownIcon = dshIconOr('IconArrowDownOutlineRegular', () =>
+      dshMenuIcon([
+        { d: 'M8 3V13' },
+        { d: 'M4 9L8 13L12 9' },
       ]),
     )
     /** 「在百科 tab 中查看」导航图标（小件批 Task 8）：宿主最近邻 IconRightUp（右上
@@ -13762,17 +15151,19 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** 抽屉/菜单图标：lucide 节点（path/circle/rect）通用渲染，默认 16px。 */
-    function renderLucideNodes(nodes, size, color) {
+    /** 抽屉/菜单图标：lucide 节点（path/circle/rect）通用渲染，默认 16px。
+        第 4 参 filled＝实心态（文件夹自定义图标的展开态）：路径填 currentColor，
+        线宽收到 1.5，避免小尺寸下实心块发胖。 */
+    function renderLucideNodes(nodes, size, color, filled) {
       return h(
         'svg',
         {
           width: size || 16,
           height: size || 16,
           viewBox: '0 0 24 24',
-          fill: 'none',
+          fill: filled ? 'currentColor' : 'none',
           stroke: 'currentColor',
-          strokeWidth: 2,
+          strokeWidth: filled ? 1.5 : 2,
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
           style: color ? { color: color } : undefined,
@@ -13825,6 +15216,259 @@ window.__ModuleLoader__.load({
         CARD_DRAWER_ICON_NODES[CARD_DRAWER_ICON_SET.has(key) ? key : CARD_DRAWER_DEFAULT_ICON],
         size,
         color,
+      )
+    }
+
+    // 文件夹图标（10-22 追加五）：用户可选 15 种图案——默认文件夹沿用宿主成对的
+    // outline/fill 图标，其余取主仓 lucide 线图标节点（24×24、2px 线宽），展开态
+    // 以浅色底块表状态。缺件时回落手工文件夹字形（测试/旧宿主）。
+    const DOC_FOLDER_PATH_CLOSED = 'M1.50439 3.11059C1.50439 2.55831 1.95211 2.1106 2.50439 2.1106H5.43389C5.67773 2.1106 5.91318 2.19969 6.09593 2.36113L7.71649 3.79265C7.89924 3.95409 8.1347 4.04319 8.3785 4.04319H13.4958C14.0481 4.04319 14.4958 4.4909 14.4958 5.04319V12.8894C14.4958 13.4417 14.0481 13.8894 13.4958 13.8894H2.50439C1.95211 13.8894 1.50439 13.4417 1.50439 12.8894V4.04319V3.11059Z'
+    const DOC_FOLDER_PATH_LINE = 'M3.63501 7.66614H12.3647'
+    const DOC_FOLDER_PATHS_OPEN_FILLED = [
+      { d: 'M2.55912 7.93683C2.67584 7.49906 3.0723 7.19446 3.52536 7.19446H13.6491C14.3061 7.19446 14.7846 7.81725 14.6153 8.45209L13.4411 12.856C13.3244 13.2938 12.9279 13.5984 12.4748 13.5984H2.35113C1.69411 13.5984 1.21562 12.9756 1.38489 12.3407L2.55912 7.93683Z', fill: 'currentColor', opacity: 0.16 },
+      { d: 'M13.6491 6.69446C14.6346 6.69453 15.3522 7.62895 15.0983 8.58118L13.9245 12.9845C13.7494 13.6412 13.1539 14.0988 12.4743 14.0988H2.35126C1.36574 14.0988 0.648153 13.1643 0.902044 12.212L2.07587 7.80774C2.25102 7.15128 2.84567 6.69455 3.52509 6.69446H13.6491ZM3.52509 7.69446C3.29865 7.69455 3.10004 7.84674 3.04169 8.06555L1.86786 12.4698C1.78345 12.7872 2.02285 13.0988 2.35126 13.0988H12.4743C12.7007 13.0988 12.8992 12.9463 12.9577 12.7277L14.1325 8.32336C14.2171 8.00598 13.9776 7.69453 13.6491 7.69446H3.52509Z', fill: 'currentColor' },
+      { d: 'M4.7666 1.90137C5.13227 1.90144 5.48571 2.03525 5.75977 2.27734L7.27246 3.61328C7.36379 3.69382 7.48174 3.73828 7.60352 3.73828H12.3994C13.2276 3.73841 13.8993 4.41005 13.8994 5.23828V6.7168C13.8183 6.70327 13.735 6.69436 13.6494 6.69434H12.8994V5.23828C12.8993 4.96233 12.6754 4.73841 12.3994 4.73828H7.60352C7.23781 4.73828 6.88446 4.60438 6.61035 4.3623L5.09766 3.02637C5.00636 2.94576 4.88838 2.90144 4.7666 2.90137H2.0498C1.77366 2.90137 1.5498 3.12523 1.5498 3.40137V9.78223L0.902344 12.2119C0.648452 13.1642 1.36604 14.0986 2.35156 14.0986H2.0498C1.2214 14.0986 0.549838 13.427 0.549805 12.5986V3.40137C0.549805 2.57294 1.22138 1.90137 2.0498 1.90137H4.7666Z', fill: 'currentColor' },
+    ]
+    const DOC_FOLDER_STYLE_ICONS = {
+      folder: { outline: 'IconFolderCloseMedium', filled: 'IconFolderOpenMedium' },
+    }
+    const DOC_FOLDER_ICON_NODES = {
+      pizza: [
+        ['path', { d: 'm12 14-1 1' }],
+        ['path', { d: 'm13.75 18.25-1.25 1.42' }],
+        ['path', { d: 'M17.775 5.654a15.68 15.68 0 0 0-12.121 12.12' }],
+        ['path', { d: 'M18.8 9.3a1 1 0 0 0 2.1 7.7' }],
+        ['path', { d: 'M21.964 20.732a1 1 0 0 1-1.232 1.232l-18-5a1 1 0 0 1-.695-1.232A19.68 19.68 0 0 1 15.732 2.037a1 1 0 0 1 1.232.695z' }],
+      ],
+      iceCream: [
+        ['path', { d: 'm7 11 4.08 10.35a1 1 0 0 0 1.84 0L17 11' }],
+        ['path', { d: 'M17 7A5 5 0 0 0 7 7' }],
+        ['path', { d: 'M17 7a2 2 0 0 1 0 4H7a2 2 0 0 1 0-4' }],
+      ],
+      cherry: [
+        ['path', { d: 'M2 17a5 5 0 0 0 10 0c0-2.76-2.5-5-5-3-2.5-2-5 .24-5 3Z' }],
+        ['path', { d: 'M12 17a5 5 0 0 0 10 0c0-2.76-2.5-5-5-3-2.5-2-5 .24-5 3Z' }],
+        ['path', { d: 'M7 14c3.22-2.91 4.29-8.75 5-12 1.66 2.38 4.94 9 5 12' }],
+        ['path', { d: 'M22 9c-4.29 0-7.14-2.33-10-7 5.71 0 10 4.67 10 7Z' }],
+      ],
+      fish: [
+        ['path', { d: 'M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z' }],
+        ['path', { d: 'M18 12v.5' }],
+        ['path', { d: 'M16 17.93a9.77 9.77 0 0 1 0-11.86' }],
+        ['path', { d: 'M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33' }],
+        ['path', { d: 'M10.46 7.26C10.2 5.88 9.17 4.24 8 3h5.8a2 2 0 0 1 1.98 1.67l.23 1.4' }],
+        ['path', { d: 'm16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98' }],
+      ],
+      bird: [
+        ['path', { d: 'M16 7h.01' }],
+        ['path', { d: 'M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20' }],
+        ['path', { d: 'm20 7 2 .5-2 .5' }],
+        ['path', { d: 'M10 18v3' }],
+        ['path', { d: 'M14 17.75V21' }],
+        ['path', { d: 'M7 18a6 6 0 0 0 3.84-10.61' }],
+      ],
+      rabbit: [
+        ['path', { d: 'M13 16a3 3 0 0 1 2.24 5' }],
+        ['path', { d: 'M18 12h.01' }],
+        ['path', { d: 'M18 21h-8a4 4 0 0 1-4-4 7 7 0 0 1 7-7h.2L9.6 6.4a1 1 0 1 1 2.8-2.8L15.8 7h.2c3.3 0 6 2.7 6 6v1a2 2 0 0 1-2 2h-1a3 3 0 0 0-3 3' }],
+        ['path', { d: 'M20 8.54V4a2 2 0 1 0-4 0v3' }],
+        ['path', { d: 'M7.612 12.524a3 3 0 1 0-1.6 4.3' }],
+      ],
+      leaf: [
+        ['path', { d: 'M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z' }],
+        ['path', { d: 'M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12' }],
+      ],
+      cloud: [
+        ['path', { d: 'M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z' }],
+      ],
+      moon: [
+        ['path', { d: 'M18 5h4' }],
+        ['path', { d: 'M20 3v4' }],
+        ['path', { d: 'M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401' }],
+      ],
+      umbrella: [
+        ['path', { d: 'M12 13v7a2 2 0 0 0 4 0' }],
+        ['path', { d: 'M12 2v2' }],
+        ['path', { d: 'M20.992 13a1 1 0 0 0 .97-1.274 10.284 10.284 0 0 0-19.923 0A1 1 0 0 0 3 13z' }],
+      ],
+      headphones: [
+        ['path', { d: 'M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3' }],
+      ],
+      gamepad: [
+        ['line', { x1: 6, x2: 10, y1: 11, y2: 11 }],
+        ['line', { x1: 8, x2: 8, y1: 9, y2: 13 }],
+        ['line', { x1: 15, x2: 15.01, y1: 12, y2: 12 }],
+        ['line', { x1: 18, x2: 18.01, y1: 10, y2: 10 }],
+        ['path', { d: 'M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z' }],
+      ],
+      palette: [
+        ['path', { d: 'M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z' }],
+        ['circle', { cx: 13.5, cy: 6.5, r: 0.5, fill: 'currentColor' }],
+        ['circle', { cx: 17.5, cy: 10.5, r: 0.5, fill: 'currentColor' }],
+        ['circle', { cx: 6.5, cy: 12.5, r: 0.5, fill: 'currentColor' }],
+        ['circle', { cx: 8.5, cy: 7.5, r: 0.5, fill: 'currentColor' }],
+      ],
+      camera: [
+        ['path', { d: 'M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z' }],
+        ['circle', { cx: 12, cy: 13, r: 3 }],
+      ],
+    }
+    const DOC_FOLDER_ICON_LABELS = {
+      folder: 'doc.folderStyleFolder',
+      pizza: 'doc.folderStylePizza',
+      iceCream: 'doc.folderStyleIceCream',
+      cherry: 'doc.folderStyleCherry',
+      fish: 'doc.folderStyleFish',
+      bird: 'doc.folderStyleBird',
+      rabbit: 'doc.folderStyleRabbit',
+      leaf: 'doc.folderStyleLeaf',
+      cloud: 'doc.folderStyleCloud',
+      moon: 'doc.folderStyleMoon',
+      umbrella: 'doc.folderStyleUmbrella',
+      headphones: 'doc.folderStyleHeadphones',
+      gamepad: 'doc.folderStyleGamepad',
+      palette: 'doc.folderStylePalette',
+      camera: 'doc.folderStyleCamera',
+    }
+    const DOC_FOLDER_COLOR_LABELS = {
+      gray: 'doc.folderColorGray',
+      forest: 'doc.folderColorForest',
+      green: 'doc.folderColorGreen',
+      blue: 'doc.folderColorBlue',
+      amber: 'doc.folderColorAmber',
+      red: 'doc.folderColorRed',
+      pink: 'doc.folderColorPink',
+      indigo: 'doc.folderColorIndigo',
+      orange: 'doc.folderColorOrange',
+      teal: 'doc.folderColorTeal',
+    }
+    function docFolderFallbackIcon(expanded, dim) {
+      const nodes = expanded
+        ? DOC_FOLDER_PATHS_OPEN_FILLED
+        : [
+            { d: DOC_FOLDER_PATH_CLOSED, stroke: 'currentColor' },
+            { d: DOC_FOLDER_PATH_LINE, stroke: 'currentColor' },
+          ]
+      return h(
+        'svg',
+        { width: dim, height: dim, viewBox: '0 0 16 16', fill: 'none', xmlns: 'http://www.w3.org/2000/svg', 'aria-hidden': 'true', strokeWidth: 1 },
+        nodes.map((node) => h('path', node)),
+      )
+    }
+    function docFolderStateIcon(expanded, size, style, color) {
+      const dim = size || 14
+      const icon = DOC_FOLDER_ICONS.includes(style) ? style : 'folder'
+      const tone = DOC_FOLDER_COLORS.includes(color) ? { color: 'var(--hrag-folder-tone-' + color + ')' } : undefined
+      if (icon === 'folder') {
+        const spec = DOC_FOLDER_STYLE_ICONS.folder
+        const Icon = hostIcon(expanded ? spec.filled : spec.outline)
+        return h(
+          'span',
+          { className: 'hrag-folder-glyph', style: tone, 'data-folder-icon': icon, 'aria-hidden': 'true' },
+          Icon ? h(Icon, { size: dim }) : docFolderFallbackIcon(expanded, dim),
+        )
+      }
+      return h(
+        'span',
+        {
+          className: 'hrag-folder-glyph' + (expanded ? ' hrag-folder-glyph-solid' : ''),
+          style: tone,
+          'data-folder-icon': icon,
+          'data-folder-filled': expanded ? 'true' : 'false',
+          'aria-hidden': 'true',
+        },
+        renderLucideNodes(DOC_FOLDER_ICON_NODES[icon], dim, null, expanded),
+      )
+    }
+
+    /** 文件夹图标与颜色：上一排样式、下一排颜色，点选即落盘并实时预览。 */
+    function FolderStylePicker({ t, folder, anchorRect, onChange, onClose }) {
+      React.useEffect(() => {
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return
+          event.preventDefault()
+          event.stopPropagation()
+          onClose()
+        }
+        window.addEventListener('keydown', onKey, true)
+        return () => window.removeEventListener('keydown', onKey, true)
+      }, [onClose])
+      const width = Math.min(536, window.innerWidth - 16)
+      const height = 214
+      const left = Math.max(8, Math.min(anchorRect ? anchorRect.left : 12, window.innerWidth - width - 8))
+      const below = anchorRect ? anchorRect.bottom + 6 : 80
+      const top =
+        below + height > window.innerHeight - 8
+          ? Math.max(8, (anchorRect ? anchorRect.top : 80) - height - 6)
+          : below
+      const icon = DOC_FOLDER_ICONS.includes(folder.icon) ? folder.icon : 'folder'
+      const color = DOC_FOLDER_COLORS.includes(folder.color) ? folder.color : null
+      const styleButton = (key) =>
+        h(
+          'button',
+          {
+            key: key,
+            type: 'button',
+            className: 'hrag-folder-style-btn' + (icon === key ? ' hrag-folder-style-btn-active' : ''),
+            'aria-label': t(DOC_FOLDER_ICON_LABELS[key]),
+            title: t(DOC_FOLDER_ICON_LABELS[key]),
+            'aria-pressed': icon === key,
+            onClick: () => onChange({ icon: key }),
+          },
+          docFolderStateIcon(false, 18, key, null),
+        )
+      const swatch = (key) =>
+        h('button', {
+          key: key || 'default',
+          type: 'button',
+          className:
+            'hrag-folder-style-swatch' +
+            (key ? '' : ' hrag-folder-style-swatch-default') +
+            (color === key ? ' hrag-folder-style-swatch-active' : ''),
+          'aria-label': key ? t(DOC_FOLDER_COLOR_LABELS[key]) : t('doc.folderStyleDefault'),
+          title: key ? t(DOC_FOLDER_COLOR_LABELS[key]) : t('doc.folderStyleDefault'),
+          'aria-pressed': color === key,
+          style: key ? { background: 'var(--hrag-folder-tone-' + key + ')' } : undefined,
+          onClick: () => onChange({ color: key }),
+        })
+      return h(
+        React.Fragment,
+        null,
+        h('div', { className: 'hrag-mm-backdrop', onMouseDown: onClose }),
+        h(
+          'div',
+          {
+            className: 'hrag-mm hrag-folder-style-pop',
+            role: 'dialog',
+            'aria-label': t('doc.folderStyle'),
+            style: { top: top + 'px', left: left + 'px' },
+            onMouseDown: (event) => event.stopPropagation(),
+            onContextMenu: (event) => event.stopPropagation(),
+          },
+          h('div', { className: 'hrag-folder-style-title' }, t('doc.folderStyle')),
+          h('div', { className: 'hrag-folder-style-rowlabel' }, t('doc.folderStyleShape')),
+          h('div', { className: 'hrag-folder-style-styles' }, DOC_FOLDER_ICONS.map(styleButton)),
+          h('div', { className: 'hrag-folder-style-rowlabel' }, t('doc.folderStyleColor')),
+          h('div', { className: 'hrag-folder-style-colors' }, [null].concat(DOC_FOLDER_COLORS).map(swatch)),
+          h(
+            'div',
+            { className: 'hrag-folder-style-foot' },
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-folder-style-reset',
+                onClick: () => onChange({ icon: null, color: null }),
+              },
+              t('doc.folderStyleReset'),
+            ),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-primary hrag-folder-style-done', onClick: onClose },
+              t('doc.folderStyleDone'),
+            ),
+          ),
+        ),
       )
     }
 
