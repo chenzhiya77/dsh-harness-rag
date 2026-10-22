@@ -63,7 +63,7 @@ cd <harness-rag>/backend && make gateway
 # uvicorn app.gateway.knowledge_app:app --host 127.0.0.1 --port 8020
 ```
 
-- 服务启动前需就绪：Python 3.12 ＋ `uv sync --inexact`；外部 Qdrant（默认 `127.0.0.1:6333`）；`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`。数据在 `backend/.deer-flow/`。
+- 服务启动前需就绪：Python 3.12 ＋ `uv sync --inexact`（默认依赖已含 ragas，L2 评测开箱可用）；外部 Qdrant（默认 `127.0.0.1:6333`）；`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`。数据在 `backend/.deer-flow/`。
 - 本机验收态可用 `DEER_FLOW_AUTH_DISABLED=1`（只绑回环）；引擎开启 token 鉴权时，插件 `apiToken` 填与服务端一致的 token；远程部署把 `backendUrl` 指过去即可。
 - 部署姿势不变：知识库数据在服务侧本地（Qdrant/存储）；插件只是它的一个客户端。
 

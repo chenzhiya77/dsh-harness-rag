@@ -1,6 +1,6 @@
 # 插件 —— RAG 功能模型经 DSH 本地代理 Spec
 
-**Status:** 已实现·已验收（2026-10-21；Anthropic 消息通路 2026-10-22 补验，effort/视觉仍待带档位模型）；逐腿思考档位（六档）由 [2026-10-21-rag-leg-effort-spec.md](2026-10-21-rag-leg-effort-spec.md) 接续。
+**Status:** 已实现·已验收（2026-10-21；Anthropic 消息通路＋effort/视觉 2026-10-22 补验）；逐腿思考档位（六档）由 [2026-10-21-rag-leg-effort-spec.md](2026-10-21-rag-leg-effort-spec.md) 接续。
 **Date:** 2026-10-21
 **配套 plan:** [2026-10-21-dsh-model-proxy-plan.md](../plans/2026-10-21-dsh-model-proxy-plan.md)
 
@@ -146,7 +146,9 @@ RAG 面板的「功能模型」列表来自引擎 `/api/models`（`models_config
 
 **实测（2026-10-21）**：5 条别名发布，`validate` 5/5 `model_present:true`；账号腿（切片重抽，20 实体，`extract_status=done`，39s）与 xiaomi 腿（百科重生成，`status=ready`）跑通；VLM 图片配文成功，BMP 直发代理 415。四个整退重开周期端口变化，均自动重发布；停 DSH 时别名报可读连接错误。别名只含本地代理地址与代理 token，引擎配置、`rag_config.json` 与日志均无 provider key。附件归一化落盘（一次 caption +893 B）。未做面：`ragas` 可选 extra 未装。验收期三处缺陷（关思考档、启动空目录误删、开思考档位）已修复并复验；档位词表在当晚扩到六档（`xhigh`/`max` 原样传递），详见 rag-leg-effort spec。
 
-**Anthropic 协议补验（2026-10-22）**：新增 provider `ceshi`（`api: anthropic-messages`，模型 `qwen3.8-flash`）后，别名 `dsh:ceshi/qwen3.8-flash` 经引擎模型工厂一次最小调用返回 `ok`，消息通路贯通（引擎 → 本地代理 → DSH Anthropic 适配器）。该模型在 DSH 声明 `supports_thinking: false`／`supports_reasoning_effort: false`／`supports_vision: false`，故 `output_config.effort` 映射与图片通路仍未验。
+**Anthropic 协议补验（2026-10-22）**：新增 provider `ceshi`（`api: anthropic-messages`，模型 `qwen3.8-flash`）后，别名 `dsh:ceshi/qwen3.8-flash` 经引擎模型工厂一次最小调用返回 `ok`，消息通路贯通（引擎 → 本地代理 → DSH Anthropic 适配器）。该模型在 DSH 声明 `supports_thinking: false`／`supports_reasoning_effort: false`／`supports_vision: false`，故当次未覆盖 effort 与图片通路。
+
+**Anthropic effort/视觉补验（2026-10-22）**：改用 `opencode-go` 的 Anthropic Messages 模型 `dsh:opencode-go/claude-haiku-5-5`（引擎条目声明六档与视觉）经同一代理直发 `/chat/completions`：`reasoning_effort: "high"` → 200 且返回 `ok`；`reasoning_effort: "max"` → 200、`ok` 且 `reasoning_content` 非空（思考路径有输出；适配器把 effort 写进 `output_config.effort` 的代码路径已核）；PNG data URL 图片描述 → 200，返回与图内容相符的一句话（usage 计入图片 token）。至此 §7.3 的 Anthropic 协议两条（effort 映射、图片通路）均有实测。
 
 ## 8. 风险与残差
 
@@ -162,5 +164,5 @@ RAG 面板的「功能模型」列表来自引擎 `/api/models`（`models_config
 - **隐藏标记**：`hidden_in_chat` 是聊天选择器过滤；RAG 面板不按它过滤，故别名仍可选。
 - **启动目录空窗**：DSH 启动初期 provider 目录可能为空；同步把空目录视为 `catalog_unavailable` 且不写引擎，启动期 10×3s 有界重试，避免把「尚在加载」误判成「模型全删」。
 - **思考关闭档**：`minimal` 在 xiaomi 上实测 4/4 被提供商拒绝（502），关闭形状因此优先用 host 的 `off`；无 `off` 的模型仍用最低发布档。
-- **Anthropic effort/视觉未验收**：消息通路已补验（2026-10-22，`dsh:ceshi/qwen3.8-flash` 最小调用返回 `ok`）；现有 Anthropic provider 只声明了这一条无 thinking/effort、无视觉的模型，`output_config.effort` 映射与图片通路待带档位/视觉声明的 Anthropic 模型补跑。
-- **判分腿未真调**：引擎未安装 `ragas` 可选 extra，L2 评测以 `ragas_available:false` 跳过，判分模型的代理调用面未实测。
+- **Anthropic effort/视觉**（2026-10-22 已验）：消息通路先由 `dsh:ceshi/qwen3.8-flash` 最小调用补验，`output_config.effort` 映射与图片通路随后由 `dsh:opencode-go/claude-haiku-5-5` 补验（`high`/`max` 均 200、`max` 带 `reasoning_content`；PNG 图片描述成功）。
+- **判分腿未真调**：`ragas` 已于 2026-10-22 改为后端默认依赖并装入环境（`ragas_available` 下次 L2 为 true），但尚未跑过一次完整 L2，判分模型的代理调用面仍未实测。
