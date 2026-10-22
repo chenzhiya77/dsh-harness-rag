@@ -2494,6 +2494,7 @@ window.__ModuleLoader__.load({
           '.hrag-recall-toggle { display: inline-flex; align-items: center; gap: 6px; min-width: 0; padding: 2px 6px; margin: -2px -6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }',
           '.hrag-recall-toggle:hover { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-recall-name { color: var(--dsw-alias-label-primary); font-size: 12px; font-weight: 600; flex-shrink: 0; }',
+          '.hrag-recall-pathicon { display: inline-flex; align-items: center; flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-recall-meta { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }',
           '.hrag-recall-seg { display: inline-flex; align-items: center; flex-shrink: 0; padding: 1px; border-radius: var(--dsw-radius-md); background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-recall-segbtn { padding: 1px 6px; border: none; border-radius: 4px; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 10px; line-height: 16px; font-family: inherit; cursor: pointer; }',
@@ -2515,7 +2516,7 @@ window.__ModuleLoader__.load({
           '.hrag-mini { position: relative; flex: 1; min-height: 0; overflow: hidden; }',
           '.hrag-mini canvas { display: block; width: 100%; height: 100%; }',
           '.hrag-recall-arearel { position: relative; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }',
-          '.hrag-recall-empty { padding: 12px; text-align: center; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-recall-empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: 12px; text-align: center; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-hitrow { display: flex; align-items: center; gap: 6px; width: 100%; padding: 4px 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; text-align: left; cursor: pointer; font-family: inherit; min-width: 0; }',
           '.hrag-hitrow:hover { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-hitrow-static { cursor: default; }',
@@ -2526,11 +2527,11 @@ window.__ModuleLoader__.load({
           '.hrag-hitpage { flex-shrink: 0; color: var(--dsw-alias-label-tertiary); font-size: 11px; }',
           '.hrag-hitscore { flex-shrink: 0; margin-left: auto; color: var(--dsw-alias-label-tertiary); font-size: 11px; font-family: ui-monospace, monospace; }',
           '.hrag-textchip { display: inline-flex; align-items: center; flex-shrink: 0; max-width: 240px; padding: 1px 7px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; color: var(--dsw-alias-label-tertiary); font-size: 10px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }',
-          '.hrag-hitrow-row .hrag-hitselect { opacity: 0; transition: opacity 120ms ease; }',
-          '.hrag-hitrow-row:hover .hrag-hitselect { opacity: 1; }',
-          '.hrag-hitselect:focus-visible { opacity: 1; }',
-          '.hrag-hitselect-on { opacity: 1; }',
-          '.hrag-recall-rows-selecting .hrag-hitselect { opacity: 1; }',
+          '.hrag-hitrow-row .hrag-ev-check { align-self: center; cursor: pointer; opacity: 0; transition: opacity 120ms ease; }',
+          '.hrag-hitrow-row:hover .hrag-ev-check { opacity: 1; }',
+          '.hrag-hitrow-row .hrag-ev-check:checked, .hrag-hitrow-row .hrag-ev-check:focus-visible { opacity: 1; }',
+          '.hrag-recall-rows-selecting .hrag-ev-check { opacity: 1; }',
+          '.hrag-hitrow-row .hrag-ev-check:disabled { opacity: 0.35; cursor: not-allowed; }',
           '.hrag-recall-sections { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }',
           // 容器底纹（10-21 surface 对）：浅色按「提亮但保持 B−R」取定值——体 #FCFDFE、头 #F3F5F7
           // （B−R 仍为 2 / 4，与宿主同比例）；深色沿用宿主 token 原值。
@@ -2809,10 +2810,6 @@ window.__ModuleLoader__.load({
           // 召回补面（存为考题）：行勾选与底栏。
           '.hrag-hitrow-row { display: flex; align-items: stretch; gap: 4px; min-width: 0; }',
           '.hrag-hitrow-row .hrag-hitrow { flex: 1; min-width: 0; }',
-          // 16px：照工作台 Checkbox（size-4），不再用 22px 撑高召回行。
-          '.hrag-hitselect { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0; width: 16px; height: 16px; padding: 0; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 4px; background: transparent; color: var(--dsw-alias-label-primary); font-size: 10px; line-height: 1; cursor: pointer; align-self: center; }',
-          '.hrag-hitselect-on { background: var(--dsw-alias-button-primary-fill); color: var(--dsw-alias-label-primary-foreground); border-color: transparent; }',
-          '.hrag-hitselect:disabled { opacity: 0.35; cursor: not-allowed; }',
           // 悬浮存为考题栏（小件批 Task 7）：外层不吃交互（pointer-events 双档），
           // 胶囊＝圆角满、底中悬浮、卡片底＋模糊＋阴影（照工作台配方）。
           '.hrag-recall-savebar { position: absolute; left: 0; right: 0; bottom: 12px; z-index: 10; display: flex; justify-content: center; pointer-events: none; }',
@@ -5600,19 +5597,15 @@ window.__ModuleLoader__.load({
                   : undefined,
             },
             select
-              ? h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'hrag-hitselect' + (select.checked ? ' hrag-hitselect-on' : ''),
-                    'aria-label': select.label,
-                    'aria-pressed': select.checked,
-                    title: select.label,
-                    disabled: select.disabled || false,
-                    onClick: select.onToggle,
-                  },
-                  select.checked ? '✓' : '',
-                )
+              ? h('input', {
+                  type: 'checkbox',
+                  className: 'hrag-ev-check',
+                  'aria-label': select.label,
+                  title: select.label,
+                  checked: select.checked,
+                  disabled: select.disabled || false,
+                  onChange: () => select.onToggle(),
+                })
               : null,
             // 「切片 #K」位次气泡（小件批 Task 7，照工作台 slicePosition）：宿主
             // Tooltip 包裹；缺件回退行按钮原生 title（上 title 分支）。
@@ -5697,6 +5690,9 @@ window.__ModuleLoader__.load({
         }
         const graphEntityCount = (result.paths.graph.entities || []).length
         const graphRelationCount = (result.paths.graph.relations || []).length
+        // 路图标（照工作台 PATH_ICONS）：散点=向量、节点图=图谱、书本=百科。
+        const pathIcon = (path) =>
+          path === 'graph' ? lucideWaypointsIcon(16) : path === 'wiki' ? lucideBookOpenIcon(16) : lucideChartScatterIcon(16)
         const section = (path) => {
           const collapsed = collapsedPaths[path]
           const scoreType = String((result.score_type && result.score_type[path]) || '')
@@ -5717,6 +5713,7 @@ window.__ModuleLoader__.load({
                   onClick: () =>
                     setCollapsedPaths((current) => Object.assign({}, current, { [path]: !current[path] })),
                 },
+                h('span', { className: 'hrag-recall-pathicon', 'aria-hidden': 'true' }, pathIcon(path)),
                 h('span', { className: 'hrag-recall-name' }, t('recall.path.' + path)),
                 h('span', { className: 'hrag-textchip', title: scoreType }, scoreType),
               ),
@@ -9786,20 +9783,33 @@ window.__ModuleLoader__.load({
 
     /** 菜单图标：工作台同款（lucide 24 视窗・stroke 2・圆头——宿主无对应件档，
         spec M3「相同语言」）。 */
-    function lucideMenuIcon(paths) {
+    function lucideMenuIcon(paths, size = 14) {
       return h(
         'svg',
-        { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
         paths.map((d, index) => h('path', { key: index, d, stroke: 'currentColor' })),
       )
     }
     function lucideUploadIcon() {
       return lucideMenuIcon(['M12 3v12', 'm17 8-5-5-5 5', 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'])
     }
-    function lucideBookOpenIcon() {
+    function lucideBookOpenIcon(size = 14) {
+      return lucideMenuIcon(
+        [
+          'M12 7v14',
+          'M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z',
+        ],
+        size,
+      )
+    }
+    /** 造题入口（lucide Sparkles，工作台同款）。 */
+    function lucideSparklesIcon() {
       return lucideMenuIcon([
-        'M12 7v14',
-        'M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z',
+        'M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z',
+        'M20 3v4',
+        'M22 5h-4',
+        'M4 17v2',
+        'M5 18H3',
       ])
     }
     function lucideRefreshCwIcon() {
@@ -9882,11 +9892,11 @@ window.__ModuleLoader__.load({
     }
 
     /** 空态散点（lucide ChartScatter，投影 tab 词汇）。 */
-    function lucideChartScatterIcon() {
+    function lucideChartScatterIcon(size = 20) {
       const dot = (cx, cy) => h('circle', { cx, cy, r: 1.5, fill: 'currentColor', stroke: 'none' })
       return h(
         'svg',
-        { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', 'aria-hidden': 'true' },
+        { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', 'aria-hidden': 'true' },
         h('path', { d: 'M3 3v16a2 2 0 0 0 2 2h16', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }),
         dot(7.5, 7.5),
         dot(18.5, 5.5),
@@ -9897,10 +9907,10 @@ window.__ModuleLoader__.load({
     }
 
     /** 空态实体图（lucide Waypoints，图谱 tab 词汇）。 */
-    function lucideWaypointsIcon() {
+    function lucideWaypointsIcon(size = 20) {
       return h(
         'svg',
-        { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
         h('circle', { cx: 12, cy: 4.5, r: 2.5 }),
         h('path', { d: 'm10.2 6.3-3.9 3.9' }),
         h('circle', { cx: 4.5, cy: 12, r: 2.5 }),
@@ -10344,12 +10354,12 @@ window.__ModuleLoader__.load({
                   render: (close) => [
                     h(
                       EvalMenuItem,
-                      { key: 'l1', selected: tier === 'l1', onSelect: () => { setTier('l1'); close() } },
+                      { key: 'l1', selected: tier === 'l1', icon: lucidePlayIcon(), onSelect: () => { setTier('l1'); close() } },
                       tk('ev.tierQuick'),
                     ),
                     h(
                       EvalMenuItem,
-                      { key: 'full', selected: tier === 'l1_l2', onSelect: () => { setTier('l1_l2'); close() } },
+                      { key: 'full', selected: tier === 'l1_l2', icon: lucideLayersIcon(), onSelect: () => { setTier('l1_l2'); close() } },
                       tk('ev.tierFull'),
                     ),
                     view === 'questions'
@@ -10358,14 +10368,14 @@ window.__ModuleLoader__.load({
                     view === 'questions'
                       ? h(
                           EvalMenuItem,
-                          { key: 'add', onSelect: () => { setBankAddOpen(true); close() } },
+                          { key: 'add', icon: dshPlusIcon(), onSelect: () => { setBankAddOpen(true); close() } },
                           tk('ev.questions.addQuestion'),
                         )
                       : null,
                     view === 'questions'
                       ? h(
                           EvalMenuItem,
-                          { key: 'syn', onSelect: () => { setBankSynthOpen(true); close() } },
+                          { key: 'syn', icon: lucideSparklesIcon(), onSelect: () => { setBankSynthOpen(true); close() } },
                           tk('ev.syn.entryButton'),
                         )
                       : null,
@@ -11717,6 +11727,7 @@ window.__ModuleLoader__.load({
               EvalMenuItem,
               {
                 key: 'l1',
+                icon: lucidePlayIcon(),
                 onSelect: () => {
                   close()
                   onTrigger({ layers: 'l1', question_ids: [question.id] })
@@ -11728,6 +11739,7 @@ window.__ModuleLoader__.load({
               EvalMenuItem,
               {
                 key: 'full',
+                icon: lucideLayersIcon(),
                 onSelect: () => {
                   close()
                   onTrigger({ layers: 'l1_l2', question_ids: [question.id] })
@@ -11740,6 +11752,7 @@ window.__ModuleLoader__.load({
               EvalMenuItem,
               {
                 key: 'del',
+                icon: dshTrashIcon(),
                 danger: true,
                 onSelect: () => {
                   close()
