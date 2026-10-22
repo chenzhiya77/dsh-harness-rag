@@ -133,7 +133,8 @@ export interface GenerateOptionsLike {
   reasoningEffort?: string
   temperature?: number
   maxTokens?: number
-  stop?: string[]
+  /** Host routing session; OpenCode providers forward it as `x-opencode-session`. */
+  sessionId?: string
 }
 
 export interface TokenUsageLike {
@@ -425,15 +426,10 @@ export async function buildGenerateOptions(
   }
   const temperature = optionalNumber(body.temperature, 'invalid_temperature')
 
-  let stop: string[] | undefined
-  if (typeof body.stop === 'string') stop = [body.stop]
-  else if (Array.isArray(body.stop)) {
-    if (!body.stop.every((item) => typeof item === 'string')) {
-      throw new ProxyHttpError(400, 'invalid_stop', 'The request contains an invalid stop sequence.')
-    }
-    stop = body.stop as string[]
-  } else if (body.stop !== undefined && body.stop !== null) {
-    throw new ProxyHttpError(400, 'invalid_stop', 'The request contains an invalid stop sequence.')
+  // The host's pi-ai service rejects GenerateOptions.stop; refuse it here with a
+  // clear 400 instead of forwarding it and surfacing as a generic 502.
+  if (body.stop !== undefined && body.stop !== null) {
+    throw new ProxyHttpError(400, 'stop_unsupported', 'Stop sequences are not supported by this proxy.')
   }
 
   let reasoningEffort: string | undefined
@@ -499,7 +495,6 @@ export async function buildGenerateOptions(
     ...(reasoningEffort ? { reasoningEffort } : {}),
     ...(temperature !== undefined ? { temperature } : {}),
     ...(maxTokens !== undefined ? { maxTokens } : {}),
-    ...(stop !== undefined ? { stop } : {}),
   }
 }
 
@@ -690,6 +685,10 @@ export function registerModelProxy(
   ctx: ProxyHostContextLike,
   config: { apiToken: string },
 ): ModelProxyHandle {
+  // OpenCode's provider requires the host routing session (chat passes its
+  // conversation id); one stable id per proxy keeps the knowledge service's
+  // calls in one routing session instead of dropping the header entirely.
+  const sessionId = randomUUID()
   let resolveRuntime: (runtime: ModelProxyRuntime) => void = () => {}
   let rejectRuntime: (error: unknown) => void = () => {}
   const whenReady = new Promise<ModelProxyRuntime>((resolve, reject) => {
@@ -813,7 +812,7 @@ export function registerModelProxy(
             )
             let result: CompletionResult
             try {
-              result = await collectCompletion(fresh.llm.stream(options))
+              result = await collectCompletion(fresh.llm.stream({ ...options, sessionId }))
             } catch (error) {
               const mapped = mapFailure(
                 unknownErrorCode(error) ? { code: unknownErrorCode(error) } : undefined,

@@ -155,7 +155,6 @@ test('buildGenerateOptions lifts system, maps text and keeps images admitted', a
       ],
       max_tokens: 512,
       temperature: 0.2,
-      stop: ['END'],
     },
     target,
     { efforts: ['low', 'medium', 'high'] },
@@ -170,7 +169,6 @@ test('buildGenerateOptions lifts system, maps text and keeps images admitted', a
   assert.equal(options.system, 'You are terse.\n\nFollow JSON.')
   assert.equal(options.maxTokens, 512)
   assert.equal(options.temperature, 0.2)
-  assert.deepEqual(options.stop, ['END'])
   assert.equal(options.reasoningEffort, undefined)
   assert.equal(admitted.length, 1)
   assert.deepEqual(admitted[0], [
@@ -228,6 +226,11 @@ test('buildGenerateOptions rejects unsupported request shapes', async () => {
     () => buildGenerateOptions({ ...base, n: 2 }, target, { efforts: [] }, admitEcho),
     400,
     'n_unsupported',
+  )
+  await expectAsyncError(
+    () => buildGenerateOptions({ ...base, stop: ['END'] }, target, { efforts: [] }, admitEcho),
+    400,
+    'stop_unsupported',
   )
   await expectAsyncError(
     () => buildGenerateOptions({ messages: [{ role: 'tool', content: 'x' }] }, target, { efforts: [] }, admitEcho),
@@ -359,8 +362,13 @@ function fakeRequest(method: string, url: string, body?: unknown, authorization?
   }
 }
 
-function makeProxy(): { handler: (req: unknown, res: unknown) => Promise<void>; ready: Promise<unknown> } {
+function makeProxy(): {
+  handler: (req: unknown, res: unknown) => Promise<void>
+  ready: Promise<unknown>
+  streamOptions: () => Record<string, unknown> | undefined
+} {
   let handler: ((req: unknown, res: unknown) => Promise<void>) | undefined
+  let streamOptions: Record<string, unknown> | undefined
   const llm = {
     listProviders: () => [{ id: 'p', name: 'P' }],
     async listModels(provider: string) {
@@ -369,7 +377,8 @@ function makeProxy(): { handler: (req: unknown, res: unknown) => Promise<void>; 
     async resolveModelInfo(provider: string, model: string) {
       return { provider, id: model, name: model, reasoning: { efforts: [{ id: 'low' }, { id: 'high' }] } }
     },
-    async *stream(_options: unknown) {
+    async *stream(options: unknown) {
+      streamOptions = options as Record<string, unknown>
       yield { type: 'text-delta', index: 0, text: 'hello' }
       yield { type: 'usage', usage: { inputTokens: 3, outputTokens: 1, totalTokens: 4 } }
       yield { type: 'finish', reason: { kind: 'stop' } }
@@ -401,6 +410,7 @@ function makeProxy(): { handler: (req: unknown, res: unknown) => Promise<void>; 
   const proxy = registerModelProxy(ctx as unknown as ProxyHostContextLike, { apiToken: TOKEN })
   return {
     ready: proxy.whenReady,
+    streamOptions: () => streamOptions,
     handler: (req, res) => {
       if (handler === undefined) throw new Error('proxy route was not registered')
       return handler(req, res)
@@ -435,6 +445,9 @@ test('registerModelProxy serves the model list and one chat completion', async (
   }
   assert.equal(parsed.choices[0].message.content, 'hello')
   assert.equal(parsed.usage.total_tokens, 4)
+  const forwarded = proxy.streamOptions()
+  assert.equal(typeof forwarded?.sessionId, 'string')
+  assert.ok((forwarded?.sessionId as string).length > 0)
 
   const denied = fakeResponse()
   await proxy.handler(fakeRequest('GET', `${LLM_PROXY_ROUTE}/models`), denied)
