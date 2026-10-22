@@ -4062,13 +4062,24 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** 视频流相对 URL（②档乙对 Task 3）：原生 <video> 直载，Range 由壳透传（206 实测）。 */
+    /**
+     * 视频流 URL（②档乙对 Task 3）：原生 <video> 直载。
+     * 桌面壳转 dsh-app:// 时会删掉 content-length（DSH forwardWebRequest 的
+     * WITHHELD_RESPONSE_HEADERS），Chromium 媒体栈据此按流式处理，seekable 只覆盖
+     * 已缓冲段，分镜跳转会被拒。壳托管本机 Host 时改用它给的 HTTP 源直载，
+     * Range/长度头才完整；Web 部署无该字段，保持相对路径。
+     */
     function videoStreamRelayUrl(kbId, docId) {
-      return (
+      const path =
         PROXY_ROUTE +
         '/videoStream?kb_id=' + encodeURIComponent(kbId) +
         '&doc_id=' + encodeURIComponent(docId)
-      )
+      const transport = globalThis.__DSH_TRANSPORT__
+      const base =
+        transport?.ownsHost === true && typeof transport.streamBaseUrl === 'string'
+          ? transport.streamBaseUrl.trim()
+          : ''
+      return base ? base.replace(/\/+$/, '') + path : path
     }
 
     /** 镜头时间码 HH:MM:SS（照工作台 formatShotTimecode，与后端镜头卡 format_timecode 同口径：去毫秒）。 */
