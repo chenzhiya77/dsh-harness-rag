@@ -160,4 +160,5 @@
 
 - `0f349bb` — `feat(panel): group documents into local folders`（本对实现＋spec/plan）
 - `9e59d3c` — `docs(panel): close out the document folder pair`（README／等价表／提交链）
+- `b21ea4c` — `docs(panel): record the folder acceptance run`（最终真栈复验登记）
 - 同日邻线（不属本对）：`e122344` 模型代理 sessionId/stop、`67ef485` 视频 seek 源、`27bfc23` 召回/评测 UI 对齐。
