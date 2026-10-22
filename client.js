@@ -53,7 +53,7 @@ window.__ModuleLoader__.load({
       'upload.failedUnit': '个文件失败',
       'reindex.button': '重建索引',
       'reindex.confirmTitle': '确认重建索引？',
-      'reindex.confirmDescription': '将重新嵌入该知识库的全部向量（切片、实体、百科条目、人工卡片；不重解析源文件），期间检索结果可能不稳。',
+      'reindex.confirmDescription': '将重新嵌入该知识库的全部向量（切片、实体、Wiki 条目、人工卡片；不重解析源文件），期间检索结果可能不稳。',
       'reindex.confirmAction': '开始重建',
       'reindex.enqueued': '已开始重建索引',
       'reindex.alreadyRunning': '已有重建正在进行',
@@ -81,7 +81,7 @@ window.__ModuleLoader__.load({
       'doc.path.caption': '配文',
       'doc.path.vector': '向量',
       'doc.path.graph': '图谱',
-      'doc.path.wiki': '百科',
+      'doc.path.wiki': 'Wiki',
       'doc.path.libraryHint': '（库级）',
       'doc.path.state.pending': '待处理',
       'doc.path.state.indexing': '索引中',
@@ -273,7 +273,7 @@ window.__ModuleLoader__.load({
       'recall.topK': '每通道条数',
       'recall.path.vector': '向量通道',
       'recall.path.graph': '图谱通道',
-      'recall.path.wiki': '百科通道',
+      'recall.path.wiki': 'Wiki 通道',
       'recall.empty': '输入问题后开始检索，对比三通道命中与得分',
       'recall.failed': '检索测试失败',
       'recall.mismatch': '库向量空间与当前嵌入配置不一致，检索质量不保证',
@@ -283,7 +283,7 @@ window.__ModuleLoader__.load({
       'vec.loadFailed': '投影加载失败',
       'vec.chips.chunks': '切片',
       'vec.chips.entities': '实体',
-      'vec.chips.wiki': '百科',
+      'vec.chips.wiki': 'Wiki',
       'vec.chips.cards': '条目',
       'vec.algoLabel': '算法',
       'vec.recompute': '重新计算',
@@ -301,7 +301,7 @@ window.__ModuleLoader__.load({
       'vec.searchScopes.all': '全部',
       'vec.searchScopes.chunks': '文档',
       'vec.searchScopes.entities': '实体',
-      'vec.searchScopes.wiki': '百科',
+      'vec.searchScopes.wiki': 'Wiki',
       'vec.searchScopes.cards': '条目',
       'vec.moreOptions': '更多选项',
       'vec.indexingHint': '{0} 个文档索引中，投影可能不完整',
@@ -570,31 +570,31 @@ window.__ModuleLoader__.load({
       'recall.saveAs.queryLabel': '问题',
       'recall.saveAs.categoryLabel': '分类',
       'recall.saveAs.expectedPathsLabel': '预期路径（可多选）',
-      'recall.saveAs.anchorHint': '勾选的切片与百科词条的源切片将记为本题锚定',
+      'recall.saveAs.anchorHint': '勾选的切片与 Wiki 词条的源切片将记为本题锚定',
       'recall.saveAs.referenceAnswerLabel': '参考答案（可选）',
       'recall.saveAs.submit': '保存',
       'recall.saveAs.cancel': '取消',
       'recall.saveAs.savedToast': '已存为考题',
       'recall.saveAs.saveFailed': '存为考题失败',
       'recall.saveAs.selectLabel': '存为考题：{0}',
-      // ── 百科（Task 9）：词汇照工作台 tk / t.knowledge.wikiPanel / wikiDrawer / manualCards ──
-      'shell.tab.wiki': '百科',
-      'wk.search': '搜索百科条目与卡片…',
+      // ── Wiki（Task 9）：词汇照工作台 tk / t.knowledge.wikiPanel / wikiDrawer / manualCards ──
+      'shell.tab.wiki': 'Wiki',
+      'wk.search': '搜索 Wiki 条目与卡片…',
       'wk.clearSearch': '清空搜索',
-      'wk.more': '百科操作',
-      'wk.updateWiki': '更新百科',
-      'wk.rebuildWiki': '重建百科',
-      'wk.rebuildTitle': '全部重建百科？',
+      'wk.more': 'Wiki 操作',
+      'wk.updateWiki': '更新 Wiki',
+      'wk.rebuildWiki': '重建 Wiki',
+      'wk.rebuildTitle': '全部重建 Wiki？',
       'wk.rebuildDesc': '将按当前图谱重写所有合格条目（包括未变化的），LLM 调用成本较高，仅在生成规则升级后使用。',
       'wk.rebuildConfirm': '确认重建',
-      'wk.enqueued': '百科生成任务已提交，完成后条目可查',
-      'wk.updated': '百科已更新',
-      'wk.updateFailed': '百科更新失败，部分条目可能仍待更新，请重试',
-      'wk.alreadyRunning': '百科正在更新中，无需重复提交',
-      'wk.loadFailed': '百科数据加载失败',
+      'wk.enqueued': 'Wiki 生成任务已提交，完成后条目可查',
+      'wk.updated': 'Wiki 已更新',
+      'wk.updateFailed': 'Wiki 更新失败，部分条目可能仍待更新，请重试',
+      'wk.alreadyRunning': 'Wiki 正在更新中，无需重复提交',
+      'wk.loadFailed': 'Wiki 数据加载失败',
       'wk.loading': '加载中…',
       'wk.entries': '生成条目',
-      'wk.entriesEmpty': '百科条目会自动沉淀、逐步出现',
+      'wk.entriesEmpty': 'Wiki 条目会自动沉淀、逐步出现',
       'wk.entriesNoMatch': '没有匹配的条目',
       'wk.dirty': '待更新',
       'wk.updating': '更新中',
@@ -602,7 +602,7 @@ window.__ModuleLoader__.load({
       'wk.selectEntry': '选择条目',
       'wk.openEntry': '打开详情',
       'wk.editEntry': '编辑条目',
-      'wk.wikiEditTitle': '编辑百科条目',
+      'wk.wikiEditTitle': '编辑 Wiki 条目',
       'wk.wikiEditDesc': '主内容区可被下次生成覆盖；补充层永久保留，并作为每次生成的方向',
       'wk.wikiEditMainLabel': '主内容区（自动生成）',
       'wk.wikiEditMainPlaceholder': 'AI 生成的内容将在此显示，您可以手动编辑',
@@ -619,15 +619,15 @@ window.__ModuleLoader__.load({
       'wk.updateSelected': '更新所选',
       'wk.deleteEntry': '删除条目',
       'wk.deleteSelected': '删除所选',
-      'wk.deleteBatchTitle': '删除 {0} 条百科条目？',
-      'wk.deleteConfirmTitle': '删除这条百科条目？',
+      'wk.deleteBatchTitle': '删除 {0} 条 Wiki 条目？',
+      'wk.deleteConfirmTitle': '删除这条 Wiki 条目？',
       'wk.deleteConfirmDesc': '将删除条目正文与检索向量，实体本身保留。若实体仍符合生成资格，下次生成时会按最新材料重新创建该条目。',
       'wk.selectedCount': '已选 {0} 项',
       'wk.cancelSelection': '取消选择',
       'wk.entryNotFound': '条目不存在或已删除',
       'wk.sourceChunks': '个源切片',
       'wk.deletedSources': '个源切片已删除',
-      'wk.openInTab': '在百科 tab 中查看',
+      'wk.openInTab': '在 Wiki 中查看',
       'wk.cards': '我的条目',
       'wk.cardsEmpty': '新建卡片，记录属于你的知识',
       'wk.cardsNoMatch': '没有匹配的卡片',
@@ -636,7 +636,7 @@ window.__ModuleLoader__.load({
       'wk.openCard': '打开详情',
       'wk.cardNotFound': '卡片不存在或已删除',
       'wk.cardNew': '新建卡片',
-      'wk.cardIncludeHint': '开启后参与百科检索，与 AI 条目共享名额，按相关性纯质量竞争',
+      'wk.cardIncludeHint': '开启后参与 Wiki 检索，与 AI 条目共享名额，按相关性纯质量竞争',
       'wk.cardEdit': '编辑卡片',
       'wk.cardDelete': '删除卡片',
       'wk.cardDeleteTitle': '删除这张知识卡片？',
@@ -692,7 +692,7 @@ window.__ModuleLoader__.load({
       'renameKb.save': '保存',
       'renameKb.done': '已重命名',
       'deleteKb.title': '删除知识库？',
-      'deleteKb.desc': '将同时删除全部文档、切片、向量、图谱与百科条目，且不可恢复。',
+      'deleteKb.desc': '将同时删除全部文档、切片、向量、图谱与 Wiki 条目，且不可恢复。',
       'createKb.title': '新建知识库',
       'createKb.created': '知识库已创建',
       'createKb.namePlaceholder': '知识库名称',
@@ -834,7 +834,7 @@ window.__ModuleLoader__.load({
       'set.field.rerankModel': '重排模型',
       'set.field.rerankBaseUrl': '重排接口地址',
       'set.field.extractModel': '图谱抽取模型',
-      'set.field.wikiModel': '百科生成模型',
+      'set.field.wikiModel': 'Wiki 生成模型',
       'set.field.synthesisModel': '考题合成模型',
       'set.field.judgeModel': '裁判模型',
       'set.field.captionModel': '图片描述模型 (VLM)',
@@ -858,7 +858,7 @@ window.__ModuleLoader__.load({
       'set.form.groupServicesHint': '仅当 Qdrant / MinerU 不在默认位置时才需要修改。',
       'set.form.groupEvaluationHint': '用于评估检索质量（ragas），与对话所选模型无关。留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。',
       'set.form.extractModelHint': '用于从文档构建知识图谱的模型，建议选择参数规模小、成本低、输出稳定 JSON 的模型。留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。',
-      'set.form.wikiModelHint': '用于生成知识库百科条目的模型。留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。',
+      'set.form.wikiModelHint': '用于生成知识库 Wiki 条目的模型。留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。',
       'set.form.synthesisModelHint': '用于从文档合成评测候选题的模型。留空表示移除本行的覆盖值，配置文件中为它指定的值仍然生效；两处都为空时由 RAG 默认模型接管。',
       'set.form.parseBaseUrlHint': 'MinerU 云 API 留空时使用官方地址 https://mineru.net；本地 MinerU 服务必填——该服务不带鉴权，只应部署在内网。',
       'set.form.parseTierHint': '档位由 MinerU 服务端定义：flash / basic 为轻量档，standard / advanced 需要服务端安装 torch；留空表示由服务端决定（服务端默认 standard）。',
@@ -1892,11 +1892,11 @@ window.__ModuleLoader__.load({
     }
 
     const SECTIONS = [
-      { id: 'docs', label: 'shell.tab.docs' },
-      { id: 'wiki', label: 'shell.tab.wiki' },
-      { id: 'recall', label: 'shell.tab.recall' },
+      { id: 'docs', label: 'shell.tab.docs', icon: true },
+      { id: 'graph', label: 'shell.tab.graph', icon: true },
+      { id: 'wiki', label: 'shell.tab.wiki', icon: true },
+      { id: 'recall', label: 'shell.tab.recall', toolstart: true },
       { id: 'vectors', label: 'shell.tab.vectors' },
-      { id: 'graph', label: 'shell.tab.graph' },
       { id: 'eval', label: 'shell.tab.eval' },
     ]
 
@@ -1939,12 +1939,12 @@ window.__ModuleLoader__.load({
           // 上并留出行盒——定死为静态块（照 .hrag-set-field 结构化覆写先例）。
           '.hrag-tabswrap > .hrag-mmhost, .hrag-tabswrap > .hrag-mm-wrap { position: absolute; top: 0; right: 0; bottom: 0; width: 40px; }',
           '.hrag-tabswrap > .hrag-mmhost > span { position: static; display: block; }',
-          '.hrag-tabs { display: flex; overflow-x: auto; padding-bottom: 1px; scrollbar-width: none; box-shadow: inset 0 -0.5px 0 var(--dsw-alias-border-l3); }',
+          '.hrag-tabs { display: flex; overflow-x: auto; padding-bottom: 1px; padding-right: 3px; box-sizing: border-box; scrollbar-width: none; box-shadow: inset 0 -0.5px 0 var(--dsw-alias-border-l3); }',
           // 六 tab 首行统一工具条（照工作台 px-4 py-2 + h-7 = 44px）：搜索行高与
           // 纵向位置跨 tab 一致；行内控件一律 28px 垂直居中，行尾按钮不再撑行。
           '.hrag-tabbar { display: flex; align-items: center; gap: 8px; min-height: 44px; flex-shrink: 0; min-width: 0; }',
           '.hrag-tabs::-webkit-scrollbar { display: none; }',
-          '.hrag-tabs-list { display: flex; gap: 0 36px; flex-shrink: 0; }',
+          '.hrag-tabs-list { display: flex; gap: 0 36px; flex-shrink: 0; min-width: 100%; }',
           // 尾垫＝遮罩宽：没有它滚动到不了有效可见区落点（照工作台）。
           '.hrag-tabs-tail { width: 40px; flex-shrink: 0; }',
           '.hrag-tabs-mask { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding: 0 4px 0 0; border: none; background: linear-gradient(to left, color-mix(in srgb, var(--dsw-alias-bg-base) 70%, transparent) 25%, transparent); color: var(--dsw-alias-label-secondary); cursor: pointer; }',
@@ -1952,7 +1952,10 @@ window.__ModuleLoader__.load({
           // 箭头只在悬停/聚焦时现身（照工作台 2026-09-28 裁定）——平时只留渐隐遮罩本体。
           '.hrag-tabs-mask-chev { display: inline-flex; opacity: 0; transition: opacity 120ms ease; }',
           '.hrag-tabs-mask:hover .hrag-tabs-mask-chev, .hrag-tabs-mask:focus-visible .hrag-tabs-mask-chev { opacity: 1; }',
-          '.hrag-tab { position: relative; flex-shrink: 0; padding: 0 0 9px; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 13px; font-weight: 500; line-height: 16px; font-family: inherit; cursor: pointer; }',
+          '.hrag-tab { position: relative; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; padding: 0 0 9px; border: none; background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 13px; font-weight: 500; line-height: 16px; font-family: inherit; cursor: pointer; }',
+          '.hrag-tabicon { display: inline-flex; width: 14px; height: 14px; flex: 0 0 14px; }',
+          '.hrag-tabicon svg { display: block; width: 14px; height: 14px; }',
+          '.hrag-tab-toolstart { margin-left: auto; }',
           '.hrag-tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 2px; background: transparent; }',
           ".hrag-tab[aria-selected='true'] { color: var(--dsw-alias-state-business-primary); }",
           ".hrag-tab[aria-selected='true']::after { background: var(--dsw-alias-state-business-primary); }",
@@ -2736,7 +2739,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-bar .hrag-seg { height: 28px; box-sizing: border-box; }',
           '.hrag-ev-bar .hrag-seg button { height: 100%; }',
           '.hrag-ev-bar .hrag-ev-run, .hrag-ev-bar .hrag-ev-chev, .hrag-ev-bar .hrag-ev-runbtns .hrag-ev-menu-btn { height: 28px; }',
-          // 首行里的图标钮（百科 ⋯）同档 28×28，不再用 22px 的正文图标档。
+          // 首行里的图标钮（Wiki ⋯）同档 28×28，不再用 22px 的正文图标档。
           '.hrag-tabbar .hrag-ev-iconbtn { width: 28px; height: 28px; min-width: 28px; padding: 0; }',
           '.hrag-ev-runbtns { margin-left: auto; display: inline-flex; align-items: stretch; flex-shrink: 0; }',
           '.hrag-ev-graybtn { background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }',
@@ -2933,7 +2936,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-danglingrow { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-caret { display: inline-block; font-size: 10px; color: var(--dsw-alias-label-tertiary); transition: transform 120ms ease; flex-shrink: 0; }',
           '.hrag-ev-caret-open { transform: rotate(180deg); }',
-          // 百科两容器的收起箭头改用工作台同款 lucide chevron：展开朝下、收起朝右，
+          // Wiki 两容器的收起箭头改用工作台同款 lucide chevron：展开朝下、收起朝右，
           // 不再用 ▾/▴ 文本小三角（10-18 他对照设置页下拉判为不同件）。
           '.hrag-wk-chev { display: inline-flex; align-items: center; justify-content: center; }',
           '.hrag-wk-chev.hrag-ev-caret-open { transform: none; }',
@@ -5849,7 +5852,7 @@ window.__ModuleLoader__.load({
         }
         const graphEntityCount = (result.paths.graph.entities || []).length
         const graphRelationCount = (result.paths.graph.relations || []).length
-        // 路图标（照工作台 PATH_ICONS）：散点=向量、节点图=图谱、书本=百科。
+        // 路图标（照工作台 PATH_ICONS）：散点=向量、节点图=图谱、书本=Wiki。
         const pathIcon = (path) =>
           path === 'graph' ? lucideWaypointsIcon(16) : path === 'wiki' ? lucideBookOpenIcon(16) : lucideChartScatterIcon(16)
         const section = (path) => {
@@ -8583,7 +8586,7 @@ window.__ModuleLoader__.load({
       }
     }
 
-    // ── 文档文件夹（2026-10-22 doc-folders）：per-kb 本地分区，照百科卡片抽屉
+    // ── 文档文件夹（2026-10-22 doc-folders）：per-kb 本地分区，照 Wiki 卡片抽屉
     // `hrag-card-drawers` 的 posture——个人归类、只影响视图；删文件夹只掉归属。
     // 未分类的折叠位是顶层布尔，不混进 folders。
     const DOC_FOLDER_KEY_PREFIX = 'hrag-doc-folders.'
@@ -11121,7 +11124,7 @@ window.__ModuleLoader__.load({
         { d: 'M4 9L8 13L12 9' },
       ]),
     )
-    /** 「在百科 tab 中查看」导航图标（小件批 Task 8）：宿主最近邻 IconRightUp（右上
+    /** 「在 Wiki 中查看」导航图标（小件批 Task 8）：宿主最近邻 IconRightUp（右上
         箭头＝跳转语义）；缺件回退工作台原形 lucide ExternalLink。 */
     const dshRightUpIcon = dshIconOr('IconRightUpOutlineRegular', () =>
       lucideMenuIcon(['M15 3h6v6', 'M10 14 21 3', 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6']),
@@ -11213,7 +11216,7 @@ window.__ModuleLoader__.load({
     /** 框内下拉触发器 chevron：工作台同款（lucide ChevronDown size-4 opacity-50——
         维度档位与 ASR 候选两处逐字对照 functional-models-view）。与菜单行图标
         （lucideMenuIcon 14px）分开：这是值域控件的件，尺寸/透明度跟工作台走。
-        百科两容器的收起箭头也用它：传 1（不再叠 50%），颜色随头的 tertiary。 */
+        Wiki 两容器的收起箭头也用它：传 1（不再叠 50%），颜色随头的 tertiary。 */
     function lucideChevronDownIcon(opacity = 0.5) {
       return h(
         'svg',
@@ -11295,6 +11298,19 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 图谱 tab 小径：14px 下 Waypoints 过密，用三节点 Share2 形（仅 tab 用；
+        路径图标/空态仍用 Waypoints）。 */
+    function lucideGraphTabIcon(size = 14) {
+      return h(
+        'svg',
+        { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
+        h('circle', { cx: 12, cy: 5, r: 2.5 }),
+        h('circle', { cx: 5, cy: 19, r: 2.5 }),
+        h('circle', { cx: 19, cy: 19, r: 2.5 }),
+        h('path', { d: 'm10.8 7.2-4.6 9.6' }),
+        h('path', { d: 'm13.2 7.2 4.6 9.6' }),
+      )
+    }
     /** 空态实体图（lucide Waypoints，图谱 tab 词汇）。 */
     function lucideWaypointsIcon(size = 20) {
       return h(
@@ -14841,7 +14857,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** 百科书页图标（16 视窗、stroke 1.2、currentColor；工作台 BookOpen 等价物）。 */
+    /** Wiki书页图标（16 视窗、stroke 1.2、currentColor；工作台 BookOpen 等价物）。 */
     function wikiBookIcon(size) {
       return h(
         'svg',
@@ -15472,7 +15488,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /** 百科视图（Task 9）：统一搜索＋「生成条目」「我的条目」双卡分高（照工作台
+    /** Wiki视图（Task 9）：统一搜索＋「生成条目」「我的条目」双卡分高（照工作台
         wiki-tab 定高分屏语义：都展开各半、收起一个让位另一个）；⋯ 承接更新/重建
         （重建走确认闸）；条目状态轮询（generating 3s＋触发后 12s 力度窗）；drain 边
         按 last_run 出真话提示；行级/批量更新与删除（编辑档不做＝富文本编辑另案）。 */
@@ -15606,14 +15622,14 @@ window.__ModuleLoader__.load({
           .finally(() => setEntrySaving(false))
       }
 
-      // 壳级菜单指令线（菜单批 Task 1）：菜单项先切百科、再以 nonce 发令，同令只消费一次。
+      // 壳级菜单指令线（菜单批 Task 1）：菜单项先切Wiki、再以 nonce 发令，同令只消费一次。
       const commandNonceRef = React.useRef(0)
       React.useEffect(() => {
         if (!command || !command.nonce || commandNonceRef.current === command.nonce) return
         commandNonceRef.current = command.nonce
         triggerWiki(command.mode)
       }, [command])
-      // 在飞态上报壳级（菜单「更新百科」行 spinner/禁用）。
+      // 在飞态上报壳级（菜单「更新 Wiki」行 spinner/禁用）。
       React.useEffect(() => {
         if (onBusyChange) onBusyChange(updating)
       }, [updating, onBusyChange])
@@ -16384,7 +16400,7 @@ window.__ModuleLoader__.load({
 
     /** 我的条目管理面（②档丙对，2026-10-18）：列表＋CRUD＋抽屉分组。
         照工作台 manual-card-panel 的逻辑与文案；批量走右键（无批量条）；
-        弹层留在面板内。cardsQ 由 WikiView 持有（百科 drain 时统一刷新）。 */
+        弹层留在面板内。cardsQ 由 WikiView 持有（Wiki drain 时统一刷新）。 */
     function ManualCardsSection({ t, kbId, cardsQ, query, onOpenCard, command, notify }) {
       const tk = (key, ...args) => evText(t(key), args)
       const [expanded, setExpanded] = React.useState(true)
@@ -17023,7 +17039,7 @@ window.__ModuleLoader__.load({
       return value
     }
 
-    /** 百科条目抽屉（Task 9，照工作台 wiki-entry-drawer）：头部书页图标＋标题＋
+    /** Wiki 条目抽屉（Task 9，照工作台 wiki-entry-drawer）：头部书页图标＋标题＋
         待更新徽章；正文卡（剥同名 H1、pre-wrap）；元信息行＝来源切片展开钮
         （chunksByIds 惰取）＋更新时间；来源切片行可点 → 切片续读（照图谱实体
         抽屉：本层 z 帧 56/57 垫在续读抽屉下，关掉续读回本条）；404 按不存在。
@@ -17197,8 +17213,8 @@ window.__ModuleLoader__.load({
             entry && entry.status === 'dirty'
               ? h('span', { className: 'hrag-ev-badge hrag-wk-dirty' }, tk('wk.dirty'))
               : null,
-            // 「在百科 tab 中查看」导航钮（小件批 Task 8·E1①，照工作台 :99-109）：
-            // 头行右侧 outline 小钮（entry 在才现）；点击＝切百科 tab＋关抽屉
+            // 「在 Wiki 中查看」导航钮（小件批 Task 8·E1①，照工作台 :99-109）：
+            // 头行右侧 outline 小钮（entry 在才现）；点击＝切Wiki tab＋关抽屉
             //（列表未分页——切过去即可见，照工作台 revealWikiEntry 语义）。
             entry && onRevealInTab
               ? h(
@@ -19972,6 +19988,9 @@ window.__ModuleLoader__.load({
         }
       }, [section])
 
+      const sectionIcon = (id) =>
+        id === 'docs' ? dshTextFileIcon() : id === 'graph' ? lucideGraphTabIcon(14) : id === 'wiki' ? lucideBookOpenIcon(14) : null
+
       return h(
         'div',
         { className: 'hrag-tabswrap' },
@@ -19989,9 +20008,10 @@ window.__ModuleLoader__.load({
                   type: 'button',
                   role: 'tab',
                   'aria-selected': section === entry.id,
-                  className: 'hrag-tab',
+                  className: 'hrag-tab' + (entry.toolstart ? ' hrag-tab-toolstart' : ''),
                   onClick: () => onSelect(entry.id),
                 },
+                entry.icon ? h('span', { className: 'hrag-tabicon', 'aria-hidden': 'true' }, sectionIcon(entry.id)) : null,
                 t(entry.label),
               ),
             ),
@@ -20198,7 +20218,7 @@ window.__ModuleLoader__.load({
       const [section, setSection] = React.useState('docs')
       const [refreshToken, setRefreshToken] = React.useState(0)
       const [drawer, setDrawer] = React.useState(null)
-      // 百科抽屉壳（Task 9）：百科 tab 行点击与召回 wiki 命中共用；组件级渲染
+      // Wiki抽屉壳（Task 9）：Wiki tab 行点击与召回 wiki 命中共用；组件级渲染
       // 在面板根（同 ChunkDrawer 层位，z 帧 56/57 垫在续读抽屉下）。
       const [wikiDrawer, setWikiDrawer] = React.useState(null)
       const [uploading, setUploading] = React.useState(false)
@@ -20246,7 +20266,7 @@ window.__ModuleLoader__.load({
         setDocFailState((prev) => ({ entries: [], notified: prev.notified, initialized: prev.initialized }))
       }
       const probeKeyRef = React.useRef('')
-      // 菜单批 Task 1：库级 ⋯ 菜单状态——重命名弹层/删除确认/设置面/百科指令线。
+      // 菜单批 Task 1：库级 ⋯ 菜单状态——重命名弹层/删除确认/设置面/Wiki指令线。
       const [menuRenameOpen, setMenuRenameOpen] = React.useState(false)
       const [renameValue, setRenameValue] = React.useState('')
       const [kbDeleteOpen, setKbDeleteOpen] = React.useState(false)
@@ -20755,7 +20775,7 @@ window.__ModuleLoader__.load({
               },
             })),
           ),
-          // 百科视图 keep-alive（同口径）：搜索/折叠/选择切走不丢；抽屉壳在面板级
+          // Wiki视图 keep-alive（同口径）：搜索/折叠/选择切走不丢；抽屉壳在面板级
           //（召回命中同样开它），本槽只承载双卡列表。
           h(
             'div',
@@ -20886,7 +20906,7 @@ window.__ModuleLoader__.load({
                   kbId,
                   entryId: wikiDrawer.id,
                   onClose: () => setWikiDrawer(null),
-                  // 导航（小件批 Task 8·E1①）：切百科 tab＋关抽屉（列表未分页，
+                  // 导航（小件批 Task 8·E1①）：切Wiki tab＋关抽屉（列表未分页，
                   // 切过去即可见；照工作台 revealWikiEntry）。
                   onRevealInTab: () => {
                     setSection('wiki')

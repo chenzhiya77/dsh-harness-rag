@@ -21,7 +21,7 @@ client.js      Client 半（JS 工厂）──inject:['slots','sidebarRightTabs'
 
 Host 半在宿主世界注册模型可见工具；Client 半在浏览器世界注册右栏 tab 类型（右栏「+」→ 引导页 → 「知识库」胶囊）。两半各自声明依赖，不能互吃对面世界的服务。
 
-右栏「知识库」tab 的文档面支持本地文件夹分组：新建/改名/折叠/移动/删除，归属键为 per-kb localStorage（`hrag-doc-folders.<kbId>.v1`），与百科卡片抽屉同口径；只影响视图，不改变检索范围与检索结果。
+右栏「知识库」tab 的文档面支持本地文件夹分组：新建/改名/折叠/移动/删除，归属键为 per-kb localStorage（`hrag-doc-folders.<kbId>.v1`），与 Wiki 卡片抽屉同口径；只影响视图，不改变检索范围与检索结果。
 
 本包不含 RAG 逻辑；解析、切片、图谱、wiki、评测、存储全部在 Python 服务侧。
 
