@@ -157,5 +157,5 @@
 ## 提交链（滚动记实）
 
 - `0f349bb` — `feat(panel): group documents into local folders`（本对实现＋spec/plan）
-- （本笔）— `docs(panel): close out the document folder pair`（README／等价表／提交链）
+- `9e59d3c` — `docs(panel): close out the document folder pair`（README／等价表／提交链）
 - 同日邻线（不属本对）：`e122344` 模型代理 sessionId/stop、`67ef485` 视频 seek 源、`27bfc23` 召回/评测 UI 对齐。
