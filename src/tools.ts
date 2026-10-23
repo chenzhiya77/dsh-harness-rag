@@ -1,4 +1,3 @@
-import type { Context } from '@deepseek-ai/cordis'
 import { defineTool, type JsonValue } from '@deepseek-ai/dsh-tools'
 import { resolveKbId, type BindingsStore } from './bindings.ts'
 import { api, HarnessRagError } from './http.ts'
@@ -67,11 +66,12 @@ function echo(target: KbTarget): { kb_id: string; kb_name?: string } {
   return { kb_id: target.kbId, ...(target.kbName ? { kb_name: target.kbName } : {}) }
 }
 
-export function registerTools(ctx: Context, config: Config, bindings: BindingsStore) {
-  /** kb_id resolution order (spec 2026-10-23 D2): tool argument > this
-   * session's binding > the configured default. The binding is keyed by the
-   * live session identity (`exec.agent.id`), so one conversation can point at
-   * a different library without touching the plugin config. */
+export function buildToolDefinitions(config: Config, bindings: BindingsStore) {
+  /** kb_id resolution order (spec 2026-10-23 binding-tool-gating D1): tool
+   * argument > this session's binding. The binding is keyed by the live
+   * session identity (`exec.agent.id`); the tools themselves are only mounted
+   * into sessions that hold a binding, so a miss here means the binding went
+   * away under a live registration. */
   const kb = (args: { kb_id?: string }, exec?: { agent?: { id?: string } }): KbTarget => {
     const sessionId = exec?.agent?.id
     const binding = sessionId ? bindings.get(sessionId) : undefined
@@ -79,12 +79,11 @@ export function registerTools(ctx: Context, config: Config, bindings: BindingsSt
       argKbId: args.kb_id,
       sessionId,
       bindings: sessionId && binding ? { [sessionId]: binding } : {},
-      defaultKbId: config.defaultKbId,
     })
     if (!resolution) {
       throw new HarnessRagError({
         kind: 'not_configured',
-        detail: 'kb_id was not given, this session has no knowledge-base binding, and no defaultKbId is configured.',
+        detail: 'kb_id was not given and this session has no knowledge-base binding.',
       })
     }
     return {
@@ -93,7 +92,9 @@ export function registerTools(ctx: Context, config: Config, bindings: BindingsSt
     }
   }
 
-  const kbDescription = "Knowledge base id; falls back to this session's binding, then the configured default"
+  const kbDescription = "Knowledge base id; falls back to this session's binding"
+
+  const definitions: Array<ReturnType<typeof defineTool>> = []
 
   const searchParams = () => ({
     query: { type: 'string' as const, required: true as const, description: 'Search query' },
@@ -102,7 +103,7 @@ export function registerTools(ctx: Context, config: Config, bindings: BindingsSt
     doc_id: { type: 'string' as const, description: 'Optional document id; when set, retrieval is scoped to that single document' },
   })
 
-  ctx.tools.register(defineTool({
+  definitions.push(defineTool({
     name: 'hrag_hybrid_search',
     description: 'Harness RAG hybrid retrieval: vector RRF + sparse fusion with rerank over one knowledge base. Results correspond to the knowledge service\'s recall-test vector path.',
     parameters: searchParams(),
@@ -126,7 +127,7 @@ export function registerTools(ctx: Context, config: Config, bindings: BindingsSt
     },
   }))
 
-  ctx.tools.register(defineTool({
+  definitions.push(defineTool({
     name: 'hrag_graph_search',
     description: 'Harness RAG graph retrieval: entity-seeded, structure-driven evidence across chapters (semantic gating, node budget, hub guard). Corresponds to the recall-test graph path.',
     parameters: searchParams(),
@@ -159,7 +160,7 @@ export function registerTools(ctx: Context, config: Config, bindings: BindingsSt
     },
   }))
 
-  ctx.tools.register(defineTool({
+  definitions.push(defineTool({
     name: 'hrag_wiki_search',
     description: 'Harness RAG wiki retrieval: pre-digested wiki entries and manual knowledge cards merged in one pool (wiki wins score ties); hits carry source_type wiki|manual, and wiki hits carry source_chunk_ids. Corresponds to the recall-test wiki path.',
     parameters: searchParams(),
@@ -183,7 +184,7 @@ export function registerTools(ctx: Context, config: Config, bindings: BindingsSt
     },
   }))
 
-  ctx.tools.register(defineTool({
+  definitions.push(defineTool({
     name: 'hrag_list_documents',
     description: 'List documents in a knowledge base: {documents: [...]} with per-entry id/name/status/chunk_count/progress_percent/path_status, straight from the knowledge service.',
     parameters: {
@@ -203,7 +204,7 @@ export function registerTools(ctx: Context, config: Config, bindings: BindingsSt
     },
   }))
 
-  ctx.tools.register(defineTool({
+  definitions.push(defineTool({
     name: 'hrag_read_document',
     description: "Read a knowledge document's chunks. Page through it by doc_id with offset/limit, or follow a search hit by passing its chunk_id: the window (default 20, max 50 chunks) is centered on that chunk and clamped at the document edges. Returns {items, total, offset, limit, has_more, message}.",
     parameters: {
@@ -236,4 +237,6 @@ export function registerTools(ctx: Context, config: Config, bindings: BindingsSt
       return { ...(payload ?? {}), ...echo(target) }
     },
   }))
+
+  return definitions
 }

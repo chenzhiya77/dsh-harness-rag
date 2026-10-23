@@ -1,0 +1,123 @@
+# 会话绑定的工具挂载（绑定即启用） Plan
+
+**Spec:** [2026-10-23-binding-tool-gating-spec.md](../specs/2026-10-23-binding-tool-gating-spec.md)
+**Status:** 实施中（2026-10-23；甲已拍，D3/D4 按推荐；Task 0–2 已完成并真栈实证，Task 3 起待令）
+**Architecture:** 工具定义拆成纯函数，apply 期不再全局注册；新增挂载器在 `agent/created`／绑定 op 时把五工具注册进 `agent.ctx`（宿主 scope 注册，随 agent 回收），解绑时调反注册。绑定仍是取库唯一来源，`defaultKbId` 退场。
+
+**硬约束**：只改插件仓 `E:\app\python\agent\dsh-harness-rag`；引擎 `harness-rag` 与主树 `deer-flow` 只读零改动；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。`node_modules/` 不触碰、不纳入提交。不往会话记录写事件。
+
+---
+
+## Task 0 — 落点核实（只读）
+
+> 动到的文件：无。
+
+- [x] 核宿主 scope 注册语义：`ctx.tools.register` 的层＝调用 ctx 的 scope——全局 ctx 注册全员可见，`agent.ctx` 注册只对该 agent 可见；返回精确反注册（`@deepseek-ai/dsh-tools/lib/index.js:2713`，README:20-24）；`restrict` 需 scoped ctx（`2723`）。
+- [x] 核 agent 生命周期事件：`AgentRegistry.register → enter + announce`，`announce` 以 `scopeTarget(agent, agent)` 发 `agent/created`（`dsh-agent/lib/index.js:585-590/660-676`）；resume 走同一发布序列（`dsh-agent/README.md:43`）⇒ 冷会话恢复同样触发。
+- [x] 核读取面：`ctx.agents.get(id)`（`:688`）与 `ctx.agents.list()`（`:706`）可拿活 agent；插件可按 `ctx.inject(['agents'])` 取。
+- [x] 核 scope 生命周期：`Scope.ctx` 注册「scope 可见＋scope 生命周期」，随 agent 销毁自动回收；未打标的事件监听器收全体事件（`dsh-scope/README.md`）。
+- [x] 核生效时机：工具 README 写明注册/注销/遮蔽使 schema 缓存从变更点失效（`:143`）⇒ 活注册表在下一模型请求生效。
+- [x] 探针实证（真栈小件，临时探针已回滚）：`agent/created` 在启动恢复时触发；对活会话注册试探工具后 scope 视图出现、反注册后消失；模型侧能真实调用并拿到哨兵值。
+- [x] 复读锚点：工具注册 `src/tools.ts:70/105/129/162/186/206`；入口 `src/index.ts:14-24`；op 接线 `src/kb_proxy.ts:572-590/641-646`；创建去预设 `src/conversations.ts:7/82-95/140-146`；解析链 `src/bindings.ts:65-80`；配置 `src/settings.ts:1-21`；面板文案 `client.js:20557-20559`（hint）／`20763-20792`（绑定/解绑）。
+- [x] 工作区核对：插件 HEAD `6867222`，工作区干净（`node_modules/` 未跟踪除外）；引擎零 diff；主树零本仓改动。
+
+**实测**：Task 0 只读部分已完成（2026-10-23）。结论：①宿主原生支持按会话挂载（scope 注册＋精确反注册）；②`agent/created` 对新建与 resume 都发，可用于冷会话补挂；③`agents.get/list` 可支撑绑定 op 与激活兜底；④活注册表在下一模型请求生效。
+
+探针实证（同日，临时探针 `src/__probe_gating.ts`＋`index.ts` 一行接线，验后已删除并 `git checkout` 回滚；日志在 `%TEMP%\hrag-gating-probe.log`）：
+
+- 启动恢复：`probe wired, live agents (none)` → `agent/created session-a59b4afa-…` ⇒ resume 路径确认触发，payload 里 `agent.id` 可直接用；未打标（全局）的 `ctx.on('agent/created')` 能收到。
+- 挂载：对活会话 `agent.ctx.tools.register(probe)` 后 `scope schemas` 末尾出现 `hrag_probe_ping`；模型侧随后发「如果你有 hrag_probe_ping 就调用」，模型真实调用并返回 `{"pong":"gating-probe-ok"}`。
+- 卸载：调反注册后同一 scope 视图里 `hrag_probe_ping` 消失；模型侧下一轮拿不到返回值（如实报「调不动」）。
+- **坑**：`ctx.tools.schemas()` 不传 scope 读的是**全局视图**（探针不在其中）；读某会话必须 `agent.ctx.tools.schemas(agent)`（`dsh-tools/lib/index.js:2787-2834`，doc 明写 omitted = global view）。实施与验收都用带 agent 的读法。
+- 回滚后 `git status` 仅剩本对 spec/plan 与既有 `node_modules/`；DSH 已无探针重启。
+
+## Task 1 — 挂载器与工具定义拆分（TDD）
+
+> 动到的文件：`src/tool_gating.ts`（新增）、`src/tools.ts`、`tests/tool_gating.test.ts`（新增）。
+
+- [x] 先写测试（fake agent ctx：`{ tools: { register: fn } }` 记录定义名与反注册）：
+  - `mountAgent` 注册五件且幂等（重复调用不重复注册）。
+  - `unmountSession` 调反注册并从表里清掉；未挂时无操作。
+  - `agent/disposed` 清表；`agents.list()` 兜底只挂有绑定的会话。
+  - `buildToolDefinitions(config, bindings)` 返回五件、名字与现有 schema 一致（名字集合对比）。
+- [x] `src/tools.ts`：`registerTools` 改为导出 `buildToolDefinitions(config, bindings)`（纯函数，返回 `defineTool` 定义数组）；`kb()` 解析链收窄为「arg ＞ session」，not_configured 文案改为「本会话没有绑定知识库」。
+- [x] `src/bindings.ts`：`resolveKbId` 删 `defaultKbId` 档（随 D3；若 D3 不拍则本项回退）。
+- [x] 门禁：`node --test tests/*.test.ts`；`tsc`；strip-types。
+
+**实测**（2026-10-23）：先落 `tests/tool_gating.test.ts`（七件：五件定义名集合、绑定挂五件、幂等、未绑定零注册、卸载反序全跑＋清表、卸载只影响本会话、`forgetAgent` 不跑反注册且可重挂），首跑因 `src/tool_gating.ts` 未实现整组红；实现后 7/7 绿。`src/tools.ts` 拆成 `buildToolDefinitions(config, bindings)`（纯函数，五件 `defineTool`，函数体未改），`kb()` 只认 arg／session 两档，缺失时文案 `kb_id was not given and this session has no knowledge-base binding.`；`src/bindings.ts` 的 `KbResolution.source` 收窄为 `'arg' | 'session'`（D3）。门禁：`tests/*.test.ts` 63/63、`tsc --noEmit` 干净、strip-types 全过（同日复跑）。注：Task 1 改完时 `tsc` 因 `src/index.ts` 仍调已删除的 `registerTools` 而红，随 Task 2 接线消解。
+
+## Task 2 — 事件与 op 接线
+
+> 动到的文件：`src/index.ts`、`src/kb_proxy.ts`、`src/conversations.ts`、`src/settings.ts`（D3）。
+
+- [x] `src/index.ts`：`registerToolGating(ctx, config, bindings)`（内部 `inject(['agents'])` 兜底挂载＋`agent/created` 监听）；删 `registerTools` 全局调用。
+- [x] `src/kb_proxy.ts`：`conversations/bind` 成功后 `mountAgent(agents.get(sessionId))`；`unbind` 先卸后删；`conversations/create` 不再传 `agentPreset`，`KNOWLEDGE_PRESET` 删除。
+- [x] `src/settings.ts`（D3）：`Config`/`defaultConfig` 删 `defaultKbId`；`cordis.patch.yml` 与 `presets/knowledge.patch.yml` 同步删项。
+- [x] 探针实证（真栈）：Task 0 已完成挂/卸与可见性；本 Task 只需复核「绑定 op → 挂载」与「解绑 op → 卸载」两条真实路径（看 `%TEMP%` 日志不可用，改为面板操作＋轨迹/注册表读数）。
+- [x] 门禁：单测＋tsc＋strip-types；`node --check client.js`。
+
+**实测**（2026-10-23）：`src/tool_gating.ts` 的 `registerToolGating` 在 `apply` 期 `inject(['agents'])`：先对 `agents.list()` 中已有绑定的活 agent 兜底挂载，再监听 `agent/created` 挂载、`agent/disposed` 清表；`index.ts` 改为 `const gating = registerToolGating(ctx, merged, bindings)`，全局 `registerTools` 调用删除。`kb_proxy.ts` 把 `gating` 传入 `conversationOps`；`conversations.ts` 删除 `KNOWLEDGE_PRESET`，`create` 不再传 `agentPreset`（D5），`bind`→`onBound`、`unbind`→先删表后 `onUnbound`。`settings.ts`／`cordis.patch.yml`／`presets/knowledge.patch.yml` 的 `defaultKbId` 同步删除。门禁：单测 63/63、`tsc` 干净、strip-types 全过。
+
+真栈实证（DSH 整重启后，同一会话 `session-a59b4afa…`；判据取宿主自留的请求头，不是模型自述）——会话 transcript `~/.dsh/sessions/…/session.v4.jsonl.zstd` 可 `zstd -d` 解出 447 行 JSONL，其中 `request/header` 事件逐次记录实际下发的工具表：
+
+| 时刻 | reason | 工具数 | `hrag_*` |
+| --- | --- | --- | --- |
+| 21:15:13 | resume | 38 | 6（含 Task 0 探针 `hrag_probe_ping`，已回滚） |
+| 21:17:35 | change | 37 | 5 |
+| 21:35:58 | resume | 37 | 5（带绑定冷启动即挂） |
+| 21:53:02 | change | 32 | **0**（解绑 op 后首个请求即卸） |
+| 22:03:46 | change | 37 | 5（重绑 op 后首个请求即挂） |
+
+- 绑定态真调：让模型直接调 `hrag_list_documents`（不带 `kb_id`），宿主返回 `{"kb_id":"48a492c8…","kb_name":"测试","documents":[]}`（绑定解析生效）。
+- 解绑态：同一句要求再发一次，请求头无该工具，模型如实回「工具不存在」。
+- **坑**：轨迹页的工具清单与模型自述都会被历史上下文污染（模型曾复述早已删除的 `hrag_probe_ping`，并猜测「bindings 空了应报错」）；验收只认 `request/header` 与真实 `tool/call` 记录。
+- 收尾已把绑定恢复原样（`kbId=48a492c8…`、`kbName=测试`），`bindings.json` 与测试前一致。
+
+## Task 3 — 面板文案与文档面
+
+> 动到的文件：`client.js`、`README.md`、`docs/equivalence.md`。
+
+- [ ] `client.js`：抽屉提示改「选择后，本会话将获得知识库工具」；解绑 Toast 改「已移除绑定，本会话不再具备知识库工具」；zh/en 同步。
+- [ ] `README.md`：删「kb_id 解析次序」里的 `defaultKbId` 档与配置表行；「隔离」节改写为「工具随绑定挂载；预设只作可选隔离」。
+- [ ] `docs/equivalence.md`：会话绑库行补「工具随绑定挂/卸」；§12 预设相关表述同步。
+- [ ] 门禁：`node --check client.js`；仓外 hostless 探针（zh/en 键集与占位）。
+
+**实测**：（待填）
+
+## Task 4 — 门禁与真栈验收
+
+> 动到的文件：无（探针/截图仓外）。
+
+- [ ] `node --check client.js`；`node --test tests/*.test.ts` 全绿；`tsc`；五个 TS strip-types。
+- [ ] 真栈按 spec §5 逐条手验（1–9），记「工具表出现/消失」的证据（轨迹页或宿主请求日志）。
+- [ ] 回归：六 tab、上传、切片/Wiki 抽屉、召回/评测/图谱面零变化。
+- [ ] 引擎与主树零 diff；提交面只含本对文件。
+
+**真跑清单（他手验）**：
+
+1. 默认：standard 会话工具表无 `hrag_*`。
+2. 绑定：绑定后下一请求出现五件并能检索。
+3. 解绑：工具消失、文案正确。
+4. 冷会话：绑定↔重启↔打开会话的挂载/不挂。
+5. 新建：面板建会话不依赖预设即可用。
+6. 覆盖：显式 `kb_id` 覆盖绑定。
+7. 子代理：无工具（D4 若确认）。
+8. 回归：面板与既有面零变化。
+
+**实测**：（待填）
+
+## Task 5 — 收口
+
+> 动到的文件：本对＋`README.md`＋`docs/equivalence.md`。
+
+- [ ] 回写 spec Status 与本 plan 各 Task 实测。
+- [ ] 逐文件核 hunk，排除 `node_modules/`；提交信息英文 Conventional ASCII；回填提交链。
+- [ ] 提交后回填提交链；仓无 remote，不推送。
+
+**实测**：（待填）
+
+---
+
+## 提交链（滚动记实）
+
+- （待填）

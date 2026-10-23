@@ -1,7 +1,6 @@
 export interface Config {
   backendUrl: string
   apiToken: string
-  defaultKbId: string
   autoSyncModels: boolean
 }
 
@@ -16,6 +15,5 @@ export interface Config {
 export const defaultConfig: Config = {
   backendUrl: 'http://127.0.0.1:8020',
   apiToken: '',
-  defaultKbId: '',
   autoSyncModels: true,
 }

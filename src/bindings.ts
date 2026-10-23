@@ -57,23 +57,21 @@ export function sanitizeBindings(raw: unknown): Record<string, Binding> {
 
 export interface KbResolution {
   kbId: string
-  source: 'arg' | 'session' | 'default'
+  source: 'arg' | 'session'
 }
 
-/** kb_id resolution order: tool argument, then the session binding, then the
- * configured default. Blank values never win a tier. */
+/** kb_id resolution order: tool argument, then the session binding. The tools
+ * only exist in bound sessions (spec 2026-10-23 binding-tool-gating), so there
+ * is no config-level default tier; blank values never win a tier. */
 export function resolveKbId(input: {
   argKbId?: string
   sessionId?: string
   bindings: Record<string, Binding>
-  defaultKbId?: string
 }): KbResolution | null {
   const arg = input.argKbId?.trim()
   if (arg) return { kbId: arg, source: 'arg' }
   const bound = input.sessionId ? input.bindings[input.sessionId]?.kbId.trim() : ''
   if (bound) return { kbId: bound, source: 'session' }
-  const fallback = input.defaultKbId?.trim()
-  if (fallback) return { kbId: fallback, source: 'default' }
   return null
 }
 

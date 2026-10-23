@@ -6,12 +6,12 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { BindingsStore } from './bindings.ts'
 import {
   conversationOps,
-  KNOWLEDGE_PRESET,
   type ConversationsHost,
   type SessionControllerLike,
 } from './conversations.ts'
 import { api, HarnessRagError } from './http.ts'
 import type { ApiError } from './http.ts'
+import type { ToolGatingHandle } from './tool_gating.ts'
 import { registerIngestJobs } from './jobs.ts'
 import type { IngestJobs } from './jobs.ts'
 import { unavailableModelStatus } from './model_sync.ts'
@@ -577,6 +577,7 @@ export function registerKbProxy(
   config: Config,
   bindings: BindingsStore,
   modelSync?: ModelSyncHandle,
+  gating?: ToolGatingHandle,
 ): void {
   const ingestJobs = registerIngestJobs(ctx, config)
   // The conversation drawer's four ops: they read the host session catalog and
@@ -584,7 +585,7 @@ export function registerKbProxy(
   const conversations: ConversationsHost = { controller: null }
   const ops = {
     ...buildOps(config, ingestJobs, modelSync),
-    ...conversationOps({ host: conversations, bindings, agentPreset: KNOWLEDGE_PRESET }),
+    ...conversationOps({ host: conversations, bindings, ...(gating ? { gating } : {}) }),
   }
 
   const handler = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {

@@ -85,34 +85,26 @@ test('sanitize: kbName is kept only when a non-blank string, other fields droppe
 
 // ── resolveKbId ─────────────────────────────────────────────────────────────
 
-test('resolveKbId: argument wins over binding and default', () => {
+test('resolveKbId: argument wins over the session binding', () => {
   const bindings = { s1: { kbId: 'kb-bound', updatedAt: NOW } }
-  assert.deepEqual(resolveKbId({ argKbId: ' kb-arg ', sessionId: 's1', bindings, defaultKbId: 'kb-def' }), {
+  assert.deepEqual(resolveKbId({ argKbId: ' kb-arg ', sessionId: 's1', bindings }), {
     kbId: 'kb-arg',
     source: 'arg',
   })
 })
 
-test('resolveKbId: binding wins over default', () => {
+test('resolveKbId: the session binding fills in when the argument is absent', () => {
   const bindings = { s1: { kbId: 'kb-bound', updatedAt: NOW } }
-  assert.deepEqual(resolveKbId({ sessionId: 's1', bindings, defaultKbId: 'kb-def' }), {
+  assert.deepEqual(resolveKbId({ sessionId: 's1', bindings }), {
     kbId: 'kb-bound',
     source: 'session',
   })
 })
 
-test('resolveKbId: default fills in when neither argument nor binding applies', () => {
-  assert.deepEqual(resolveKbId({ sessionId: 's2', bindings: { s1: { kbId: 'kb-bound', updatedAt: NOW } }, defaultKbId: ' kb-def ' }), {
-    kbId: 'kb-def',
-    source: 'default',
-  })
-  assert.deepEqual(resolveKbId({ defaultKbId: 'kb-def' }), { kbId: 'kb-def', source: 'default' })
-})
-
-test('resolveKbId: no source means no kb', () => {
+test('resolveKbId: no argument and no binding means no kb', () => {
   assert.equal(resolveKbId({ bindings: {} }), null)
-  assert.equal(resolveKbId({ argKbId: '  ', sessionId: 's2', bindings: { s1: { kbId: 'kb', updatedAt: NOW } }, defaultKbId: '' }), null)
-  assert.equal(resolveKbId({ sessionId: 's1', bindings: {}, defaultKbId: '' }), null)
+  assert.equal(resolveKbId({ argKbId: '  ', sessionId: 's2', bindings: { s1: { kbId: 'kb', updatedAt: NOW } } }), null)
+  assert.equal(resolveKbId({ sessionId: 's1', bindings: {} }), null)
 })
 
 // ── store ───────────────────────────────────────────────────────────────────

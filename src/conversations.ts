@@ -1,11 +1,6 @@
 import type { Binding, BindingsStore } from './bindings.ts'
 import { HarnessRagError } from './http.ts'
 
-/** The Agent preset that mounts this plugin's tool pack (presets/knowledge.patch.yml).
- * New conversations ask for it first and fall back to the host default when the
- * user has not merged that preset into their profile. */
-export const KNOWLEDGE_PRESET = 'harness-rag-knowledge'
-
 /** The slice of `ctx.sessionController` these ops use. */
 export interface SessionRowLike {
   sessionId: string
@@ -105,11 +100,19 @@ const requireString = (args: unknown, key: string): string => {
   return value
 }
 
+/** Bind/unbind side effects on the live tool registration (spec 2026-10-23
+ * binding-tool-gating D1). */
+export interface ToolGatingCallbacks {
+  onBound(sessionId: string): void
+  onUnbound(sessionId: string): void
+}
+
 export interface ConversationOpsDeps {
   host: ConversationsHost
   bindings: BindingsStore
-  /** Preset for new conversations; absent when the composition has none. */
-  agentPreset?: string
+  /** Mount/unmount the knowledge tools as the binding changes; absent when the
+   * host has no agent registry (the ops still write the table). */
+  gating?: ToolGatingCallbacks
 }
 
 /** Panel ops for the conversation drawer. Only `create` and `list` need the
@@ -139,22 +142,25 @@ export function conversationOps(deps: ConversationOpsDeps): Record<string, (args
       const kbId = requireString(args, 'kbId')
       const kbName = optionalString(args, 'kbName')
       const cwd = optionalString(args, 'cwd')
-      const created = await createSession(controller(), {
-        ...(cwd === undefined ? {} : { cwd }),
-        ...(deps.agentPreset === undefined ? {} : { agentPreset: deps.agentPreset }),
-      })
+      // No agent preset on purpose: the knowledge tools mount per binding
+      // (spec 2026-10-23 binding-tool-gating D5), so the session starts on the
+      // host default and gains `hrag_*` once this binding lands.
+      const created = await createSession(controller(), { ...(cwd === undefined ? {} : { cwd }) })
       await deps.bindings.set(created.sessionId, kbId, kbName)
+      deps.gating?.onBound(created.sessionId)
       return created
     },
     'conversations/bind': async (args) => {
       const sessionId = requireString(args, 'sessionId')
       const kbId = requireString(args, 'kbId')
       await deps.bindings.set(sessionId, kbId, optionalString(args, 'kbName'))
+      deps.gating?.onBound(sessionId)
       return { sessionId, kbId }
     },
     'conversations/unbind': async (args) => {
       const sessionId = requireString(args, 'sessionId')
       await deps.bindings.delete(sessionId)
+      deps.gating?.onUnbound(sessionId)
       return { sessionId }
     },
   }

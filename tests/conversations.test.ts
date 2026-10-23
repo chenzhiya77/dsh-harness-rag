@@ -169,15 +169,25 @@ test('ops: list accepts the host service envelope { items }', async () => {
   ])
 })
 
-test('ops: bind and unbind write through the store', async () => {
+test('ops: bind and unbind write through the store and drive the gating hooks', async () => {
   const store = tempStore()
-  const ops = conversationOps({ host: host(fakeController()), bindings: store })
+  const gateCalls: string[] = []
+  const ops = conversationOps({
+    host: host(fakeController()),
+    bindings: store,
+    gating: {
+      onBound: (sessionId) => gateCalls.push('bound:' + sessionId),
+      onUnbound: (sessionId) => gateCalls.push('unbound:' + sessionId),
+    },
+  })
 
   await ops['conversations/bind']({ sessionId: 's1', kbId: 'kb-a', kbName: ' 产品文档 ' })
   assert.deepEqual(store.get('s1'), { kbId: 'kb-a', kbName: '产品文档', updatedAt: NOW })
+  assert.deepEqual(gateCalls, ['bound:s1'])
 
   await ops['conversations/unbind']({ sessionId: 's1' })
   assert.equal(store.get('s1'), undefined)
+  assert.deepEqual(gateCalls, ['bound:s1', 'unbound:s1'])
 })
 
 test('ops: bind rejects a blank kb id', async () => {
@@ -185,23 +195,29 @@ test('ops: bind rejects a blank kb id', async () => {
   await assert.rejects(ops['conversations/bind']({ sessionId: 's1', kbId: '  ' }), /kbId/)
 })
 
-test('ops: create makes the session, writes the binding, and returns the id', async () => {
+test('ops: create makes the session, writes the binding, and mounts the tools', async () => {
   const store = tempStore()
   const calls: Array<{ cwd?: string; agentPreset?: string }> = []
   const controller = fakeController([], async (request) => {
     calls.push(request)
     return { sessionId: 'fresh' }
   })
+  const gateCalls: string[] = []
   const ops = conversationOps({
     host: host(controller),
     bindings: store,
-    agentPreset: 'harness-rag-knowledge',
+    gating: {
+      onBound: (sessionId) => gateCalls.push(sessionId),
+      onUnbound: () => {},
+    },
   })
 
   const created = await ops['conversations/create']({ cwd: 'E:/work', kbId: 'kb-a', kbName: '产品文档' })
   assert.deepEqual(created, { sessionId: 'fresh' })
-  assert.deepEqual(calls, [{ cwd: 'E:/work', agentPreset: 'harness-rag-knowledge' }])
+  // No preset on purpose: tools mount per binding, not per preset (D5).
+  assert.deepEqual(calls, [{ cwd: 'E:/work' }])
   assert.deepEqual(store.get('fresh'), { kbId: 'kb-a', kbName: '产品文档', updatedAt: NOW })
+  assert.deepEqual(gateCalls, ['fresh'])
 })
 
 test('ops: create without a controller is a 503', async () => {
