@@ -1,7 +1,7 @@
 # 会话绑定的工具挂载（绑定即启用） Plan
 
 **Spec:** [2026-10-23-binding-tool-gating-spec.md](../specs/2026-10-23-binding-tool-gating-spec.md)
-**Status:** 实施中（2026-10-23；甲已拍，D3/D4 按推荐；Task 0–3 已完成并过门禁，Task 4 起待令）
+**Status:** 实施完成（2026-10-24；甲已拍，D3/D4 按推荐；Task 0–4b 已完成并过门禁，Task 5 收口中；§5#8 回归待手验）
 **Architecture:** 工具定义拆成纯函数，apply 期不再全局注册；新增挂载器在 `agent/created`／绑定 op 时把五工具注册进 `agent.ctx`（宿主 scope 注册，随 agent 回收），解绑时调反注册。绑定仍是取库唯一来源，`defaultKbId` 退场。
 
 **硬约束**：只改插件仓 `E:\app\python\agent\dsh-harness-rag`；引擎 `harness-rag` 与主树 `deer-flow` 只读零改动；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。`node_modules/` 不触碰、不纳入提交。不往会话记录写事件。
@@ -90,10 +90,10 @@
 
 > 动到的文件：无（探针/截图仓外）。
 
-- [ ] `node --check client.js`；`node --test tests/*.test.ts` 全绿；`tsc`；五个 TS strip-types。
-- [ ] 真栈按 spec §5 逐条手验（1–9），记「工具表出现/消失」的证据（轨迹页或宿主请求日志）。
+- [x] `node --check client.js`；`node --test tests/*.test.ts` 全绿；`tsc`；五个 TS strip-types。
+- [x] 真栈按 spec §5 逐条手验（1–7、9 已取证；8 待手验），证据见下表。
 - [ ] 回归：六 tab、上传、切片/Wiki 抽屉、召回/评测/图谱面零变化。
-- [ ] 引擎与主树零 diff；提交面只含本对文件。
+- [x] 引擎与主树零 diff；提交面只含本对文件。
 
 **真跑清单（他手验）**：
 
@@ -106,7 +106,34 @@
 7. 子代理：无工具（D4 若确认）。
 8. 回归：面板与既有面零变化。
 
-**实测**：（待填）
+**实测**（§5 逐条证据汇总，Task 2 已证项＋10-24 复验）：
+
+| §5 项 | 判据 | 证据 | 状态 |
+| --- | --- | --- | --- |
+| 1 默认无工具 | standard 会话请求头无 `hrag_*` | Task 2：解绑后 `request/header` 32 件／`hrag_*`=0 | 过 |
+| 2 绑定即挂载 | 绑定后下一请求五件＋检索回显 | Task 2：`change` 37/5；`hrag_list_documents` 回 `kb_id`/`kb_name` | 过 |
+| 3 解绑即卸载 | 解绑后下一请求 0 件 | Task 2：`change` 32/0；文案已验 | 过 |
+| 4 冷会话 | 绑定↔重启的挂载 | Task 2：重启后 `resume` 37/5 | 过（「解绑后重启」未单跑） |
+| 5 新建 | 面板「新建」→ 消息 → 五件 | 10-24 `session-42663300…`：成员＋绑定＋`initial` 37/5＋真调工具 | 过（随 Task 4b 修复） |
+| 6 覆盖 | 显式 `kb_id` 覆盖绑定 | Task 2：`query+t3` 调用回显 t3 库 | 过 |
+| 7 子代理 | 子代理无 `hrag_*` | Task 2：子代理请求头 0 件 | 过（D4 预置） |
+| 8 回归 | 面板六 tab／上传／抽屉／召回评测图谱 | 本对未改 UI；待他手验 | 待验 |
+| 9 门禁与零 diff | 四门禁＋两树零改 | Task 4 勾选＋Task 5 | 过 |
+
+## Task 4b — 「新建」缺口修复（TDD，Task 4 验收前置）
+
+> 动到的文件：`src/conversations.ts`、`src/kb_proxy.ts`、`tests/conversations.test.ts`。
+
+**缺口（2026-10-23 复核）**：面板「新建」建出的会话不在任何 workspace 里 ⇒ 打开它落回 workspace 草稿页，首条消息另起一个 session id，绑定与工具挂载留在空会话上。§5#5 因此不可达。
+
+- [x] 复核宿主链路（只读，asar 取证）：`SessionCommandController.create` 收 `workspaceId` XOR `cwd`，仅当点名 workspace 时才 `workspace.attachSession(sessionId)`（`dsh-session-controller.js:753-790`）；`attachSession` 校验 header.cwd 归一后逐字等于 workspace path（`dsh-workspace.js:111-123`）；UI `openSession` 只是导航，`connectBlank` 只复用 `workspace.sessionIds.includes(id)` 的空会话 ⇒ 非成员会话必然落草稿。
+- [x] 现网证据：`~/.dsh/storages/workspace.json` 仅一个 workspace（`b1196018…`，path=`…\Documents\deepseek-harness\default-workspace`），其 `sessionIds` 含首条消息形成的 `46ca1627…`，**不含**面板建出的 `5d244ea4…`；而 `5d244ea4…` 的 header cwd 本就等于该 path ⇒ 症状根因是「没 attach」，不是「没 cwd」。
+- [x] 测试先行：`createSession` 去预设回落保留 `workspaceId`；`conversations/create` 按 cwd 归到 workspace 时只传 `{ workspaceId }`；查不到／`resolveByPath` 抛错时回落 `{ cwd }`。RED：2 例红（16 例中），GREEN：66/66。
+- [x] 修法：`SessionControllerLike.create` 增 `workspaceId`；`ConversationsHost` 增可选 `workspaces`（`WorkspaceRegistryLike.resolveByPath`）；`kb_proxy.ts` 新增 `inject(['workspaceRegistry'])` 注入（无此服务的宿主保持 cwd 老路）。`conversations/create` 先按 cwd 找 workspace，命中则走 workspace 建会话（cwd 由 workspace 携带，宿主随后 attach）；未命中或路径已不可解析则维持 `{ cwd }`。面板端无需改动（本就把当前会话 cwd 传下来）。
+- [x] 门禁：`node --test tests/*.test.ts` 66/66；`tsc -p tsconfig.json` 0；`--experimental-strip-types --check` 两文件过。
+- [x] 真栈（2026-10-24，DSH 整重启后他手点「新建」）：新会话 `session-42663300-a233-40e6-bd0e-290af25f80db` 进入 `workspace.json` 的 `sessionIds`（第 14 位），绑定 `9141e58d → t3-panel-acceptance`；首条消息落在该 id，header `agentPreset=standard`、`cwd`=workspace path；`request/header`（reason=initial）37 件工具中 `hrag_*` 恰为五件，模型真实调用 `hrag_list_documents` 并拿到 `kb_id=9141e58d…`／`kb_name=t3-panel-acceptance`。
+
+**实测**（2026-10-23／24）：`workspaceIdForCwd` 只在拿到 cwd 且注入到 registry 时调用；`resolveByPath` 归一化后按 path 相等匹配，`attachSession` 的 cwd 校验因此天然成立。宿主侧 `create({ workspaceId })` 与旧路径的差别只有两处：cwd 来源改为 workspace.path、创建后 attach；`agentPreset` 回落路径同样保留 `workspaceId`。真栈一步已于 10-24 补齐（见上条）：同一 op 先以 curl 复现（`session-e1126f86…` 同样入册），再由面板按钮走完整链路（`session-42663300…`）。
 
 ## Task 5 — 收口
 

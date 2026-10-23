@@ -8,6 +8,7 @@ import {
   conversationOps,
   type ConversationsHost,
   type SessionControllerLike,
+  type WorkspaceRegistryLike,
 } from './conversations.ts'
 import { api, HarnessRagError } from './http.ts'
 import type { ApiError } from './http.ts'
@@ -329,6 +330,12 @@ interface SessionHostLike {
   inject(dependencies: string[], callback: (fresh: { sessionController: SessionControllerLike }) => void): void
 }
 
+/** Workspace membership is a separate service; without it the create op keeps
+ * the plain-cwd path instead of failing. */
+interface WorkspaceHostLike {
+  inject(dependencies: string[], callback: (fresh: { workspaceRegistry: WorkspaceRegistryLike }) => void): void
+}
+
 const MAX_BODY_BYTES = 1024 * 1024
 
 const sendJson = (res: ServerResponse, status: number, payload: unknown): void => {
@@ -646,5 +653,10 @@ export function registerKbProxy(
   const sessionHost = ctx as unknown as SessionHostLike
   sessionHost.inject(['sessionController'], (fresh) => {
     conversations.controller = fresh.sessionController
+  })
+
+  const workspaceHost = ctx as unknown as WorkspaceHostLike
+  workspaceHost.inject(['workspaceRegistry'], (fresh) => {
+    conversations.workspaces = fresh.workspaceRegistry
   })
 }

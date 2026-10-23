@@ -15,13 +15,26 @@ export interface SessionControllerLike {
   /** The host service answers `{ items }` (its internal list helper answers a
    * bare array); accept both so the op does not depend on which layer it sees. */
   list(request?: unknown, signal?: AbortSignal): Promise<SessionRowLike[] | { items?: SessionRowLike[] }>
-  create(request: { cwd?: string; agentPreset?: string }): Promise<{ sessionId: string; agentPreset?: string }>
+  /** `workspaceId` and `cwd` are exclusive on the host path; a workspace id
+   * also makes the new session a member, which is what the UI's blank-session
+   * reuse and the workspace draft require. */
+  create(request: {
+    workspaceId?: string
+    cwd?: string
+    agentPreset?: string
+  }): Promise<{ sessionId: string; agentPreset?: string }>
 }
 
-/** The controller arrives with the host composition, possibly after this
- * plugin activates; the holder stays null until then. */
+/** The workspace registry slice used to attach panel-created sessions. */
+export interface WorkspaceRegistryLike {
+  resolveByPath(path: string): Promise<{ id: unknown } | undefined>
+}
+
 export interface ConversationsHost {
+  /** The controller arrives with the host composition, possibly after this
+   * plugin activates; the holder stays null until then. */
   controller: SessionControllerLike | null
+  workspaces?: WorkspaceRegistryLike | null
 }
 
 export interface ConversationRow {
@@ -74,16 +87,34 @@ export function mergeRows(
  * default when that preset is not part of the user's composition. */
 export async function createSession(
   controller: SessionControllerLike,
-  request: { cwd?: string; agentPreset?: string },
+  request: { workspaceId?: string; cwd?: string; agentPreset?: string },
 ): Promise<{ sessionId: string; agentPreset?: string }> {
   try {
     return await controller.create(request)
   } catch (error) {
     const code = (error as { code?: unknown } | null)?.code
     if (typeof code === 'string' && code.startsWith('agent-preset/') && request.agentPreset !== undefined) {
-      return await controller.create(request.cwd === undefined ? {} : { cwd: request.cwd })
+      return await controller.create({
+        ...(request.workspaceId === undefined ? {} : { workspaceId: request.workspaceId }),
+        ...(request.cwd === undefined ? {} : { cwd: request.cwd }),
+      })
     }
     throw error
+  }
+}
+
+/** The workspace owning this directory, if any. `resolveByPath` rejects for a
+ * path that no longer resolves; the caller keeps the plain-cwd fallback. */
+async function workspaceIdForCwd(
+  registry: WorkspaceRegistryLike | null | undefined,
+  cwd: string | undefined,
+): Promise<string | undefined> {
+  if (!registry || cwd === undefined) return undefined
+  try {
+    const workspace = await registry.resolveByPath(cwd)
+    return workspace === undefined ? undefined : String(workspace.id)
+  } catch {
+    return undefined
   }
 }
 
@@ -145,7 +176,16 @@ export function conversationOps(deps: ConversationOpsDeps): Record<string, (args
       // No agent preset on purpose: the knowledge tools mount per binding
       // (spec 2026-10-23 binding-tool-gating D5), so the session starts on the
       // host default and gains `hrag_*` once this binding lands.
-      const created = await createSession(controller(), { ...(cwd === undefined ? {} : { cwd }) })
+      // Create through the workspace when one owns this directory: a session
+      // that is not a member leaves the chat UI on the workspace draft, and the
+      // first message would then land in a different session id.
+      const workspaceId = await workspaceIdForCwd(deps.host.workspaces, cwd)
+      const created = await createSession(
+        controller(),
+        workspaceId === undefined
+          ? { ...(cwd === undefined ? {} : { cwd }) }
+          : { workspaceId },
+      )
       await deps.bindings.set(created.sessionId, kbId, kbName)
       deps.gating?.onBound(created.sessionId)
       return created

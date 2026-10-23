@@ -125,6 +125,21 @@ test('createSession: no preset requested means a single call', async () => {
   assert.deepEqual(calls, [{ cwd: 'E:/work' }])
 })
 
+test('createSession: dropping an unavailable preset keeps the workspace', async () => {
+  const calls: Array<{ workspaceId?: string; cwd?: string; agentPreset?: string }> = []
+  const controller = fakeController([], async (request) => {
+    calls.push(request)
+    if (request.agentPreset) {
+      const error = new Error('preset missing') as Error & { code: string }
+      error.code = 'agent-preset/not-found'
+      throw error
+    }
+    return { sessionId: 's' }
+  })
+  await createSession(controller, { workspaceId: 'ws-1', agentPreset: 'p' })
+  assert.deepEqual(calls, [{ workspaceId: 'ws-1', agentPreset: 'p' }, { workspaceId: 'ws-1' }])
+})
+
 // ── ops ─────────────────────────────────────────────────────────────────────
 
 test('ops: list reports not-ready without a controller', async () => {
@@ -226,4 +241,51 @@ test('ops: create without a controller is a 503', async () => {
     const info = error as { info?: { status?: number } }
     return info.info?.status === 503
   })
+})
+
+// ── workspace attach (the panel's new-session gap) ──────────────────────────
+
+test('ops: create goes through the workspace that owns the cwd', async () => {
+  const store = tempStore()
+  const calls: Array<{ workspaceId?: string; cwd?: string }> = []
+  const controller = fakeController([], async (request) => {
+    calls.push(request)
+    return { sessionId: 'fresh' }
+  })
+  const ops = conversationOps({
+    host: {
+      controller,
+      workspaces: {
+        resolveByPath: async (path) => (path === 'E:/work' ? { id: 'ws-1' } : undefined),
+      },
+    },
+    bindings: store,
+  })
+  const created = await ops['conversations/create']({ cwd: 'E:/work', kbId: 'kb-a' })
+  assert.deepEqual(created, { sessionId: 'fresh' })
+  // workspaceId and cwd are exclusive on the host path; the workspace carries it.
+  assert.deepEqual(calls, [{ workspaceId: 'ws-1' }])
+  assert.deepEqual(store.get('fresh'), { kbId: 'kb-a', updatedAt: NOW })
+})
+
+test('ops: create falls back to cwd when no workspace owns the path', async () => {
+  const failures = [
+    async () => undefined,
+    async () => {
+      throw new Error('ENOENT')
+    },
+  ]
+  for (const resolveByPath of failures) {
+    const calls: Array<{ workspaceId?: string; cwd?: string }> = []
+    const controller = fakeController([], async (request) => {
+      calls.push(request)
+      return { sessionId: 'fresh' }
+    })
+    const ops = conversationOps({
+      host: { controller, workspaces: { resolveByPath } },
+      bindings: tempStore(),
+    })
+    await ops['conversations/create']({ cwd: 'E:/nowhere', kbId: 'kb-a' })
+    assert.deepEqual(calls, [{ cwd: 'E:/nowhere' }])
+  }
 })
