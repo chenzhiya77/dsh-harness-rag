@@ -2,12 +2,13 @@
 
 **Harness RAG for DeepSeek Harness (DSH)** — 三路检索（混合/图谱/wiki）+ 文档续读 + 知识库管理面板，后端为 Harness RAG knowledge 服务（最小 Python 服务）。
 
-> Status: **T2–T6 已实装并在真栈验收** — 工具面（三检索＋文档两件套：单路 recall-test / 中心窗续读 / 半开输出）、右栏管理面板（T3）、摄取通道后台任务（T4）、子槽声明契约＋命名空间四防（T5）、等价对照表＋原创图标＋三检索真跑（T6）；隔离提供「知识预设」可选件。后端已切到主体二 `harness-rag` 最小知识服务（`127.0.0.1:8020`）。未配后端时返回结构化错误。
+> Status: **T2–T6 已实装并在真栈验收** — 工具面（三检索＋文档两件套：单路 recall-test / 中心窗续读 / 半开输出）、右栏管理面板（T3）、摄取通道后台任务（T4）、子槽声明契约＋命名空间四防（T5）、等价对照表＋原创图标＋三检索真跑（T6）；工具随会话绑定挂/卸（未绑定不挂）；「知识预设」留作可选隔离件。后端已切到主体二 `harness-rag` 最小知识服务（`127.0.0.1:8020`）。未配后端时返回结构化错误。
 
 ## 隔离与 kb_id 解析
 
-- **隔离（可选，推荐）**：`presets/knowledge.patch.yml` 定义了一个 DSH Agent 预设 `harness-rag-knowledge`——挂载本插件的工具包，**选中该预设的会话才有 `hrag_*`**（未用时工具在全局视图中仍可见，等于当前测试态）。用法：把该文件的 `insert` 行并入 profile 的 `cordis.patch.yml`，在该行 `config.plugins` 里写本包 **`link:` 安装路径**（官方 preset 行的同款写法），并按需加 `defaultKbId` 配置。
-- **kb_id 解析次序**：工具参数 ＞ 会话绑定 ＞ `defaultKbId`。会话绑定在面板顶栏「会话」入口里切换（每个会话至多一个库），工具结果回显 `kb_id`（绑定来源还带 `kb_name`）。
+- **隔离（默认）**：工具不做全局注册。会话在面板里绑定知识库后，五件 `hrag_*` 只挂进该会话（下一模型请求生效）；解绑即从该会话的工具表消失，未绑定的会话没有这些工具。
+- **可选隔离件（预设）**：要把插件实例本身（如另一套 `backendUrl` / `apiToken`）按会话隔离，可用 `presets/knowledge.patch.yml` 的 `harness-rag-knowledge` 预设。用法：把该文件的 `insert` 行并入 profile 的 `cordis.patch.yml`，在该行 `config.plugins` 里写本包 **`link:` 安装路径**（官方 preset 行的同款写法）。
+- **kb_id 解析次序**：工具参数 ＞ 会话绑定。两者都没有时返回结构化错误（`not_configured`）。会话绑定在面板顶栏「会话」入口里切换（每个会话至多一个库），工具结果回显 `kb_id`（绑定来源还带 `kb_name`）。
 - **会话绑定**：面板顶栏（库选择器与 ⋯ 之间）的「会话」按钮打开抽屉——给当前会话绑定/切换/移除知识库，并列出已绑定会话（可跳转、可按当前浏览库新建）。绑定存 host 侧 `<DSH_HOME>/harness-rag/bindings.json`（`DSH_HOME` 缺省 `~/.dsh`）。
 - **防同名遮蔽**：工具名统一 `hrag_` 命名空间；宿主按「视图（scope）」解析工具（`get(name, scope)`），agent 视角存在遮蔽面——命名空间是现状下的主防线。
 
@@ -51,7 +52,6 @@ dsh plugin --profile <name> add link:<本仓绝对路径>
 |---|---|
 | `backendUrl` | knowledge 服务地址（默认 `http://127.0.0.1:8020`） |
 | `apiToken` | Bearer token；引擎开启鉴权时必填（与服务端 `DEER_FLOW_API_TOKEN` 一致）；空=仅对 auth-off 引擎有效 |
-| `defaultKbId` | 默认知识库 id；空=每次调用必须传 `kb_id` |
 
 ## 后端最小形态（部署）
 

@@ -1,7 +1,7 @@
 # 会话绑定的工具挂载（绑定即启用） Plan
 
 **Spec:** [2026-10-23-binding-tool-gating-spec.md](../specs/2026-10-23-binding-tool-gating-spec.md)
-**Status:** 实施中（2026-10-23；甲已拍，D3/D4 按推荐；Task 0–2 已完成并真栈实证，Task 3 起待令）
+**Status:** 实施中（2026-10-23；甲已拍，D3/D4 按推荐；Task 0–3 已完成并过门禁，Task 4 起待令）
 **Architecture:** 工具定义拆成纯函数，apply 期不再全局注册；新增挂载器在 `agent/created`／绑定 op 时把五工具注册进 `agent.ctx`（宿主 scope 注册，随 agent 回收），解绑时调反注册。绑定仍是取库唯一来源，`defaultKbId` 退场。
 
 **硬约束**：只改插件仓 `E:\app\python\agent\dsh-harness-rag`；引擎 `harness-rag` 与主树 `deer-flow` 只读零改动；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。`node_modules/` 不触碰、不纳入提交。不往会话记录写事件。
@@ -77,12 +77,14 @@
 
 > 动到的文件：`client.js`、`README.md`、`docs/equivalence.md`。
 
-- [ ] `client.js`：抽屉提示改「选择后，本会话将获得知识库工具」；解绑 Toast 改「已移除绑定，本会话不再具备知识库工具」；zh/en 同步。
-- [ ] `README.md`：删「kb_id 解析次序」里的 `defaultKbId` 档与配置表行；「隔离」节改写为「工具随绑定挂载；预设只作可选隔离」。
-- [ ] `docs/equivalence.md`：会话绑库行补「工具随绑定挂/卸」；§12 预设相关表述同步。
-- [ ] 门禁：`node --check client.js`；仓外 hostless 探针（zh/en 键集与占位）。
+- [x] `client.js`：抽屉提示改「选择后，本会话将获得知识库工具」；解绑 Toast 改「已移除绑定，本会话不再具备知识库工具」；zh/en 同步。
+- [x] `README.md`：删「kb_id 解析次序」里的 `defaultKbId` 档与配置表行；「隔离」节改写为「工具随绑定挂载；预设只作可选隔离」。
+- [x] `docs/equivalence.md`：会话绑库行补「工具随绑定挂/卸」；§12 预设相关表述同步。
+- [x] 门禁：`node --check client.js`；仓外 hostless 探针（zh/en 键集与占位）。
 
-**实测**：（待填）
+**实测**（2026-10-23）：`client.js` 改 `session.pickHint`／`session.unboundToast` 两键×zh/en（`选择后，本会话将获得知识库工具。` / `Once picked, this chat gains the knowledge tools.`；`已移除绑定，本会话不再具备知识库工具` / `Binding removed; this chat no longer has the knowledge tools`）。README 的「隔离」节拆成三条：默认隔离＝工具只挂绑定会话、可选隔离件＝预设（保留用法）、`kb_id` 解析两档＋`not_configured`；Status 行与配置表同步去掉默认库口径。equivalence §11 会话绑库行改为「arg ＞ 绑定；五件随绑定挂/卸（未绑定不挂）」并把末次核对说明改为「会话绑定收口＋工具随绑定挂/卸」；§12 无预设相关表述，未动。历史 plan/spec（10-11 freeze、10-23 conversation-binding）里的三级链记载按当时事实保留。
+
+门禁：`node --check client.js` 通过。仓外探针 `%TEMP%\hrag-copy-parity.mjs`（从源码抽出 `const zh` / `const en` 字面量求值）：键集 838/838 对齐、`{0}` 占位逐键一致、两处新文案逐字断言、全表无「默认知识库／default knowledge base／defaultKbId」残留。**顺带修一处既有缺口（非本议题引入）**：`set.form.modelPickerAria` 只有 zh 键，en 缺键会回落中文；补 `'Choose a model; current: {0}'` 后键集才对齐——该缺口在本次改动前的 HEAD 已存在（`git show HEAD:client.js` 实核）。
 
 ## Task 4 — 门禁与真栈验收
 
