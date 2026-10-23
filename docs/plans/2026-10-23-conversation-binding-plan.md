@@ -1,7 +1,7 @@
 # 会话知识库绑定（面板内） Plan
 
 **Spec:** [2026-10-23-conversation-binding-spec.md](../specs/2026-10-23-conversation-binding-spec.md)
-**Status:** Task 0–5 已完成、真栈 1–9 手验通过（2026-10-23；Task 5 静态门禁全绿＋DSH 整重启后逐条手验）；Task 6 收口进行中（D1 甲、D2 乙、D3 甲、D4 甲、D5 甲、D6 甲、D7 不弹确认、D8 悬空标灰；多库不做；10-23 对照实码审查后修订 P1–P3）
+**Status:** ✅ 全收官（2026-10-23 Task 0–5 完成、真栈 1–9 手验通过；Task 6 收口已落 `6867222`，D1 甲、D2 乙、D3 甲、D4 甲、D5 甲、D6 甲、D7 不弹确认、D8 悬空标灰；多库不做；10-23 对照实码审查后修订 P1–P3）
 **Architecture:** 绑定落在 host 半的 JSON 文件（`<DSH_HOME>/harness-rag/bindings.json`），面板经既有具名路由读写；工具 `kb()` 在参数与 `defaultKbId` 之间插入「会话绑定」一格。client 半只加顶栏按钮＋覆盖抽屉；打开会话走 `ctx.uiWorkspace.openSession`，新建走 host `sessionController.create` 再导航。
 
 **硬约束**：只改插件仓 `E:\app\python\agent\dsh-harness-rag`；引擎 `harness-rag` 与主树 `deer-flow` 只读零改动；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。`node_modules/` 为既有未跟踪目录，不触碰、不纳入提交。不往会话记录里写任何事件。多库混合不做。
@@ -132,4 +132,4 @@
 ## 提交链（滚动记实）
 
 - `ec58a41` — `feat(panel): bind a knowledge base per session`（实现＋spec/plan）
-- （本笔）— `docs(panel): close out the session binding pair`（README／等价表／Task 5–6 回写）
+- `6867222` — `docs(panel): close out the session binding pair`（README／等价表／Task 5–6 回写）

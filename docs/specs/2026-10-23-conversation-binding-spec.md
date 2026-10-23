@@ -1,6 +1,6 @@
 # 会话知识库绑定（面板内） —— spec
 
-**Status:** 已实施·真栈验收通过（2026-10-23；Task 0–5 全落、§5 九项手验过、Task 6 收口进行中；D1 甲＝顶栏按钮＋覆盖抽屉、D2 乙＝会话可改绑、D3 甲＝浏览与绑定分离、D4 甲＝host 侧 JSON 文件、D5 甲＝`sessionController.list`、D6 甲＝host `create`＋client `openSession`、D7 不弹确认框、D8 悬空绑定标灰；多库混合不做。**10-23 对照实码审查后修订 P1–P3**：sessionId 改走标准 prop、右栏 per-session 布局、list 带当前会话行、`kb()` 同步载入、子代理回落、`DSH_HOME` 空白串、冷会话标题、归档会话、路由鉴权姿态、tsc 命令）
+**Status:** 已实施·真栈验收通过（2026-10-23；Task 0–5 全落、§5 九项手验过、Task 6 收口已落（`6867222`）；D1 甲＝顶栏按钮＋覆盖抽屉、D2 乙＝会话可改绑、D3 甲＝浏览与绑定分离、D4 甲＝host 侧 JSON 文件、D5 甲＝`sessionController.list`、D6 甲＝host `create`＋client `openSession`、D7 不弹确认框、D8 悬空绑定标灰；多库混合不做。**10-23 对照实码审查后修订 P1–P3**：sessionId 改走标准 prop、右栏 per-session 布局、list 带当前会话行、`kb()` 同步载入、子代理回落、`DSH_HOME` 空白串、冷会话标题、归档会话、路由鉴权姿态、tsc 命令）
 **Date:** 2026-10-23
 **来源:** 10-23 他问「一个会话是绑定一个知识库的吗，切换之后这个会话看到的是切换后的库吗」；确认现状＝无绑定、面板切库不影响会话；他拍「乙更符合常理」（会话可改绑），并要求切换时不要弹确认框；随后「我觉得这个应该放在 rag 当中」，定为面板内入口；令写 spec/plan。
 **承接:** 面板六 tab 与顶栏（[2026-10-21-panel-tabs 之后](../plans/2026-10-21-dsh-model-proxy-plan.md) 的 `hrag-bar` 结构，`client.js:20628`）；抽屉底座沿用切片续读抽屉（`client.js:2706-2715`）；工具 kb 解析链出自 [2026-10-19-t5-slot-contract-spec.md](2026-10-19-t5-slot-contract-spec.md) D4（`src/tools.ts:59-70`）；宿主会话 API 取证见下方 §2.3。

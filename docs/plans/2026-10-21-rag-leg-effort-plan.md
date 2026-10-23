@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
 **Spec:** [2026-10-21-rag-leg-effort-spec.md](../specs/2026-10-21-rag-leg-effort-spec.md)
-**Status:** 立项（2026-10-21 两点裁定：逐腿选择器 / 六档原样；D3 于当晚由四档投影改为 `xhigh`、`max` 各占一项）；**Task 0–6 已完成**——引擎侧全落（Task 1 门禁 155 绿；Task 2 门禁 33 绿、`tests/knowledge` 零新增红；Task 3 caption 门禁 419 + 14 绿），三组 neuter 全过；Task 4 插件代理六档与发布口径已落（两测 27 绿、typecheck 绿、两针 neuter 各恰红 2 项）；Task 5 面板五腿选择器已落（两冒烟全绿、两针 neuter 各恰红 1 项、复刻页真量宽）；Task 6 真栈矩阵已跑（抽取/裁判/手动条目/caption/max/夹取/思考关/死端口全过；`minimal` 按已知风险被拒并留档）。Task 7 全过（引擎全量红集零新增；插件门禁全绿；真面板换模型清回由用户实点复验）。后续面板观感跟进（单框双配置 + 删重复说明 + 搜索/厂商分组）已于同日晚按用户点令实施，见「面板观感跟进」。
+**Status:** ✅ 已交付（2026-10-21 两点裁定：逐腿选择器 / 六档原样；D3 于当晚由四档投影改为 `xhigh`、`max` 各占一项）；**Task 0–7 全过**——引擎侧全落（Task 1 门禁 155 绿；Task 2 门禁 33 绿、`tests/knowledge` 零新增红；Task 3 caption 门禁 419 + 14 绿），三组 neuter 全过；Task 4 插件代理六档与发布口径已落（两测 27 绿、typecheck 绿、两针 neuter 各恰红 2 项）；Task 5 面板五腿选择器已落（两冒烟全绿、两针 neuter 各恰红 1 项、复刻页真量宽）；Task 6 真栈矩阵已跑（抽取/裁判/手动条目/caption/max/夹取/思考关/死端口全过；`minimal` 按已知风险被拒并留档）。Task 7 全过（引擎全量红集零新增；插件门禁全绿；真面板换模型清回由用户实点复验）。后续面板观感跟进（单框双配置 + 删重复说明 + 搜索/厂商分组）已于同日晚按用户点令实施，见「面板观感跟进」。
 **Architecture:** 引擎档位词表扩到六档（`minimal/low/medium/high/xhigh/max`）；RAG 配置新增五个逐腿档位字段；四条 LangChain 腿经 `create_rag_chat_model` 传档，caption 腿在 OpenAI / Anthropic 两种直发协议下各写对应字段；插件代理不再折叠 `xhigh/max`，并停止把 DSH 默认档写进别名条目。选项来自该腿生效模型的 `supported_reasoning_efforts`。
 
 **硬约束**：引擎只改本 plan 列出的文件，其余保持只读；探针落仓外 `E:\appdevelop\hrag-probe\`；provider key 不得进入配置、响应或日志；DSH 整重启候令；提交候令，提交信息英文 Conventional ASCII；档位只在思考开启时下发；`off` 不做档位；引擎词表只扩 `xhigh`/`max` 两项；Codex 路径不动；主树/切片树不动；手动模型条目不受发布逻辑影响。

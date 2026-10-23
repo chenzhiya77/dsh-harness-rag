@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Spec:** [2026-10-18-my-entries-spec.md](../specs/2026-10-18-my-entries-spec.md)（范围＋D1/D2＋验收）
-**Status:** 🟢 开跑（2026-10-18 他令「D2：甲，按此推进」）——**D1＝甲／D2＝甲（已拍）**；**Task 0–5.5 全毕**（冒烟默认/hostless 各 **73 PASS**；E3 条目编辑并入）；**Task 6 全绿**（probe 13/13＋真栈 CRUD 6/6＋检索生命周期 3/3＋销定＋10-18 他手验真跑全过）；10-18 第二轮真跑两修已落（右缘子菜单翻转／列表横向滚动条）＋他问「生成条目是否紧凑」后行几何照工作台收口（40/14/8）＋生成条目 ⋯ 菜单补图标＋两容器头部同轴对齐＋收起箭头换工作台同款 lucide chevron（展开下/收起右），**10-18 已提交**。
+**Status:** ✅ 收官（2026-10-18 他令「D2：甲，按此推进」）——**D1＝甲／D2＝甲（已拍）**；**Task 0–5.5 全毕**（冒烟默认/hostless 各 **73 PASS**；E3 条目编辑并入）；**Task 6 全绿**（probe 13/13＋真栈 CRUD 6/6＋检索生命周期 3/3＋销定＋10-18 他手验真跑全过）；10-18 第二轮真跑两修已落（右缘子菜单翻转／列表横向滚动条）＋他问「生成条目是否紧凑」后行几何照工作台收口（40/14/8）＋生成条目 ⋯ 菜单补图标＋两容器头部同轴对齐＋收起箭头换工作台同款 lucide chevron（展开下/收起右），**10-18 已提交**。
 **Parent:** ②档批（10-16 他令「都做」；档位表见会话）× 乙对 chunk-items 收官（`a90db41`）。
 **步骤记录:** [2026-10-11-plugin-porting-plan.md](../2026-10-11-plugin-porting-plan.md)。
 

@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
 
 **Spec:** [2026-10-21-dsh-model-proxy-spec.md](../specs/2026-10-21-dsh-model-proxy-spec.md)
-**Status:** 已实现·已验收（2026-10-21）；Task 0–4 全落，Task 5 文档已回写；代码两笔已入库（3d465b6、20dc0a3），文档笔候令。Task 3 的旧思考菜单已由 rag-leg-effort 线的逐腿选择器取代。
+**Status:** 已实现·已验收（2026-10-21）；Task 0–4 全落，Task 5 文档已回写；代码两笔已入库（3d465b6、20dc0a3），文档笔已入库（`69b7dd7`；10-22 补记 `c7a2dde`／`ee5214a`）。Task 3 的旧思考菜单已由 rag-leg-effort 线的逐腿选择器取代。
 **Architecture:** 插件宿主半新增本地 OpenAI 兼容代理（`/dsh-harness-rag/llm/v1`），引擎 RAG 腿经代理调用 `ctx.llm.stream`；引擎侧每条 DSH 模型只写一条 `dsh:` 薄别名（代理地址＋别名＋本地代理 token＋能力元数据），不写 provider endpoint/key/协议/thinking 方言。账号主模型因此可用。引擎零代码改动。
 
 **硬约束**：引擎只读（除经其既有 `/api/models/config` 写条目）；探针落仓外 `E:\appdevelop\hrag-probe\`；provider key 不得进入引擎配置、面板响应或日志；DSH 整重启候令；提交候令，提交信息英文 Conventional ASCII；不做流式/tools/per-session 模型；`dsh:` 条目由插件托管。
@@ -124,4 +124,4 @@
 
 - Task 1 — `3d465b6` feat(proxy): add the local OpenAI-compatible model proxy（`src/model_proxy.ts`＋`tests/model_proxy.test.ts`）。
 - Task 2 — `20dc0a3` feat(sync): publish host models to the knowledge service（`src/model_sync.ts`＋同步/接线/路由冒烟）。
-- Task 5 — `docs(rag): record the dsh model proxy design and acceptance`（README / spec / plan；本笔）。
+- Task 5 — `docs(rag): record the dsh model proxy design and acceptance`（README / spec / plan；`69b7dd7`）。
