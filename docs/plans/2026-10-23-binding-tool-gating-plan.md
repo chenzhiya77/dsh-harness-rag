@@ -139,14 +139,15 @@
 
 > 动到的文件：本对＋`README.md`＋`docs/equivalence.md`。
 
-- [ ] 回写 spec Status 与本 plan 各 Task 实测。
-- [ ] 逐文件核 hunk，排除 `node_modules/`；提交信息英文 Conventional ASCII；回填提交链。
-- [ ] 提交后回填提交链；仓无 remote，不推送。
+- [x] 回写 spec Status 与本 plan 各 Task 实测。
+- [x] 逐文件核 hunk，排除 `node_modules/`；提交信息英文 Conventional ASCII；回填提交链。
+- [x] 提交后回填提交链；仓无 remote，不推送。
 
-**实测**：（待填）
+**实测**（2026-10-24）：修复笔 `babb66b`（5 文件，153+/12−：`src/conversations.ts`、`src/kb_proxy.ts`、`tests/conversations.test.ts`、本 plan、spec Status）；提交前门禁复跑 66/66／`tsc` 0／strip-types 两文件过。`node_modules/` 未纳入。本笔为提交链回填。
 
 ---
 
 ## 提交链（滚动记实）
 
-- （待填）
+- `babb66b` fix(panel): attach panel-created sessions to their workspace —— Task 4b（workspaceId 建会话＋三例测试）＋spec/plan 回写。
+- 提交链回填笔（docs，紧随 `babb66b`；仓无 remote，未推送）。
