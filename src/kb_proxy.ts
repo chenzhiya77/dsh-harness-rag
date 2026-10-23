@@ -3,6 +3,13 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as WebReadableStream } from 'node:stream/web'
 import type { Context } from '@deepseek-ai/cordis'
+import type { BindingsStore } from './bindings.ts'
+import {
+  conversationOps,
+  KNOWLEDGE_PRESET,
+  type ConversationsHost,
+  type SessionControllerLike,
+} from './conversations.ts'
 import { api, HarnessRagError } from './http.ts'
 import type { ApiError } from './http.ts'
 import { registerIngestJobs } from './jobs.ts'
@@ -316,6 +323,12 @@ interface PanelHostLike {
   inject(dependencies: string[], callback: (fresh: WebServerHostLike) => void): void
 }
 
+/** Same inject seam for the host's session controller (absent in headless
+ * compositions, so the conversation ops stay closed until it arrives). */
+interface SessionHostLike {
+  inject(dependencies: string[], callback: (fresh: { sessionController: SessionControllerLike }) => void): void
+}
+
 const MAX_BODY_BYTES = 1024 * 1024
 
 const sendJson = (res: ServerResponse, status: number, payload: unknown): void => {
@@ -559,9 +572,20 @@ const forwardRelay = async (
   await pipeline(Readable.fromWeb(upstream.body as unknown as WebReadableStream<Uint8Array>), res).catch(() => {})
 }
 
-export function registerKbProxy(ctx: Context, config: Config, modelSync?: ModelSyncHandle): void {
+export function registerKbProxy(
+  ctx: Context,
+  config: Config,
+  bindings: BindingsStore,
+  modelSync?: ModelSyncHandle,
+): void {
   const ingestJobs = registerIngestJobs(ctx, config)
-  const ops = buildOps(config, ingestJobs, modelSync)
+  // The conversation drawer's four ops: they read the host session catalog and
+  // the local binding table instead of the knowledge service.
+  const conversations: ConversationsHost = { controller: null }
+  const ops = {
+    ...buildOps(config, ingestJobs, modelSync),
+    ...conversationOps({ host: conversations, bindings, agentPreset: KNOWLEDGE_PRESET }),
+  }
 
   const handler = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     try {
@@ -616,5 +640,10 @@ export function registerKbProxy(ctx: Context, config: Config, modelSync?: ModelS
       () => fresh.webServer.register({ kind: 'prefix', path: KB_PROXY_ROUTE, handler }),
       'harness-rag: panel proxy route',
     )
+  })
+
+  const sessionHost = ctx as unknown as SessionHostLike
+  sessionHost.inject(['sessionController'], (fresh) => {
+    conversations.controller = fresh.sessionController
   })
 }

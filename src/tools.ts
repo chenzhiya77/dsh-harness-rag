@@ -1,5 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { defineTool, type JsonValue } from '@deepseek-ai/dsh-tools'
+import { resolveKbId, type BindingsStore } from './bindings.ts'
 import { api, HarnessRagError } from './http.ts'
 import type { Config } from './settings.ts'
 
@@ -55,25 +56,48 @@ function segmentOf(envelope: Record<string, unknown>, path: 'vector' | 'graph' |
   return ((envelope.paths as Record<string, Record<string, unknown>> | undefined)?.[path]) ?? {}
 }
 
-export function registerTools(ctx: Context, config: Config) {
-  /** kb_id resolution order (spec 2026-10-11 D4): tool argument > session
-   * context > the configured default. The session-context tier corresponds to
-   * the DeerFlow surface's per-thread KB binding; the reading point is wired
-   * for T3 (the knowledge preset/panel owns per-session binding), so at this
-   * stage the tier is absent and the chain degrades to argument-or-default
-   * without changing the order. */
-  const kb = (args: { kb_id?: string }, exec?: { agent?: { ctx?: unknown } }) => {
-    void exec
-    const id = args.kb_id?.trim() || config.defaultKbId.trim()
-    if (!id) {
-      throw new HarnessRagError({ kind: 'not_configured', detail: 'kb_id not given and no defaultKbId configured.' })
+/** Where a call's kb came from, plus the display name when the binding knew it.
+ * Every tool echoes this so an answer can name the library behind its evidence. */
+interface KbTarget {
+  kbId: string
+  kbName?: string
+}
+
+function echo(target: KbTarget): { kb_id: string; kb_name?: string } {
+  return { kb_id: target.kbId, ...(target.kbName ? { kb_name: target.kbName } : {}) }
+}
+
+export function registerTools(ctx: Context, config: Config, bindings: BindingsStore) {
+  /** kb_id resolution order (spec 2026-10-23 D2): tool argument > this
+   * session's binding > the configured default. The binding is keyed by the
+   * live session identity (`exec.agent.id`), so one conversation can point at
+   * a different library without touching the plugin config. */
+  const kb = (args: { kb_id?: string }, exec?: { agent?: { id?: string } }): KbTarget => {
+    const sessionId = exec?.agent?.id
+    const binding = sessionId ? bindings.get(sessionId) : undefined
+    const resolution = resolveKbId({
+      argKbId: args.kb_id,
+      sessionId,
+      bindings: sessionId && binding ? { [sessionId]: binding } : {},
+      defaultKbId: config.defaultKbId,
+    })
+    if (!resolution) {
+      throw new HarnessRagError({
+        kind: 'not_configured',
+        detail: 'kb_id was not given, this session has no knowledge-base binding, and no defaultKbId is configured.',
+      })
     }
-    return id
+    return {
+      kbId: resolution.kbId,
+      ...(resolution.source === 'session' && binding?.kbName ? { kbName: binding.kbName } : {}),
+    }
   }
+
+  const kbDescription = "Knowledge base id; falls back to this session's binding, then the configured default"
 
   const searchParams = () => ({
     query: { type: 'string' as const, required: true as const, description: 'Search query' },
-    kb_id: { type: 'string' as const, description: 'Knowledge base id; falls back to the configured default' },
+    kb_id: { type: 'string' as const, description: kbDescription },
     top_k: { type: 'number' as const, description: 'Max hits to return (1–20, default 5)' },
     doc_id: { type: 'string' as const, description: 'Optional document id; when set, retrieval is scoped to that single document' },
   })
@@ -84,14 +108,21 @@ export function registerTools(ctx: Context, config: Config) {
     parameters: searchParams(),
     output: output({
       query: { type: 'string' },
+      kb_id: { type: 'string' },
+      kb_name: { type: 'string' },
       results: { type: 'json' },
       message: { type: 'string' },
       score_type: { type: 'json' },
       elapsed_ms: { type: 'json' },
     }),
     async execute(args, exec) {
-      const envelope = await recallTest(config, kb(args), 'vector', args, exec.signal)
-      return { ...envelopeMeta(envelope, 'vector'), results: (segmentOf(envelope, 'vector').hits ?? []) as JsonValue }
+      const target = kb(args, exec)
+      const envelope = await recallTest(config, target.kbId, 'vector', args, exec.signal)
+      return {
+        ...envelopeMeta(envelope, 'vector'),
+        ...echo(target),
+        results: (segmentOf(envelope, 'vector').hits ?? []) as JsonValue,
+      }
     },
   }))
 
@@ -101,6 +132,8 @@ export function registerTools(ctx: Context, config: Config) {
     parameters: searchParams(),
     output: output({
       query: { type: 'string' },
+      kb_id: { type: 'string' },
+      kb_name: { type: 'string' },
       entities: { type: 'json' },
       relations: { type: 'json' },
       evidence: { type: 'json' },
@@ -109,7 +142,8 @@ export function registerTools(ctx: Context, config: Config) {
       elapsed_ms: { type: 'json' },
     }),
     async execute(args, exec) {
-      const envelope = await recallTest(config, kb(args), 'graph', args, exec.signal)
+      const target = kb(args, exec)
+      const envelope = await recallTest(config, target.kbId, 'graph', args, exec.signal)
       const segment = segmentOf(envelope, 'graph')
       const base = envelopeMeta(envelope, 'graph')
       return {
@@ -117,6 +151,7 @@ export function registerTools(ctx: Context, config: Config) {
         score_type: base.score_type,
         elapsed_ms: base.elapsed_ms,
         ...(typeof segment.message === 'string' ? { message: segment.message } : {}),
+        ...echo(target),
         entities: (segment.entities ?? []) as JsonValue,
         relations: (segment.relations ?? []) as JsonValue,
         evidence: (segment.evidence ?? []) as JsonValue,
@@ -130,14 +165,21 @@ export function registerTools(ctx: Context, config: Config) {
     parameters: searchParams(),
     output: output({
       query: { type: 'string' },
+      kb_id: { type: 'string' },
+      kb_name: { type: 'string' },
       entries: { type: 'json' },
       message: { type: 'string' },
       score_type: { type: 'json' },
       elapsed_ms: { type: 'json' },
     }),
     async execute(args, exec) {
-      const envelope = await recallTest(config, kb(args), 'wiki', args, exec.signal)
-      return { ...envelopeMeta(envelope, 'wiki'), entries: (segmentOf(envelope, 'wiki').hits ?? []) as JsonValue }
+      const target = kb(args, exec)
+      const envelope = await recallTest(config, target.kbId, 'wiki', args, exec.signal)
+      return {
+        ...envelopeMeta(envelope, 'wiki'),
+        ...echo(target),
+        entries: (segmentOf(envelope, 'wiki').hits ?? []) as JsonValue,
+      }
     },
   }))
 
@@ -145,16 +187,19 @@ export function registerTools(ctx: Context, config: Config) {
     name: 'hrag_list_documents',
     description: 'List documents in a knowledge base: {documents: [...]} with per-entry id/name/status/chunk_count/progress_percent/path_status, straight from the knowledge service.',
     parameters: {
-      kb_id: { type: 'string' as const, description: 'Knowledge base id; falls back to the configured default' },
+      kb_id: { type: 'string' as const, description: kbDescription },
     },
     // Wrapped into an object: the host's tool-output path is object-rooted
     // (an array-rooted output fails deeper than defineTool's own compile).
     output: output({
+      kb_id: { type: 'string' },
+      kb_name: { type: 'string' },
       documents: { type: 'json' },
     }),
     async execute(args, exec) {
-      const payload = await api<unknown>(config, `/api/knowledge-bases/${kb(args)}/documents`, { signal: exec.signal })
-      return { documents: (Array.isArray(payload) ? payload : [payload]) as JsonValue }
+      const target = kb(args, exec)
+      const payload = await api<unknown>(config, `/api/knowledge-bases/${target.kbId}/documents`, { signal: exec.signal })
+      return { ...echo(target), documents: (Array.isArray(payload) ? payload : [payload]) as JsonValue }
     },
   }))
 
@@ -162,13 +207,15 @@ export function registerTools(ctx: Context, config: Config) {
     name: 'hrag_read_document',
     description: "Read a knowledge document's chunks. Page through it by doc_id with offset/limit, or follow a search hit by passing its chunk_id: the window (default 20, max 50 chunks) is centered on that chunk and clamped at the document edges. Returns {items, total, offset, limit, has_more, message}.",
     parameters: {
-      kb_id: { type: 'string' as const, description: 'Knowledge base id; falls back to the configured default' },
+      kb_id: { type: 'string' as const, description: kbDescription },
       doc_id: { type: 'string' as const, required: true, description: 'Document to read (required; when using chunk_id the service resolves the document from the chunk)' },
       chunk_id: { type: 'string' as const, description: 'Center the window on this chunk (takes precedence over offset)' },
       offset: { type: 'number' as const, description: 'Chunk offset when paging by doc_id' },
       limit: { type: 'number' as const, description: 'Page/window width in chunks (default 20, capped at 50)' },
     },
     output: output({
+      kb_id: { type: 'string' },
+      kb_name: { type: 'string' },
       items: { type: 'json' },
       total: { type: 'number' },
       offset: { type: 'number' },
@@ -177,10 +224,16 @@ export function registerTools(ctx: Context, config: Config) {
       message: { type: 'string' },
     }),
     async execute(args, exec) {
-      return api(config, `/api/knowledge-bases/${kb(args)}/documents/${args.doc_id}/chunks`, {
-        query: { chunk_id: args.chunk_id, offset: args.offset, limit: args.limit },
-        signal: exec.signal,
-      })
+      const target = kb(args, exec)
+      const payload = await api<Record<string, unknown> | null>(
+        config,
+        `/api/knowledge-bases/${target.kbId}/documents/${args.doc_id}/chunks`,
+        {
+          query: { chunk_id: args.chunk_id, offset: args.offset, limit: args.limit },
+          signal: exec.signal,
+        },
+      )
+      return { ...(payload ?? {}), ...echo(target) }
     },
   }))
 }

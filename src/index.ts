@@ -1,5 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-tools'
+import { createBindingsStore } from './bindings.ts'
 import { defaultConfig, type Config } from './settings.ts'
 import { registerKbProxy } from './kb_proxy.ts'
 import { registerModelProxy, type ProxyHostContextLike } from './model_proxy.ts'
@@ -13,10 +14,14 @@ export const inject = ['tools']
 
 export function apply(ctx: Context, config: Config = defaultConfig): void {
   const merged = { ...defaultConfig, ...config }
-  registerTools(ctx, merged)
+  // Session→knowledge-base bindings survive restarts next to the host's own
+  // data; loaded synchronously so tool dispatch never waits on the file.
+  const bindings = createBindingsStore()
+  bindings.loadSync()
+  registerTools(ctx, merged, bindings)
   // The panel's data seam (T3 Task 1): a named route on the browser-facing
   // web server, skipped where that service does not exist (headless).
   const modelProxy = registerModelProxy(ctx as unknown as ProxyHostContextLike, merged)
   const modelSync = registerModelSync(ctx as unknown as SyncHostContextLike, merged, modelProxy)
-  registerKbProxy(ctx, merged, modelSync)
+  registerKbProxy(ctx, merged, bindings, modelSync)
 }

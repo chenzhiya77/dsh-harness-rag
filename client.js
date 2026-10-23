@@ -37,6 +37,8 @@ window.__ModuleLoader__.load({
     const NS = 'harnessRag'
     // The host half's named route (src/kb_proxy.ts owns the other end).
     const PROXY_ROUTE = '/dsh-harness-rag/api'
+    // 会话跳转（D6 甲）：apply 期 scoped inject 捕获 uiWorkspace，组件不持 ctx。
+    const uiWorkspaceHolder = { service: null }
 
     const zh = {
       'tab.title': '知识库',
@@ -65,6 +67,37 @@ window.__ModuleLoader__.load({
       'reindex.kbLabel': '目标知识库',
       'reindex.kbPlaceholder': '选择知识库',
       'shell.kbLabel': '知识库',
+      // 会话绑定（会话知识库绑定对）：顶栏入口＋覆盖抽屉＋本会话绑定区。
+      'session.entry': '会话',
+      'session.title': '会话',
+      'session.this': '本会话',
+      'session.untitled': '新会话',
+      'session.useKb': '使用知识库',
+      'session.unbound': '未绑定 · 选择知识库',
+      'session.pickHint': '选择后，本会话的检索将使用该库。',
+      'session.tipBound': '本会话使用：{0}',
+      'session.tipUnbound': '本会话未绑定知识库',
+      'session.switched': '已切换到 {0}，此后检索使用该库',
+      'session.switchedNext': '已切换到 {0}，下一条消息生效',
+      'session.unbind': '移除绑定',
+      'session.unboundToast': '已移除绑定，本会话回到默认知识库',
+      'session.close': '关闭',
+      'session.loadFailed': '会话列表加载失败',
+      'session.listTitle': 'RAG 会话',
+      'session.new': '新建',
+      'session.newHint': '新会话使用：{0}',
+      'session.empty': '还没有绑定知识库的会话',
+      'session.emptyNew': '新建会话',
+      'session.unavailable': '当前宿主未提供会话服务',
+      'session.loading': '正在加载会话…',
+      'session.openUnavailable': '无法切换会话（会话服务不可用）',
+      'session.pickKbFirst': '先在顶栏选择知识库，再新建会话',
+      'session.deletedSuffix': '（已删除）',
+      'session.justNow': '刚刚',
+      'session.minutesAgo': '{0} 分钟前',
+      'session.hoursAgo': '{0} 小时前',
+      'session.yesterday': '昨天',
+      'session.daysAgo': '{0} 天前',
       'shell.tab.docs': '文档',
       'shell.tabs.more': '更多标签页',
       'shell.tab.recall': '召回',
@@ -892,6 +925,36 @@ window.__ModuleLoader__.load({
       'reindex.kbLabel': 'Target library',
       'reindex.kbPlaceholder': 'Choose a library',
       'shell.kbLabel': 'Knowledge base',
+      'session.entry': 'Chats',
+      'session.title': 'Chats',
+      'session.this': 'This chat',
+      'session.untitled': 'New chat',
+      'session.useKb': 'Knowledge base',
+      'session.unbound': 'None · choose a knowledge base',
+      'session.pickHint': 'Once picked, retrieval in this chat uses that knowledge base.',
+      'session.tipBound': 'This chat uses: {0}',
+      'session.tipUnbound': 'This chat has no knowledge base bound',
+      'session.switched': 'Switched to {0}; this chat now retrieves from it',
+      'session.switchedNext': 'Switched to {0}; takes effect on the next message',
+      'session.unbind': 'Remove binding',
+      'session.unboundToast': 'Binding removed; this chat falls back to the default knowledge base',
+      'session.close': 'Close',
+      'session.loadFailed': 'Could not load conversations',
+      'session.listTitle': 'RAG chats',
+      'session.new': 'New',
+      'session.newHint': 'New chats use: {0}',
+      'session.empty': 'No chat has a knowledge base bound yet',
+      'session.emptyNew': 'New chat',
+      'session.unavailable': 'This host does not provide the session service',
+      'session.loading': 'Loading chats…',
+      'session.openUnavailable': 'Cannot open the chat (session service unavailable)',
+      'session.pickKbFirst': 'Pick a knowledge base in the top bar before creating a chat',
+      'session.deletedSuffix': ' (deleted)',
+      'session.justNow': 'Just now',
+      'session.minutesAgo': '{0} min ago',
+      'session.hoursAgo': '{0} h ago',
+      'session.yesterday': 'Yesterday',
+      'session.daysAgo': '{0} d ago',
       'shell.tab.docs': 'Documents',
       'shell.tabs.more': 'More tabs',
       'shell.tab.recall': 'Recall',
@@ -1921,6 +1984,61 @@ window.__ModuleLoader__.load({
           '.hrag-kbtrigger-chev { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-iconbare { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
           '.hrag-iconbare:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          // 会话入口（会话绑定对）：顶栏 28px 图标钮；已绑定＝环内实点心（success），
+          // 未绑定＝空心环；窄档只留图标（label 由面板测量隐藏）。
+          '.hrag-sessionbtn { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; height: 28px; padding: 0 6px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-tertiary); font-family: inherit; font-size: 13px; font-weight: 500; line-height: 16px; white-space: nowrap; cursor: pointer; }',
+          // 顶栏三件：库选择器在左（唯一可收的一件），会话钮与 ⋯ 成组靠右。
+          '.hrag-bar > .hrag-sessionbtn { margin-left: auto; }',
+          '.hrag-bar > .hrag-mmhost, .hrag-bar > .hrag-mm-wrap { flex: 0 0 auto; }',
+          '.hrag-bar > .hrag-mmhost:first-child, .hrag-bar > .hrag-mm-wrap:first-child { flex: 1 1 auto; min-width: 0; }',
+          '.hrag-bar > .hrag-mmhost:first-child > span { display: flex; flex: 1 1 auto; min-width: 0; }',
+          '.hrag-sessionbtn:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-sessionbtn-icon { display: inline-flex; flex-shrink: 0; }',
+          '.hrag-sessionbtn-dot { fill: var(--dsw-alias-state-success-primary); }',
+          '.hrag-sessionbtn-icononly .hrag-sessionbtn-label { display: none; }',
+          // 会话抽屉：本会话区（12px 标签＋13px 标题＋「使用知识库」行）。
+          '.hrag-drawer-body.hrag-sess-body { display: flex; flex-direction: column; gap: 14px; padding: 12px 14px 16px; overflow: hidden; }',
+          // 本会话区固定，列表区独立滚动（spec §4.1）。
+          '.hrag-sess-body > .hrag-sess-section { flex-shrink: 0; }',
+          '.hrag-sess-body > .hrag-sess-listsec { flex: 1 1 auto; min-height: 0; overflow-y: auto; }',
+          '.hrag-sess-section { display: flex; flex-direction: column; gap: 6px; min-width: 0; }',
+          '.hrag-sess-label { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-sess-title { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; line-height: 20px; }',
+          '.hrag-sess-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-sess-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }',
+          '.hrag-sess-rowlabel { flex-shrink: 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }',
+          '.hrag-sess-row > .hrag-mmhost, .hrag-sess-row > .hrag-mmhost > span { display: inline-flex; align-items: center; min-width: 0; max-width: 60%; }',
+          '.hrag-sess-pick { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; height: 28px; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; font-family: inherit; cursor: pointer; }',
+          '.hrag-sess-pick:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-sess-pick-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-sess-pick-empty .hrag-sess-pick-name { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-sess-pick-chev { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-sess-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-sess-error { margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }',
+          // 会话抽屉·列表区（Task 4）：36px 行；当前会话左侧 2px 主色竖条；悬停时
+          // 时间让位给「移除绑定」（同槽位互换，布局不跳）。
+          '.hrag-sess-divider { height: 0; margin: 2px 0; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-sess-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }',
+          '.hrag-sess-headlabel { color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; line-height: 20px; }',
+          '.hrag-sess-new { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; height: 24px; padding: 0 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 12px; line-height: 16px; cursor: pointer; }',
+          '.hrag-sess-new:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-sess-new:disabled { opacity: 0.45; cursor: default; }',
+          '.hrag-sess-list { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin: 0; padding: 0; list-style: none; }',
+          '.hrag-sess-item { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; height: 36px; padding: 0 6px 0 8px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 13px; text-align: left; cursor: pointer; }',
+          '.hrag-sess-item:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-sess-item-current { padding-left: 10px; }',
+          '.hrag-sess-item-current::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; border-radius: 1px; background: var(--dsw-alias-button-primary-fill); }',
+          '.hrag-sess-item-dangling { opacity: 0.55; }',
+          '.hrag-sess-item-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-sess-item-kb { flex-shrink: 0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-secondary); font-size: 12px; }',
+          '.hrag-sess-item-time { flex-shrink: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; font-variant-numeric: tabular-nums; }',
+          '.hrag-sess-item-remove { display: inline-flex; opacity: 0; flex-shrink: 0; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 1; cursor: pointer; }',
+          '.hrag-sess-item-remove:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-state-error-primary); }',
+          '.hrag-sess-item:hover .hrag-sess-item-remove, .hrag-sess-item-remove:focus-visible { opacity: 1; }',
+          '.hrag-sess-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 0 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-sess-emptybtn { padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 12px; line-height: 18px; cursor: pointer; }',
+          '.hrag-sess-emptybtn:hover:not(:disabled) { text-decoration: underline; }',
+          '.hrag-sess-emptybtn:disabled { opacity: 0.45; cursor: default; }',
           '.hrag-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 0 12px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
           '.hrag-btn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-btn:active:not(:disabled) { background: var(--dsw-alias-interactive-bg-active); }',
@@ -20210,7 +20328,275 @@ window.__ModuleLoader__.load({
       return null
     }
 
-    function KnowledgePanel({ t }) {
+    /** 会话入口图标（14px）：环＋环心。已绑定＝环心实点（success 色），
+        未绑定＝空心环——与 spec §4.7 的「实心点/空心」同义（颜色只在实点）。 */
+    function sessionBindIcon(bound) {
+      return h(
+        'svg',
+        { className: 'hrag-sessionbtn-icon', width: 14, height: 14, viewBox: '0 0 16 16', 'aria-hidden': 'true' },
+        h('circle', { cx: 8, cy: 8, r: 5.25, fill: 'none', stroke: 'currentColor', strokeWidth: 1.5 }),
+        bound ? h('circle', { className: 'hrag-sessionbtn-dot', cx: 8, cy: 8, r: 2.4 }) : null,
+      )
+    }
+
+    /** 顶栏会话入口（D1 甲）：状态只看绑定，与面板浏览库无关（D3 甲）。 */
+    function SessionEntryButton({ t, bound, name, narrow, onOpen }) {
+      const tip = bound ? t('session.tipBound', { 0: name }) : t('session.tipUnbound')
+      return h(
+        'button',
+        {
+          type: 'button',
+          className: 'hrag-sessionbtn' + (narrow ? ' hrag-sessionbtn-icononly' : ''),
+          title: tip,
+          'aria-label': tip,
+          onClick: onOpen,
+        },
+        sessionBindIcon(bound),
+        h('span', { className: 'hrag-sessionbtn-label' }, t('session.entry')),
+      )
+    }
+
+    /** 会话列表的相对时间（紧凑口径：刚刚/分钟/小时/昨天/天；再远＝日期）。 */
+    function relativeTime(t, ms) {
+      const value = Number(ms)
+      if (!Number.isFinite(value)) return ''
+      const diff = Date.now() - value
+      const minute = 60000
+      const hour = 3600000
+      const day = 86400000
+      if (diff < 0) return t('session.justNow')
+      if (diff < minute) return t('session.justNow')
+      if (diff < hour) return t('session.minutesAgo', { 0: Math.floor(diff / minute) })
+      if (diff < day) return t('session.hoursAgo', { 0: Math.floor(diff / hour) })
+      if (diff < day * 2) return t('session.yesterday')
+      if (diff < day * 7) return t('session.daysAgo', { 0: Math.floor(diff / day) })
+      const date = new Date(value)
+      const now = new Date()
+      const month = date.getMonth() + 1
+      const dayOfMonth = date.getDate()
+      return date.getFullYear() === now.getFullYear()
+        ? month + '/' + dayOfMonth
+        : date.getFullYear() + '/' + month + '/' + dayOfMonth
+    }
+
+    /** 会话抽屉（D1 甲，覆盖式）：底座同切片续读抽屉；上＝本会话（标题＋「使用
+        知识库」单选菜单，当前绑定打勾、末项移除），下＝RAG 会话列表（Task 4）。 */
+    function SessionDrawer({
+      t,
+      sessionId,
+      current,
+      rows,
+      kbs,
+      ready,
+      loaded,
+      kbsReady,
+      browsingKbName,
+      busy,
+      error,
+      onBind,
+      onUnbind,
+      onUnbindRow,
+      onOpenSession,
+      onNew,
+      onClose,
+    }) {
+      React.useEffect(() => {
+        const onKey = (event) => {
+          if (event.key === 'Escape') onClose()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+      }, [onClose])
+
+      const bindingKbId = current && current.kbId ? String(current.kbId) : ''
+      const kbOfId = (id) => kbs.find((kb) => String(kb.id) === id) || null
+      const boundKb = bindingKbId ? kbOfId(bindingKbId) : null
+      const bindingName = bindingKbId
+        ? String(current.kbName || (boundKb && boundKb.name) || bindingKbId)
+        : ''
+      const title = current ? String(current.title || '') || t('session.untitled') : '—'
+      const items = kbs.map((kb) => ({ id: String(kb.id), label: String(kb.name || kb.id) }))
+      if (bindingKbId) {
+        items.push({ type: 'separator', id: 'sess-bind-sep' })
+        items.push({ id: 'sess-unbind', label: t('session.unbind'), danger: true })
+      }
+      const picker = h(DshMenu, {
+        title: t('session.useKb'),
+        align: 'end',
+        className: 'hrag-sess-pick' + (bindingKbId ? '' : ' hrag-sess-pick-empty'),
+        trigger: h(
+          React.Fragment,
+          null,
+          h(
+            'span',
+            { className: 'hrag-sess-pick-name', title: bindingName || undefined },
+            bindingName || t('session.unbound'),
+          ),
+          h('span', { className: 'hrag-sess-pick-chev' }, dshChevronDownIcon()),
+        ),
+        items,
+        selectedId: bindingKbId || undefined,
+        onSelect: (id) => {
+          if (busy) return
+          if (id === 'sess-unbind') {
+            onUnbind()
+            return
+          }
+          const kb = kbOfId(id)
+          onBind(id, kb ? String(kb.name || kb.id) : undefined)
+        },
+      })
+
+      const boundRows = (rows || []).filter((row) => row && row.kbId)
+      const kbNameOf = (row) => {
+        const kb = kbOfId(String(row.kbId))
+        return String(row.kbName || (kb && kb.name) || row.kbId)
+      }
+      const newDisabled = busy || !ready || !browsingKbName
+      const listNotice = !sessionId
+        ? t('session.unavailable')
+        : !loaded
+          ? t('session.loading')
+          : ready
+            ? t('session.empty')
+            : t('session.unavailable')
+      const rowView = (row) => {
+        const rowTitle = String(row.title || '') || t('session.untitled')
+        // 悬空（D8）：绑定指向的库不在已加载库清单里——标灰仍可跳转，仍可移除。
+        const dangling = kbsReady && !kbOfId(String(row.kbId))
+        return h(
+          'div',
+          {
+            key: row.sessionId,
+            className:
+              'hrag-sess-item' +
+              (row.sessionId === sessionId ? ' hrag-sess-item-current' : '') +
+              (dangling ? ' hrag-sess-item-dangling' : ''),
+            role: 'button',
+            tabIndex: 0,
+            title: rowTitle,
+            onClick: () => onOpenSession(row.sessionId),
+            onKeyDown: (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onOpenSession(row.sessionId)
+              }
+            },
+          },
+          row.running ? stateDot(12) : null,
+          h('span', { className: 'hrag-sess-item-title' }, rowTitle),
+          h('span', { className: 'hrag-sess-item-kb' }, kbNameOf(row) + (dangling ? t('session.deletedSuffix') : '')),
+          h('span', { className: 'hrag-sess-item-time' }, relativeTime(t, row.updatedAt)),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'hrag-sess-item-remove',
+              title: t('session.unbind'),
+              'aria-label': t('session.unbind'),
+              onClick: (event) => {
+                event.stopPropagation()
+                onUnbindRow(row.sessionId)
+              },
+            },
+            '✕',
+          ),
+        )
+      }
+
+      return h(
+        React.Fragment,
+        null,
+        h('div', {
+          className: 'hrag-drawer-overlay',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) onClose()
+          },
+        }),
+        h(
+          'div',
+          { className: 'hrag-drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('session.title') },
+          h(
+            'div',
+            { className: 'hrag-drawer-head' },
+            h('span', { className: 'hrag-drawer-title' }, t('session.title')),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-outline hrag-drawer-close',
+                'aria-label': t('session.close'),
+                title: t('session.close'),
+                onClick: onClose,
+              },
+              '✕',
+            ),
+          ),
+          h(
+            'div',
+            { className: 'hrag-drawer-panel' },
+            h(
+              'div',
+              { className: 'hrag-drawer-body hrag-sess-body' },
+              h(
+                'section',
+                { className: 'hrag-sess-section' },
+                h('div', { className: 'hrag-sess-label' }, t('session.this')),
+                h(
+                  'div',
+                  { className: 'hrag-sess-title' },
+                  current && current.running ? stateDot(12) : null,
+                  h('span', { className: 'hrag-sess-title-text', title: title }, title),
+                ),
+                h(
+                  'div',
+                  { className: 'hrag-sess-row' },
+                  h('span', { className: 'hrag-sess-rowlabel' }, t('session.useKb')),
+                  sessionId ? picker : h('span', { className: 'hrag-sess-hint' }, t('session.unbound')),
+                ),
+                bindingKbId
+                  ? null
+                  : h('p', { className: 'hrag-sess-hint' }, t('session.pickHint')),
+              ),
+              h('div', { className: 'hrag-sess-divider' }),
+              h(
+                'section',
+                { className: 'hrag-sess-section hrag-sess-listsec' },
+                h(
+                  'div',
+                  { className: 'hrag-sess-head' },
+                  h('span', { className: 'hrag-sess-headlabel' }, t('session.listTitle')),
+                  h(
+                    'button',
+                    { type: 'button', className: 'hrag-sess-new', disabled: newDisabled, onClick: onNew },
+                    dshPlusIcon(),
+                    t('session.new'),
+                  ),
+                ),
+                h('p', { className: 'hrag-sess-hint' }, t('session.newHint', { 0: browsingKbName || '—' })),
+                boundRows.length
+                  ? h('ul', { className: 'hrag-sess-list' }, boundRows.map(rowView))
+                  : h(
+                      'div',
+                      { className: 'hrag-sess-empty' },
+                      h('span', null, listNotice),
+                      ready
+                        ? h(
+                            'button',
+                            { type: 'button', className: 'hrag-sess-emptybtn', disabled: newDisabled, onClick: onNew },
+                            t('session.emptyNew'),
+                          )
+                        : null,
+                    ),
+              ),
+              error ? h('p', { className: 'hrag-sess-error' }, t('session.loadFailed') + ': ' + error) : null,
+            ),
+          ),
+        ),
+      )
+    }
+
+    function KnowledgePanel({ t, sessionId }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
       const [failure, setFailure] = React.useState(null)
@@ -20218,6 +20604,18 @@ window.__ModuleLoader__.load({
       const [section, setSection] = React.useState('docs')
       const [refreshToken, setRefreshToken] = React.useState(0)
       const [drawer, setDrawer] = React.useState(null)
+      // 会话绑定（D1 甲）：sessionId 走槽位标准 prop；顶栏按钮与抽屉共用一份
+      // `conversations/list` 响应（current＝本会话行，未绑定时 kbId 为 null）。
+      const [sessionOpen, setSessionOpen] = React.useState(false)
+      const [sessionData, setSessionData] = React.useState({
+        ready: false,
+        loaded: false,
+        items: [],
+        current: null,
+        error: null,
+      })
+      const [sessionBusy, setSessionBusy] = React.useState(false)
+      const [barNarrow, setBarNarrow] = React.useState(false)
       // Wiki抽屉壳（Task 9）：Wiki tab 行点击与召回 wiki 命中共用；组件级渲染
       // 在面板根（同 ChunkDrawer 层位，z 帧 56/57 垫在续读抽屉下）。
       const [wikiDrawer, setWikiDrawer] = React.useState(null)
@@ -20276,6 +20674,12 @@ window.__ModuleLoader__.load({
       const [wikiCommand, setWikiCommand] = React.useState(null)
       const [wikiBusy, setWikiBusy] = React.useState(false)
       const currentKb = kbs.find((item) => String(item.id) === kbId) || null
+      // 绑定的显示名优先级：绑定表里记的名字（写入时快照）> 面板已加载的同 id 库名
+      // > id 本身（库已删＝悬空，仍按绑定显示，不静默回落）。
+      const sessionRow = sessionData.current
+      const bindingKbId = sessionId && sessionRow && sessionRow.kbId ? String(sessionRow.kbId) : ''
+      const bindingKb = bindingKbId ? kbs.find((item) => String(item.id) === bindingKbId) || null : null
+      const bindingName = bindingKbId ? String(sessionRow.kbName || (bindingKb && bindingKb.name) || bindingKbId) : ''
       const [createKbOpen, setCreateKbOpen] = React.useState(false)
       const [createKbName, setCreateKbName] = React.useState('')
       const [createKbDesc, setCreateKbDesc] = React.useState('')
@@ -20335,6 +20739,108 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         load()
       }, [load])
+
+      // 会话绑定（D5 甲）：每请求现拉一次会话目录＋绑定表左连接；current 取本面板
+      // 所属会话那一行（未绑定也在，kbId:null）。hostless（无 sessionId）不发请求。
+      const refreshSessions = React.useCallback(() => {
+        if (!sessionId) return Promise.resolve()
+        return callOp('conversations/list', { currentSessionId: sessionId })
+          .then((payload) => {
+            const items = payload && Array.isArray(payload.items) ? payload.items : []
+            const current = items.find((row) => row && row.sessionId === sessionId) || null
+            setSessionData({ ready: !!(payload && payload.ready), loaded: true, items, current, error: null })
+          })
+          .catch((error) => {
+            setSessionData((prev) => ({ ...prev, loaded: true, error: errorDetail(error) }))
+          })
+      }, [sessionId])
+
+      React.useEffect(() => {
+        refreshSessions()
+      }, [refreshSessions])
+
+      // 绑定/解绑（D7 不弹确认）：写成功即 Toast；回合在跑时文案改为「下一条消息生效」。
+      const bindKb = React.useCallback(
+        (nextKbId, nextKbName) => {
+          if (!sessionId || !nextKbId || sessionBusy) return
+          const running = !!(sessionRow && sessionRow.running)
+          setSessionBusy(true)
+          callOp('conversations/bind', { sessionId, kbId: nextKbId, kbName: nextKbName })
+            .then(() => {
+              showToast(
+                running
+                  ? t('session.switchedNext', { 0: nextKbName || nextKbId })
+                  : t('session.switched', { 0: nextKbName || nextKbId }),
+              )
+              return refreshSessions()
+            })
+            .catch((error) => showToast(errorDetail(error), { error: true }))
+            .finally(() => setSessionBusy(false))
+        },
+        [sessionId, sessionBusy, sessionRow, refreshSessions, t],
+      )
+      const unbindSession = (targetId) => {
+        if (!targetId || sessionBusy) return
+        setSessionBusy(true)
+        callOp('conversations/unbind', { sessionId: targetId })
+          .then(() => {
+            showToast(t('session.unboundToast'))
+            return refreshSessions()
+          })
+          .catch((error) => showToast(errorDetail(error), { error: true }))
+          .finally(() => setSessionBusy(false))
+      }
+
+      // 会话跳转（D6 甲）：uiWorkspace.openSession 由 apply 期 scoped inject 捕获；
+      // 开关抽屉不影响主区，只有这一处主动导航。
+      const openConversation = (targetId) => {
+        const service = uiWorkspaceHolder.service
+        if (!service || typeof service.openSession !== 'function') {
+          showToast(t('session.openUnavailable'), { error: true })
+          return
+        }
+        setSessionOpen(false)
+        try {
+          service.openSession(targetId)
+        } catch (error) {
+          showToast(errorDetail(error), { error: true })
+        }
+      }
+
+      // 新建（D6 甲）：按面板当前浏览的库建会话→host 写绑定→跳转；cwd 取不到
+      // 就不传（宿主回落 defaultCwd），预设缺失的回落由 host 完成。
+      const newConversation = () => {
+        if (sessionBusy) return
+        if (!kbId) {
+          showToast(t('session.pickKbFirst'), { error: true })
+          return
+        }
+        const kbName = currentKb ? String(currentKb.name || currentKb.id) : kbId
+        const cwd = sessionRow && sessionRow.cwd ? String(sessionRow.cwd) : ''
+        setSessionBusy(true)
+        callOp('conversations/create', { kbId, kbName, ...(cwd ? { cwd } : {}) })
+          .then((created) => {
+            if (!created || !created.sessionId) return
+            openConversation(String(created.sessionId))
+            refreshSessions()
+          })
+          .catch((error) => showToast(errorDetail(error), { error: true }))
+          .finally(() => setSessionBusy(false))
+      }
+
+      // 198px 档只留图标：栏宽 < 208 时「会话」二字让位（此时库名仍留 ~104px）。
+      React.useEffect(() => {
+        const element = toastAnchorRef.current
+        if (!element || typeof ResizeObserver === 'undefined') return undefined
+        const measure = () => {
+          const next = element.clientWidth < 208
+          setBarNarrow((prev) => (prev === next ? prev : next))
+        }
+        measure()
+        const observer = new ResizeObserver(measure)
+        observer.observe(element)
+        return () => observer.disconnect()
+      }, [phase])
 
       // Upload accept list — the service's allowlist is the source of truth.
       React.useEffect(() => {
@@ -20657,6 +21163,17 @@ window.__ModuleLoader__.load({
                   return
                 }
                 setKbId(id)
+              },
+            }),
+            // 会话入口（D1 甲）：库选择器只管浏览，这里才显示本会话的绑定。
+            h(SessionEntryButton, {
+              t,
+              bound: Boolean(bindingKbId),
+              name: bindingName,
+              narrow: barNarrow,
+              onOpen: () => {
+                setSessionOpen(true)
+                refreshSessions()
               },
             }),
             h(DshMenu, {
@@ -21097,6 +21614,31 @@ window.__ModuleLoader__.load({
                 }),
               )
             : null,
+          sessionOpen
+            ? h(
+                HragBoundary,
+                { t, name: t('session.title') },
+                h(SessionDrawer, {
+                  t,
+                  sessionId,
+                  current: sessionRow,
+                  rows: sessionData.items,
+                  kbs: orderedKbs,
+                  ready: sessionData.ready,
+                  loaded: sessionData.loaded,
+                  kbsReady: phase === 'ready' || phase === 'empty',
+                  browsingKbName: currentKb ? String(currentKb.name || currentKb.id) : '',
+                  busy: sessionBusy,
+                  error: sessionData.error,
+                  onBind: bindKb,
+                  onUnbind: () => unbindSession(sessionId),
+                  onUnbindRow: unbindSession,
+                  onOpenSession: openConversation,
+                  onNew: newConversation,
+                  onClose: () => setSessionOpen(false),
+                }),
+              )
+            : null,
         ),
       )
     }
@@ -21106,6 +21648,10 @@ window.__ModuleLoader__.load({
       apply(ctx) {
         ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'harness-rag: dictionaries')
         const t = ctx.locale.bind(NS)
+        // 会话跳转服务晚到/缺件都不影响面板本体：作用域 inject 只填 holder。
+        ctx.inject(['uiWorkspace'], (fresh) => {
+          uiWorkspaceHolder.service = fresh.uiWorkspace
+        })
         ctx.effect(
           () =>
             ctx.sidebarRightTabs.register({
