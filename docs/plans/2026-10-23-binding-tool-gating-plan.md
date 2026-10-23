@@ -1,7 +1,7 @@
 # 会话绑定的工具挂载（绑定即启用） Plan
 
 **Spec:** [2026-10-23-binding-tool-gating-spec.md](../specs/2026-10-23-binding-tool-gating-spec.md)
-**Status:** 实施完成（2026-10-24；甲已拍，D3/D4 按推荐；Task 0–4b 已完成并过门禁，Task 5 收口中；§5#8 回归待手验）
+**Status:** 实施完成（2026-10-24；甲已拍，D3/D4 按推荐；Task 0–5 全部完成；§5 九项验收全过，第 8 项回归由他 10-24 手验）
 **Architecture:** 工具定义拆成纯函数，apply 期不再全局注册；新增挂载器在 `agent/created`／绑定 op 时把五工具注册进 `agent.ctx`（宿主 scope 注册，随 agent 回收），解绑时调反注册。绑定仍是取库唯一来源，`defaultKbId` 退场。
 
 **硬约束**：只改插件仓 `E:\app\python\agent\dsh-harness-rag`；引擎 `harness-rag` 与主树 `deer-flow` 只读零改动；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。`node_modules/` 不触碰、不纳入提交。不往会话记录写事件。
@@ -91,8 +91,8 @@
 > 动到的文件：无（探针/截图仓外）。
 
 - [x] `node --check client.js`；`node --test tests/*.test.ts` 全绿；`tsc`；五个 TS strip-types。
-- [x] 真栈按 spec §5 逐条手验（1–7、9 已取证；8 待手验），证据见下表。
-- [ ] 回归：六 tab、上传、切片/Wiki 抽屉、召回/评测/图谱面零变化。
+- [x] 真栈按 spec §5 逐条手验（1–9 全过），证据见下表。
+- [x] 回归：六 tab、上传、切片/Wiki 抽屉、召回/评测/图谱面零变化（他手验，2026-10-24）。
 - [x] 引擎与主树零 diff；提交面只含本对文件。
 
 **真跑清单（他手验）**：
@@ -117,7 +117,7 @@
 | 5 新建 | 面板「新建」→ 消息 → 五件 | 10-24 `session-42663300…`：成员＋绑定＋`initial` 37/5＋真调工具 | 过（随 Task 4b 修复） |
 | 6 覆盖 | 显式 `kb_id` 覆盖绑定 | Task 2：`query+t3` 调用回显 t3 库 | 过 |
 | 7 子代理 | 子代理无 `hrag_*` | Task 2：子代理请求头 0 件 | 过（D4 预置） |
-| 8 回归 | 面板六 tab／上传／抽屉／召回评测图谱 | 本对未改 UI；待他手验 | 待验 |
+| 8 回归 | 面板六 tab／上传／抽屉／召回评测图谱 | 他手验（2026-10-24）：零变化 | 过 |
 | 9 门禁与零 diff | 四门禁＋两树零改 | Task 4 勾选＋Task 5 | 过 |
 
 ## Task 4b — 「新建」缺口修复（TDD，Task 4 验收前置）
@@ -151,3 +151,4 @@
 
 - `babb66b` fix(panel): attach panel-created sessions to their workspace —— Task 4b（workspaceId 建会话＋三例测试）＋spec/plan 回写。
 - 提交链回填笔（docs，紧随 `babb66b`；仓无 remote，未推送）。
+- 收官笔 `docs(panel): close out the binding tool gating pair` —— §5#8 回归过、Status 冻结、残留空会话已清。
