@@ -120,15 +120,16 @@
 
 > 动到的文件：本对＋`README.md`＋`docs/equivalence.md`。
 
-- [ ] 回写 spec Status 与本 plan 各 Task 实测。
-- [ ] `README.md`：功能处补一句「会话可绑定知识库（面板内切换；绑定存 host，工具检索按绑定取库）」；数据落点加 `~/.dsh/harness-rag/bindings.json`。
-- [ ] `docs/equivalence.md`：登记「会话绑定＝插件增加（工作台为 per-thread 绑定；本插件在 DSH 会话上复刻同一语义）」。
-- [ ] 逐文件核 hunk，排除 `node_modules/` 与并行工作区；提交信息英文 Conventional ASCII；回填提交链。
+- [x] 回写 spec Status 与本 plan 各 Task 实测。
+- [x] `README.md`：功能处补一句「会话可绑定知识库（面板内切换；绑定存 host，工具检索按绑定取库）」；数据落点加 `~/.dsh/harness-rag/bindings.json`。
+- [x] `docs/equivalence.md`：登记「会话绑定＝插件增加（工作台为 per-thread 绑定；本插件在 DSH 会话上复刻同一语义）」。
+- [x] 逐文件核 hunk，排除 `node_modules/` 与并行工作区；提交信息英文 Conventional ASCII；回填提交链。
 
-**实测**：（待填）
+**实测**：spec Status 改「已实施·真栈验收通过」、Task 5 九条实测回写（2026-10-23）；README 的 kb_id 链改为「参数 ＞ 会话绑定 ＞ defaultKbId」并新增会话绑定词条（含 `bindings.json` 落点）；等价表 §1 绑库行改判等价、§11 增「会话级绑库」行、§12 删「不做」行、核对日期更新。实现笔 `ec58a41`（10 文件、+1783/−32），收口文档本笔；引擎与主树零 diff；`node_modules/` 未纳入。
 
 ---
 
 ## 提交链（滚动记实）
 
-- （待填）
+- `ec58a41` — `feat(panel): bind a knowledge base per session`（实现＋spec/plan）
+- （本笔）— `docs(panel): close out the session binding pair`（README／等价表／Task 5–6 回写）

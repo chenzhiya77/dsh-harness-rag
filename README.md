@@ -7,7 +7,8 @@
 ## 隔离与 kb_id 解析
 
 - **隔离（可选，推荐）**：`presets/knowledge.patch.yml` 定义了一个 DSH Agent 预设 `harness-rag-knowledge`——挂载本插件的工具包，**选中该预设的会话才有 `hrag_*`**（未用时工具在全局视图中仍可见，等于当前测试态）。用法：把该文件的 `insert` 行并入 profile 的 `cordis.patch.yml`，在该行 `config.plugins` 里写本包 **`link:` 安装路径**（官方 preset 行的同款写法），并按需加 `defaultKbId` 配置。
-- **kb_id 解析次序**：工具参数 ＞ 会话上下文 ＞ `defaultKbId`。会话级（现面 per-thread 绑库的对应物）由知识预设/面板（T3）持有，本阶段该级缺席、链条按原序降级（参数或默认）。
+- **kb_id 解析次序**：工具参数 ＞ 会话绑定 ＞ `defaultKbId`。会话绑定在面板顶栏「会话」入口里切换（每个会话至多一个库），工具结果回显 `kb_id`（绑定来源还带 `kb_name`）。
+- **会话绑定**：面板顶栏（库选择器与 ⋯ 之间）的「会话」按钮打开抽屉——给当前会话绑定/切换/移除知识库，并列出已绑定会话（可跳转、可按当前浏览库新建）。绑定存 host 侧 `<DSH_HOME>/harness-rag/bindings.json`（`DSH_HOME` 缺省 `~/.dsh`）。
 - **防同名遮蔽**：工具名统一 `hrag_` 命名空间；宿主按「视图（scope）」解析工具（`get(name, scope)`），agent 视角存在遮蔽面——命名空间是现状下的主防线。
 
 ## 形态
