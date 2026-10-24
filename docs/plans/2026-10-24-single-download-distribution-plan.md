@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·进行中（2026-10-25；Task 0–4 代码完成，Task 3/4 余真机门禁，Task 5–8 未开始）
+**Status:** 已拍·进行中（2026-10-25；Task 0–5 代码完成，Task 3/4/5 余真机门禁，Task 6–8 未开始）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -148,18 +148,31 @@
 
 ## Task 5 — 面板首次运行面（spec §4.6）
 
-> 动到的文件：`client.js`（面板挂载、状态块、引导横幅、内联 zh/en 词条）。
+> 动到的文件：`client.js`（面板挂载、状态块、引导横幅、内联 zh/en 词条）；`src/runtime/ops.ts`、`src/kb_proxy.ts`、`tests/runtime_ops.test.ts`（`needsEmbeddingConfig` 探针接线）；`src/runtime/location.ts`、`tests/runtime_paths.test.ts`（默认根白名单修复）。
 
-- [ ] 挂载先拉 `runtime/status`：`external` 直接走原逻辑；`needs_location` 渲染设置卡，其余托管未就绪不拉库列表，渲染居中准备块（标题/阶段/进度条/体积说明）。
-- [ ] 设置卡：位置行（`~/.dsh/harness-rag` 符号形式 + 绝对路径 tooltip）+「更改…」；锚点失效时显示原因与旧路径，并给「改回默认」；体积/磁盘说明；主按钮「开始准备」（默认根直接开始）、次按钮「连接已有服务」——优先 `pluginNavigation.openBundle('dsh-harness-rag')`，不可用时退回可复制说明「Plugins → Harness RAG → backendUrl」；校验错误在位置行下红字，不进下载态。
-- [ ] 「更改…」调 `runtime/pickDirectory`：返回父目录则回填 `<parent>/harness-rag`（basename 已是 `harness-rag` 时确认后直接用）；`null`（取消）不改；`status.picker !== 'native'` ⇒ 原地切换为可编辑绝对路径。选择只回填，`runtime/configure` 在「开始准备」时才调用。`pluginNavigation` 是插件管理 UI 的 client 反射服务，点击时 `ctx.get('pluginNavigation')` 懒取（不写进 `inject`，免得缺件时整个面板挂不上）。
-- [ ] `error`：标题、阶段、错误、`重试`、日志路径复制；尚未生成 `current.json` 时多给「更改位置」；`runtime/retry` 后回到进度态。
-- [ ] `ready`：正常六 tab；`needsEmbeddingConfig` 为真时加可关闭横幅「本地服务已就绪；配置嵌入模型后即可上传文档」，按钮打开既有设置面；托管模式把设置页「Qdrant 地址」渲染为只读并注明「由内置服务管理」。
-- [ ] 停止条件：`needs_location`/`ready`/`error` 停轮询；隐藏/卸载时清定时器。
-- [ ] 词条 zh/en 成对；深浅色只走现有 token；198px 档不溢出。
-- [ ] 门禁：`node --check client.js`；仓外 hostless 探针覆盖五态（设置/准备/错误/就绪/外部）、锚点失效原因、「更改位置」、更改回填、取消、手输、picker 退化、重试与托管 Qdrant 只读；真栈手验 Task 6。
+- [x] 挂载先拉 `runtime/status`：`external` 直接走原逻辑；`needs_location` 渲染设置卡，其余托管未就绪不拉库列表，渲染居中准备块（标题/阶段/进度条/体积说明）。
+- [x] 设置卡：位置行（`~/.dsh/harness-rag` 符号形式 + 绝对路径 tooltip）+「更改…」；锚点失效时显示原因与旧路径，并给「改回默认」；体积/磁盘说明；主按钮「开始准备」（默认根直接开始）、次按钮「连接已有服务」——优先 `pluginNavigation.openBundle('dsh-harness-rag')`，不可用时退回说明「Plugins → Harness RAG → backendUrl」；校验错误在位置行下红字，不进下载态。
+- [x] 「更改…」调 `runtime/pickDirectory`：回填返回的 `<parent>/harness-rag`；`null`（取消）不改；`status.picker !== 'native'` ⇒ 原地切换为可编辑绝对路径。选择只回填，`runtime/configure` 在「开始准备」时才调用。`pluginNavigation` 点击时 `ctx.get('pluginNavigation')` 懒取（apply 期只存 ctx，不写进 `inject`）。
+- [x] `error`：标题、阶段、错误、`重试`、日志路径复制（宿主 `writeClipboard`，缺件回退 `navigator.clipboard`）；尚未生成 `current.json` 时多给「更改位置」；`runtime/retry` 后回到进度态。
+- [x] `ready`：正常六 tab；`needsEmbeddingConfig` 为真时加可关闭横幅「本地服务已就绪；配置嵌入模型后即可上传文档」，按钮打开既有设置面；托管模式把设置页「Qdrant 地址」渲染为只读并注明「由内置服务管理」。
+- [x] 停止条件：`needs_location`/`ready`/`error` 停轮询；卸载清定时器（宿主切走 tab 即卸载）。
+- [x] 词条 zh/en 成对；深浅色只走现有 token；198px 档不溢出（行内三件 flex＋ellipsis，动作区 wrap）。
+- [x] 门禁：`node --check client.js`；仓外 hostless 探针覆盖五态（设置/准备/错误/就绪/外部）、锚点失效原因、「更改位置」、更改回填、取消、手输、picker 退化、重试与托管 Qdrant 只读；真栈手验 Task 6。
 
 **实测（实施期回填）**：
+
+- 三个 run 态由 `runtime/status` 单点决定：`!runtime` ⇒ 「正在检查本地服务…」/加载失败＋重试；`managed` 且 `needs_location|forcedSetup` ⇒ 设置卡；`error` ⇒ 错误卡；其余非 `ready` ⇒ 进度块；`external|ready` ⇒ 原六 tab。库列表 `listKbs` 只在 `external|ready` 拉一次（`runtimeLoadedRef`），准备中/失败不拉。
+- 轮询 1 s，只在中间态挂 `setTimeout`（每次新状态重挂），`needs_location`/`ready`/`error` 不挂；`runtime/status` 自身触发 `ensure()`（`needs_location` 除外），所以「配置成功 ⇒ 下一次拉取即开始下载」；`runtime/configure` 后额外补一次 status，首帧进度不等 1 s。
+- 设置卡位置行两态：`picker==='native'` ⇒ 路径文本（`<title>` 给绝对路径）＋「更改…」；`browse|none` ⇒ 同一行换成 `HostInput` 绝对路径。两种情况都按 host 的 `targetRoot` 口径回填/换算（basename 已是 `harness-rag` 不再套一层，分隔符按输入推断），手输内容就是 `parent` 参数。选中只进本地 state；「开始准备」才 `runtime/configure`。
+- 校验拒绝码（`path_not_absolute`/`network_path`/`plugin_dir`/`nested_in_anchor`/`system_dir`/`path_too_long`/`target_not_plugin_data`/`not_writable`/`space_insufficient`/`runtime_installed`）逐一译成中文红字；`sync_confirm` 不进红字，改出「继续/取消」二段确认（继续时带 `confirmSync:true`）。`needs_location.reason` 只译两种已知原句（不存在/不可写），未知原句不展示。
+- 进度块：`progress.phase` 细化 `preparing`（download/verify/extract），`starting` 单独一档；下载有总长时出百分比（`aria-valuenow`＋条宽），其余走不定态动画条。
+- 错误卡：`error.phase`/`code`/`detail`＋日志尾（`<pre>`，`logTail`）＋日志目录复制；`installed` 为假才给「更改位置」（本地强制设置卡，配置成功复位）；「重试」调 `runtime/retry`，回到进度块。
+- 引导横幅挂在 `.hrag-root` 层（`HragBoundary` 之前，`margin: 12px 12px 0`）：`managed && ready && needsEmbeddingConfig && !dismissed`；库列表为空时的空态也能看到（首次运行最需要它的正是这一刻）。**偏离**：初版放在六 tab 壳里，探针发现空库态根本看不到，改挂根层。
+- 托管设置页：`ModelSettingsPanel` 增 `managed` prop；「Qdrant 地址」换成只读盒（值＋「由内置服务管理」），不再可编辑，label 的 title 也给同一句。
+- **host 半补件**：`runtime/status` 改为 `panelStatus(deps)` —— 只有 `managed && phase==='ready'` 才 `await deps.needsEmbeddingConfig()`（该探针会真请求本地服务，准备中不能跑）；`runtime_ops.test.ts` 钉「ready 探一次 / starting 不探」。
+- **缺陷（Task 1 规则）**：`validateRootCandidate` 的 `nested_in_anchor` 把**锚点根本身**也拒了（`containsPath(anchorRoot, parent)` 含等值），导致「设置卡默认位置直接开始」永远红字；改为「等于锚点根放行、其子目录仍拒」，`runtime_paths.test.ts` 加等值用例、`runtime_ops.test.ts` 加 `configure(parent=anchorRoot)` 落锚点用例。
+- 门禁：`node --check client.js` 过；`tsc -p tsconfig.json` 0 错；全量 `node --test tests/*.test.ts` **190/190**。仓外 hostless 探针 `D:\hrag-t5-probe\probe.mjs`（jsdom＋react 18，`react-dom` 在 jsdom 全局就位后动态 import；宿主 primitives 缺失走全回退）：**35/35**，覆盖设置卡（标题/`~` 路径/失效原因/体积）、原生 picker 回填、同步盘确认、校验拒绝红字、picker 退化手输＋「将安装到」、下载百分比 25%→启动不定态、错误卡（阶段/日志尾/重试/更改位置）、错误→设置卡、就绪横幅→→设置页只读 Qdrant、external 无门、status 失败重试。
+- **未闭合**：①真栈手验（Task 6）——首启真实下载/进度/启动、native picker 实点、198px 档实宽；②`pluginNavigation.openBundle` 的实参形状未在真宿主点过（探针里 `ctx.get` 返回 null ⇒ 走「可复制说明」分支）；③探针的 DshMenu 回退会报一次 `<button>` 嵌 `<button>` 的 DOM 警告（真宿主有 HostMenu，不属面板缺陷）；④坏 `location.json` 走 `resolveRoot` 的 `warning` 回落默认根，`runtime/status` 未带该字段、面板也不上屏（spec §4.6 未列；要上屏另议）。
 
 ## Task 6 — 运行时包构建与真冷启动（spec §4.8）
 
