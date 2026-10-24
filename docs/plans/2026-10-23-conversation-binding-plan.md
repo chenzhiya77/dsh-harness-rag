@@ -1,7 +1,7 @@
 # 会话知识库绑定（面板内） Plan
 
 **Spec:** [2026-10-23-conversation-binding-spec.md](../specs/2026-10-23-conversation-binding-spec.md)
-**Status:** ✅ 全收官（2026-10-23 Task 0–5 完成、真栈 1–9 手验通过；Task 6 收口已落 `6867222`，D1 甲、D2 乙、D3 甲、D4 甲、D5 甲、D6 甲、D7 不弹确认、D8 悬空标灰；多库不做；10-23 对照实码审查后修订 P1–P3）
+**Status:** ✅ 全收官（2026-10-23 Task 0–5 完成、真栈 1–9 手验通过；Task 6 收口已落 `6867222`，D1 甲、D2 乙、D3 甲、D4 甲、D5 甲、D6 甲、D7 不弹确认、D8 悬空标灰；多库不做；10-23 对照实码审查后修订 P1–P3；**10-24 修订**：入口形态改为锚定小面板（`629fb3f`），见文末「修订」节——Task 3–4 的抽屉形态退场，数据面不变）
 **Architecture:** 绑定落在 host 半的 JSON 文件（`<DSH_HOME>/harness-rag/bindings.json`），面板经既有具名路由读写；工具 `kb()` 在参数与 `defaultKbId` 之间插入「会话绑定」一格。client 半只加顶栏按钮＋覆盖抽屉；打开会话走 `ctx.uiWorkspace.openSession`，新建走 host `sessionController.create` 再导航。
 
 **硬约束**：只改插件仓 `E:\app\python\agent\dsh-harness-rag`；引擎 `harness-rag` 与主树 `deer-flow` 只读零改动；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。`node_modules/` 为既有未跟踪目录，不触碰、不纳入提交。不往会话记录里写任何事件。多库混合不做。
@@ -129,7 +129,21 @@
 
 ---
 
+## 修订（2026-10-24）
+
+Task 3–4 的「覆盖抽屉」形态由锚定小面板替换；D2–D8 的绑定数据面、Task 5 的验收口径与 Task 6 的文档结论不变。
+
+- **组件**：`SessionDrawer` → `SessionPopover`；320px 宽、右缘对齐入口钮、钮下 6px，下方空间不足时翻到钮上方，高度 160–480px；`position:fixed` 可越过 198px 面板左缘；点外部／Esc 关闭，resize／滚动重新定位。入口钮补 `aria-haspopup`／`aria-expanded`。
+- **头部与列表**：本会话标题＋定宽 144px 的绑定库 chip（chip 菜单承担换库／解绑）；列表行 32px、当前行 2px 主色条、每行恒定显示绑定库名、时间列定宽右对齐；「＋ 新建」移到「RAG 会话」标头右侧。
+- **文案与退场**：删「本会话」「选择后…」「关闭」；空态改「还没有会话」；行内「✕」退场，`SessionDrawer` 与 `.hrag-drawer` 复用形态退场。
+- **验收补记（CDP 直连渲染层）**：宽 575／窄 198 两档栏内无溢出；短库名 `4`、`测试` 与 `t3-panel-acceptance` 均正常显示；长会话标题省略而 chip 位置不动；Esc／外点关闭、chip 菜单（换库／移除绑定）可用。
+- **落地**：`629fb3f`。同笔含两处修正：chip 的 55%×55% 循环收窄改定宽（短名不再被压成 0 宽）；列表恢复每行库名。
+
+---
+
 ## 提交链（滚动记实）
 
 - `ec58a41` — `feat(panel): bind a knowledge base per session`（实现＋spec/plan）
 - `6867222` — `docs(panel): close out the session binding pair`（README／等价表／Task 5–6 回写）
+- `629fb3f` — `feat(panel): replace the session drawer with an anchored popover`（10-24 修订）
+- 本笔 — `docs(panel): record the anchored popover revision`（spec §9＋本 plan 修订节）

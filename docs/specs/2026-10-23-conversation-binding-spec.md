@@ -1,6 +1,6 @@
 # 会话知识库绑定（面板内） —— spec
 
-**Status:** 已实施·真栈验收通过（2026-10-23；Task 0–5 全落、§5 九项手验过、Task 6 收口已落（`6867222`）；D1 甲＝顶栏按钮＋覆盖抽屉、D2 乙＝会话可改绑、D3 甲＝浏览与绑定分离、D4 甲＝host 侧 JSON 文件、D5 甲＝`sessionController.list`、D6 甲＝host `create`＋client `openSession`、D7 不弹确认框、D8 悬空绑定标灰；多库混合不做。**10-23 对照实码审查后修订 P1–P3**：sessionId 改走标准 prop、右栏 per-session 布局、list 带当前会话行、`kb()` 同步载入、子代理回落、`DSH_HOME` 空白串、冷会话标题、归档会话、路由鉴权姿态、tsc 命令）
+**Status:** 已实施·真栈验收通过（2026-10-23；Task 0–5 全落、§5 九项手验过、Task 6 收口已落（`6867222`）；D1 甲＝顶栏按钮＋覆盖抽屉、D2 乙＝会话可改绑、D3 甲＝浏览与绑定分离、D4 甲＝host 侧 JSON 文件、D5 甲＝`sessionController.list`、D6 甲＝host `create`＋client `openSession`、D7 不弹确认框、D8 悬空绑定标灰；多库混合不做。**10-23 对照实码审查后修订 P1–P3**：sessionId 改走标准 prop、右栏 per-session 布局、list 带当前会话行、`kb()` 同步载入、子代理回落、`DSH_HOME` 空白串、冷会话标题、归档会话、路由鉴权姿态、tsc 命令。**10-24 修订**：入口形态改为锚定小面板（`629fb3f`），见 §9；数据面 D2–D8 与 §4.5–§4.6 不变）
 **Date:** 2026-10-23
 **来源:** 10-23 他问「一个会话是绑定一个知识库的吗，切换之后这个会话看到的是切换后的库吗」；确认现状＝无绑定、面板切库不影响会话；他拍「乙更符合常理」（会话可改绑），并要求切换时不要弹确认框；随后「我觉得这个应该放在 rag 当中」，定为面板内入口；令写 spec/plan。
 **承接:** 面板六 tab 与顶栏（[2026-10-21-panel-tabs 之后](../plans/2026-10-21-dsh-model-proxy-plan.md) 的 `hrag-bar` 结构，`client.js:20628`）；抽屉底座沿用切片续读抽屉（`client.js:2706-2715`）；工具 kb 解析链出自 [2026-10-19-t5-slot-contract-spec.md](2026-10-19-t5-slot-contract-spec.md) D4（`src/tools.ts:59-70`）；宿主会话 API 取证见下方 §2.3。
@@ -100,6 +100,8 @@
 ## 4. 口径
 
 ### 4.1 入口与抽屉形态
+
+> 2026-10-24 修订：入口仍为顶栏「会话」钮，展开形态已由覆盖抽屉改为锚定小面板，见 §9；以下为 10-23 原稿。
 
 ```text
 [产品文档库 ▾]   [◍ 会话]  [⋯]        ← 顶栏（hrag-bar）
@@ -218,3 +220,15 @@ kb_id（参数） > 会话绑定（exec.agent.session.id）> config.defaultKbId
 - **storageDomain**：若复核发现插件可构造 domain spec（例如宿主开放了 `defineDomain` 的再导出），把 §4.6 的文件换成 domain 表，键与语义不变。
 - **引擎落库**：需要跨设备/跨 profile 时，改存引擎 `kb_bindings(session_id, kb_id, updated_at)`＋迁移；插件只换实现，不动面板与解析链。
 - **多库**：届时把绑定从 `kbId: string` 扩成 `kbIds: string[]`，引擎侧另开「多库检索」端点（带引用标注与总 top_k 预算），不复活本对的单选口径。
+
+## 9. 修订（2026-10-24）
+
+入口形态自「顶栏按钮＋覆盖抽屉」改为「顶栏按钮＋锚定小面板」，绑定数据面（D2–D8、§4.5–§4.6）零变化。
+
+- **入口**：仍为 `hrag-bar` 内、库选择器与 `⋯` 之间的「会话」钮；图标＋「会话」文字，栏宽 <208px 只留图标；补 `aria-haspopup="dialog"`／`aria-expanded`，展开态有底色。
+- **面板**：320px 宽、右缘对齐入口钮、钮下 6px；下方空间不足 280px 时翻到钮上方；高度在 160–480px 间取剩余空间；`position:fixed`，可越过 198px 面板左缘。点外部／Esc 关闭；resize 与滚动重新定位。
+- **头部**：本会话标题（超长省略）＋绑定库 chip。chip 定宽 144px、右对齐，库名超长省略且 title 给全名；chip 菜单＝换库（`conversations/bind`）／移除绑定（`conversations/unbind`）。
+- **列表**：「RAG 会话」标头右侧「＋ 新建」；行高 32px，当前会话左侧 2px 主色条；每行**恒定**显示绑定库名（悬空库加「（已删除）」并整行标灰，仍可跳转），相对时间列定宽右对齐。
+- **文案**：删「本会话」「选择后…」「关闭」三键；空态改为「还没有会话」；解绑入口收进 chip 菜单，行内「✕」退场。
+- **退场**：`SessionDrawer` 组件与 `.hrag-drawer` 复用形态退场，改由 `.hrag-sesspop` 承载。
+- **落地**：`629fb3f`（`feat(panel): replace the session drawer with an anchored popover`）。同笔含两处修正：chip 外层与宿主 Menu 内层各设 55% 上限造成循环收窄（短库名被压成 0 宽）→ 改定宽 144；列表「行所属库＝浏览库时省略库名」的规则回退为恒定显示。
