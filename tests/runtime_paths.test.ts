@@ -242,6 +242,15 @@ test('validate: a parent nested inside the anchor root is rejected', () => {
   if (!result.ok) assert.equal(result.code, 'nested_in_anchor')
 })
 
+test('validate: the anchor root itself is the default install root', () => {
+  const anchor = join(tempDir(), 'harness-rag')
+
+  const result = validateRootCandidate({ parent: anchor, anchorRoot: anchor })
+
+  assert.equal(result.ok, true)
+  if (result.ok) assert.equal(result.root, anchor)
+})
+
 test('validate: system directories are rejected', () => {
   const base = tempDir()
   const system = join(base, 'Windows')

@@ -239,7 +239,7 @@ export function validateRootCandidate(input: RootCandidateInput): RootCandidateR
   if (hasNodeModulesSegment(parent) || (input.pluginRoot && containsPath(input.pluginRoot, parent))) {
     return fail('plugin_dir', `inside a plugin directory: ${parent}`)
   }
-  if (containsPath(input.anchorRoot, parent)) {
+  if (containsPath(input.anchorRoot, parent) && fold(resolve(parent)) !== fold(resolve(input.anchorRoot))) {
     return fail('nested_in_anchor', `nested inside the anchor root: ${parent}`)
   }
   for (const dir of systemDirsOf(input)) {
