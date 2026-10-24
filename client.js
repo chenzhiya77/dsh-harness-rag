@@ -70,23 +70,20 @@ window.__ModuleLoader__.load({
       // 会话绑定（会话知识库绑定对）：顶栏入口＋覆盖抽屉＋本会话绑定区。
       'session.entry': '会话',
       'session.title': '会话',
-      'session.this': '本会话',
       'session.untitled': '新会话',
       'session.useKb': '使用知识库',
       'session.unbound': '未绑定 · 选择知识库',
-      'session.pickHint': '选择后，本会话将获得知识库工具。',
       'session.tipBound': '本会话使用：{0}',
       'session.tipUnbound': '本会话未绑定知识库',
       'session.switched': '已切换到 {0}，此后检索使用该库',
       'session.switchedNext': '已切换到 {0}，下一条消息生效',
       'session.unbind': '移除绑定',
       'session.unboundToast': '已移除绑定，本会话不再具备知识库工具',
-      'session.close': '关闭',
       'session.loadFailed': '会话列表加载失败',
       'session.listTitle': 'RAG 会话',
       'session.new': '新建',
       'session.newHint': '新会话使用：{0}',
-      'session.empty': '还没有绑定知识库的会话',
+      'session.empty': '还没有会话',
       'session.emptyNew': '新建会话',
       'session.unavailable': '当前宿主未提供会话服务',
       'session.loading': '正在加载会话…',
@@ -927,23 +924,20 @@ window.__ModuleLoader__.load({
       'shell.kbLabel': 'Knowledge base',
       'session.entry': 'Chats',
       'session.title': 'Chats',
-      'session.this': 'This chat',
       'session.untitled': 'New chat',
       'session.useKb': 'Knowledge base',
       'session.unbound': 'None · choose a knowledge base',
-      'session.pickHint': 'Once picked, this chat gains the knowledge tools.',
       'session.tipBound': 'This chat uses: {0}',
       'session.tipUnbound': 'This chat has no knowledge base bound',
       'session.switched': 'Switched to {0}; this chat now retrieves from it',
       'session.switchedNext': 'Switched to {0}; takes effect on the next message',
       'session.unbind': 'Remove binding',
       'session.unboundToast': 'Binding removed; this chat no longer has the knowledge tools',
-      'session.close': 'Close',
       'session.loadFailed': 'Could not load conversations',
       'session.listTitle': 'RAG chats',
       'session.new': 'New',
       'session.newHint': 'New chats use: {0}',
-      'session.empty': 'No chat has a knowledge base bound yet',
+      'session.empty': 'No chats yet',
       'session.emptyNew': 'New chat',
       'session.unavailable': 'This host does not provide the session service',
       'session.loading': 'Loading chats…',
@@ -1997,49 +1991,45 @@ window.__ModuleLoader__.load({
           '.hrag-sessionbtn-icon { display: inline-flex; flex-shrink: 0; }',
           '.hrag-sessionbtn-dot { fill: var(--dsw-alias-state-success-primary); }',
           '.hrag-sessionbtn-icononly .hrag-sessionbtn-label { display: none; }',
-          // 会话抽屉：本会话区（12px 标签＋13px 标题＋「使用知识库」行）。
-          '.hrag-drawer-body.hrag-sess-body { display: flex; flex-direction: column; gap: 14px; padding: 12px 14px 16px; overflow: hidden; }',
-          // 本会话区固定，列表区独立滚动（spec §4.1）。
-          '.hrag-sess-body > .hrag-sess-section { flex-shrink: 0; }',
-          '.hrag-sess-body > .hrag-sess-listsec { flex: 1 1 auto; min-height: 0; overflow-y: auto; }',
-          '.hrag-sess-section { display: flex; flex-direction: column; gap: 6px; min-width: 0; }',
-          '.hrag-sess-label { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
-          '.hrag-sess-title { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; line-height: 20px; }',
-          '.hrag-sess-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
-          '.hrag-sess-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }',
-          '.hrag-sess-rowlabel { flex-shrink: 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }',
-          '.hrag-sess-row > .hrag-mmhost, .hrag-sess-row > .hrag-mmhost > span { display: inline-flex; align-items: center; min-width: 0; max-width: 60%; }',
-          '.hrag-sess-pick { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; height: 28px; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 13px; font-family: inherit; cursor: pointer; }',
+          // 会话小面板（10-24 改版）：挂在入口钮下方的小卡片（320 宽，fixed 定位
+          // 可越过 198px 面板左缘）；chip＝本会话绑定，列表＝已绑定会话。
+          '.hrag-sessionbtn[aria-expanded="true"] { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-sesspop-backdrop { position: fixed; inset: 0; z-index: 69; background: transparent; }',
+          '.hrag-sesspop { position: fixed; z-index: 70; display: flex; flex-direction: column; gap: 8px; padding: 10px; box-sizing: border-box; border-radius: var(--dsw-radius-lg); background: var(--dsw-menu-surface-fill, var(--dsw-alias-bg-layer-1)); box-shadow: var(--dsw-elevation-prominent); backdrop-filter: var(--dsw-menu-backdrop-filter); -webkit-backdrop-filter: var(--dsw-menu-backdrop-filter); }',
+          '.hrag-sesspop-head { display: flex; align-items: center; gap: 8px; min-width: 0; }',
+          '.hrag-sesspop-current { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; min-width: 0; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; line-height: 20px; }',
+          '.hrag-sesspop-current-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          // 绑定框定宽右对齐：外层与 Menu 内层各套一道百分比上限会循环收窄
+          // （55%×55%），短库名直接被压成 0 宽——定宽后标题吃余宽并省略。
+          '.hrag-sesspop-head > .hrag-mmhost { display: flex; align-items: center; flex: 0 0 144px; width: 144px; min-width: 0; max-width: none; }',
+          '.hrag-sesspop-head > .hrag-mmhost > span { display: flex; align-items: center; width: 100%; min-width: 0; max-width: none; }',
+          '.hrag-sess-pick { display: inline-flex; align-items: center; justify-content: space-between; gap: 4px; width: 100%; min-width: 0; max-width: 100%; height: 26px; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 12px; font-family: inherit; text-align: left; cursor: pointer; }',
           '.hrag-sess-pick:hover { background: var(--dsw-alias-interactive-bg-hover); }',
-          '.hrag-sess-pick-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-sess-pick-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
           '.hrag-sess-pick-empty .hrag-sess-pick-name { color: var(--dsw-alias-label-tertiary); }',
           '.hrag-sess-pick-chev { display: inline-flex; flex-shrink: 0; color: var(--dsw-alias-label-tertiary); }',
-          '.hrag-sess-hint { margin: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
-          '.hrag-sess-error { margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }',
-          // 会话抽屉·列表区（Task 4）：36px 行；当前会话左侧 2px 主色竖条；悬停时
-          // 时间让位给「移除绑定」（同槽位互换，布局不跳）。
-          '.hrag-sess-divider { height: 0; margin: 2px 0; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
-          '.hrag-sess-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }',
-          '.hrag-sess-headlabel { color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; line-height: 20px; }',
-          '.hrag-sess-new { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; height: 24px; padding: 0 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 12px; line-height: 16px; cursor: pointer; }',
-          '.hrag-sess-new:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
-          '.hrag-sess-new:disabled { opacity: 0.45; cursor: default; }',
-          '.hrag-sess-list { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin: 0; padding: 0; list-style: none; }',
-          '.hrag-sess-item { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; height: 36px; padding: 0 6px 0 8px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 13px; text-align: left; cursor: pointer; }',
-          '.hrag-sess-item:hover { background: var(--dsw-alias-interactive-bg-hover); }',
-          '.hrag-sess-item-current { padding-left: 10px; }',
-          '.hrag-sess-item-current::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; border-radius: 1px; background: var(--dsw-alias-button-primary-fill); }',
-          '.hrag-sess-item-dangling { opacity: 0.55; }',
-          '.hrag-sess-item-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
-          '.hrag-sess-item-kb { flex-shrink: 0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-secondary); font-size: 12px; }',
-          '.hrag-sess-item-time { flex-shrink: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; font-variant-numeric: tabular-nums; }',
-          '.hrag-sess-item-remove { display: inline-flex; opacity: 0; flex-shrink: 0; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 1; cursor: pointer; }',
-          '.hrag-sess-item-remove:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-state-error-primary); }',
-          '.hrag-sess-item:hover .hrag-sess-item-remove, .hrag-sess-item-remove:focus-visible { opacity: 1; }',
-          '.hrag-sess-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 0 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
-          '.hrag-sess-emptybtn { padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 12px; line-height: 18px; cursor: pointer; }',
-          '.hrag-sess-emptybtn:hover:not(:disabled) { text-decoration: underline; }',
-          '.hrag-sess-emptybtn:disabled { opacity: 0.45; cursor: default; }',
+          '.hrag-sesspop-unbound { flex-shrink: 0; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-sesspop-divider { height: 0; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-sesspop-listhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }',
+          '.hrag-sesspop-label { color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; line-height: 18px; }',
+          '.hrag-sesspop-new { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; height: 24px; padding: 0 6px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 12px; line-height: 16px; cursor: pointer; }',
+          '.hrag-sesspop-new:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-sesspop-new:disabled { opacity: 0.45; cursor: default; }',
+          '.hrag-sesspop-list { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; min-height: 0; margin: 0; padding: 0; list-style: none; overflow-y: auto; }',
+          '.hrag-sesspop-li { min-width: 0; }',
+          '.hrag-sesspop-row { position: relative; display: flex; align-items: center; gap: 6px; width: 100%; min-width: 0; height: 32px; padding: 0 6px 0 8px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 13px; text-align: left; cursor: pointer; }',
+          '.hrag-sesspop-row:hover { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-sesspop-row-current { padding-left: 10px; }',
+          '.hrag-sesspop-row-current::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; width: 2px; border-radius: 1px; background: var(--dsw-alias-button-primary-fill); }',
+          '.hrag-sesspop-row-dangling { opacity: 0.55; }',
+          '.hrag-sesspop-rowtitle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-sesspop-rowkb { flex-shrink: 0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-tertiary); font-size: 11px; }',
+          '.hrag-sesspop-rowtime { flex-shrink: 0; min-width: 52px; color: var(--dsw-alias-label-tertiary); font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }',
+          '.hrag-sesspop-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 4px 2px 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-sesspop-emptybtn { padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 12px; line-height: 18px; cursor: pointer; }',
+          '.hrag-sesspop-emptybtn:hover:not(:disabled) { text-decoration: underline; }',
+          '.hrag-sesspop-emptybtn:disabled { opacity: 0.45; cursor: default; }',
+          '.hrag-sesspop-error { margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }',
           '.hrag-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 0 12px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
           '.hrag-btn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-btn:active:not(:disabled) { background: var(--dsw-alias-interactive-bg-active); }',
@@ -20341,15 +20331,19 @@ window.__ModuleLoader__.load({
     }
 
     /** 顶栏会话入口（D1 甲）：状态只看绑定，与面板浏览库无关（D3 甲）。 */
-    function SessionEntryButton({ t, bound, name, narrow, onOpen }) {
+    /** 会话入口钮（D1 甲）：绑定指示＋「会话」文字；窄档只留图标。 */
+    function SessionEntryButton({ t, bound, name, narrow, open, btnRef, onOpen }) {
       const tip = bound ? t('session.tipBound', { 0: name }) : t('session.tipUnbound')
       return h(
         'button',
         {
           type: 'button',
+          ref: btnRef,
           className: 'hrag-sessionbtn' + (narrow ? ' hrag-sessionbtn-icononly' : ''),
           title: tip,
           'aria-label': tip,
+          'aria-haspopup': 'dialog',
+          'aria-expanded': open ? 'true' : 'false',
           onClick: onOpen,
         },
         sessionBindIcon(bound),
@@ -20380,9 +20374,9 @@ window.__ModuleLoader__.load({
         : date.getFullYear() + '/' + month + '/' + dayOfMonth
     }
 
-    /** 会话抽屉（D1 甲，覆盖式）：底座同切片续读抽屉；上＝本会话（标题＋「使用
-        知识库」单选菜单，当前绑定打勾、末项移除），下＝RAG 会话列表（Task 4）。 */
-    function SessionDrawer({
+    /** 会话小面板（D1 甲改版）：挂在入口钮下方的小卡片（fixed，320 宽，可越过
+        198px 面板左缘）；上＝本会话标题＋库 chip，下＝RAG 会话列表；点外部/Esc 关。 */
+    function SessionPopover({
       t,
       sessionId,
       current,
@@ -20394,9 +20388,9 @@ window.__ModuleLoader__.load({
       browsingKbName,
       busy,
       error,
+      anchorRef,
       onBind,
       onUnbind,
-      onUnbindRow,
       onOpenSession,
       onNew,
       onClose,
@@ -20408,6 +20402,37 @@ window.__ModuleLoader__.load({
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
       }, [onClose])
+
+      // 定位：右缘对齐入口钮；下方空间不足 280 时翻到钮上方；高度取剩余空间。
+      const [box, setBox] = React.useState(null)
+      React.useLayoutEffect(() => {
+        const anchor = anchorRef && anchorRef.current
+        if (!anchor) return undefined
+        const measure = () => {
+          const rect = anchor.getBoundingClientRect()
+          const vw = window.innerWidth
+          const vh = window.innerHeight
+          const width = Math.min(320, vw - 16)
+          const right = Math.max(8, Math.min(vw - rect.right, vw - width - 8))
+          const below = vh - rect.bottom - 16
+          const above = rect.top - 16
+          const flip = below < 280 && above > below
+          setBox({
+            width,
+            right,
+            maxHeight: Math.max(160, Math.min(480, flip ? above : below)),
+            top: flip ? undefined : Math.max(8, Math.round(rect.bottom + 6)),
+            bottom: flip ? Math.max(8, Math.round(vh - rect.top + 6)) : undefined,
+          })
+        }
+        measure()
+        window.addEventListener('resize', measure)
+        window.addEventListener('scroll', measure, true)
+        return () => {
+          window.removeEventListener('resize', measure)
+          window.removeEventListener('scroll', measure, true)
+        }
+      }, [anchorRef])
 
       const bindingKbId = current && current.kbId ? String(current.kbId) : ''
       const kbOfId = (id) => kbs.find((kb) => String(kb.id) === id) || null
@@ -20463,136 +20488,116 @@ window.__ModuleLoader__.load({
             : t('session.unavailable')
       const rowView = (row) => {
         const rowTitle = String(row.title || '') || t('session.untitled')
-        // 悬空（D8）：绑定指向的库不在已加载库清单里——标灰仍可跳转，仍可移除。
+        // 悬空（D8）：绑定指向的库不在已加载库清单里——标灰仍可跳转。
         const dangling = kbsReady && !kbOfId(String(row.kbId))
+        const isCurrent = row.sessionId === sessionId
+        // 每行都带自己的绑定库名（10-24 修）：按「浏览库相同就省略」的规则会让
+        // 刚切过去的当前行看起来没绑上，回退为恒定显示。
+        const kbName = row.kbId ? kbNameOf(row) + (dangling ? t('session.deletedSuffix') : '') : ''
         return h(
-          'div',
-          {
-            key: row.sessionId,
-            className:
-              'hrag-sess-item' +
-              (row.sessionId === sessionId ? ' hrag-sess-item-current' : '') +
-              (dangling ? ' hrag-sess-item-dangling' : ''),
-            role: 'button',
-            tabIndex: 0,
-            title: rowTitle,
-            onClick: () => onOpenSession(row.sessionId),
-            onKeyDown: (event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                onOpenSession(row.sessionId)
-              }
-            },
-          },
-          row.running ? stateDot(12) : null,
-          h('span', { className: 'hrag-sess-item-title' }, rowTitle),
-          h('span', { className: 'hrag-sess-item-kb' }, kbNameOf(row) + (dangling ? t('session.deletedSuffix') : '')),
-          h('span', { className: 'hrag-sess-item-time' }, relativeTime(t, row.updatedAt)),
+          'li',
+          { key: row.sessionId, className: 'hrag-sesspop-li' },
           h(
             'button',
             {
               type: 'button',
-              className: 'hrag-sess-item-remove',
-              title: t('session.unbind'),
-              'aria-label': t('session.unbind'),
-              onClick: (event) => {
-                event.stopPropagation()
-                onUnbindRow(row.sessionId)
+              className:
+                'hrag-sesspop-row' +
+                (isCurrent ? ' hrag-sesspop-row-current' : '') +
+                (dangling ? ' hrag-sesspop-row-dangling' : ''),
+              title: kbName ? rowTitle + ' · ' + kbName : rowTitle,
+              'aria-current': isCurrent ? 'true' : undefined,
+              onClick: () => {
+                onOpenSession(row.sessionId)
+                onClose()
               },
             },
-            '✕',
+            row.running ? stateDot(12) : null,
+            h('span', { className: 'hrag-sesspop-rowtitle' }, rowTitle),
+            kbName ? h('span', { className: 'hrag-sesspop-rowkb' }, kbName) : null,
+            h('span', { className: 'hrag-sesspop-rowtime' }, relativeTime(t, row.updatedAt)),
           ),
         )
       }
 
+      const style = box
+        ? {
+            width: box.width + 'px',
+            right: box.right + 'px',
+            maxHeight: box.maxHeight + 'px',
+            top: box.top === undefined ? 'auto' : box.top + 'px',
+            bottom: box.bottom === undefined ? 'auto' : box.bottom + 'px',
+          }
+        : { visibility: 'hidden' }
       return h(
         React.Fragment,
         null,
         h('div', {
-          className: 'hrag-drawer-overlay',
+          className: 'hrag-sesspop-backdrop',
           onMouseDown: (event) => {
             if (event.target === event.currentTarget) onClose()
           },
         }),
         h(
           'div',
-          { className: 'hrag-drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('session.title') },
+          { className: 'hrag-sesspop', role: 'dialog', 'aria-label': t('session.title'), style },
           h(
             'div',
-            { className: 'hrag-drawer-head' },
-            h('span', { className: 'hrag-drawer-title' }, t('session.title')),
+            { className: 'hrag-sesspop-head' },
+            h(
+              'span',
+              { className: 'hrag-sesspop-current' },
+              current && current.running ? stateDot(12) : null,
+              h('span', { className: 'hrag-sesspop-current-text', title }, title),
+            ),
+            sessionId ? picker : h('span', { className: 'hrag-sesspop-unbound' }, t('session.unbound')),
+          ),
+          h('div', { className: 'hrag-sesspop-divider' }),
+          h(
+            'div',
+            { className: 'hrag-sesspop-listhead' },
+            h('span', { className: 'hrag-sesspop-label' }, t('session.listTitle')),
             h(
               'button',
               {
                 type: 'button',
-                className: 'hrag-btn hrag-btn-outline hrag-drawer-close',
-                'aria-label': t('session.close'),
-                title: t('session.close'),
-                onClick: onClose,
+                className: 'hrag-sesspop-new',
+                disabled: newDisabled,
+                title: browsingKbName ? t('session.newHint', { 0: browsingKbName }) : undefined,
+                onClick: () => {
+                  if (newDisabled) return
+                  onNew()
+                  onClose()
+                },
               },
-              '✕',
+              dshPlusIcon(),
+              t('session.new'),
             ),
           ),
-          h(
-            'div',
-            { className: 'hrag-drawer-panel' },
-            h(
-              'div',
-              { className: 'hrag-drawer-body hrag-sess-body' },
-              h(
-                'section',
-                { className: 'hrag-sess-section' },
-                h('div', { className: 'hrag-sess-label' }, t('session.this')),
-                h(
-                  'div',
-                  { className: 'hrag-sess-title' },
-                  current && current.running ? stateDot(12) : null,
-                  h('span', { className: 'hrag-sess-title-text', title: title }, title),
-                ),
-                h(
-                  'div',
-                  { className: 'hrag-sess-row' },
-                  h('span', { className: 'hrag-sess-rowlabel' }, t('session.useKb')),
-                  sessionId ? picker : h('span', { className: 'hrag-sess-hint' }, t('session.unbound')),
-                ),
-                bindingKbId
-                  ? null
-                  : h('p', { className: 'hrag-sess-hint' }, t('session.pickHint')),
+          boundRows.length
+            ? h('ul', { className: 'hrag-sesspop-list' }, boundRows.map(rowView))
+            : h(
+                'div',
+                { className: 'hrag-sesspop-empty' },
+                h('span', null, listNotice),
+                ready
+                  ? h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-sesspop-emptybtn',
+                        disabled: newDisabled,
+                        onClick: () => {
+                          if (newDisabled) return
+                          onNew()
+                          onClose()
+                        },
+                      },
+                      t('session.emptyNew'),
+                    )
+                  : null,
               ),
-              h('div', { className: 'hrag-sess-divider' }),
-              h(
-                'section',
-                { className: 'hrag-sess-section hrag-sess-listsec' },
-                h(
-                  'div',
-                  { className: 'hrag-sess-head' },
-                  h('span', { className: 'hrag-sess-headlabel' }, t('session.listTitle')),
-                  h(
-                    'button',
-                    { type: 'button', className: 'hrag-sess-new', disabled: newDisabled, onClick: onNew },
-                    dshPlusIcon(),
-                    t('session.new'),
-                  ),
-                ),
-                h('p', { className: 'hrag-sess-hint' }, t('session.newHint', { 0: browsingKbName || '—' })),
-                boundRows.length
-                  ? h('ul', { className: 'hrag-sess-list' }, boundRows.map(rowView))
-                  : h(
-                      'div',
-                      { className: 'hrag-sess-empty' },
-                      h('span', null, listNotice),
-                      ready
-                        ? h(
-                            'button',
-                            { type: 'button', className: 'hrag-sess-emptybtn', disabled: newDisabled, onClick: onNew },
-                            t('session.emptyNew'),
-                          )
-                        : null,
-                    ),
-              ),
-              error ? h('p', { className: 'hrag-sess-error' }, t('session.loadFailed') + ': ' + error) : null,
-            ),
-          ),
+          error ? h('p', { className: 'hrag-sesspop-error' }, t('session.loadFailed') + ': ' + error) : null,
         ),
       )
     }
@@ -20608,6 +20613,7 @@ window.__ModuleLoader__.load({
       // 会话绑定（D1 甲）：sessionId 走槽位标准 prop；顶栏按钮与抽屉共用一份
       // `conversations/list` 响应（current＝本会话行，未绑定时 kbId 为 null）。
       const [sessionOpen, setSessionOpen] = React.useState(false)
+      const sessionBtnRef = React.useRef(null)
       const [sessionData, setSessionData] = React.useState({
         ready: false,
         loaded: false,
@@ -21172,9 +21178,14 @@ window.__ModuleLoader__.load({
               bound: Boolean(bindingKbId),
               name: bindingName,
               narrow: barNarrow,
+              open: sessionOpen,
+              btnRef: sessionBtnRef,
               onOpen: () => {
-                setSessionOpen(true)
-                refreshSessions()
+                setSessionOpen((prev) => {
+                  const next = !prev
+                  if (next) refreshSessions()
+                  return next
+                })
               },
             }),
             h(DshMenu, {
@@ -21619,7 +21630,7 @@ window.__ModuleLoader__.load({
             ? h(
                 HragBoundary,
                 { t, name: t('session.title') },
-                h(SessionDrawer, {
+                h(SessionPopover, {
                   t,
                   sessionId,
                   current: sessionRow,
@@ -21631,9 +21642,9 @@ window.__ModuleLoader__.load({
                   browsingKbName: currentKb ? String(currentKb.name || currentKb.id) : '',
                   busy: sessionBusy,
                   error: sessionData.error,
+                  anchorRef: sessionBtnRef,
                   onBind: bindKb,
                   onUnbind: () => unbindSession(sessionId),
-                  onUnbindRow: unbindSession,
                   onOpenSession: openConversation,
                   onNew: newConversation,
                   onClose: () => setSessionOpen(false),
