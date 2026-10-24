@@ -37,8 +37,13 @@ window.__ModuleLoader__.load({
     const NS = 'harnessRag'
     // The host half's named route (src/kb_proxy.ts owns the other end).
     const PROXY_ROUTE = '/dsh-harness-rag/api'
+    // 首启轮询节拍（spec §4.6）：1 s，只在中间态开。
+    const RUNTIME_POLL_MS = 1000
     // 会话跳转（D6 甲）：apply 期 scoped inject 捕获 uiWorkspace，组件不持 ctx。
     const uiWorkspaceHolder = { service: null }
+    // 插件管理 UI 的 client 反射服务（Task 5）：点击时 ctx.get 懒取，
+    // 不写进 inject —— 缺件时整个面板仍要能挂载。
+    const pluginNavHolder = { ctx: null }
 
     const zh = {
       'tab.title': '知识库',
@@ -49,6 +54,52 @@ window.__ModuleLoader__.load({
       'shell.empty': '暂无知识库',
       'shell.emptyHint': '先在 DeerFlow 工作台创建知识库，再点「刷新」。',
       'shell.refresh': '刷新',
+      // 首启运行时门（Task 5）：设置卡 / 进度 / 错误三态。
+      'rt.loading': '正在检查本地服务…',
+      'rt.setupTitle': '准备本地知识服务',
+      'rt.setupHint': '首次使用需下载约 {0}，安装后约 {1}；运行时、数据与配置都放在这个目录下。',
+      'rt.setupHintNoSize': '运行时、数据与配置都放在这个目录下。',
+      'rt.location': '安装到',
+      'rt.willInstallTo': '将安装到 {0}',
+      'rt.change': '更改…',
+      'rt.start': '开始准备',
+      'rt.connectExisting': '连接已有服务',
+      'rt.connectHint': '打开「插件 → Harness RAG → backendUrl」，填入已有服务地址。',
+      'rt.previousBroken': '上次的位置不可用',
+      'rt.useDefault': '改回默认',
+      'rt.reasonMissing': '目录已不存在',
+      'rt.reasonNotWritable': '目录不可写',
+      'rt.err.pathNotAbsolute': '请填写绝对路径。',
+      'rt.err.networkPath': '不支持网络路径（UNC），请选本地磁盘。',
+      'rt.err.pluginDir': '不能放在插件目录或 node_modules 里。',
+      'rt.err.nestedInAnchor': '不能嵌套在 <DSH_HOME>/harness-rag 内。',
+      'rt.err.systemDir': '不能放在系统目录。',
+      'rt.err.pathTooLong': '路径过长，请选更浅的目录。',
+      'rt.err.targetNotPluginData': '目标 harness-rag 目录已存在且不是本插件的数据。',
+      'rt.err.notWritable': '目录不可写。',
+      'rt.err.spaceInsufficient': '磁盘空间不足。',
+      'rt.err.runtimeInstalled': '运行时已安装；换位置请手工搬迁。',
+      'rt.progressTitle': '正在准备本地知识服务',
+      'rt.phase.downloading': '正在下载运行时…',
+      'rt.phase.verifying': '正在校验下载…',
+      'rt.phase.extracting': '正在解压运行时…',
+      'rt.phase.preparing': '正在检查运行时…',
+      'rt.phase.starting': '正在启动本地服务…',
+      'rt.errorTitle': '本地知识服务未能启动',
+      'rt.errorStage': '未通过阶段：{0}',
+      'rt.retry': '重试',
+      'rt.copyLog': '复制日志路径',
+      'rt.copied': '已复制',
+      'rt.copyFailed': '复制失败',
+      'rt.changeLocation': '更改位置',
+      'rt.confirmSync': '该目录在同步盘（如 OneDrive）上，Qdrant 与 SQLite 容易出现锁冲突。仍要继续？',
+      'rt.continue': '继续',
+      'rt.cancel': '取消',
+      'rt.syncNote': '建议放在本地磁盘；同步盘上运行数据容易损坏。',
+      'rt.embedBanner': '本地服务已就绪；配置嵌入模型后即可上传文档',
+      'rt.embedAction': '去配置',
+      'rt.dismiss': '关闭',
+      'rt.qdrantManaged': '由内置服务管理',
       'shell.upload': '上传',
       'upload.uploading': '上传中…',
       'upload.submittedUnit': '个文件已提交',
@@ -907,6 +958,52 @@ window.__ModuleLoader__.load({
       'shell.empty': 'No knowledge bases yet',
       'shell.emptyHint': 'Create one in the DeerFlow workbench, then hit Refresh.',
       'shell.refresh': 'Refresh',
+      // First-run runtime gate (Task 5): setup / progress / error.
+      'rt.loading': 'Checking the local service…',
+      'rt.setupTitle': 'Set up the local knowledge service',
+      'rt.setupHint': 'The first run downloads about {0} and installs about {1}; the runtime, data and config all live in this directory.',
+      'rt.setupHintNoSize': 'The runtime, data and config all live in this directory.',
+      'rt.location': 'Install to',
+      'rt.willInstallTo': 'Installs to {0}',
+      'rt.change': 'Change…',
+      'rt.start': 'Start setup',
+      'rt.connectExisting': 'Use an existing service',
+      'rt.connectHint': 'Open "Plugins → Harness RAG → backendUrl" and enter the existing service address.',
+      'rt.previousBroken': 'The previous location is unavailable',
+      'rt.useDefault': 'Use the default',
+      'rt.reasonMissing': 'the directory no longer exists',
+      'rt.reasonNotWritable': 'the directory is not writable',
+      'rt.err.pathNotAbsolute': 'Enter an absolute path.',
+      'rt.err.networkPath': 'Network paths (UNC) are not supported; pick a local disk.',
+      'rt.err.pluginDir': 'The plugin directory and node_modules are not allowed.',
+      'rt.err.nestedInAnchor': 'It cannot sit inside <DSH_HOME>/harness-rag.',
+      'rt.err.systemDir': 'System directories are not allowed.',
+      'rt.err.pathTooLong': 'The path is too long; pick a shallower directory.',
+      'rt.err.targetNotPluginData': 'That harness-rag directory exists and is not this plugin’s data.',
+      'rt.err.notWritable': 'The directory is not writable.',
+      'rt.err.spaceInsufficient': 'Not enough disk space.',
+      'rt.err.runtimeInstalled': 'The runtime is already installed; move it by hand.',
+      'rt.progressTitle': 'Preparing the local knowledge service',
+      'rt.phase.downloading': 'Downloading the runtime…',
+      'rt.phase.verifying': 'Verifying the download…',
+      'rt.phase.extracting': 'Unpacking the runtime…',
+      'rt.phase.preparing': 'Checking the runtime…',
+      'rt.phase.starting': 'Starting the local service…',
+      'rt.errorTitle': 'The local knowledge service could not start',
+      'rt.errorStage': 'Failed at: {0}',
+      'rt.retry': 'Retry',
+      'rt.copyLog': 'Copy log path',
+      'rt.copied': 'Copied',
+      'rt.copyFailed': 'Could not copy',
+      'rt.changeLocation': 'Change location',
+      'rt.confirmSync': 'This directory is on a synced drive (OneDrive and friends), where Qdrant and SQLite tend to hit lock conflicts. Continue anyway?',
+      'rt.continue': 'Continue',
+      'rt.cancel': 'Cancel',
+      'rt.syncNote': 'Prefer a local disk; runtime data on a synced drive is easy to corrupt.',
+      'rt.embedBanner': 'The local service is ready; configure an embedding model to start uploading documents',
+      'rt.embedAction': 'Configure',
+      'rt.dismiss': 'Dismiss',
+      'rt.qdrantManaged': 'Managed by the built-in service',
       'shell.upload': 'Upload',
       'upload.uploading': 'Uploading…',
       'upload.submittedUnit': 'file(s) submitted',
@@ -2087,6 +2184,31 @@ window.__ModuleLoader__.load({
           '.hrag-state-title { color: var(--dsw-alias-label-primary); font-size: 14px; line-height: 22px; }',
           '.hrag-state-detail { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; word-break: break-word; }',
           '.hrag-state-error .hrag-state-title { color: var(--dsw-alias-state-error-primary); }',
+          // 首启运行时门（Task 5）：设置卡行/进度条/日志尾/引导横幅。
+          '.hrag-rt-card { gap: 10px; }',
+          '.hrag-rt-row { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 448px; }',
+          '.hrag-rt-label { flex: 0 0 auto; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
+          '.hrag-rt-input { flex: 1 1 auto; min-width: 0; }',
+          '.hrag-rt-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 6px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 26px; }',
+          '.hrag-rt-warnrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; max-width: 448px; }',
+          '.hrag-rt-warn { color: var(--dsw-alias-state-warn-primary); text-align: left; }',
+          '.hrag-rt-inlineerror { max-width: 448px; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; word-break: break-word; }',
+          '.hrag-rt-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }',
+          '.hrag-rt-bar { width: 100%; max-width: 280px; height: 4px; border-radius: 2px; background: var(--dsw-alias-interactive-bg-hover); overflow: hidden; }',
+          '.hrag-rt-barfill { height: 100%; background: var(--dsw-alias-state-business-primary); transition: width 200ms linear; }',
+          '.hrag-rt-barfill-indeterminate { width: 35%; animation: hrag-rt-indeterminate 1.4s ease-in-out infinite; }',
+          '@keyframes hrag-rt-indeterminate { 0% { margin-left: -35%; } 100% { margin-left: 100%; } }',
+          '.hrag-rt-log { max-width: 448px; max-height: 120px; overflow: auto; margin: 0; padding: 8px; border-radius: 6px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; white-space: pre-wrap; word-break: break-all; text-align: left; }',
+          '.hrag-rt-logrow { justify-content: center; }',
+          '.hrag-rt-logpath { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-rt-banner { display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin: 12px 12px 0; border-radius: 8px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }',
+          '.hrag-rt-banner > span { flex: 1 1 auto; min-width: 0; }',
+          '.hrag-rt-bannerbtn { flex: 0 0 auto; }',
+          '.hrag-rt-bannerclose { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; }',
+          '.hrag-rt-bannerclose:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-rt-confirm { display: flex; flex-direction: column; gap: 6px; align-items: center; width: 100%; max-width: 448px; }',
+          '.hrag-rt-syncnote { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-rt-connecthint { max-width: 448px; }',
           // 文档表骨架（doc-columns 对 Task 1）：滚动区横滚保护列宽（min-w 544px
           // ＝工作台 34rem 同款），内容列撑满余高。10-16 他截图对照修订：顶部
           // 「就绪 N」汇总行撤除，改挂工作台同款底栏统计行（document-stats-row
@@ -2587,6 +2709,9 @@ window.__ModuleLoader__.load({
           // padding+border 顶出字段约 17px（10-14 复跑「Model ID 溢出容器」实证；原生 select/input
           // 吃 UA border-box 所以不受影响）。同一属性也兜住 primitives 缺件时的原生 input 回退。
           '.hrag-set-control { width: 100%; min-width: 0; box-sizing: border-box; }',
+          '.hrag-set-readonly { display: inline-flex; align-items: center; gap: 8px; width: 100%; min-width: 0; box-sizing: border-box; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 6px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 28px; }',
+          '.hrag-set-readonly > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
+          '.hrag-set-readonly-note { flex: 0 0 auto; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-set-field { position: relative; width: 100%; min-width: 0; }',
           // 10-14 复跑案：trail 上的 transform 会成为固定位菜单（DshMenu `.hrag-mm`）的
           // 包含块——菜单被放到「trail 左上 + 按钮视口坐标」的错位处（面板内不可见、还把
@@ -3118,6 +3243,65 @@ window.__ModuleLoader__.load({
           '.hrag-recall-savecount { margin-left: auto; font-size: 12px; color: var(--dsw-alias-label-secondary); }',
         ].join('\n'),
       )
+    }
+
+    /** 「更改…」给的是父目录；安装根＝<parent>/harness-rag，父目录本身已叫
+     * harness-rag 时不再套一层（与 host 半 targetRoot 同规则；8.3 短名同样有效）。 */
+    function runtimeTargetOf(parent) {
+      const trimmed = String(parent || '').trim().replace(/[\\/]+$/, '')
+      if (!trimmed) return ''
+      const sep = trimmed.indexOf('\\') >= 0 ? '\\' : '/'
+      const base = trimmed.split(sep).pop() || ''
+      return base.toLowerCase() === 'harness-rag' ? trimmed : trimmed + sep + 'harness-rag'
+    }
+
+    /** 首启门的阶段文案：supervisor 的粗阶段（preparing/starting）在前，
+     * 下载器细阶段（download/verify/extract）细化 preparing。 */
+    function runtimeStageKey(runtime) {
+      if (!runtime) return 'rt.phase.preparing'
+      if (runtime.phase === 'starting') return 'rt.phase.starting'
+      const progress = runtime.progress
+      if (progress && progress.phase === 'download') return 'rt.phase.downloading'
+      if (progress && progress.phase === 'verify') return 'rt.phase.verifying'
+      if (progress && progress.phase === 'extract') return 'rt.phase.extracting'
+      return 'rt.phase.preparing'
+    }
+
+    // runtime/configure 的拒绝码（host 半 ops.ts / location.ts）→ 本地化文案。
+    const RUNTIME_ERROR_KEYS = {
+      path_not_absolute: 'rt.err.pathNotAbsolute',
+      network_path: 'rt.err.networkPath',
+      plugin_dir: 'rt.err.pluginDir',
+      nested_in_anchor: 'rt.err.nestedInAnchor',
+      system_dir: 'rt.err.systemDir',
+      path_too_long: 'rt.err.pathTooLong',
+      target_not_plugin_data: 'rt.err.targetNotPluginData',
+      not_writable: 'rt.err.notWritable',
+      space_insufficient: 'rt.err.spaceInsufficient',
+      runtime_installed: 'rt.err.runtimeInstalled',
+    }
+
+    function runtimeOpErrorText(t, error) {
+      const kind = error && error.info && error.info.kind
+      const key = kind ? RUNTIME_ERROR_KEYS[kind] : ''
+      return key ? t(key) : errorDetail(error)
+    }
+
+    /** needs_location 的 reason 是 host 半的英文原句；只翻译两种已知原因。 */
+    function runtimeReasonText(t, reason) {
+      const text = String(reason || '')
+      if (/^target root does not exist/.test(text)) return t('rt.reasonMissing')
+      if (/^target root is not writable/.test(text)) return t('rt.reasonNotWritable')
+      return ''
+    }
+
+    /** 默认根给宿主符号形态（~/.dsh/harness-rag），其余原样绝对路径；
+     * 悬停 title 始终是绝对路径（spec §4.6）。 */
+    function runtimePathLabel(abs, defaultRoot) {
+      const path = String(abs || '')
+      if (!path) return ''
+      if (path === defaultRoot && /(^|[\\/])\.dsh[\\/]/.test(path)) return '~/.dsh/harness-rag'
+      return path
     }
 
     /** Failure display: the service's own detail, else the Error text. The host
@@ -17915,7 +18099,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function ModelSettingsPanel({ t, kbId, kbs, onClose }) {
+    function ModelSettingsPanel({ t, kbId, kbs, managed, onClose }) {
       const configQ = useEvalCall(kbId, true, 'ragConfigGet', null)
       const migrationQ = useEvalCall(kbId, true, 'ragMigration', null, (payload) =>
         Boolean(payload && payload.state === 'running'),
@@ -18912,14 +19096,22 @@ window.__ModuleLoader__.load({
             h('div', { className: 'hrag-set-grouptitle', title: t('set.form.groupServicesHint') }, t('set.group.services')),
             fieldRow(
               t('set.field.qdrantUrl'),
-              h(HostInput, {
-                className: 'hrag-set-control',
-                spellCheck: false,
-                type: 'url',
-                value: values.qdrant_url,
-                'aria-label': t('set.field.qdrantUrl'),
-                onChange: (event) => update('qdrant_url', event.target.value),
-              }),
+              managed
+                ? h(
+                    'span',
+                    { className: 'hrag-set-readonly', title: values.qdrant_url },
+                    h('span', null, values.qdrant_url || '-'),
+                    h('span', { className: 'hrag-set-readonly-note' }, t('rt.qdrantManaged')),
+                  )
+                : h(HostInput, {
+                    className: 'hrag-set-control',
+                    spellCheck: false,
+                    type: 'url',
+                    value: values.qdrant_url,
+                    'aria-label': t('set.field.qdrantUrl'),
+                    onChange: (event) => update('qdrant_url', event.target.value),
+                  }),
+              managed ? { info: t('rt.qdrantManaged') } : undefined,
             ),
             fieldRow(
               t('set.field.parseProvider'),
@@ -20762,6 +20954,18 @@ window.__ModuleLoader__.load({
         setKbOrder(next)
       }, [])
       const kbDragLabel = useKbDragReorder(commitKbMove)
+      // 首启运行时门（Task 5）：mount 先拉 runtime/status；external 直走原逻辑。
+      const [runtime, setRuntime] = React.useState(null)
+      const [runtimeFailure, setRuntimeFailure] = React.useState(null)
+      const [runtimeBusy, setRuntimeBusy] = React.useState(false)
+      const [runtimeInput, setRuntimeInput] = React.useState('')
+      const [runtimeFormError, setRuntimeFormError] = React.useState(null)
+      const [runtimeSyncConfirm, setRuntimeSyncConfirm] = React.useState(false)
+      const [runtimeSetupForced, setRuntimeSetupForced] = React.useState(false)
+      const [runtimeCopied, setRuntimeCopied] = React.useState(false)
+      const [embedBannerOff, setEmbedBannerOff] = React.useState(false)
+      const [connectHint, setConnectHint] = React.useState(false)
+      const runtimeLoadedRef = React.useRef(false)
 
       const load = React.useCallback(() => {
         setPhase('loading')
@@ -20785,9 +20989,40 @@ window.__ModuleLoader__.load({
           })
       }, [])
 
+      // 运行时状态（Task 5）：mount 先拉一次；托管未就绪按 1 s 轮询，
+      // needs_location / ready / error 停（设置卡不轮询）。轮询本身触发 ensure()。
+      const refreshRuntime = React.useCallback(() => {
+        return callOp('runtime/status')
+          .then((payload) => {
+            setRuntime(payload)
+            setRuntimeFailure(null)
+            return payload
+          })
+          .catch((error) => {
+            setRuntimeFailure(error)
+            return null
+          })
+      }, [])
+
       React.useEffect(() => {
+        refreshRuntime()
+      }, [refreshRuntime])
+
+      React.useEffect(() => {
+        if (!runtime || runtime.mode === 'external') return undefined
+        const phase = runtime.phase
+        if (phase === 'ready' || phase === 'error' || phase === 'needs_location') return undefined
+        const timer = window.setTimeout(refreshRuntime, RUNTIME_POLL_MS)
+        return () => window.clearTimeout(timer)
+      }, [runtime, refreshRuntime])
+
+      // 库列表只拉一次：external 直接走原逻辑，托管等 ready；准备中/失败不拉。
+      React.useEffect(() => {
+        if (runtimeLoadedRef.current || !runtime) return
+        if (runtime.mode !== 'external' && runtime.phase !== 'ready') return
+        runtimeLoadedRef.current = true
         load()
-      }, [load])
+      }, [runtime, load])
 
       // 会话绑定（D5 甲）：每请求现拉一次会话目录＋绑定表左连接；current 取本面板
       // 所属会话那一行（未绑定也在，kbId:null）。hostless（无 sessionId）不发请求。
@@ -21155,6 +21390,308 @@ window.__ModuleLoader__.load({
           })
       }
 
+      // ── 首启运行时门（Task 5）：设置卡 / 进度 / 错误 ─────────────────────
+      const runtimeTarget = runtimeInput.trim() || (runtime ? runtime.root || runtime.defaultRoot : '')
+      const runtimeTargetResolved = runtimeInput.trim() ? runtimeTargetOf(runtimeInput.trim()) : runtimeTarget
+      const runtimeEditable = Boolean(runtime && runtime.picker !== 'native')
+
+      const startRuntimeSetup = (confirmSync) => {
+        if (runtimeBusy || !runtime) return
+        const parent = runtimeInput.trim() || runtime.root || runtime.defaultRoot
+        if (!parent) return
+        setRuntimeBusy(true)
+        setRuntimeFormError(null)
+        callOp('runtime/configure', confirmSync ? { parent, confirmSync: true } : { parent })
+          .then((payload) => {
+            setRuntimeSyncConfirm(false)
+            setRuntimeSetupForced(false)
+            setRuntimeInput('')
+            setRuntime(payload)
+            // configure 只落锚点与目录：再拉一次 status 让 host 开始准备。
+            return refreshRuntime()
+          })
+          .catch((error) => {
+            const kind = error && error.info && error.info.kind
+            if (kind === 'sync_confirm') {
+              setRuntimeSyncConfirm(true)
+              return
+            }
+            setRuntimeFormError(runtimeOpErrorText(t, error))
+          })
+          .finally(() => setRuntimeBusy(false))
+      }
+
+      const pickRuntimeLocation = () => {
+        if (runtimeBusy) return
+        setRuntimeFormError(null)
+        setRuntimeBusy(true)
+        callOp('runtime/pickDirectory', {})
+          .then((result) => {
+            if (result && result.target) {
+              setRuntimeInput(String(result.target))
+              setRuntimeSyncConfirm(false)
+            }
+          })
+          .catch((error) => setRuntimeFormError(runtimeOpErrorText(t, error)))
+          .finally(() => setRuntimeBusy(false))
+      }
+
+      const retryRuntimeSetup = () => {
+        if (runtimeBusy) return
+        setRuntimeBusy(true)
+        callOp('runtime/retry', {})
+          .then((payload) => setRuntime(payload))
+          .catch((error) => showToast(errorDetail(error), { error: true }))
+          .finally(() => setRuntimeBusy(false))
+      }
+
+      const copyRuntimeLogPath = () => {
+        const path = runtime && runtime.paths ? String(runtime.paths.logs || '') : ''
+        if (!path) return
+        const done = (ok) => {
+          if (ok) {
+            setRuntimeCopied(true)
+            window.setTimeout(() => setRuntimeCopied(false), 1500)
+            return
+          }
+          showToast(t('rt.copyFailed'), { error: true })
+        }
+        if (HostWriteClipboard) {
+          Promise.resolve(HostWriteClipboard(path)).then(done, () => done(false))
+          return
+        }
+        const clipboard = navigator.clipboard
+        if (clipboard && typeof clipboard.writeText === 'function') {
+          clipboard.writeText(path).then(() => done(true), () => done(false))
+          return
+        }
+        done(false)
+      }
+
+      const connectExistingService = () => {
+        let opened = false
+        try {
+          const ctx = pluginNavHolder.ctx
+          const navigation = ctx && typeof ctx.get === 'function' ? ctx.get('pluginNavigation') : null
+          if (navigation && typeof navigation.openBundle === 'function') {
+            navigation.openBundle('dsh-harness-rag')
+            opened = true
+          }
+        } catch (cause) {
+          opened = false
+        }
+        setConnectHint(!opened)
+      }
+
+      // 首启门优先于库列表四态；null ⇒ 原逻辑（external 或托管 ready）。
+      let runtimeGate = null
+      if (!runtime) {
+        runtimeGate = runtimeFailure
+          ? h(
+              'div',
+              { className: 'hrag-state hrag-state-fill hrag-state-error' },
+              h('div', { className: 'hrag-state-title' }, t('shell.errorTitle')),
+              h('div', { className: 'hrag-state-detail' }, errorDetail(runtimeFailure)),
+              h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: refreshRuntime }, t('shell.retry')),
+            )
+          : h(
+              'div',
+              { className: 'hrag-state hrag-state-fill' },
+              h('div', { className: 'hrag-state-title' }, t('rt.loading')),
+            )
+      } else if (runtime.mode === 'managed' && (runtime.phase === 'needs_location' || runtimeSetupForced)) {
+        const reason = runtime.previousRoot ? runtimeReasonText(t, runtime.reason) : ''
+        const sizeHint =
+          runtime.pack && runtime.pack.size > 0
+            ? t('rt.setupHint', { 0: docFmtBytes(runtime.pack.size), 1: docFmtBytes(runtime.pack.unpackedSize) })
+            : t('rt.setupHintNoSize')
+        runtimeGate = h(
+          'div',
+          { className: 'hrag-state hrag-state-fill hrag-rt-card' },
+          h('div', { className: 'hrag-state-title' }, t('rt.setupTitle')),
+          runtime.previousRoot
+            ? h(
+                'div',
+                { className: 'hrag-rt-warnrow' },
+                h(
+                  'div',
+                  { className: 'hrag-state-detail hrag-rt-warn' },
+                  t('rt.previousBroken') + ': ' + runtime.previousRoot + (reason ? ' (' + reason + ')' : ''),
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-outline',
+                    disabled: runtimeBusy,
+                    onClick: () => {
+                      setRuntimeInput('')
+                      setRuntimeFormError(null)
+                      setRuntimeSyncConfirm(false)
+                    },
+                  },
+                  t('rt.useDefault'),
+                ),
+              )
+            : null,
+          h(
+            'div',
+            { className: 'hrag-rt-row' },
+            h('span', { className: 'hrag-rt-label' }, t('rt.location')),
+            runtimeEditable
+              ? h(HostInput, {
+                  className: 'hrag-rt-input hrag-set-control',
+                  spellCheck: false,
+                  value: runtimeInput,
+                  placeholder: runtime.defaultRoot,
+                  'aria-label': t('rt.location'),
+                  onChange: (event) => {
+                    setRuntimeInput(event.target.value)
+                    setRuntimeFormError(null)
+                    setRuntimeSyncConfirm(false)
+                  },
+                })
+              : h(
+                  'span',
+                  { className: 'hrag-rt-input hrag-rt-path', title: runtimeTargetResolved },
+                  runtimePathLabel(runtimeTargetResolved, runtime.defaultRoot),
+                ),
+            runtimeEditable
+              ? null
+              : h(
+                  'button',
+                  { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: runtimeBusy, onClick: pickRuntimeLocation },
+                  t('rt.change'),
+                ),
+          ),
+          runtimeInput.trim() && runtimeTargetResolved !== runtimeInput.trim()
+            ? h('div', { className: 'hrag-state-detail' }, t('rt.willInstallTo', { 0: runtimeTargetResolved }))
+            : null,
+          runtimeFormError ? h('div', { className: 'hrag-rt-inlineerror' }, runtimeFormError) : null,
+          h('div', { className: 'hrag-state-detail' }, sizeHint),
+          runtimeSyncConfirm
+            ? h(
+                'div',
+                { className: 'hrag-rt-confirm' },
+                h('div', { className: 'hrag-state-detail' }, t('rt.confirmSync')),
+                h('div', { className: 'hrag-state-detail hrag-rt-syncnote' }, t('rt.syncNote')),
+                h(
+                  'div',
+                  { className: 'hrag-rt-actions' },
+                  h(
+                    'button',
+                    { type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: runtimeBusy, onClick: () => startRuntimeSetup(true) },
+                    t('rt.continue'),
+                  ),
+                  h(
+                    'button',
+                    { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: runtimeBusy, onClick: () => setRuntimeSyncConfirm(false) },
+                    t('rt.cancel'),
+                  ),
+                ),
+              )
+            : h(
+                'div',
+                { className: 'hrag-rt-actions' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-primary',
+                    disabled: runtimeBusy || !runtimeTarget,
+                    onClick: () => startRuntimeSetup(false),
+                  },
+                  t('rt.start'),
+                ),
+                h(
+                  'button',
+                  { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: runtimeBusy, onClick: connectExistingService },
+                  t('rt.connectExisting'),
+                ),
+              ),
+          connectHint ? h('div', { className: 'hrag-state-detail hrag-rt-connecthint' }, t('rt.connectHint')) : null,
+        )
+      } else if (runtime.mode === 'managed' && runtime.phase === 'error') {
+        const failure = runtime.error || {}
+        const detail = [failure.code, failure.detail].filter(Boolean).join(' — ')
+        runtimeGate = h(
+          'div',
+          { className: 'hrag-state hrag-state-fill hrag-state-error hrag-rt-card' },
+          h('div', { className: 'hrag-state-title' }, t('rt.errorTitle')),
+          h(
+            'div',
+            { className: 'hrag-state-detail' },
+            t('rt.errorStage', { 0: failure.phase || runtime.phase }) + (detail ? ': ' + detail : ''),
+          ),
+          runtime.logTail ? h('pre', { className: 'hrag-rt-log' }, runtime.logTail) : null,
+          runtime.paths
+            ? h(
+                'div',
+                { className: 'hrag-rt-row hrag-rt-logrow' },
+                h('span', { className: 'hrag-rt-input hrag-rt-path hrag-rt-logpath', title: runtime.paths.logs }, runtime.paths.logs),
+                h(
+                  'button',
+                  { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: copyRuntimeLogPath },
+                  runtimeCopied ? t('rt.copied') : t('rt.copyLog'),
+                ),
+              )
+            : null,
+          h(
+            'div',
+            { className: 'hrag-rt-actions' },
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-primary', disabled: runtimeBusy, onClick: retryRuntimeSetup },
+              t('rt.retry'),
+            ),
+            runtime.installed
+              ? null
+              : h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-outline',
+                    disabled: runtimeBusy,
+                    onClick: () => setRuntimeSetupForced(true),
+                  },
+                  t('rt.changeLocation'),
+                ),
+          ),
+        )
+      } else if (runtime.mode === 'managed' && runtime.phase !== 'ready') {
+        const progress = runtime.progress
+        const percent =
+          progress && progress.phase === 'download' && progress.total > 0
+            ? Math.max(0, Math.min(100, Math.floor((progress.received / progress.total) * 100)))
+            : null
+        const sizeHint =
+          runtime.pack && runtime.pack.size > 0
+            ? t('rt.setupHint', { 0: docFmtBytes(runtime.pack.size), 1: docFmtBytes(runtime.pack.unpackedSize) })
+            : t('rt.setupHintNoSize')
+        runtimeGate = h(
+          'div',
+          { className: 'hrag-state hrag-state-fill hrag-rt-card' },
+          h('div', { className: 'hrag-state-title' }, t('rt.progressTitle')),
+          h(
+            'div',
+            { className: 'hrag-state-detail' },
+            t(runtimeStageKey(runtime)) + (percent === null ? '' : ' · ' + percent + '%'),
+          ),
+          h(
+            'div',
+            Object.assign(
+              { className: 'hrag-rt-bar', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': 100 },
+              percent === null ? {} : { 'aria-valuenow': percent },
+            ),
+            h('div', {
+              className: 'hrag-rt-barfill' + (percent === null ? ' hrag-rt-barfill-indeterminate' : ''),
+              style: percent === null ? undefined : { width: percent + '%' },
+            }),
+          ),
+          h('div', { className: 'hrag-state-detail' }, sizeHint),
+        )
+      }
+
       let content
       if (phase === 'loading') {
         content = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('shell.loading')))
@@ -21428,7 +21965,31 @@ window.__ModuleLoader__.load({
             onDragLeave: panelDragLeave,
             onDrop: panelDrop,
           },
-          h(HragBoundary, { t, name: t('tab.title') }, content),
+          // 引导横幅（Task 5）：托管模式已就绪但还没配嵌入模型，可关；空库态也显示。
+          runtime && runtime.mode === 'managed' && runtime.phase === 'ready' && runtime.needsEmbeddingConfig && !embedBannerOff
+            ? h(
+                'div',
+                { className: 'hrag-rt-banner' },
+                h('span', null, t('rt.embedBanner')),
+                h(
+                  'button',
+                  { type: 'button', className: 'hrag-btn hrag-btn-outline hrag-rt-bannerbtn', onClick: () => setSettingsOpen(true) },
+                  t('rt.embedAction'),
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-rt-bannerclose',
+                    'aria-label': t('rt.dismiss'),
+                    title: t('rt.dismiss'),
+                    onClick: () => setEmbedBannerOff(true),
+                  },
+                  dshCloseIcon(),
+                ),
+              )
+            : null,
+          h(HragBoundary, { t, name: t('tab.title') }, runtimeGate || content),
           // 放置层（小件批 Task 2，照工作台双态）：空库＝虚线框＋底缘胶囊（全拒换
           // 「该格式暂不支持」），让九宫格判词透出；非空库＝70% 实底＋居中胶囊。
           dragFeedbackOn
@@ -21685,6 +22246,8 @@ window.__ModuleLoader__.load({
                   kbId,
                   onClose: () => setSettingsOpen(false),
                   kbs,
+                  // 托管模式（Task 5）：Qdrant 地址由内置服务拥有，设置页只读。
+                  managed: Boolean(runtime && runtime.mode === 'managed'),
                 }),
               )
             : null,
@@ -21722,6 +22285,7 @@ window.__ModuleLoader__.load({
       apply(ctx) {
         ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'harness-rag: dictionaries')
         const t = ctx.locale.bind(NS)
+        pluginNavHolder.ctx = ctx
         // 会话跳转服务晚到/缺件都不影响面板本体：作用域 inject 只填 holder。
         ctx.inject(['uiWorkspace'], (fresh) => {
           uiWorkspaceHolder.service = fresh.uiWorkspace

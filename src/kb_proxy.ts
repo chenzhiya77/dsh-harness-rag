@@ -20,7 +20,7 @@ import type { ModelSyncHandle } from './model_sync.ts'
 import type { Config } from './settings.ts'
 import {
   configureRuntime,
-  ensureRuntimeFromPanel,
+  panelStatus,
   pickDirectory,
   retryRuntime,
   RuntimeOpError,
@@ -429,7 +429,7 @@ export function checkPrivilegedRequest(headers: PrivilegedHeaders): void {
 
 function runtimePanelOps(deps: RuntimeOpsDeps): Record<string, (args: unknown) => Promise<unknown>> {
   return {
-    'runtime/status': async () => ensureRuntimeFromPanel(deps),
+    'runtime/status': async () => panelStatus(deps),
     'runtime/retry': async () => retryRuntime(deps),
     'runtime/pickDirectory': async () => pickDirectory(deps),
     'runtime/configure': async (args) =>

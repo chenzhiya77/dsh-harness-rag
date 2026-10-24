@@ -32,6 +32,8 @@ export interface RuntimeStatusPayload {
   logTail?: string
   error?: { phase: string; code: string; detail?: string }
   needsEmbeddingConfig?: boolean
+  /** `state/current.json` exists: a finished runtime is installed at this root. */
+  installed: boolean
   paths: { runtime: string; state: string; config: string; logs: string; downloads: string }
   pack: { size: number; unpackedSize: number } | null
 }
@@ -79,6 +81,7 @@ export function statusPayload(deps: RuntimeOpsDeps): RuntimeStatusPayload {
       mode: 'external',
       phase: 'external',
       root: defaulted,
+      installed: false,
       paths: layoutOf(defaulted),
     }
   }
@@ -95,6 +98,7 @@ export function statusPayload(deps: RuntimeOpsDeps): RuntimeStatusPayload {
     mode: 'managed',
     phase,
     root,
+    installed: existsSync(join(stateDir(root), 'current.json')),
     paths: layoutOf(root),
   }
   if (needsLocation) {
@@ -190,5 +194,16 @@ export function ensureRuntimeFromPanel(deps: RuntimeOpsDeps): RuntimeStatusPaylo
   if (payload.phase === 'needs_location') return payload
   const managed = deps.supervisor()
   if (managed) void managed.ensure()
+  return payload
+}
+
+/** `runtime/status`: the mount payload, plus the embedding probe once the
+ * service actually answers (the probe fetches the service; it must not run
+ * while the stack is still starting). */
+export async function panelStatus(deps: RuntimeOpsDeps): Promise<RuntimeStatusPayload> {
+  const payload = ensureRuntimeFromPanel(deps)
+  if (payload.mode === 'managed' && payload.phase === 'ready') {
+    payload.needsEmbeddingConfig = await deps.needsEmbeddingConfig()
+  }
   return payload
 }

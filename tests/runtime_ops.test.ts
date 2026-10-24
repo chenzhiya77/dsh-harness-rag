@@ -9,6 +9,7 @@ import { checkPrivilegedRequest } from '../src/kb_proxy.ts'
 import {
   configureRuntime,
   ensureRuntimeFromPanel,
+  panelStatus,
   pickDirectory,
   retryRuntime,
   RuntimeOpError,
@@ -96,6 +97,17 @@ test('status: managed mode defaults to the anchor root and the supervisor phase'
   assert.equal(payload.root, join(f.home, 'harness-rag'))
   assert.equal(payload.paths.config, join(payload.root, 'config'))
   assert.deepEqual(payload.pack, { size: 100, unpackedSize: 100 })
+  assert.equal(payload.installed, false)
+})
+
+test('status: an installed runtime is reported as installed', () => {
+  const f = fixture()
+  mkdirSync(join(f.home, 'harness-rag', 'state'), { recursive: true })
+  writeFileSync(join(f.home, 'harness-rag', 'state', 'current.json'), '{"version":1}')
+
+  const payload = statusPayload(f.deps)
+
+  assert.equal(payload.installed, true)
 })
 
 test('status: a recorded root that vanished asks for a location', () => {
@@ -179,6 +191,16 @@ test('configure: the anchor is written and the new root is created', () => {
   assert.deepEqual(f.configured, [root])
 })
 
+test('configure: the default root can be chosen as-is', () => {
+  const f = fixture()
+
+  const result = configureRuntime(f.deps, { parent: f.anchorRoot })
+
+  assert.equal(result.root, f.anchorRoot)
+  assert.equal(JSON.parse(readFileSync(join(f.anchorRoot, 'location.json'), 'utf8')).root, f.anchorRoot)
+  assert.deepEqual(f.configured, [f.anchorRoot])
+})
+
 // ── pick / retry ────────────────────────────────────────────────────────────
 
 test('pick: the native picker returns the parent and its harness-rag target', async () => {
@@ -221,6 +243,24 @@ test('ensure: the panel starts provisioning unless it needs a location', () => {
   )
   ensureRuntimeFromPanel(blocked.deps)
   assert.equal(blocked.supervisor.calls.ensure, 0)
+})
+
+test('panel status: the embedding probe only runs once the service is ready', async () => {
+  let probes = 0
+  const probe = async () => {
+    probes += 1
+    return true
+  }
+
+  const ready = fixture({ needsEmbeddingConfig: probe }, 'ready')
+  const readyPayload = await panelStatus(ready.deps)
+  assert.equal(readyPayload.needsEmbeddingConfig, true)
+  assert.equal(probes, 1)
+
+  const starting = fixture({ needsEmbeddingConfig: probe }, 'starting')
+  const startingPayload = await panelStatus(starting.deps)
+  assert.equal(startingPayload.needsEmbeddingConfig, undefined)
+  assert.equal(probes, 1)
 })
 
 // ── privileged-op guards ────────────────────────────────────────────────────
