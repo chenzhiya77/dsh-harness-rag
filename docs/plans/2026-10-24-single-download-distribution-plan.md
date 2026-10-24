@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·进行中（2026-10-25；Task 0–2 完成，Task 3–8 未开始）
+**Status:** 已拍·进行中（2026-10-25；Task 0–2 完成、Task 3 实施中（纯函数与守护核心已绿，真机门禁未跑），Task 4–8 未开始）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -102,13 +102,23 @@
 
 > 动到的文件：`src/runtime/seed.ts`（新增）、`src/runtime/ports.ts`（新增）、`src/runtime/supervisor.ts`（新增）、`src/runtime/process.ts`（新增）、`tests/runtime_supervisor.test.ts`（新增）、`tests/runtime_seed.test.ts`（新增）。
 
-- [ ] 测试先行（纯函数）：端口规划（默认口空闲/占用/双占用，bind 失败换口重试）；配置种子内容（从 `engine/config.example.yaml` 拷贝出的 `config.yaml` 必须能被 `AppConfig` 加载，含 `sandbox.use`；绝对 `sqlite_dir`；`rag_config.json.qdrant_url`；空 `models_config.json`）；读-改-写只动 `sqlite_dir`/`qdrant_url` 两个键；`service.json`/`current.json`/`lease.json` 清洗与坏 JSON 处理。
+- [x] 测试先行（纯函数）：端口规划（默认口空闲/占用/双占用，bind 失败换口重试）；配置种子内容（从 `engine/config.example.yaml` 拷贝出的 `config.yaml` 必须能被 `AppConfig` 加载，含 `sandbox.use`；绝对 `sqlite_dir`；`rag_config.json.qdrant_url`；空 `models_config.json`）；读-改-写只动 `sqlite_dir`/`qdrant_url` 两个键；`service.json`/`current.json`/`lease.json` 清洗与坏 JSON 处理。
 - [ ] 守护（用 Node 桩子进程模拟 Qdrant/knowledge）：启动顺序、Qdrant 六个环境变量（host/HTTP/GRPC/storage/snapshots/telemetry）、**经 `ctx.subprocess.spawn` 起子进程**（Windows kill-on-close Job、`windowsHide`、`scrubbedParentEnv` 自带代理；`DEER_FLOW_API_TOKEN` 走显式 `env`，不靠环境继承）、就绪探测（`/readyz`、`/health`、带 token 的 `/api/knowledge-bases`）、超时、退出码→`error`、日志落盘与轮转、正常停止（尽力 + 下次清理）、认领（service.json + token 200）、`lease.json` 单写者、pid 归属核对失败不杀、bind 失败换口重试。
-- [ ] 单例与去抖：`globalThis` 复用；dispose 后 5 秒内新实例接管则取消停止（假定时器）。
-- [ ] `seed.ts`：`config.yaml` 首次从 `config.example.yaml` 整份拷贝，**再追加** `database:{backend: sqlite, sqlite_dir:<运行根>/state/data}`（示例里该段是注释，没有可改写的既有键）；`rag_config.json`/`models_config.json` 只在文件不存在时写；每次启动只按当前运行根改 `sqlite_dir`、按实际端口修补 `qdrant_url`，其余键保留（托管模式只拥有这两个键）。
+- [x] 单例与去抖：`globalThis` 复用；dispose 后 5 秒内新实例接管则取消停止（假定时器）。
+- [x] `seed.ts`：`config.yaml` 首次从 `config.example.yaml` 整份拷贝，**再追加** `database:{backend: sqlite, sqlite_dir:<运行根>/state/data}`（示例里该段是注释，没有可改写的既有键）；`rag_config.json`/`models_config.json` 只在文件不存在时写；每次启动只按当前运行根改 `sqlite_dir`、按实际端口修补 `qdrant_url`，其余键保留（托管模式只拥有这两个键）。
 - [ ] 门禁：`node --test tests/runtime_*.test.ts`；`tsc`；真机起一次 Qdrant+引擎（用 Task 0 的临时运行时）验证。
 
 **实测（实施期回填）**：
+
+- 已落地四模块：`seed.ts`（整份拷贝＋追加 `database`；每次只改 `sqlite_dir` 一行）、`ports.ts`（默认 6333/6334/8020，逐角色升位并避开已占用者）、`process.ts`（`service.json`/`lease.json` 清洗、pid 归属判定、`taskkill /T /F` 与 POSIX 信号）、`supervisor.ts`（起停、探测、认领、租约、日志）。
+- 用例：seed 12、ports 7、process 7、supervisor 11；全量 **158/158**；`tsc` 0 错。neuter 两刀（认领短路、dispose 不杀子进程）各被抓，还原后复绿。
+- 守护口径（测试用 Node 桩子进程 + 真 HTTP 探测）：起序 qdrant→`/readyz`→engine→`/health`→带 token 的 `/api/knowledge-bases`；Qdrant 六 env、engine 五路径 env＋`DEER_FLOW_API_TOKEN`＋四段 `PYTHONPATH` 逐项钉死；子进程中途退出立即报 `<phase>_exited`（不等超时）；超时报 `<phase>_not_ready`；失败清理 service.json/租约/子进程。
+- 认领：`service.json` 记录 + token 探活 200 ⇒ `ready(adopted)`，**不 spawn、不杀**；探活失败才清理陈旧记录，且只杀「可执行文件在运行根内」的 pid。
+- 租约：`lease.json` 由宿主 pid 持有；外来且存活 ⇒ `lease_held` 不 spawn；陈旧 ⇒ 接管。
+- 单例：`globalThis` 按 `root+version` 复用；`dispose()` 走 5 秒宽限（定时器可注入，测试用假定时器），期间 `ensure()` 取消停止。
+- 端口：`planPorts` 只看「能否 bind」，**spawn 后被抢端口的换口重试尚未实现**（真实 bind 失败无法用桩模拟，留真机轮）。
+- 种子：`rag_config.json` 只写 `qdrant_url`（其余键逐字保留），损坏 JSON ⇒ `invalid_rag_config` 且不覆盖；`models_config.json` 只在不存在时写 `{models: []}`。
+- **未闭合**：①「种子 config.yaml 能被 `AppConfig` 加载」的 Python 侧验证；②`ctx.subprocess.spawn` 的真实接线（Task 4 的 `index.ts` 适配层）；③bind 失败换口；④真机起一次 Qdrant+引擎（`D:\hrag-t0` 已清理，需重建临时运行时）。
 
 ## Task 4 — 有效地址接线、状态 op 与工具姿态（spec §4.2、§4.6）
 
