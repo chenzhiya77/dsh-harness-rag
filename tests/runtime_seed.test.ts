@@ -179,7 +179,7 @@ test('models: an absent file is created with an empty model list', () => {
 
   assert.equal(result.ok, true)
   if (result.ok) assert.equal(result.created.models, true)
-  assert.deepEqual(JSON.parse(readFileSync(join(f.root, 'config', 'models_config.json'), 'utf8')), { models: [] })
+  assert.deepEqual(JSON.parse(readFileSync(join(f.root, 'config', 'models_config.json'), 'utf8')), { models: [], hidden_in_chat: [] })
 })
 
 test('models: an existing file is never rewritten', () => {

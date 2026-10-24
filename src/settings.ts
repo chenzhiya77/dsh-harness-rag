@@ -12,8 +12,11 @@ export interface Config {
  * it fails the whole entry at activation. The settings form ships in T3 via
  * the composition-provided path (see dsh-knowledge's bundle).
  */
+/** Empty `backendUrl` means "run the bundled service": the plugin provisions
+ * and supervises it under the runtime root. A non-empty value keeps the old
+ * external mode and nothing is downloaded. */
 export const defaultConfig: Config = {
-  backendUrl: 'http://127.0.0.1:8020',
+  backendUrl: '',
   apiToken: '',
   autoSyncModels: true,
 }

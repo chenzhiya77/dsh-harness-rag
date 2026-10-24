@@ -7,7 +7,9 @@
     - id: harness-rag
       name: dsh-harness-rag
       config:
-        # Harness RAG knowledge service endpoint (the minimal Python service).
-        backendUrl: 'http://127.0.0.1:8020'
-        # Optional API token sent as Bearer; empty = no auth header.
+        # Empty = run the bundled local knowledge service (provisioned on first
+        # use); non-empty = talk to an external service and download nothing.
+        backendUrl: ''
+        # External mode: optional Bearer token. Managed mode ignores this value
+        # and uses the token recorded in state/service.json.
         apiToken: ''

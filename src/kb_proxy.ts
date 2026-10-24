@@ -18,6 +18,14 @@ import type { IngestJobs } from './jobs.ts'
 import { unavailableModelStatus } from './model_sync.ts'
 import type { ModelSyncHandle } from './model_sync.ts'
 import type { Config } from './settings.ts'
+import {
+  configureRuntime,
+  ensureRuntimeFromPanel,
+  pickDirectory,
+  retryRuntime,
+  RuntimeOpError,
+  type RuntimeOpsDeps,
+} from './runtime/ops.ts'
 
 /**
  * Named route for the panel's data seam (spec 2026-10-12 §3.1, D3 甲): the
@@ -372,7 +380,61 @@ const readJsonBody = async (req: IncomingMessage): Promise<unknown> => {
  * (unreachable) or 503 (not configured) so the panel can tell them apart. */
 const errorStatus = (info: ApiError): number => {
   if (info.kind === 'http' && typeof info.status === 'number') return info.status
-  return info.kind === 'network' ? 502 : 503
+  if (info.kind === 'runtime_not_ready' || info.kind === 'not_configured') return 503
+  if (info.kind === 'cross_origin') return 403
+  if (info.kind === 'unsupported_media_type') return 415
+  return 502
+}
+
+/** Ops that can start a download or move the runtime root. They only accept a
+ * JSON POST from this origin, so a cross-site page cannot trigger them. */
+export const PRIVILEGED_OPS = new Set(['runtime/configure', 'runtime/pickDirectory', 'runtime/retry'])
+
+export interface PrivilegedHeaders {
+  'content-type'?: string
+  origin?: string
+  'sec-fetch-site'?: string
+  host?: string
+}
+
+export function checkPrivilegedRequest(headers: PrivilegedHeaders): void {
+  const type = (headers['content-type'] ?? '').toLowerCase()
+  if (!type.startsWith('application/json')) {
+    throw new HarnessRagError({
+      kind: 'unsupported_media_type',
+      detail: 'privileged panel ops require application/json',
+    })
+  }
+  const site = headers['sec-fetch-site']
+  if (site && site !== 'same-origin' && site !== 'none') {
+    throw new HarnessRagError({
+      kind: 'cross_origin',
+      detail: `cross-site panel op rejected (sec-fetch-site: ${site})`,
+    })
+  }
+  const origin = headers.origin
+  if (origin === 'null') {
+    throw new HarnessRagError({ kind: 'cross_origin', detail: 'opaque-origin panel op rejected' })
+  }
+  if (origin) {
+    const host = headers.host ?? ''
+    if (!host || (origin !== `http://${host}` && origin !== `https://${host}`)) {
+      throw new HarnessRagError({
+        kind: 'cross_origin',
+        detail: `cross-origin panel op rejected (origin: ${origin})`,
+      })
+    }
+  }
+}
+
+function runtimePanelOps(deps: RuntimeOpsDeps): Record<string, (args: unknown) => Promise<unknown>> {
+  return {
+    'runtime/status': async () => ensureRuntimeFromPanel(deps),
+    'runtime/retry': async () => retryRuntime(deps),
+    'runtime/pickDirectory': async () => pickDirectory(deps),
+    'runtime/configure': async (args) =>
+      configureRuntime(deps, (args ?? {}) as { parent?: unknown; confirmSync?: unknown }),
+  }
 }
 
 /** Raw upload pass-through: the browser posts multipart here and the body
@@ -585,6 +647,7 @@ export function registerKbProxy(
   bindings: BindingsStore,
   modelSync?: ModelSyncHandle,
   gating?: ToolGatingHandle,
+  runtimeOps?: RuntimeOpsDeps,
 ): void {
   const ingestJobs = registerIngestJobs(ctx, config)
   // The conversation drawer's four ops: they read the host session catalog and
@@ -593,6 +656,7 @@ export function registerKbProxy(
   const ops = {
     ...buildOps(config, ingestJobs, modelSync),
     ...conversationOps({ host: conversations, bindings, ...(gating ? { gating } : {}) }),
+    ...(runtimeOps ? runtimePanelOps(runtimeOps) : {}),
   }
 
   const handler = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
@@ -621,6 +685,7 @@ export function registerKbProxy(
         await forwardDownload(req, res, config)
         return
       }
+      if (PRIVILEGED_OPS.has(opName)) checkPrivilegedRequest(req.headers as PrivilegedHeaders)
       const op = ops[opName]
       if (!op) {
         sendJson(res, 404, { error: { kind: 'op', detail: `unknown panel op: ${opName}` } })
@@ -629,6 +694,10 @@ export function registerKbProxy(
       const data = await op(await readJsonBody(req))
       sendJson(res, 200, data ?? null)
     } catch (error) {
+      if (error instanceof RuntimeOpError) {
+        sendJson(res, 400, { error: { kind: error.kind, detail: error.message } })
+        return
+      }
       if (error instanceof HarnessRagError) {
         sendJson(res, errorStatus(error.info), { error: error.info })
         return

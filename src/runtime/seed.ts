@@ -111,7 +111,7 @@ export function seedRuntimeConfig(request: SeedRequest): SeedResult {
 
   const modelsPath = join(dir, 'models_config.json')
   if (!existsSync(modelsPath)) {
-    writeAtomic(modelsPath, `${JSON.stringify({ models: [] }, null, 2)}\n`)
+    writeAtomic(modelsPath, `${JSON.stringify({ models: [], hidden_in_chat: [] }, null, 2)}\n`)
     created.models = true
   }
 

@@ -189,11 +189,12 @@ test('start: the engine receives the five paths, the token, and PYTHONPATH', asy
 
   const env = f.spawned.requests[1].env
   assert.equal(env.DEER_FLOW_PROJECT_ROOT, f.root)
-  assert.equal(env.DEER_FLOW_HOME, join(f.root, 'state', 'data'))
+  assert.equal(env.DEER_FLOW_HOME, join(f.root, 'state'))
   assert.equal(env.DEER_FLOW_CONFIG_PATH, join(f.root, 'config', 'config.yaml'))
   assert.equal(env.DEER_FLOW_MODELS_CONFIG_PATH, join(f.root, 'config', 'models_config.json'))
   assert.equal(env.DEER_FLOW_RAG_CONFIG_PATH, join(f.root, 'config', 'rag_config.json'))
   assert.equal(env.DEER_FLOW_API_TOKEN, 'test-token')
+  assert.equal(env.PYTHONUTF8, '1')
   assert.equal(
     env.PYTHONPATH,
     [

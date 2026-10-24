@@ -62,6 +62,8 @@ export interface SupervisorOptions {
   readyTimeoutMs?: number
   probeIntervalMs?: number
   disposeGraceMs?: number
+  /** Called once the instance answers, whether adopted or freshly started. */
+  onReady?: () => void
   timers?: { set: (fn: () => void, ms: number) => unknown; clear: (handle: unknown) => void }
   maxLogBytes?: number
 }
@@ -297,7 +299,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     cwd: root,
     env: {
       DEER_FLOW_PROJECT_ROOT: root,
-      DEER_FLOW_HOME: join(stateDir(root), 'data'),
+      DEER_FLOW_HOME: stateDir(root),
       DEER_FLOW_CONFIG_PATH: join(configDir(root), 'config.yaml'),
       DEER_FLOW_MODELS_CONFIG_PATH: join(configDir(root), 'models_config.json'),
       DEER_FLOW_RAG_CONFIG_PATH: join(configDir(root), 'rag_config.json'),
@@ -308,6 +310,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         join(runtime, 'engine', 'backend', 'packages', 'harness'),
         join(runtime, 'engine', 'backend', 'packages', 'extension-api'),
       ].join(';'),
+      PYTHONUTF8: '1',
       PYTHONIOENCODING: 'utf-8',
     },
   })
@@ -318,6 +321,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     const base = `http://127.0.0.1:${record.ports.knowledge}`
     const healthy = await probe(`${base}/api/knowledge-bases`, { authorization: `Bearer ${record.token}` })
     if (!healthy) return null
+    options.onReady?.()
     setPhase({
       phase: 'ready',
       adopted: true,
@@ -415,13 +419,14 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
 
     writeJson(statePath, {
       version: 1,
-      pid: engine.pid ?? process.pid,
+      pid: engine.pid ?? null,
       qdrantPid: qdrant.pid ?? null,
       runtimeVersion,
       token,
       ports,
       startedAt: now(),
     })
+    options.onReady?.()
     setPhase({ phase: 'ready', adopted: false, error: undefined, logTail: currentLogTail() })
     return status
   }

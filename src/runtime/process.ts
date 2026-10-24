@@ -23,7 +23,8 @@ export type SpawnFn = (request: SpawnRequest) => ChildHandle
 
 export interface ServiceRecord {
   version: 1
-  pid: number
+  /** Null when the host seam keeps target identity private (it does). */
+  pid: number | null
   qdrantPid: number | null
   runtimeVersion: string
   token: string
@@ -56,17 +57,18 @@ function sanitizePorts(raw: unknown): PortPlan | null {
  * running instance instead of spawning a second one. */
 export function sanitizeService(raw: unknown): ServiceRecord | null {
   if (!isRecord(raw) || raw.version !== 1) return null
-  if (!positiveInt(raw.pid)) return null
   if (!isRuntimeVersion(raw.runtimeVersion)) return null
   if (!nonEmpty(raw.token)) return null
   const ports = sanitizePorts(raw.ports)
   if (!ports) return null
   if (!nonEmpty(raw.startedAt)) return null
+  const pid = raw.pid === undefined || raw.pid === null ? null : raw.pid
+  if (pid !== null && !positiveInt(pid)) return null
   const qdrantPid = raw.qdrantPid === undefined || raw.qdrantPid === null ? null : raw.qdrantPid
   if (qdrantPid !== null && !positiveInt(qdrantPid)) return null
   return {
     version: 1,
-    pid: raw.pid,
+    pid,
     qdrantPid,
     runtimeVersion: raw.runtimeVersion,
     token: raw.token,

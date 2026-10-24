@@ -1,9 +1,15 @@
 import type { Config } from './settings.ts'
 
 export interface ApiError {
-  kind: 'not_configured' | 'http' | 'network'
+  kind: 'not_configured' | 'runtime_not_ready' | 'cross_origin' | 'unsupported_media_type' | 'http' | 'network'
   status?: number
   detail: string
+}
+
+/** Managed mode exposes this so `api()` can name the phase instead of
+ * pretending the address is simply blank. */
+export interface ApiConfigLike extends Config {
+  readonly runtimeNotReady?: () => { phase: string } | null
 }
 
 export class HarnessRagError extends Error {
@@ -26,6 +32,13 @@ export async function api<T>(
   path: string,
   init?: { method?: string; body?: unknown; query?: Record<string, unknown>; signal?: AbortSignal },
 ): Promise<T> {
+  const waiting = (config as ApiConfigLike).runtimeNotReady?.()
+  if (waiting) {
+    throw new HarnessRagError({
+      kind: 'runtime_not_ready',
+      detail: `runtime_not_ready: the local knowledge service is not ready (phase: ${waiting.phase}). Open the knowledge-base panel to finish setup, or retry later.`,
+    })
+  }
   const base = config.backendUrl?.trim()
   if (!base) {
     throw new HarnessRagError({

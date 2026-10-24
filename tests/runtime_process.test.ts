@@ -24,9 +24,9 @@ test('service: a well-formed record survives', () => {
   assert.deepEqual(sanitizeService(service), service)
 })
 
-test('service: a missing qdrant pid is tolerated', () => {
-  const { qdrantPid: _dropped, ...withoutQdrant } = service
-  assert.deepEqual(sanitizeService(withoutQdrant), { ...withoutQdrant, qdrantPid: null })
+test('service: missing pids are tolerated (the host keeps identity private)', () => {
+  const { qdrantPid: _dropped, pid: _pid, ...withoutPids } = service
+  assert.deepEqual(sanitizeService(withoutPids), { ...withoutPids, pid: null, qdrantPid: null })
 })
 
 test('service: broken records degrade to null', () => {
