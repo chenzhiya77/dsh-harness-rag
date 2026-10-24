@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·进行中（2026-10-25；Task 0–2 完成、Task 3 实施中（纯函数与守护核心已绿，真机门禁未跑），Task 4–8 未开始）
+**Status:** 已拍·进行中（2026-10-25；Task 0–4 代码完成，Task 3/4 余真机门禁，Task 5–8 未开始）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -124,16 +124,27 @@
 
 > 动到的文件：`src/settings.ts`、`src/http.ts`、`src/kb_proxy.ts`、`src/model_sync.ts`、`src/index.ts`、`cordis.patch.yml`、`tests/runtime_config.test.ts`（新增）。
 
-- [ ] `settings.ts`：默认 `backendUrl: ''`（托管）；`cordis.patch.yml` 插入行同改；注释写「空=内置本地服务，非空=外部服务」。
-- [ ] 有效配置：`createEffectiveConfig(raw, supervisor)` 以 getter 提供 `backendUrl`/`apiToken`；外部模式原样；托管模式 token 只取 `service.json`（忽略 profile 遗留 `apiToken`），未就绪时 `api()` 抛 `runtime_not_ready`（带阶段），不静默连 8020。托管模式设置页 Qdrant 地址只读，`rag_config.json` 只重写 `qdrant_url` 一个键。
-- [ ] `index.ts`：创建 supervisor（单例）、异步 `ensureRuntime()`；`registerTools`/`registerKbProxy`/`registerModelSync` 全拿有效配置；就绪回调触发一次 `syncNow()`；`ctx.inject(['directoryPicker'], …)` 捕获选择器（缺件时标记不可用）。
-- [ ] `kb_proxy.ts` 增四 op：`runtime/status`（mode/phase/progress/version/root/defaultRoot/ports/paths/needsEmbeddingConfig/picker/logTail/error；phase 含 `needs_location`，带「目标不可用/校验失败」原因、旧路径与 `headless` 标志；`picker` 为 `native|browse|none`）、`runtime/retry`（重新走流水线）、`runtime/pickDirectory`（调宿主原生选择器，返回父目录或 null）、`runtime/configure({parent, confirmSync?})`（校验 + **先建运行根、`downloads/`、`config/`、`state/{data,logs,qdrant}`** + 写锚点 + 开始准备；同步盘二次确认；已装运行时拒绝换位，未生成 `current.json` 时允许）；错误信封沿用既有 `{error:{kind,detail}}`。headless 无位置时走默认根，不返回 `needs_location`；根可用但下载失败 ⇒ `error`/重试，不回 `needs_location`。`needsEmbeddingConfig` 口径见 spec §4.5。
-- [ ] 工具：未就绪（含 `needs_location`）返回结构化 `runtime_not_ready`，文案含阶段与「打开知识库面板完成设置 / 稍后重试」；不就绪也不注册到未绑定会话（沿用现有 gating）。
-- [ ] 特权 op 防护：`runtime/configure`/`pickDirectory`/`retry` 只接受 `application/json`，并校验 `Origin`/`Sec-Fetch-Site` 同源（与既有面板 op 的 JSON 预检口径一致），拒绝跨站触发的下载/换位。
-- [ ] 测试：外部/托管切换、getter 取值、未就绪错误、status 形状（含 picker/needsEmbeddingConfig）、configure 校验分支、重试幂等、跨源拒绝。
-- [ ] 门禁：`node --test tests/*.test.ts`；`tsc`。
+- [x] `settings.ts`：默认 `backendUrl: ''`（托管）；`cordis.patch.yml` 插入行同改；注释写「空=内置本地服务，非空=外部服务」。
+- [x] 有效配置：`createEffectiveConfig(raw, supervisor)` 以 getter 提供 `backendUrl`/`apiToken`；外部模式原样；托管模式 token 只取 `service.json`（忽略 profile 遗留 `apiToken`），未就绪时 `api()` 抛 `runtime_not_ready`（带阶段），不静默连 8020。托管模式设置页 Qdrant 地址只读，`rag_config.json` 只重写 `qdrant_url` 一个键。
+- [x] `index.ts`：创建 supervisor（单例）、异步 `ensureRuntime()`；`registerTools`/`registerKbProxy`/`registerModelSync` 全拿有效配置；就绪回调触发一次 `syncNow()`；`ctx.inject(['directoryPicker'], …)` 捕获选择器（缺件时标记不可用）。
+- [x] `kb_proxy.ts` 增四 op：`runtime/status`（mode/phase/progress/version/root/defaultRoot/ports/paths/needsEmbeddingConfig/picker/logTail/error；phase 含 `needs_location`，带「目标不可用/校验失败」原因、旧路径与 `headless` 标志；`picker` 为 `native|browse|none`）、`runtime/retry`（重新走流水线）、`runtime/pickDirectory`（调宿主原生选择器，返回父目录或 null）、`runtime/configure({parent, confirmSync?})`（校验 + **先建运行根、`downloads/`、`config/`、`state/{data,logs,qdrant}`** + 写锚点 + 开始准备；同步盘二次确认；已装运行时拒绝换位，未生成 `current.json` 时允许）；错误信封沿用既有 `{error:{kind,detail}}`。headless 无位置时走默认根，不返回 `needs_location`；根可用但下载失败 ⇒ `error`/重试，不回 `needs_location`。`needsEmbeddingConfig` 口径见 spec §4.5。
+- [x] 工具：未就绪（含 `needs_location`）返回结构化 `runtime_not_ready`，文案含阶段与「打开知识库面板完成设置 / 稍后重试」；不就绪也不注册到未绑定会话（沿用现有 gating）。
+- [x] 特权 op 防护：`runtime/configure`/`pickDirectory`/`retry` 只接受 `application/json`，并校验 `Origin`/`Sec-Fetch-Site` 同源（与既有面板 op 的 JSON 预检口径一致），拒绝跨站触发的下载/换位。
+- [x] 测试：外部/托管切换、getter 取值、未就绪错误、status 形状（含 picker/needsEmbeddingConfig）、configure 校验分支、重试幂等、跨源拒绝。
+- [x] 门禁：`node --test tests/*.test.ts`；`tsc`。
 
 **实测（实施期回填）**：
+
+- 新增/改动：`runtime/config.ts`（有效配置）、`runtime/ops.ts`（四 op 纯函数）、`runtime/spawn.ts`（宿主适配）、`runtime/provision.ts`（下载＋解压流水线）、`runtime/bridge.ts`（单例/根/picker/headless 接线）；改 `settings.ts`、`http.ts`、`kb_proxy.ts`、`index.ts`、`cordis.patch.yml` 与 Task 3 的 `process.ts`/`seed.ts`/`supervisor.ts`。
+- 用例：config 8／ops 15／spawn 5（加上前序共 **186/186**）；`tsc` 0 错。neuter 两刀（`runtimeNotReady` 短路、JSON 守卫短路）各被抓。
+- **宿主契约（`app.asar` 实读）**：`ctx.subprocess.spawn({argv,cwd,stdio,graceMs,env})`，`argv` 不经 shell、`env` 在剥凭据后合并；句柄只有 `done`/`collected.<stream>.readFrom(offset)`/`terminate()`/`waitForExit()`，**无 pid**（目标身份归提供方私有，Windows 走私有 runner＋Job）。因此 `service.json` 的 `pid`/`qdrantPid` 放宽为可空，陈旧记录「拿不到 pid 就不杀」，进程树由宿主 Job 的 dispose 回收——Task 3 那句「pid 归属核对失败不杀」的实际落点改为「无 pid 可核 ⇒ 不杀」。
+- `spawn.ts` 把收集式输出按 250 ms 轮询喂给既有日志监听（`maxBytes` 256 KB 尾窗），`kill()` 走 `terminate()`；宿主 `done` reject（命令起不来）折算成 exit `-1`，supervisor 据此立刻报 `<phase>_exited`。
+- 有效配置：外部模式原样；托管模式地址/令牌来自 `state/service.json`（忽略 profile 遗留 `apiToken`），未就绪时 `api()` 抛 `runtime_not_ready`，文案含阶段与「打开面板完成设置 / 稍后重试」；`backendUrl`/`apiToken` 是 getter，跟着实例走。
+- 四个 op：`runtime/status`（含 `headless`/`picker`/`previousRoot`/`reason`/`pack` 体积/`paths`）、`runtime/configure`（校验→建运行根/`downloads`/`config`/`state/{data,logs,qdrant,qdrant-snapshots}`→写锚点→交回新根；同步盘 `sync_confirm`；`state/current.json` 已存在 ⇒ `runtime_installed`）、`runtime/pickDirectory`（原生返回父目录并算出 `<parent>/harness-rag`）、`runtime/retry`。错误走 `RuntimeOpError` ⇒ 400 `{error:{kind,detail}}`。
+- 特权 op 守卫：`runtime/configure|pickDirectory|retry` 必须 `application/json`（否则 415），`sec-fetch-site` 只收 `same-origin|none`、`origin` 必须是同 host（否则 403、`origin: null` 也拒）。
+- headless：`ctx.get('webServer')` 缺失；激活后给 2 s 宽限，仍无 webServer 就用默认根自动 `ensure()`。面板侧 `runtime/status` 也会触发 `ensure()`（`needs_location` 除外）。
+- 就绪回调：`supervisor.onReady` 在认领与新起两条路都触发，`index.ts` 挂钩 `modelSync.syncNow({force:true})` 一次。
+- **未闭合**：①真机冷启动整链（下载→解压→起栈）与 AppConfig 实加载；②bind 被抢后的换口重试；③`needsEmbeddingConfig` 的「环境变量钥匙」判定用了 `DASHSCOPE_API_KEY/EMBEDDING_API_KEY/RAG_EMBEDDING_API_KEY` 近似，真机核一次；④`runtime/status` 的 `needsEmbeddingConfig` 只有 ready 时才探，面板文案按 Task 5 接。
 
 ## Task 5 — 面板首次运行面（spec §4.6）
 
