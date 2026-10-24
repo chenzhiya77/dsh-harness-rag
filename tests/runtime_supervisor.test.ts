@@ -1,0 +1,392 @@
+import test, { type TestContext } from 'node:test'
+import assert from 'node:assert/strict'
+import { spawn as spawnProcess, type ChildProcess } from 'node:child_process'
+import { createServer as createHttpServer } from 'node:http'
+import { createServer as createNetServer } from 'node:net'
+import type { AddressInfo } from 'node:net'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { sanitizeService, type SpawnFn, type SpawnRequest } from '../src/runtime/process.ts'
+import {
+  createSupervisor,
+  forgetSupervisor,
+  getSupervisor,
+  type Supervisor,
+} from '../src/runtime/supervisor.ts'
+
+const VERSION = '2.1.0-1'
+
+const QDRANT_STUB = `
+import { createServer } from 'node:http'
+const port = Number(process.env.QDRANT__SERVICE__HTTP_PORT)
+createServer((req, res) => {
+  if (req.url === '/readyz') { res.writeHead(200); res.end('ok'); return }
+  res.writeHead(404); res.end()
+}).listen(port, '127.0.0.1')
+`
+
+const ENGINE_STUB = `
+import { createServer } from 'node:http'
+const port = Number(process.argv[process.argv.indexOf('--port') + 1])
+const token = process.env.DEER_FLOW_API_TOKEN
+createServer((req, res) => {
+  if (req.url === '/health') { res.writeHead(200); res.end('{"status":"healthy"}'); return }
+  if (req.url === '/api/knowledge-bases') {
+    if (req.headers.authorization === 'Bearer ' + token) { res.writeHead(200); res.end('[]') }
+    else { res.writeHead(401); res.end() }
+    return
+  }
+  res.writeHead(404); res.end()
+}).listen(port, '127.0.0.1')
+`
+
+const CRASH_STUB = `process.exit(3)`
+
+interface Spawned {
+  spawn: SpawnFn
+  requests: SpawnRequest[]
+  children: ChildProcess[]
+  stop: () => void
+}
+
+function fakeSpawn(scripts: { qdrant: string; engine: string }): Spawned {
+  const requests: SpawnRequest[] = []
+  const children: ChildProcess[] = []
+  const spawn: SpawnFn = (request) => {
+    requests.push(request)
+    const script = request.command.endsWith('qdrant.exe') ? scripts.qdrant : scripts.engine
+    const child = spawnProcess(process.execPath, [script, ...request.args], {
+      cwd: request.cwd,
+      env: { ...process.env, ...request.env },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    })
+    children.push(child)
+    return {
+      pid: child.pid,
+      onData: (stream, listener) => {
+        child[stream]?.on('data', (chunk: Buffer) => listener(String(chunk)))
+      },
+      onExit: (listener) => {
+        child.on('exit', (code) => listener(code))
+      },
+      kill: () => {
+        child.kill()
+      },
+    }
+  }
+  return {
+    spawn,
+    requests,
+    children,
+    stop: () => {
+      for (const child of children) child.kill()
+    },
+  }
+}
+
+function writeStubs(root: string): { qdrant: string; engine: string; crash: string } {
+  const dir = join(root, 'stubs')
+  mkdirSync(dir, { recursive: true })
+  const qdrant = join(dir, 'qdrant-stub.mjs')
+  const engine = join(dir, 'engine-stub.mjs')
+  const crash = join(dir, 'crash-stub.mjs')
+  writeFileSync(qdrant, QDRANT_STUB)
+  writeFileSync(engine, ENGINE_STUB)
+  writeFileSync(crash, CRASH_STUB)
+  return { qdrant, engine, crash }
+}
+
+async function freePorts(count: number): Promise<number[]> {
+  const ports: number[] = []
+  for (let index = 0; index < count; index++) {
+    const server = createNetServer()
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+    ports.push((server.address() as AddressInfo).port)
+    await new Promise<void>((resolve) => server.close(() => resolve()))
+  }
+  return ports
+}
+
+interface Fixture {
+  root: string
+  runtime: string
+  stubs: { qdrant: string; engine: string; crash: string }
+  preferredPorts: { qdrantHttp: number; qdrantGrpc: number; knowledge: number }
+  spawned: Spawned
+}
+
+async function fixture(t: TestContext, mode: 'ok' | 'crash-engine' = 'ok'): Promise<Fixture> {
+  const root = mkdtempSync(join(tmpdir(), 'hrag-sup-'))
+  const runtime = join(root, 'runtime', VERSION)
+  mkdirSync(join(runtime, 'engine'), { recursive: true })
+  writeFileSync(join(runtime, 'engine', 'config.example.yaml'), 'config_version: 44\nsandbox:\n  use: x\n')
+  mkdirSync(join(runtime, 'qdrant'), { recursive: true })
+  mkdirSync(join(runtime, 'python'), { recursive: true })
+  writeFileSync(join(runtime, 'qdrant', 'qdrant.exe'), '')
+  writeFileSync(join(runtime, 'python', 'python.exe'), '')
+  const stubs = writeStubs(root)
+  const [qdrantHttp, qdrantGrpc, knowledge] = await freePorts(3)
+  const spawned = fakeSpawn({ qdrant: stubs.qdrant, engine: mode === 'ok' ? stubs.engine : stubs.crash })
+  t.after(() => spawned.stop())
+  return { root, runtime, stubs, preferredPorts: { qdrantHttp, qdrantGrpc, knowledge }, spawned }
+}
+
+function supervisor(f: Fixture, overrides: Partial<Parameters<typeof createSupervisor>[0]> = {}): Supervisor {
+  return createSupervisor({
+    root: f.root,
+    runtimeVersion: VERSION,
+    token: 'test-token',
+    spawn: f.spawned.spawn,
+    preferredPorts: f.preferredPorts,
+    probePort: async () => true,
+    readyTimeoutMs: 8_000,
+    probeIntervalMs: 40,
+    disposeGraceMs: 0,
+    ...overrides,
+  })
+}
+
+// ── start ───────────────────────────────────────────────────────────────────
+
+test('start: qdrant comes up first, the engine second, and service.json records both', async (t) => {
+  const f = await fixture(t)
+  const sup = supervisor(f)
+
+  const status = await sup.ensure()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.adopted, false)
+  assert.deepEqual(
+    f.spawned.requests.map((request) => (request.command.endsWith('qdrant.exe') ? 'qdrant' : 'engine')),
+    ['qdrant', 'engine'],
+  )
+  const record = sanitizeService(JSON.parse(readFileSync(join(f.root, 'state', 'service.json'), 'utf8')))
+  assert.ok(record)
+  assert.equal(record.token, 'test-token')
+  assert.deepEqual(record.ports, status.ports)
+  assert.ok(record.pid > 0)
+  assert.ok(record.qdrantPid && record.qdrantPid > 0)
+})
+
+test('start: qdrant receives the six storage and service variables', async (t) => {
+  const f = await fixture(t)
+  const status = await supervisor(f).ensure()
+
+  const env = f.spawned.requests[0].env
+  assert.equal(env.QDRANT__SERVICE__HOST, '127.0.0.1')
+  assert.equal(env.QDRANT__SERVICE__HTTP_PORT, String(status.ports?.qdrantHttp))
+  assert.equal(env.QDRANT__SERVICE__GRPC_PORT, String(status.ports?.qdrantGrpc))
+  assert.equal(env.QDRANT__STORAGE__STORAGE_PATH, join(f.root, 'state', 'qdrant'))
+  assert.equal(env.QDRANT__STORAGE__SNAPSHOTS_PATH, join(f.root, 'state', 'qdrant-snapshots'))
+  assert.equal(env.QDRANT__TELEMETRY_DISABLED, 'true')
+})
+
+test('start: the engine receives the five paths, the token, and PYTHONPATH', async (t) => {
+  const f = await fixture(t)
+  await supervisor(f).ensure()
+
+  const env = f.spawned.requests[1].env
+  assert.equal(env.DEER_FLOW_PROJECT_ROOT, f.root)
+  assert.equal(env.DEER_FLOW_HOME, join(f.root, 'state', 'data'))
+  assert.equal(env.DEER_FLOW_CONFIG_PATH, join(f.root, 'config', 'config.yaml'))
+  assert.equal(env.DEER_FLOW_MODELS_CONFIG_PATH, join(f.root, 'config', 'models_config.json'))
+  assert.equal(env.DEER_FLOW_RAG_CONFIG_PATH, join(f.root, 'config', 'rag_config.json'))
+  assert.equal(env.DEER_FLOW_API_TOKEN, 'test-token')
+  assert.equal(
+    env.PYTHONPATH,
+    [
+      join(f.runtime, 'site-packages'),
+      join(f.runtime, 'engine', 'backend'),
+      join(f.runtime, 'engine', 'backend', 'packages', 'harness'),
+      join(f.runtime, 'engine', 'backend', 'packages', 'extension-api'),
+    ].join(';'),
+  )
+})
+
+test('start: the seed runs before the children and points at the planned qdrant', async (t) => {
+  const f = await fixture(t)
+  const status = await supervisor(f).ensure()
+
+  const config = readFileSync(join(f.root, 'config', 'config.yaml'), 'utf8')
+  assert.match(config, new RegExp(`sqlite_dir: '${join(f.root, 'state', 'data').replace(/\\/g, '\\\\')}`))
+  const rag = JSON.parse(readFileSync(join(f.root, 'config', 'rag_config.json'), 'utf8'))
+  assert.equal(rag.qdrant_url, `http://127.0.0.1:${status.ports?.qdrantHttp}`)
+})
+
+// ── adopt / lease ───────────────────────────────────────────────────────────
+
+test('adopt: a live instance is reused and nothing is spawned', async (t) => {
+  const f = await fixture(t)
+  const ports = f.preferredPorts
+  const server = createHttpServer((req, res) => {
+    if (req.url === '/api/knowledge-bases' && req.headers.authorization === 'Bearer live-token') {
+      res.writeHead(200)
+      res.end('[]')
+      return
+    }
+    res.writeHead(401)
+    res.end()
+  })
+  await new Promise<void>((resolve) => server.listen(ports.knowledge, '127.0.0.1', resolve))
+  t.after(() => server.close())
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'service.json'),
+    JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      qdrantPid: null,
+      runtimeVersion: VERSION,
+      token: 'live-token',
+      ports,
+      startedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.adopted, true)
+  assert.equal(f.spawned.requests.length, 0)
+})
+
+test('lease: a live foreign owner blocks startup without spawning', async (t) => {
+  const f = await fixture(t)
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'lease.json'),
+    JSON.stringify({ version: 1, owner: 'other-host', pid: process.pid, startedAt: '2026-10-25T00:00:00.000Z' }),
+  )
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'error')
+  assert.equal(status.error?.code, 'lease_held')
+  assert.equal(f.spawned.requests.length, 0)
+})
+
+test('lease: a stale owner is taken over', async (t) => {
+  const f = await fixture(t)
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'lease.json'),
+    JSON.stringify({ version: 1, owner: 'dead-host', pid: 999_999, startedAt: '2026-10-25T00:00:00.000Z' }),
+  )
+
+  const status = await supervisor(f, { isAlive: () => false }).ensure()
+
+  assert.equal(status.phase, 'ready')
+})
+
+// ── failures ────────────────────────────────────────────────────────────────
+
+test('fail: an engine that exits during startup reports its phase, not a timeout', async (t) => {
+  const f = await fixture(t, 'crash-engine')
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'error')
+  assert.equal(status.error?.phase, 'engine')
+  assert.equal(status.error?.code, 'engine_exited')
+  assert.equal(existsSync(join(f.root, 'state', 'service.json')), false)
+  assert.equal(existsSync(join(f.root, 'state', 'lease.json')), false)
+})
+
+// ── stop ────────────────────────────────────────────────────────────────────
+
+test('stop: dispose kills both children and clears service.json and the lease', async (t) => {
+  const f = await fixture(t)
+  const sup = supervisor(f)
+  const status = await sup.ensure()
+  assert.equal(status.phase, 'ready')
+
+  sup.dispose()
+  const port = status.ports!.knowledge
+  const deadline = Date.now() + 5_000
+  let answered = true
+  while (Date.now() < deadline) {
+    answered = await fetch(`http://127.0.0.1:${port}/health`)
+      .then(() => true)
+      .catch(() => false)
+    if (!answered) break
+    await new Promise((resolve) => setTimeout(resolve, 50))
+  }
+
+  assert.equal(answered, false, 'the engine port stops answering')
+  assert.equal(existsSync(join(f.root, 'state', 'service.json')), false)
+  assert.equal(existsSync(join(f.root, 'state', 'lease.json')), false)
+})
+
+test('stop: an adopted instance is left running', async (t) => {
+  const f = await fixture(t)
+  const server = createHttpServer((_req, res) => {
+    res.writeHead(200)
+    res.end('[]')
+  })
+  await new Promise<void>((resolve) => server.listen(f.preferredPorts.knowledge, '127.0.0.1', resolve))
+  t.after(() => server.close())
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'service.json'),
+    JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      qdrantPid: null,
+      runtimeVersion: VERSION,
+      token: 'live-token',
+      ports: f.preferredPorts,
+      startedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+  const sup = supervisor(f)
+  await sup.ensure()
+
+  sup.dispose()
+
+  assert.equal(existsSync(join(f.root, 'state', 'service.json')), true)
+})
+
+// ── singleton and dispose debounce ──────────────────────────────────────────
+
+test('singleton: one supervisor per root and a pending dispose is cancelled by ensure', async (t) => {
+  const f = await fixture(t)
+  const pending = new Map<number, () => void>()
+  let nextId = 0
+  const timers = {
+    set: (fn: () => void) => {
+      pending.set(++nextId, fn)
+      return nextId
+    },
+    clear: (handle: unknown) => {
+      pending.delete(handle as number)
+    },
+  }
+  const options = {
+    root: f.root,
+    runtimeVersion: VERSION,
+    token: 'test-token',
+    spawn: f.spawned.spawn,
+    preferredPorts: f.preferredPorts,
+    probePort: async () => true,
+    readyTimeoutMs: 8_000,
+    probeIntervalMs: 40,
+    disposeGraceMs: 5_000,
+    timers,
+  }
+  t.after(() => forgetSupervisor(f.root, VERSION))
+
+  const first = getSupervisor(options)
+  await first.ensure()
+  first.dispose()
+  assert.equal(pending.size, 1, 'dispose is deferred')
+
+  const second = getSupervisor(options)
+  assert.equal(second, first, 'the same instance comes back')
+  await second.ensure()
+  assert.equal(pending.size, 0, 'ensure cancels the pending dispose')
+
+  for (const fire of [...pending.values()]) fire()
+  assert.equal(existsSync(join(f.root, 'state', 'service.json')), true)
+})
