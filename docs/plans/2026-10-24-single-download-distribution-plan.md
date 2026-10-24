@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·进行中（2026-10-25；Task 0 落点核实完成，Task 1–8 未开始）
+**Status:** 已拍·进行中（2026-10-25；Task 0–1 完成，Task 2–8 未开始）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -28,7 +28,7 @@
 - [ ] **宿主 UI 面**：面板现有居中状态块（`.hrag-state-fill`，`client.js` 样式段）、`ToasterHost`、设置入口（嵌入模型所在面）的实际打开方式；设置页「Qdrant 地址」的只读态是否可复用现有控件；`pluginNavigation.openBundle('dsh-harness-rag')` 是否可从 client 半注入、不可用时的退化文案；确认无需新槽位。**实测缺口：只读态需 Task 5 真面板验（primitives 包不在 asar 内）；其余已定位。**
 - [x] **工作区基线**：插件 HEAD 与未提交面；引擎 `git status` 空；主树零改动；记录 `npm pack --dry-run` 当前内容，作为 Task 7 对照。
 
-**实测**：2026-10-25（只读；探针与下载物在仓外 `D:\hrag-t0\`，三树零改动）。
+**实测**：2026-10-25（只读；探针与下载物在仓外 `D:\hrag-t0\`，已清理；三树零改动）。
 
 - **宿主能力**：`@deepseek-ai/dsh-subprocess` 已在 dsh-base 组合（id `subprocess`）。`ctx.subprocess` 的 Windows 实现在 kill-on-close Job 里跑子进程（`windowsHide`、Job 关闭即清树），内部调 `proxyEnvironmentForChild()`；子环境先剥凭据形与 `DSH_*` 再并入**显式** `env`（`dsh-subprocess/lib/index.js`、`dsh-subprocess-local/README.md`）。插件运行面只提供 `dsh-tools` + `cordis` 两个 peer（`src/settings.ts:10-11`），**不能直接 import `dsh-http-proxy`** ⇒ 代理与进程树都走 `ctx.subprocess`，`DEER_FLOW_API_TOKEN` 必须作为显式 env 传入。本地探针：`windowsHide:true`+`shell:false` 可取 stdout/stderr；`exit/SIGINT/SIGTERM` 均可注册；HMR 只替换模块不重启进程 ⇒ `globalThis` 保留。
 - **目录选择器**：`ctx.directoryPicker` 由 `@deepseek-ai/dsh-host-directory-picker-auto` 挂载（web-app id `directory-picker`）；win32 native 是自带 **Win32 COM 对话框 worker**（不是 Electron `showOpenDialog`），取消返回 `null`；auto 在远程授权/非 loopback/SSH 时退 `browse`，桌面 loopback 默认 `native`。
@@ -51,15 +51,24 @@
 
 > 动到的文件：`src/runtime/manifest.ts`（新增）、`src/runtime/paths.ts`（新增）、`src/runtime/location.ts`（新增）、`runtime.json`（新增）、`tests/runtime_manifest.test.ts`（新增）、`tests/runtime_paths.test.ts`（新增）。
 
-- [ ] 测试先行：清单校验（`format:1`、平台键、`https` URL 列表、64 位 hex sha256、size/unpackedSize 正整数、`runtimeVersion` 字符合法）；缺平台/占位 URL/0 size/坏 hash 的拒绝文案（占位统一报 `pack_missing`）；版本目录名与 `current.json` 结构。
-- [ ] `paths.ts`：`defaultRoot()`（`<DSH_HOME>/harness-rag`；`DSH_HOME` 空白串视同未设、缺省 `~/.dsh`，与 `bindings.ts:83-85` 同规则；测试把 `DSH_HOME` 指到临时目录）、`runtimeDir(root, version)`、`stateDir(root)`、`configDir(root)`、`logsDir(root)`、`downloadsDir(root)`；全部纯函数、不建目录。
-- [ ] `location.ts`：`readLocation()`（锚点固定在锚点根；坏 JSON/非绝对/相对路径 ⇒ 回落默认运行根并标记）、`writeLocation(root)`（原子写）、`resolveRoot()`（锚点优先，否则默认根；锚点存在但目标缺失/不可写 ⇒ 返回 `needs_location` + 原因，不静默改根）；测试覆盖锚点优先、坏锚点回落、目标缺失、空白 `DSH_HOME`。
-- [ ] 根校验纯函数：绝对路径、父目录可写探针、非系统目录、空间阈值（`size + unpackedSize × 1.1`）、Windows 路径长度、拒绝插件目录/node_modules、拒绝 UNC/网络盘、拒绝嵌套在锚点根内、同步盘二次确认标记、目标 `harness-rag` 非本插件数据时拒绝（本插件标记 = `bindings.json`/`location.json`/`runtime/<v>/runtime-manifest.json` 任一）。
-- [ ] `manifest.ts`：从包根读 `runtime.json`（`import.meta.url` 解析），按 `process.platform-process.arch` 取条目；返回结构化错误（`platform_unsupported`/`manifest_invalid`/`pack_missing`）。
-- [ ] `runtime.json` 初版：`win32-x64` 条目带占位 URL、0 size 与 0 unpackedSize（发布时回填），其余字段齐；0/空 URL 明确按 `pack_missing` 处理，单测覆盖，不违反「非占位条目 size 为正整数」。
-- [ ] 门禁：`node --test tests/runtime_manifest.test.ts`；`tsc -p tsconfig.json`。
+- [x] 测试先行：清单校验（`format:1`、平台键、`https` URL 列表、64 位 hex sha256、size/unpackedSize 正整数、`runtimeVersion` 字符合法）；缺平台/占位 URL/0 size/坏 hash 的拒绝文案（占位统一报 `pack_missing`）；版本目录名与 `current.json` 结构。
+- [x] `paths.ts`：`defaultRoot()`（`<DSH_HOME>/harness-rag`；`DSH_HOME` 空白串视同未设、缺省 `~/.dsh`，与 `bindings.ts:83-85` 同规则；测试把 `DSH_HOME` 指到临时目录）、`runtimeDir(root, version)`、`stateDir(root)`、`configDir(root)`、`logsDir(root)`、`downloadsDir(root)`；全部纯函数、不建目录。
+- [x] `location.ts`：`readLocation()`（锚点固定在锚点根；坏 JSON/非绝对/相对路径 ⇒ 回落默认运行根并标记）、`writeLocation(root)`（原子写）、`resolveRoot()`（锚点优先，否则默认根；锚点存在但目标缺失/不可写 ⇒ 返回 `needs_location` + 原因，不静默改根）；测试覆盖锚点优先、坏锚点回落、目标缺失、空白 `DSH_HOME`。
+- [x] 根校验纯函数：绝对路径、父目录可写探针、非系统目录、空间阈值（`size + unpackedSize × 1.1`）、Windows 路径长度、拒绝插件目录/node_modules、拒绝 UNC/网络盘、拒绝嵌套在锚点根内、同步盘二次确认标记、目标 `harness-rag` 非本插件数据时拒绝（本插件标记 = `bindings.json`/`location.json`/`runtime/<v>/runtime-manifest.json` 任一）。
+- [x] `manifest.ts`：从包根读 `runtime.json`（`import.meta.url` 解析），按 `process.platform-process.arch` 取条目；返回结构化错误（`platform_unsupported`/`manifest_invalid`/`pack_missing`）。
+- [x] `runtime.json` 初版：`win32-x64` 条目带占位 URL、0 size 与 0 unpackedSize（发布时回填），其余字段齐；0/空 URL 明确按 `pack_missing` 处理，单测覆盖，不违反「非占位条目 size 为正整数」。
+- [x] 门禁：`node --test tests/runtime_manifest.test.ts`；`tsc -p tsconfig.json`。
 
 **实测（实施期回填）**：
+
+- 38 用例（manifest 16／paths 22）全绿；全量 `node --test tests/*.test.ts` **104/104**；`tsc` 0 错。
+- 导出面：`manifest.ts`＝`validateManifest`/`selectPack`/`readManifest`/`loadPack`/`sanitizeCurrent`/`isRuntimeVersion`/`isUnpublished`；`paths.ts`＝七个纯 join；`location.ts`＝`LOCATION_FILE`/`locationPath`/`readLocation`/`writeLocation`/`resolveRoot`/`targetRoot`/`validateRootCandidate`/`probeWritable`。
+- 判定口径：占位＝`urls.length===0 || size===0`（校验通过、`selectPack` 报 `pack_missing`，部分回填同理）；版本串在字符集外另拒 `.`/`..`（版本即目录名）；同步盘＝`OneDrive*` 环境变量包含父目录；系统目录默认取 `SystemRoot/windir/ProgramFiles/ProgramFiles(x86)/ProgramW6432/ProgramData`；可写探针＝写临时文件再删（ACL 也拦得住）；空间＝`ceil(size + unpackedSize×1.1)`；目标已存在须含三标记之一，**空目录也拒**。
+- **Windows 根路径预算定 120 字符**（259 − `runtime\<version>\` ≈ 20 − 最长包内条目 ≤120；Task 0 实测最长 167 含将排除的 `.deer-flow`）。Task 6 打包路径检查时复核实测条目高度，必要时收窄。
+- `resolveRoot` 的 `needs_location` 带 `{anchorRoot, previousRoot, reason}`；坏锚点回默认根时带 `warning`。目标目录存在但只缺运行时 ⇒ 仍 `ok`（下载失败归 `error`，Task 4/5）。
+- **偏离**：`package.json` 的 `files` 增 `runtime.json`（清单必须进 npm 包，原 Task 1 清单未列该文件）。`npm pack --dry-run`：25 文件、312.8 kB tarball、`runtime.json` 336 B。
+- `runtime.json` 初值：`runtimeVersion=0.1.0-1`、`engineVersion=0.1.0`、`engineCommit=b34b2d572`、`pythonVersion=3.12.13`、`qdrantVersion=1.20.0`、`configVersion=44`，`urls/size/sha256` 占位，Task 6 回填。
+- neuter：①`isUnpublished` 恒 `false` ⇒ manifest 3 败；②目标可写判定短路 ⇒ 「不可写 ⇒ needs_location」1 败；均整体还原后复跑全绿。
 
 ## Task 2 — 下载、校验、解压（TDD）（spec §4.4）
 
