@@ -1,0 +1,194 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import {
+  loadPack,
+  readManifest,
+  sanitizeCurrent,
+  selectPack,
+  validateManifest,
+} from '../src/runtime/manifest.ts'
+
+const HASH = 'a'.repeat(64)
+const PACKAGE_ROOT = fileURLToPath(new URL('../', import.meta.url))
+
+function pack(overrides: Record<string, unknown> = {}) {
+  return {
+    runtimeVersion: '2.1.0-1',
+    engineVersion: '2.1.0',
+    engineCommit: 'b34b2d572',
+    pythonVersion: '3.12.13',
+    qdrantVersion: '1.20.0',
+    configVersion: 44,
+    urls: ['https://example.com/runtime.zip'],
+    size: 123,
+    unpackedSize: 456,
+    sha256: HASH,
+    ...overrides,
+  }
+}
+
+function manifest(overrides: Record<string, unknown> = {}) {
+  return { format: 1, packs: { 'win32-x64': pack() }, ...overrides }
+}
+
+function tempDir(): string {
+  return mkdtempSync(join(tmpdir(), 'hrag-manifest-'))
+}
+
+function assertInvalid(raw: unknown, label: string): void {
+  const result = validateManifest(raw)
+  assert.equal(result.ok, false, label)
+  if (!result.ok) assert.equal(result.code, 'manifest_invalid', label)
+}
+
+// ── validateManifest ────────────────────────────────────────────────────────
+
+test('validate: a published pack is accepted and returned whole', () => {
+  const result = validateManifest(manifest())
+  assert.equal(result.ok, true)
+  if (result.ok) {
+    assert.equal(result.manifest.format, 1)
+    assert.equal(result.manifest.packs['win32-x64'].size, 123)
+  }
+})
+
+test('validate: format must be exactly 1', () => {
+  for (const format of [0, 2, '1', null, undefined]) {
+    assertInvalid(manifest({ format }), `format=${String(format)}`)
+  }
+})
+
+test('validate: packs must be a non-empty object of platform keys', () => {
+  for (const packs of [undefined, null, [], {}, { win32: pack() }, { WIN32_X64: pack() }]) {
+    assertInvalid(manifest({ packs }), `packs=${JSON.stringify(packs)}`)
+  }
+})
+
+test('validate: runtimeVersion allows [0-9A-Za-z._-] only', () => {
+  for (const runtimeVersion of ['', '2.1.0/1', '2.1 0', '../2.1.0', 1]) {
+    assertInvalid(manifest({ packs: { 'win32-x64': pack({ runtimeVersion }) } }), `runtimeVersion=${String(runtimeVersion)}`)
+  }
+})
+
+test('validate: non-placeholder entries need https urls', () => {
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ urls: ['http://example.com/x.zip'] }) } }), 'http')
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ urls: ['ftp://example.com/x.zip'] }) } }), 'ftp')
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ urls: 'https://example.com/x.zip' }) } }), 'not an array')
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ urls: ['not a url'] }) } }), 'garbage url')
+})
+
+test('validate: non-placeholder entries need a 64-hex sha256 and positive sizes', () => {
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ sha256: 'abc' }) } }), 'short hash')
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ sha256: HASH.toUpperCase() }) } }), 'uppercase hash')
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ size: -1 }) } }), 'negative size')
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ unpackedSize: 1.5 }) } }), 'fractional size')
+})
+
+test('validate: each entry carries the identity fields', () => {
+  for (const field of ['engineVersion', 'engineCommit', 'pythonVersion', 'qdrantVersion']) {
+    assertInvalid(manifest({ packs: { 'win32-x64': pack({ [field]: '' }) } }), field)
+  }
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ configVersion: -1 }) } }), 'configVersion')
+  assertInvalid(manifest({ packs: { 'win32-x64': pack({ configVersion: 1.5 }) } }), 'configVersion fraction')
+})
+
+test('validate: the unpublished placeholder is legal but selects as pack_missing', () => {
+  const placeholder = pack({ urls: [], size: 0, unpackedSize: 0, sha256: '' })
+  const result = validateManifest(manifest({ packs: { 'win32-x64': placeholder } }))
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  const selected = selectPack(result.manifest, 'win32-x64')
+  assert.equal(selected.ok, false)
+  if (!selected.ok) assert.equal(selected.code, 'pack_missing')
+})
+
+test('validate: a partially filled pack is still an unpublished placeholder', () => {
+  const partial = pack({ size: 0 })
+  const result = validateManifest(manifest({ packs: { 'win32-x64': partial } }))
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  const selected = selectPack(result.manifest, 'win32-x64')
+  assert.equal(selected.ok, false)
+  if (!selected.ok) assert.equal(selected.code, 'pack_missing')
+})
+
+// ── selectPack / loadPack ───────────────────────────────────────────────────
+
+test('select: an absent platform is platform_unsupported', () => {
+  const result = validateManifest(manifest())
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  for (const platform of ['darwin-arm64', 'linux-x64', 'win32-arm64']) {
+    const selected = selectPack(result.manifest, platform)
+    assert.equal(selected.ok, false)
+    if (!selected.ok) assert.equal(selected.code, 'platform_unsupported', platform)
+  }
+})
+
+test('select: the matching platform returns its pack', () => {
+  const result = validateManifest(manifest())
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  const selected = selectPack(result.manifest, 'win32-x64')
+  assert.equal(selected.ok, true)
+  if (selected.ok) {
+    assert.equal(selected.platform, 'win32-x64')
+    assert.equal(selected.pack.runtimeVersion, '2.1.0-1')
+  }
+})
+
+test('load: reads runtime.json from the package root', () => {
+  const dir = tempDir()
+  writeFileSync(join(dir, 'runtime.json'), JSON.stringify(manifest()))
+  const loaded = loadPack({ packageRoot: dir, platform: 'win32-x64' })
+  assert.equal(loaded.ok, true)
+  if (loaded.ok) assert.equal(loaded.pack.size, 123)
+})
+
+test('load: missing or malformed runtime.json is manifest_invalid', () => {
+  const dir = tempDir()
+  const missing = loadPack({ packageRoot: dir, platform: 'win32-x64' })
+  assert.equal(missing.ok, false)
+  if (!missing.ok) assert.equal(missing.code, 'manifest_invalid')
+
+  writeFileSync(join(dir, 'runtime.json'), '{ not json')
+  const malformed = loadPack({ packageRoot: dir, platform: 'win32-x64' })
+  assert.equal(malformed.ok, false)
+  if (!malformed.ok) assert.equal(malformed.code, 'manifest_invalid')
+})
+
+test('load: the shipped runtime.json is valid and its win32-x64 pack is unpublished', () => {
+  const read = readManifest({ packageRoot: PACKAGE_ROOT })
+  assert.equal(read.ok, true)
+  const loaded = loadPack({ packageRoot: PACKAGE_ROOT, platform: 'win32-x64' })
+  assert.equal(loaded.ok, false)
+  if (!loaded.ok) assert.equal(loaded.code, 'pack_missing')
+})
+
+// ── current.json ────────────────────────────────────────────────────────────
+
+test('current: a well-formed record survives, with or without previousVersion', () => {
+  const base = { version: 1, runtimeVersion: '2.1.0-1', updatedAt: '2026-10-25T00:00:00.000Z' }
+  assert.deepEqual(sanitizeCurrent(base), base)
+  assert.deepEqual(sanitizeCurrent({ ...base, previousVersion: '2.0.0-1' }), { ...base, previousVersion: '2.0.0-1' })
+})
+
+test('current: wrong version, bad runtimeVersion, or blank updatedAt degrades to null', () => {
+  const base = { version: 1, runtimeVersion: '2.1.0-1', updatedAt: '2026-10-25T00:00:00.000Z' }
+  for (const raw of [
+    null,
+    undefined,
+    [],
+    { ...base, version: 2 },
+    { ...base, runtimeVersion: '2.1.0/1' },
+    { ...base, runtimeVersion: '' },
+    { ...base, updatedAt: '' },
+    { ...base, previousVersion: 'bad/version' },
+  ]) {
+    assert.equal(sanitizeCurrent(raw), null, JSON.stringify(raw))
+  }
+})

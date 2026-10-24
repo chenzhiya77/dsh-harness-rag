@@ -22,7 +22,8 @@
     "cordis.patch.yml",
     "locale",
     "docs/equivalence.md",
-    "README.md"
+    "README.md",
+    "runtime.json"
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --pretty false"

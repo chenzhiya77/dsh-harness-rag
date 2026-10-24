@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "packs": {
+    "win32-x64": {
+      "runtimeVersion": "0.1.0-1",
+      "engineVersion": "0.1.0",
+      "engineCommit": "b34b2d572",
+      "pythonVersion": "3.12.13",
+      "qdrantVersion": "1.20.0",
+      "configVersion": 44,
+      "urls": [],
+      "size": 0,
+      "unpackedSize": 0,
+      "sha256": ""
+    }
+  }
+}
