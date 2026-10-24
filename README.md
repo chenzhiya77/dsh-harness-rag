@@ -58,13 +58,13 @@ dsh plugin --profile <name> add link:<本仓绝对路径>
 本插件只需要 **Harness RAG knowledge 服务**（主体二 `harness-rag` 仓）：只挂知识库 API 的单进程服务，不含 agent 运行时、IM 通道、调度器与前端。
 
 ```sh
-# 最小形态：只起 knowledge 服务（端口 8020）
+# 最小形态：只起 knowledge 服务（端口 8020）；gateway 会先同步依赖（含 UMAP 投影 extra）
 cd <harness-rag>/backend && make gateway
 # 它跑的就是（backend/Makefile）：
 # uvicorn app.gateway.knowledge_app:app --host 127.0.0.1 --port 8020
 ```
 
-- 服务启动前需就绪：Python 3.12 ＋ `uv sync --inexact`（默认依赖已含 ragas，L2 评测开箱可用）；外部 Qdrant（默认 `127.0.0.1:6333`）；`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`。数据在 `backend/.deer-flow/`。
+- 服务启动前需就绪：Python 3.12 ＋ 依赖同步（`make gateway` 内置 `uv sync --inexact --extra umap`：默认依赖含 ragas，umap extra 提供投影的 UMAP 算法，未装时只有 PCA；直接运行 uvicorn 时需手动同步）；外部 Qdrant（默认 `127.0.0.1:6333`）；`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`。数据在 `backend/.deer-flow/`。
 - 本机验收态可用 `DEER_FLOW_AUTH_DISABLED=1`（只绑回环）；引擎开启 token 鉴权时，插件 `apiToken` 填与服务端一致的 token；远程部署把 `backendUrl` 指过去即可。
 - 部署姿势不变：知识库数据在服务侧本地（Qdrant/存储）；插件只是它的一个客户端。
 
