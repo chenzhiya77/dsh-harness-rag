@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·进行中（2026-10-25；Task 0–1 完成，Task 2–8 未开始）
+**Status:** 已拍·进行中（2026-10-25；Task 0–2 完成，Task 3–8 未开始）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -74,15 +74,29 @@
 
 > 动到的文件：`src/runtime/download.ts`（新增）、`src/runtime/zip.ts`（新增）、`tests/runtime_download.test.ts`（新增）、`package.json`（新增运行依赖）。
 
-- [ ] 测试先行：本地 HTTP 服务（`node:http`）提供小 zip——正常下载、sha256 不符、size 不符、镜像 1 失败后镜像 2 成功、`.part` 断点（206 续写）、服务端回 200 时从头覆盖、3 次重试后报错、abort 后保留 `.part`。
-- [ ] 下载器：`https:` 校验、镜像顺序、`Range` 续写、流式写 `.part`、进度回调（`{phase, received, total}`）、完成后 `sha256`+`size` 双校验、成功改名。
-- [ ] 空间检查：下载前比较 `statfs`/可用空间与 `size + unpackedSize × 1.1`，不足即 `no_space`。
-- [ ] 代理与中止：普通 `fetch`（不传自定义 dispatcher）走宿主全局 dispatcher；插件 dispose/DSH 退出时 abort 下载、保留 `.part`。
-- [ ] 解压器：流式逐条；拒绝绝对路径、`..`、盘符、符号链接；先解到 `<version>.tmp`，成功原子改名；解压进度回调；`runtime/<version>` 已存在但缺 `runtime-manifest.json`（上次中断）时删除重解压。
-- [ ] 测试覆盖 zip-slip（`../evil.txt`、`C:\evil`）与坏 zip 截断。
-- [ ] 门禁：`node --test tests/runtime_download.test.ts`；`tsc`；`node --check` 不适用于 TS，跑 strip-types check。
+- [x] 测试先行：本地 HTTP 服务（`node:http`）提供小 zip——正常下载、sha256 不符、size 不符、镜像 1 失败后镜像 2 成功、`.part` 断点（206 续写）、服务端回 200 时从头覆盖、3 次重试后报错、abort 后保留 `.part`。
+- [x] 下载器：`https:` 校验、镜像顺序、`Range` 续写、流式写 `.part`、进度回调（`{phase, received, total}`）、完成后 `sha256`+`size` 双校验、成功改名。
+- [x] 空间检查：下载前比较 `statfs`/可用空间与 `size + unpackedSize × 1.1`，不足即 `no_space`。
+- [x] 代理与中止：普通 `fetch`（不传自定义 dispatcher）走宿主全局 dispatcher；插件 dispose/DSH 退出时 abort 下载、保留 `.part`。
+- [x] 解压器：流式逐条；拒绝绝对路径、`..`、盘符、符号链接；先解到 `<version>.tmp`，成功原子改名；解压进度回调；`runtime/<version>` 已存在但缺 `runtime-manifest.json`（上次中断）时删除重解压。
+- [x] 测试覆盖 zip-slip（`../evil.txt`、`C:\evil`）与坏 zip 截断。
+- [x] 门禁：`node --test tests/runtime_download.test.ts`；`tsc`；`node --check` 不适用于 TS，跑 strip-types check。
 
 **实测（实施期回填）**：
+
+- 17 例（下载 10／解压 7）全绿；全量 **121/121**；`tsc` 0 错。
+- 重试口径：**每镜像 4 次尝试（首试＋3 次重试）**，`retryDelayMs` 默认 250（测试传 0）；镜像按 `urls` 顺序，全部耗尽返回最后一次失败码与 detail（如 `HTTP 503`）。
+- URL 策略：`https` 全域放行，`http` **仅回环**（`127.0.0.1`/`localhost`/`[::1]`）——测试桩出口；清单侧仍由 Task 1 只收 https。
+- 续写：`.part` 实际尺寸即 `Range` 起点；206 追加、200 从头覆盖、416 丢弃重来；**sha256/size 不符的坏体删 `.part` 从零重来，网络错误保留 `.part`**。
+- **落盘语义改过一次**：初版用 `pipeline` 到写流，abort 时缓冲被丢弃，`.part` 可能 0 字节甚至不存在；改为逐块 `write(chunk, cb)` 再取下一块——abort 时已报的字节全部落盘，且文件恒为真前缀（测试用重复块校验前缀一致）。代价是写盘串行，400 MB 可接受。
+- 校验：先比文件 size，再流式算 sha256（第二遍读，400 MB 约 1–2 s），验证阶段回调 `phase:'verify'`。
+- 空间：`ceil(size + unpackedSize×1.1)` 对比 `statfs` 可用量，**在任何请求之前**判 `no_space`。
+- 解压：yauzl 开两次（先扫中央目录求 `uncompressedSize` 总和做进度分母，再逐条流式解）；条目名先归一 `\`→`/`，再拒绝对路径/盘符/`..`/`.`/NUL，并叠加 `resolve()` 越界判定；符号链接看 external attrs 高 16 位 `0xA000` ⇒ `unsafe_entry`；解完必须见 `runtime-manifest.json`，否则 `missing_manifest` 并整体回滚；`<version>.tmp` 成功后 rename；目标已带 manifest ⇒ `reused:true`，不读包。
+- zip-slip 两种名由 yauzl 在发条目时先拦（我们守卫是第二道），故测试接受 `zip_invalid` 或 `unsafe_entry`；符号链接只有自家守卫拦得住，测试钉 `unsafe_entry`。
+- 依赖：`yauzl@^3.4.0`（运行）＋`@types/yauzl`（开发）；仓内无锁文件，用 `npm install --no-package-lock` 落地；npm `files` 不含 tests，包面不受影响。
+- neuter：符号链接守卫恒 `false` ⇒ symlink 1 败；size 校验短路 ⇒ short-body 1 败；还原后 17/17。
+- 未做（登记）：解压 abort 只在条目/块边界生效（无独立中断句柄）；写盘错误（如 ENOSPC）暂并入 `network`，磁盘类文案留 Task 4。
+
 
 ## Task 3 — 配置种子与服务守护（TDD）（spec §4.3、§4.5）
 
