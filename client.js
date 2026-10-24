@@ -2080,6 +2080,9 @@ window.__ModuleLoader__.load({
           // 空态照工作台 recall-test-panel（FlaskConical size-5 + text-sm muted，gap-2 居中）。
           '.hrag-state-empty { flex: 1; justify-content: center; gap: 8px; padding: 16px; }',
           '.hrag-state-empty .hrag-state-title { color: var(--dsw-alias-label-tertiary); }',
+          // 投影/图谱三态照工作台 h-full 双轴居中；详情限宽照 max-w-md。
+          '.hrag-state-fill { flex: 1; justify-content: center; }',
+          '.hrag-state-fill .hrag-state-detail { max-width: 448px; }',
           '.hrag-state-icon { display: inline-flex; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-state-title { color: var(--dsw-alias-label-primary); font-size: 14px; line-height: 22px; }',
           '.hrag-state-detail { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; word-break: break-word; }',
@@ -7203,11 +7206,15 @@ window.__ModuleLoader__.load({
 
       let body
       if (phase === 'idle' || phase === 'loading') {
-        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('vec.loading')))
+        body = h(
+          'div',
+          { className: 'hrag-state hrag-state-fill' },
+          h('div', { className: 'hrag-state-title' }, t('vec.loading')),
+        )
       } else if (phase === 'error') {
         body = h(
           'div',
-          { className: 'hrag-state hrag-state-error' },
+          { className: 'hrag-state hrag-state-fill hrag-state-error' },
           h('div', { className: 'hrag-state-title' }, t('vec.loadFailed')),
           h('div', { className: 'hrag-state-detail' }, errorDetail(failure)),
           h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.retry')),
@@ -8150,11 +8157,15 @@ window.__ModuleLoader__.load({
 
       let body
       if (phase === 'idle' || phase === 'loading') {
-        body = h('div', { className: 'hrag-state' }, h('div', { className: 'hrag-state-title' }, t('graph.loading')))
+        body = h(
+          'div',
+          { className: 'hrag-state hrag-state-fill' },
+          h('div', { className: 'hrag-state-title' }, t('graph.loading')),
+        )
       } else if (phase === 'error') {
         body = h(
           'div',
-          { className: 'hrag-state hrag-state-error' },
+          { className: 'hrag-state hrag-state-fill hrag-state-error' },
           h('div', { className: 'hrag-state-title' }, t('graph.loadFailed')),
           h('div', { className: 'hrag-state-detail' }, errorDetail(failure)),
           h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.retry')),
