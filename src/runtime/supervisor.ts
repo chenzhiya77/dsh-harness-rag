@@ -160,6 +160,24 @@ function sizeOf(path: string): number {
   }
 }
 
+/** httpx reads `NO_PROXY` entries as URL patterns, so a bracketed IPv6 entry
+ * (`[::1]`) throws when the client is built — and the host's proxy overlay
+ * writes exactly that form. Keep the user's entries, drop the brackets, and
+ * make sure loopback stays bypassed. */
+export function pythonNoProxy(env: NodeJS.ProcessEnv): string {
+  const raw = (env.no_proxy ?? env.NO_PROXY ?? '').trim()
+  if (raw === '*') return '*'
+  const entries = raw
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => (entry.startsWith('[') && entry.endsWith(']') ? entry.slice(1, -1) : entry))
+  for (const name of ['localhost', '127.0.0.1', '::1', '0.0.0.0', '::ffff:127.0.0.1']) {
+    if (!entries.includes(name)) entries.push(name)
+  }
+  return entries.join(',')
+}
+
 /** Windows reports the port conflict as a numeric code; the English phrase only
  * appears on English locales. */
 const BIND_FAILURE = /(os error|Errno|winerror)\s*10048|EADDRINUSE|address already in use/i
@@ -443,6 +461,12 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       ].join(';'),
       PYTHONUTF8: '1',
       PYTHONIOENCODING: 'utf-8',
+      // The host overlays the resolved proxy policy onto every child, and its
+      // bypass list carries bracketed IPv6 entries (`[::1]`) that httpx rejects
+      // at client construction. Our env merges last, so hand Python a list it
+      // can parse instead.
+      no_proxy: pythonNoProxy(process.env),
+      NO_PROXY: pythonNoProxy(process.env),
     },
   })
 

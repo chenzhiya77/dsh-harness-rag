@@ -16,6 +16,7 @@ import {
   createSupervisor,
   forgetSupervisor,
   getSupervisor,
+  pythonNoProxy,
   type Supervisor,
 } from '../src/runtime/supervisor.ts'
 
@@ -187,6 +188,30 @@ test('start: qdrant receives the six storage and service variables', async (t) =
   assert.equal(env.QDRANT__STORAGE__STORAGE_PATH, join(f.root, 'state', 'qdrant'))
   assert.equal(env.QDRANT__STORAGE__SNAPSHOTS_PATH, join(f.root, 'state', 'qdrant-snapshots'))
   assert.equal(env.QDRANT__TELEMETRY_DISABLED, 'true')
+})
+
+test('pythonNoProxy: brackets are stripped and loopback stays bypassed', () => {
+  assert.equal(pythonNoProxy({ NO_PROXY: 'corp.example,[::1],10.0.0.0/8' }), 'corp.example,::1,10.0.0.0/8,localhost,127.0.0.1,0.0.0.0,::ffff:127.0.0.1')
+  assert.equal(pythonNoProxy({ no_proxy: 'intra.example' }), 'intra.example,localhost,127.0.0.1,::1,0.0.0.0,::ffff:127.0.0.1')
+  assert.equal(pythonNoProxy({}), 'localhost,127.0.0.1,::1,0.0.0.0,::ffff:127.0.0.1')
+  assert.equal(pythonNoProxy({ NO_PROXY: '*' }), '*')
+})
+
+test('start: the engine gets a NO_PROXY list httpx can parse', async (t) => {
+  const saved = process.env.NO_PROXY
+  process.env.NO_PROXY = 'corp.example,[::1]'
+  t.after(() => {
+    if (saved === undefined) delete process.env.NO_PROXY
+    else process.env.NO_PROXY = saved
+  })
+  const f = await fixture(t)
+  await supervisor(f).ensure()
+
+  const env = f.spawned.requests[1].env
+  assert.equal(env.no_proxy, env.NO_PROXY)
+  assert.ok(!String(env.NO_PROXY).includes('['), env.NO_PROXY)
+  assert.ok(String(env.NO_PROXY).includes('corp.example'))
+  assert.ok(String(env.NO_PROXY).includes('127.0.0.1'))
 })
 
 test('start: the engine receives the five paths, the token, and PYTHONPATH', async (t) => {
