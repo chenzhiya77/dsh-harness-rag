@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·进行中（2026-10-25；Task 0–6 代码完成，Task 3/4/5/6 余真机门禁，Task 7–8 未开始）
+**Status:** 已拍·进行中（2026-10-25；Task 0–7 落地（Task 7 余 GitHub 安装实测与发布件上传，属外部条件），Task 8 未开始）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -215,16 +215,24 @@
 
 > 动到的文件：`package.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`、`engine/`（并入）、`engine/UPSTREAM.md`（新增）、`market/index.json`（新增）、`README.md`、`docs/equivalence.md`（若需一句分发说明）。
 
-- [ ] **并入引擎**：按 Task 0 选定的方式把 `harness-rag` 的 `feat/rag-knowledge-base` 放进 `engine/`（默认 `git subtree add --squash` 或快照提交，不保留 172 MB 完整历史）；确认 `engine/backend/uv.lock` 与 `engine/config.example.yaml` 随源结构进入；写 `engine/UPSTREAM.md`（源仓、源 commit、并入日期）；旧引擎仓归档；并入时逐字节保留后端行为。
-- [ ] `package.json`：去 `private`；`publishConfig.access=public`；`engines.dsh`（建议 `>=0.2.1-rc.2 <0.3.0`，Task 0 定值）；`files` 增 `runtime.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`；`dependencies.yauzl`；`repository`/`homepage` 用实际发布地址（未定则留占位并在发布前替换）。
-- [ ] `LICENSE`：MIT 全文（10-25 已补）；`THIRD_PARTY_NOTICES.md` 保留 DeerFlow 与 DeepSeek Harness 的 MIT 声明；`runtime.json` 指真实 release URL、`size`/`unpackedSize`/`sha256`（未发布则保持占位并在 Task 8 标明「发布前回填」）。
-- [ ] `market/index.json`：形态 1；npm source；`engines.dsh` 对齐；内联 SVG 图标；用 DSH 校验器（仓外一次性）验证通过。
-- [ ] README：安装改为「装插件→首启在面板选位置并开始准备（约 400 MB）→配置嵌入模型」；并列三种安装命令（npm 包名、`git+https://…`、本地 `link:`），注明 GitHub 安装建议用 tag/commit；保留外部模式一节；给出默认/自定义根、`DSH_HOME`、换位需手工迁移、清理顺序、平台限制、索引添加方法；明确「官方市场未内置索引」；补「开发机已有 Qdrant 时托管会另起一个」「旧 `backend/.deer-flow` 数据不自动迁入」「杀软可能拦未签名 exe，如何加白」「视频默认 ASR 档需另装或改用服务档」。
-- [ ] `npm pack --dry-run` 对照 `files`：不含 `engine/`、`scripts/`、`market/`、`docs/specs`、`docs/plans`、`node_modules`；含 `runtime.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`、`client.js`、`src/`；记录包大小（基线 307.6 kB tarball / 1.2 MB 解包，预计仍约 1.5 MB）。
+- [x] **并入引擎**：按 Task 0 选定的方式把 `harness-rag` 的 `feat/rag-knowledge-base` 放进 `engine/`（默认 `git subtree add --squash` 或快照提交，不保留 172 MB 完整历史）；确认 `engine/backend/uv.lock` 与 `engine/config.example.yaml` 随源结构进入；写 `engine/UPSTREAM.md`（源仓、源 commit、并入日期）；旧引擎仓归档；并入时逐字节保留后端行为。
+- [x] `package.json`：去 `private`；`publishConfig.access=public`；`engines.dsh`（建议 `>=0.2.1-rc.2 <0.3.0`，Task 0 定值）；`files` 增 `runtime.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`；`dependencies.yauzl`；`repository`/`homepage` 用实际发布地址（未定则留占位并在发布前替换）。
+- [x] `LICENSE`：MIT 全文（10-25 已补）；`THIRD_PARTY_NOTICES.md` 保留 DeerFlow 与 DeepSeek Harness 的 MIT 声明；`runtime.json` 指真实 release URL、`size`/`unpackedSize`/`sha256`（未发布则保持占位并在 Task 8 标明「发布前回填」）。
+- [x] `market/index.json`：形态 1；npm source；`engines.dsh` 对齐；内联 SVG 图标；用 DSH 校验器（仓外一次性）验证通过。
+- [x] README：安装改为「装插件→首启在面板选位置并开始准备（约 400 MB）→配置嵌入模型」；并列三种安装命令（npm 包名、`git+https://…`、本地 `link:`），注明 GitHub 安装建议用 tag/commit；保留外部模式一节；给出默认/自定义根、`DSH_HOME`、换位需手工迁移、清理顺序、平台限制、索引添加方法；明确「官方市场未内置索引」；补「开发机已有 Qdrant 时托管会另起一个」「旧 `backend/.deer-flow` 数据不自动迁入」「杀软可能拦未签名 exe，如何加白」「视频默认 ASR 档需另装或改用服务档」。
+- [x] `npm pack --dry-run` 对照 `files`：不含 `engine/`、`scripts/`、`market/`、`docs/specs`、`docs/plans`、`node_modules`；含 `runtime.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`、`client.js`、`src/`；记录包大小（基线 307.6 kB tarball / 1.2 MB 解包，预计仍约 1.5 MB）。
 - [ ] 用 `git+https://<repo>.git` 在真实 DSH 装一次（仓库根是插件包），确认与 npm 安装等价、`runtime.json` 可读；记录 Git 安装的 `engines.dsh` 是装完后判定、失败会回滚 manifest/lock（与 registry 安装不同）。
-- [ ] 门禁：`node --check client.js`；`tsc`；`node --test tests/*.test.ts`；`engine/` 相对源 commit 只含预期改动；主树零 diff；token/key 扫描（提交面与包内容）。
+- [x] 门禁：`node --check client.js`；`tsc`；`node --test tests/*.test.ts`；`engine/` 相对源 commit 只含预期改动；主树零 diff；token/key 扫描（提交面与包内容）。
 
 **实测（实施期回填）**：
+
+- **并入引擎**：`git archive b34b2d572 | tar -x -C engine` 快照（不保留历史，`.git` 不增）；**1082/1082 文件逐字节等于源 commit**（按 git blob sha 全量比对），额外仅 `engine/UPSTREAM.md`（源仓/分支/commit/日期/更新法）。`git archive` 会按源仓 `.gitattributes` 把 `*.cmd` 转 CRLF，唯一的 `scripts/run-with-git-bash.cmd` 已按 blob 还原为 LF；并入树自带 `.gitattributes`，后续 checkout 行为与源仓一致。
+- **package.json**：去 `private`；`publishConfig.access=public`；`engines.dsh=>=0.2.1-rc.2 <0.3.0`（Task 0 实核）；`repository`/`homepage` 为 `OWNER` 占位（发布前替换）；**`files` 增 `presets`**——README 引用了 `presets/knowledge.patch.yml`，原白名单漏项，npm 装法会缺件。
+- **market/index.json**：format 1，npm source，`engines.dsh` 与包一致，`publishTimestamp=1792904630`，图标为 `icon.svg`（872 B）的内联 base64 data URL（1,190 B < 32 KiB）。用 app.asar 里的 `@deepseek-ai/dsh-plugin-market-index` 校验器（仓外 `D:\hrag-t7`，`parseMarketIndex` + `marketInstallTarget`）实跑通过：插件 `dsh-harness-rag`、版本 `0.1.0`、安装目标 `dsh-harness-rag@0.1.0`。
+- **README**：安装改为「装插件→选位置→开始准备（约 315 MB 下载 / 840 MB 落盘）→配置嵌入模型」，三种安装命令并列并注明发布前只可用 `link:`；新增运行根布局、端口占用与换口、换位手迁、清理顺序（先 `state/` 后 `runtime/`）、卸载保留、升级备份、旧 `.deer-flow` 不迁入、杀软加白、代理、市场索引添加、外部模式（原「后端最小形态」整节保留）与本地 ASR 依赖说明。
+- **npm pack --dry-run**：**37 文件 / 341,354 B tarball / 1,362,291 B 解包**；含 `runtime.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`、`client.js`、`src/`、`presets/`；不含 `engine/`、`scripts/`、`market/`、`tests/`、`docs/specs`、`docs/plans`、`node_modules`（逐条核对）。
+- **门禁**：`node --check client.js` 过；`tsc` 0 错；全量 **198/198**；`engine/` 1082/1082 字节一致（额外仅 `UPSTREAM.md`）；主树 `deer-flow` 未动（既有脏面 mtime 均为 10-06/10-10）；密钥扫描（`sk-`/`AKIA`/`ghp_`/私钥头/`xox*` 与长值 `api_key|secret|password` 赋值）零命中——唯一 `api_key=` 是引擎上游测试占位 `sk-super-secret-never-log`。
+- **未闭合**：①GitHub 地址安装实测（仓无 remote，Task 8 外部件）；②npm 发布、索引上线、Release 上传与 `runtime.json.urls` 回填（外部动作）；③`repository`/`homepage` 的 `OWNER` 占位待替换。
 
 ## Task 8 — 收口（spec §5）
 
