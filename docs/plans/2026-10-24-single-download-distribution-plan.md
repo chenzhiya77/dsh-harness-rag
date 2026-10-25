@@ -241,4 +241,8 @@
 
 ## 提交链（滚动记实）
 
-- 待实施。预计切分：①`chore(repo): vendor the harness-rag backend into engine/`（Task 7 迁移，**先于 Task 6 执行**）②`feat(runtime): provision and supervise the local knowledge service`（Task 1–4）③`feat(panel): show first-run runtime provisioning`（Task 5）④`build(runtime): add the platform pack builder`（Task 6）⑤`docs(distribution): document single-download install`（Task 7–8）；最终按实际 hunk 归属调整。
+- `88fc708` `feat(runtime): honor a local pack override and fix the stack lifecycle`（Task 6 运行侧：`DSH_HARNESS_RAG_PACK` 覆盖＋四项缺陷修复）
+- `a94a453` `build(runtime): add the platform pack builder`（Task 6 构建器、`yazl` devDependency、`runtime.json` 体积/sha 回填）
+- `8197fce` `chore(repo): relicense the plugin under MIT`（spec §4.8 许可面：LICENSE、THIRD_PARTY_NOTICES、README/package.json）
+- `dfc0283` `docs(distribution): record task 6 build and real-host results in the plan`（Task 6 实测、缺陷修复 ④与未闭合）
+- 待实施：①`chore(repo): vendor the harness-rag backend into engine/`（Task 7 迁移）②`docs(distribution): document single-download install`（Task 7–8）。Task 0–5 的笔次见 `1d63f4c` 及更早提交，本表自 Task 6 起滚动记实。
