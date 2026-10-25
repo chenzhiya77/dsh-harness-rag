@@ -70,20 +70,20 @@ Host 半在宿主世界注册 `hrag_*` 工具、面板数据桥与摄取后台�
 
 ### 检索（三路）
 
-- `hrag_hybrid_search`：**内容匹配**——混合召回（dense + sparse 单次调用）→ RRF 融合 → 重排；重排服务故障自动降级为 RRF 序
-- `hrag_graph_search`：**信息关系**——实体关系多跳
-- `hrag_wiki_search`：**条目级线索**——百科条目摘要，含用户自建的「我的条目」
-- 回答侧：插件只提供检索工具与证据；回答策略与引用呈现由 DSH 模型/宿主决定。
+- `hrag_hybrid_search`：**内容匹配**——混合召回（dense + sparse 单次调用）→ RRF 融合 → 重排；结果带 `chunk_id` / `doc_id` / `chunk_index` / 实体与 `citation_no`，可按 `doc_id` 限定单篇；重排服务故障自动降级为 RRF 序
+- `hrag_graph_search`：**信息关系**——按问题理解或 `entity` 精确实体直取，1–2 跳扩展；证据片带 `doc_id` 与 `citation_no`
+- `hrag_wiki_search`：**条目级线索**——返回百科条目或人工知识卡的完整正文；可按 `title` 精确直取，含用户自建的「我的条目」
+- 引用编号：引擎按会话回合分配连续 `citation_no`，三路工具共用一套编号；回答策略与引用呈现由 DSH 模型/宿主决定。
 
 ### 文档感知（只读）
 
 库里的文档与百科条目不再只能靠检索「碰见」——三件只读工具把它们变成可直接使用的对象：文档**能枚举、能定位、能读回**，百科条目**能枚举**。它们不是旁路：整条链本来就是通的（解析 → 切分 → 落库 → 图谱 / 百科），文档与切片的关系、切片的顺序与位置早已在其中，三件工具只是把既有关系以只读方式开放给 agent；与三路检索共用同一条知识库绑定。
 
-- `hrag_list_documents`：**文档清单**——列出绑定库内的文档行（`id` / 名称 / 状态 / 切片数，面板原样）
-- `hrag_read_document`：**原文读取**——`doc_id` 分页通读整篇（当前工具要求 `doc_id`）；`chunk_id` 用于把窗口定位到该片（仍需同时给 `doc_id`）。
-- `hrag_list_wiki_entries`：**百科条目清单**——列出绑定库内生成的百科条目（标题 / 状态）与就绪 / 待更新的诚实计数；只含过门槛的生成条目，未达门槛的实体由图谱与向量两路直接服务
-- 追问链：切片级命中自带 `chunk_id`（向量、图谱两路）；`hrag_graph_search` 的证据片另带 `doc_id`，可配合 `hrag_read_document` 读回（该工具当前要求 `doc_id`）。
-- 错误面：不存在 / 跨库的文档返回 404，不空返。
+- `hrag_list_documents`：**文档清单**——`doc_id` / 名称 / 状态 / 切片数，附就绪 / 处理中 / 失败计数
+- `hrag_read_document`：**原文读取**——`doc_id` + offset/limit 分页通读整篇；或只给 `chunk_id`，直接读该片为中心、边界收拢的窗口。单条超 2000 字截断并标 `truncated`，每片附实体（去重后最多 10 个）。
+- `hrag_list_wiki_entries`：**百科条目清单**——标题 / 状态 / 更新时间与就绪 / 待更新的诚实计数；只含过门槛的生成条目，未达门槛的实体由图谱与向量两路直接服务
+- 追问链：切片级命中自带 `chunk_id`（向量、图谱两路），`hrag_read_document` 可直接以 `chunk_id` 续读；图谱证据另带 `doc_id`，也可按篇分页。
+- 错误面：不存在 / 跨库 / 未就绪的读取请求以 200 + 可读 message 返回（工具级拒绝不抛 404）。
 - 与引用两分：事实性结论仍走三路检索并标 `[n]`；枚举 / 结构 / 定位类回答以文字出处（文档名 / 片序 / 条目名）作答——清单与读取不进编号体系
 
 ### 知识库面板（右栏 tab）
@@ -185,17 +185,17 @@ dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.g
 
 | 项 | 数量 |
 | --- | --- |
-| 插件 Host 半 `src/` | 25 个 TS 文件、5,817 行 |
+| 插件 Host 半 `src/` | 25 个 TS 文件、5,830 行 |
 | 插件 Client 半 `client.js` | 22,345 行 |
 | 插件测试 `tests/` | 17 个测试文件 |
-| 引擎知识核心 `engine/backend/packages/harness/deerflow/knowledge/` | 72 个 Python 文件 |
-| 引擎知识测试 `engine/backend/tests/knowledge/` | 101 个测试文件、1,553 个 `def test_`（静态计数） |
+| 引擎知识核心（知识库模块） | 72 个 Python 文件 |
+| 引擎知识测试 `engine/backend/tests/knowledge/` | 104 个测试文件、1,571 个 `def test_`（静态计数） |
 
 ## ✅ 状态
 
 | 部分 | 状态 |
 | --- | --- |
-| 工具面（三检索＋文档两件＋百科清单） | 已实装 |
+| 工具面（三检索＋文档两件＋百科清单） | 已实装（六件契约与主树工具组对齐） |
 | 右栏「知识库」管理面板 | 已实装 |
 | 摄取后台任务 | 已实装 |
 | 运行时准备 / 就绪 / 重试 / 嵌入模型引导 | 已实装 |
@@ -205,5 +205,5 @@ dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.g
 
 - **RAG 能力**（解析、切片、三路检索、图谱、wiki、评测与面板）由本项目自行实现。
 - 插件基于 **DeepSeek Harness**（<https://github.com/deepseek-ai/deepseek-harness>，MIT）的插件 API。
-- 引擎源码树中包含 **DeerFlow** harness 框架代码，其 MIT 声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+- 引擎内包含第三方 MIT 框架代码，其版权声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 - 本仓库为独立项目，非任何上游官方发布。

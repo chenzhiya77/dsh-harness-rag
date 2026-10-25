@@ -106,12 +106,14 @@ Host 半在宿主世界注册模型可见工具，并负责运行时的准备、
 
 | 工具 | 说明 |
 |---|---|
-| `hrag_hybrid_search` | 混合检索：向量+稀疏融合、重排 |
-| `hrag_graph_search` | 图谱检索：实体种子、跨章节结构证据 |
-| `hrag_wiki_search` | wiki 检索：预消化条目+手动知识卡 |
-| `hrag_list_documents` | 文档清单与逐篇状态 |
-| `hrag_read_document` | 按 doc_id 分页读切片；chunk_id 用于定位窗口（仍需 doc_id） |
-| `hrag_list_wiki_entries` | 百科条目清单（标题 / 状态 + 诚实计数） |
+| `hrag_hybrid_search` | 混合检索：向量+稀疏融合、重排；参数 `query` / `top_k` / `doc_id`，结果含 `doc_id` / `chunk_index` / 实体 / `citation_no` |
+| `hrag_graph_search` | 图谱检索：`query` 或 `entity` 精确实体直取，`hops` 1–2；证据片带 `doc_id` / `citation_no` |
+| `hrag_wiki_search` | wiki 检索：预消化条目+手动知识卡，返回完整正文；`query` 或 `title` 精确直取，`top_k` 默认 3 |
+| `hrag_list_documents` | 文档清单：`doc_id` / 名称 / 状态 / 切片数 + 就绪 / 处理中 / 失败计数 |
+| `hrag_read_document` | 按 `doc_id` 分页读切片，或只给 `chunk_id` 读中心窗；超长片 `truncated`、拒绝走 200 + message |
+| `hrag_list_wiki_entries` | 百科条目清单（标题 / 状态 / 更新时间 + 诚实计数） |
+
+六件工具提交到 `POST /api/knowledge-bases/{kb_id}/tools`，由引擎按 `name` 分派到与主树同名的实现；`citation_no` 按会话回合连续分配，三路检索共用一套编号。回答策略与引用呈现仍由宿主决定（SOUL 纪律另案）。
 
 完整的功能面等价对照（工作台原型 ↔ 本插件，含差异理由）见 [equivalence.md](equivalence.md)。
 
@@ -137,10 +139,10 @@ pnpm run typecheck
 
 改动后重载：Client 半（`client.js`）随窗口重开即生效；Host 半（`src/`）须桌面端托盘完整退出重启才换代（`link:` 开发安装无须重装，改码即被读取）。
 
-运行时包由仓外构建：`node scripts/build-runtime-pack.mjs --engine ./engine --out <目录>`（需要 `uv` 0.11.2 与 `gh`；产物是 `harness-rag-runtime-win32-x64-<version>.zip`，并把 size/sha256 回填到 `runtime.json`）。开发时可用 `DSH_HARNESS_RAG_PACK=<本地 zip>` 跳过下载、直接解压该包。
+运行时包由仓内脚本构建：`pnpm run build:runtime -- --engine-commit "$(git rev-parse --short=9 HEAD)"`（或直接 `node scripts/build-runtime-pack.mjs --engine ./engine --engine-commit <sha>`）；默认输出 `dist/`，加 `--update-manifest` 回填 `runtime.json` 的 size/sha256（pnpm 下写作 `pnpm run build:runtime -- --update-manifest`）。冷构建固定 Python 3.12.13、Qdrant 1.20.0，要求 `uv` 0.11.2 与 `gh` ≥ 2.40。`engine/` 是本仓的后端目录、自身没有 `.git`，builder 不会向上找仓根，因此必须显式传 `--engine-commit`；`engine/UPSTREAM.md` 只记分叉基准，不作为构建来源。构建前可加 `--print-inputs` 核对解析结果。产物是 `harness-rag-runtime-win32-x64-<version>.zip`。开发时可用 `DSH_HARNESS_RAG_PACK=<本地 zip>` 跳过下载、直接解压该包。
 
 面板文案走内联字典（`ctx.locale.register('harnessRag', …)`，三方插件官方模式）；`locale/*.json` 只承载清单显示元数据（title/description），不是词条文件。
 
 ## License
 
-MIT。RAG 能力（解析、切片、三路检索、图谱、wiki、评测与面板）由本项目自行实现；插件基于 DeepSeek Harness（MIT）的插件 API。引擎源码树内含 DeerFlow harness 框架代码，其 MIT 声明见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
+MIT。RAG 能力（解析、切片、三路检索、图谱、wiki、评测与面板）由本项目自行实现；插件基于 DeepSeek Harness（MIT）的插件 API。引擎源码树内含第三方 MIT 框架代码，其版权声明见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。

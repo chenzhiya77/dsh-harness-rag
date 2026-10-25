@@ -148,13 +148,14 @@
 
 | 功能 | 工作台现面 | DSH 插件面 | 状态 |
 |---|---|---|---|
-| 三路检索 | 召回测试 UI（人用，三路同跑） | `hrag_hybrid_search`/`hrag_graph_search`/`hrag_wiki_search`（模型用，对应 recall-test 单路 `path`） | 精简（同一端点；模型面字段/参数未对齐，见注） |
-| 文档清单/续读 | 文档页/切片抽屉（人用） | `hrag_list_documents`/`hrag_read_document`（模型用；含 chunk 中心窗） | 精简（清单为面板行、主键 `id`、无聚合计数；`chunk_id` 续读需 `doc_id`；无 `truncated` / 未就绪拒绝） |
-| 百科条目清单 | 百科 tab 的条目列表（人用） | `hrag_list_wiki_entries`（模型用；标题 + 状态 + 诚实计数） | 等价 |
+| 三路检索 | 召回测试 UI（人用，三路同跑） | `hrag_hybrid_search`/`hrag_graph_search`/`hrag_wiki_search`（模型用，`/tools` 端点直通主树同名实现） | 等价（参数 / 字段 / 默认值 / 引用编号与主树工具组一致；面板 `recall-test` 独立） |
+| 文档清单/续读 | 文档页/切片抽屉（人用） | `hrag_list_documents`/`hrag_read_document`（模型用；`doc_id` 分页或 `chunk_id` 单独中心窗） | 等价（`doc_id` 主键、聚合计数、`truncated`、未就绪 / 跨库 / 不存在拒绝） |
+| 百科条目清单 | 百科 tab 的条目列表（人用） | `hrag_list_wiki_entries`（模型用；标题 + 状态 + 更新时间 + 诚实计数） | 等价 |
+| 回答纪律（SOUL） | 主树 `agents/assets/rag/SOUL.md`（向量保底 / 分路路由 / 补检与读取限次 / 引用与拒答） | 未注入 | G11 另案（不在本次工具面） |
 | 知识库助手对话 | 工作台内嵌 KB 对话（带引用） | 无内嵌对话；DSH 对话＋`hrag_*` 工具 | 宿主侧（10-14 裁定面板内置对话不做） |
 | 会话级绑库（per-thread） | 每会话绑定/切换一个库；未绑定回落默认库 | 面板顶栏「会话」抽屉：绑定/切换/移除；工具解析链 arg ＞ 绑定；六件 `hrag_*` 随绑定挂/卸（解绑即从该会话工具表消失，未绑定不挂）；已绑定会话列表可跳转、可按浏览库新建 | 等价（per-thread 语义在 DSH 会话上复刻；默认库档退场） |
 
-> 注：三路工具当前仍以 `recall-test` 为后端——hybrid 的 `doc_id` 限定被忽略，hybrid/wiki 命中缺 `citation_no`，hybrid 缺 `doc_id`/`chunk_index`/`entities`；graph 缺 `entity`/`hops`；wiki 缺 `title` 与全文（仅 120 字摘要）。文档工具返回面板行（主键 `id`、无聚合计数），`hrag_read_document` 强制 `doc_id` 且缺 `truncated` / 未就绪拒绝；回答纪律（SOUL）未注入（G11 另案）。修复另立工具面对；本表不把这些记成等价。
+> 注：六件工具的可观察契约已于 2026-10-25 与主树 RAG 工具组对齐（独立 `/tools` 端点；面板继续使用 `recall-test`，其展示字段不进入模型载荷）。回答纪律（SOUL：强制向量保底、分路路由、补检 / 读取限次、引用与拒答规范）仍未注入，G11 另案——本表只记工具面，不把整个 RAG agent 记为等价。
 
 ## 12. 宿主侧与明确不做
 
