@@ -9,9 +9,9 @@
       "qdrantVersion": "1.20.0",
       "configVersion": 44,
       "urls": [],
-      "size": 0,
-      "unpackedSize": 0,
-      "sha256": ""
+      "size": 330280025,
+      "unpackedSize": 881198854,
+      "sha256": "776558d6d86c3b4f2647b7337ea7c5e68d245af3d9b85108f63caf2cef85c375"
     }
   }
 }

@@ -37,7 +37,9 @@
     "@deepseek-ai/cordis": "^4.0.5",
     "@types/node": "^22.20.0",
     "@types/yauzl": "^2.10.3",
-    "typescript": "^6.0.3"
+    "@types/yazl": "^3.3.1",
+    "typescript": "^6.0.3",
+    "yazl": "^3.3.1"
   },
   "dsh": {
     "bundle": {
