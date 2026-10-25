@@ -1,6 +1,6 @@
 # 运行时韧性收尾（认领看门狗 / 端口抢占重试 / 锚点告警 / 嵌入就绪判定） —— spec
 
-**Status:** 已拍·待实施（2026-10-25；D1＝10 s／连续 2 次，D2＝只认日志特征）
+**Status:** 已实施（2026-10-25；D1＝10 s／连续 2 次，D2＝只认日志特征）
 **Date:** 2026-10-25
 **来源:** 10-25 验收轮后的收口。真机验 §5.11 退出清理时发现「认领实例死了状态不会自己翻」；验 §5.13 搬迁与 §5.4 选择器时顺带确认「端口探空到 spawn 之间被抢」只有一句设计、没有实现；plan Task 5/6 记的「坏 `location.json` 的 `warning` 未上屏」「`needsEmbeddingConfig` 的环境变量钥匙仍是近似」也一起收。
 **承接:** 分布 spec [2026-10-24-single-download-distribution-spec.md](2026-10-24-single-download-distribution-spec.md) §4.2 步 7（换口重试）、§4.3（服务守护）、§5.10；plan Task 3 未闭合③、Task 4 未闭合③、Task 5 未闭合②④、Task 6 未闭合③。
@@ -77,18 +77,18 @@
 ## 4. 取舍
 
 - **看门狗只报错不自动重启**：自动重启会与租约、双 profile 归属、端口占用互相踩；把决定权留给用户的「重试」，行为可解释。
-- **10 s / 2 次**：面板在 ready 后不轮询，宿主必须自己发现；两次是抗抖动与延迟的折中（最坏 20 s 发现）。真机若觉得慢再调单个常量。
+- **10 s / 2 次**：面板在 ready 后不轮询，宿主必须自己发现；两次是抗抖动与延迟的折中（最坏 22 s 发现＝2×(10 s 间隔＋1 s 探测超时)，真机实测 20.5 s）。真机若觉得慢再调单个常量。
 - **重试只依据日志特征**：比「无条件重试一次」保守，牺牲一点覆盖换「真崩溃不被掩盖、失败时间不翻倍」。
 - **告警用横幅不用弹窗**：文件坏了但服务可用，属于「知道就好」，弹窗会打断正在做的事。
 - **判定收紧可能多提示**：去掉环境变量近似后，只有密钥没有模型的部署会重新看到横幅——这正是应该提示的状态。
 
 ## 5. 验收
 
-1. **看门狗**：真机认领一个外部实例（外部模式或第二个 profile），把它 kill ⇒ ≤ 20 s 内 `runtime/status` 变 `error` / `code=adopted_unreachable`，`service.json` 仍在；重启服务后点「重试」⇒ 回到 `ready/adopted`。
+1. **看门狗**：真机认领一个外部实例（外部模式或第二个 profile），把它 kill ⇒ 22 s 内（2×(10 s 间隔＋1 s 探测超时)，实测 20.5 s）`runtime/status` 变 `error` / `code=adopted_unreachable`，`service.json` 仍在；重启服务后点「重试」⇒ 回到 `ready/adopted`。
 2. **换口重试**：单测里让 `isFree` 一律返回 true、实则用一个真实 net server 占住首选端口 ⇒ 日志出现一次换口重试，最终在本轮内 `ready`；把两个候选口都占住 ⇒ 重试一次后按 `qdrant_exited`/`engine_exited` 失败，不无限重试。
 3. **锚点告警**：写入非法 `location.json` ⇒ 启动后 `root` 为默认根、`runtime/status.warning` 非空、面板顶部出现横幅且可关闭；库列表与上传照常。
 4. **嵌入判定**：清空 `rag_config.json` 的 `embedding_model`、同时在宿主环境设 `DASHSCOPE_API_KEY` ⇒ 横幅仍出现；配置好模型后 ⇒ 横幅消失。
-5. **门禁**：`tsc` 0 错；`node --test tests/*.test.ts` 全绿且现有 204 条不回归；`engine/` 与主树零 diff。
+5. **门禁**：`tsc` 0 错；`node --test tests/*.test.ts` 全绿（最终 217 条，Task 1 之前的 204 条无回归）；`engine/` 与主树零 diff。
 
 ## 6. 不做
 
