@@ -1,0 +1,160 @@
+name: RAG Retrieval Evaluation (CI Gate)
+
+# Runs Layer 1 deterministic IR metrics on every PR that touches retrieval-related modules.
+# Bot comments the summary table in the PR; regression beyond threshold fails the check.
+# Missing credentials / unconfigured eval KB → explicit skipped (never a fake green).
+#
+# Spec: docs/superpowers/specs/2026-08-23-rag-retrieval-evaluation-design.md §7
+#
+# Required secrets: DASHSCOPE_EMBEDDING_API_KEY, DASHSCOPE_RERANK_API_KEY,
+# DEEPSEEK_API_KEY (the graph path's query-entity extraction LLM).
+# Required vars: RAG_EVAL_KB_ID (the seeded evaluation knowledge base).
+
+on:
+  push:
+    branches: [ "main", "2.0.x-dev" ]
+    paths:
+      - ".github/workflows/rag-eval.yml"
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "backend/packages/harness/deerflow/knowledge/**"
+      - "backend/packages/harness/deerflow/tools/builtins/*search*.py"
+      - "backend/app/gateway/services/knowledge_service.py"
+      - "backend/tests/fixtures/rag_eval/golden.jsonl"
+
+concurrency:
+  group: rag-eval-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write  # needed for commenting on PR
+  actions: read         # needed to download the main-branch baseline artifact
+
+jobs:
+  rag-eval:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync --group dev
+
+      - name: Check evaluation credentials
+        id: keys
+        run: |
+          missing=""
+          for key in DASHSCOPE_EMBEDDING_API_KEY DASHSCOPE_RERANK_API_KEY DEEPSEEK_API_KEY; do
+            if [ -z "${!key}" ]; then missing="${missing} ${key}"; fi
+          done
+          if [ -z "${RAG_EVAL_KB_ID}" ]; then missing="${missing} vars.RAG_EVAL_KB_ID"; fi
+          if [ -n "$missing" ]; then
+            echo "::warning::Missing evaluation credentials:${missing} — rag-eval skipped (explicit, not a pass)"
+            echo "skipped=true" >> $GITHUB_OUTPUT
+          else
+            echo "skipped=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          DASHSCOPE_EMBEDDING_API_KEY: ${{ secrets.DASHSCOPE_EMBEDDING_API_KEY }}
+          DASHSCOPE_RERANK_API_KEY: ${{ secrets.DASHSCOPE_RERANK_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          RAG_EVAL_KB_ID: ${{ vars.RAG_EVAL_KB_ID }}
+
+      - name: Download main-branch baseline (PR only)
+        id: baseline
+        if: steps.keys.outputs.skipped == 'false' && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          BASELINE_DIR="${RUNNER_TEMP}/rag-eval-baseline"
+          mkdir -p "$BASELINE_DIR"
+          RUN_ID=$(gh run list --workflow rag-eval.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty' || true)
+          if [ -n "$RUN_ID" ] && gh run download "$RUN_ID" --name rag-eval-baseline --dir "$BASELINE_DIR"; then
+            echo "baseline=${BASELINE_DIR}/report.json" >> $GITHUB_OUTPUT
+            echo "Downloaded baseline from main run ${RUN_ID}"
+          else
+            echo "baseline=" >> $GITHUB_OUTPUT
+            echo "No main-branch baseline found — this run becomes the reference"
+          fi
+
+      - name: Run evaluation
+        id: eval
+        if: steps.keys.outputs.skipped == 'false'
+        working-directory: backend
+        env:
+          DASHSCOPE_EMBEDDING_API_KEY: ${{ secrets.DASHSCOPE_EMBEDDING_API_KEY }}
+          DASHSCOPE_RERANK_API_KEY: ${{ secrets.DASHSCOPE_RERANK_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          set -uo pipefail
+          OUT="${RUNNER_TEMP}/rag-eval-current"
+          mkdir -p "$OUT"
+          BASELINE_ARG=""
+          if [ -n "${{ steps.baseline.outputs.baseline }}" ] && [ -f "${{ steps.baseline.outputs.baseline }}" ]; then
+            BASELINE_ARG="--baseline ${{ steps.baseline.outputs.baseline }}"
+          fi
+          # set +e: the CLI encodes its verdict in the exit code (0 ok / 1
+          # regression / 2 usage-error / 3 skipped) — capture it, never mask it.
+          set +e
+          uv run python scripts/run_rag_eval.py \
+            --kb-id "${{ vars.RAG_EVAL_KB_ID }}" \
+            --golden tests/fixtures/rag_eval/golden.jsonl \
+            --out "$OUT" \
+            ${BASELINE_ARG}
+          EXIT_CODE=$?
+          set -e
+          echo "exit_code=${EXIT_CODE}" >> $GITHUB_OUTPUT
+          cp "$OUT/report.md" "$RUNNER_TEMP/report_summary.md"
+
+      - name: CLI-level skip notice
+        if: steps.keys.outputs.skipped == 'false' && steps.eval.outputs.exit_code == '3'
+        run: echo "::notice::RAG evaluation skipped at runtime (credentials resolved empty inside the CLI)"
+
+      - name: Usage/IO error fails loudly
+        if: steps.eval.outputs.exit_code == '2'
+        run: exit 1
+
+      - name: Comment on PR
+        if: steps.keys.outputs.skipped == 'false' && github.event_name == 'pull_request' && steps.eval.outputs.exit_code != '3'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: ${{ runner.temp }}/report_summary.md
+          comment_tag: rag-eval-summary
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Regression gate
+        if: steps.eval.outputs.exit_code == '1'
+        run: |
+          echo "::error::Golden-dataset recall regression beyond --fail-threshold — see the report comment above"
+          exit 1
+
+      - name: Upload report artifacts
+        if: always() && steps.keys.outputs.skipped == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-eval-reports
+          path: |
+            ${{ runner.temp }}/rag-eval-current/
+            ${{ runner.temp }}/report_summary.md
+
+      - name: Publish baseline artifact (main branch only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.eval.outputs.exit_code == '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-eval-baseline
+          path: ${{ runner.temp }}/rag-eval-current/report.json

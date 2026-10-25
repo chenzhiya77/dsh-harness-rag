@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>宠物帧动画预览</title>
+<style>
+  /* 与应用 (frontend/src/styles/globals.css §9.1) 逐字一致:travel 必须走
+     0% → 100% 的百分比 —— background-size 是 N × 100% 时第 k 帧正好落在
+     100k/(N-1)%,而 steps(N, jump-none) 吐出的就是这些值;普通 steps(N)
+     永远走不到最后一帧。 */
+  @keyframes pet-play {
+    from { background-position: 0% 0; }
+    to   { background-position: 100% 0; }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 13px/1.5 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    background: #0f0f11; color: #e8e8ea;
+    -webkit-font-smoothing: antialiased;
+  }
+  body.light { background: #f4f4f6; color: #1b1b1f; }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px;
+    padding: 12px 18px;
+    background: #16161a; border-bottom: 1px solid #2e2e34;
+  }
+  body.light header { background: #fff; border-bottom-color: #e2e2e6; }
+  h1 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: .3px; }
+  .hint { color: #9a9aa2; font-size: 12px; }
+  body.light .hint { color: #6b6b73; }
+  .spacer { flex: 1 1 auto; }
+
+  .ctl { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .ctl > label { color: #9a9aa2; font-size: 12px; }
+  body.light .ctl > label { color: #6b6b73; }
+
+  input[type="range"] { width: 130px; accent-color: #6ea8fe; }
+  input[type="number"], input[type="text"] {
+    width: 58px; padding: 3px 6px; border-radius: 5px;
+    border: 1px solid #3a3a42; background: #1d1d22; color: inherit;
+    font: inherit; font-variant-numeric: tabular-nums;
+  }
+  body.light input[type="number"], body.light input[type="text"] {
+    border-color: #d6d6dc; background: #fff;
+  }
+  input:focus { outline: 1px solid #6ea8fe; outline-offset: -1px; }
+
+  button {
+    padding: 5px 11px; border-radius: 6px; cursor: pointer;
+    border: 1px solid #3a3a42; background: #22222a; color: inherit; font: inherit;
+  }
+  button:hover { border-color: #5a5a66; }
+  body.light button { border-color: #d6d6dc; background: #fff; }
+  body.light button:hover { border-color: #b2b2bc; }
+  button.primary { border-color: #3d6fd4; background: #2b4a8f; color: #fff; }
+  button.primary:hover { background: #33569f; }
+
+  .seg { display: flex; border: 1px solid #3a3a42; border-radius: 6px; overflow: hidden; }
+  body.light .seg { border-color: #d6d6dc; }
+  .seg button { border: 0; border-radius: 0; background: transparent; padding: 5px 10px; }
+  .seg button + button { border-left: 1px solid #3a3a42; }
+  body.light .seg button + button { border-left-color: #d6d6dc; }
+  .seg button[aria-pressed="true"] { background: #2b4a8f; color: #fff; }
+
+  #empty {
+    margin: 24px auto; max-width: 640px; padding: 44px 28px;
+    border: 2px dashed #3a3a42; border-radius: 12px; text-align: center;
+  }
+  body.light #empty { border-color: #cfcfd6; }
+  #empty h2 { margin: 0 0 6px; font-size: 15px; }
+  #empty p { margin: 6px 0; color: #9a9aa2; }
+  body.light #empty p { color: #6b6b73; }
+  #empty code { background: #22222a; padding: 1px 5px; border-radius: 4px; }
+  body.light #empty code { background: #ececf0; }
+
+  #grid {
+    display: grid; gap: 16px; padding: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+    align-items: start;
+  }
+  .card { border: 1px solid #2e2e34; border-radius: 10px; overflow: hidden; background: #16161a; }
+  body.light .card { background: #fff; border-color: #e2e2e6; }
+  .card-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-bottom: 1px solid #2e2e34;
+  }
+  body.light .card-head { border-bottom-color: #e2e2e6; }
+  .card-name { flex: 1 1 auto; font-weight: 600; font-size: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .x { padding: 2px 7px; line-height: 1.2; }
+
+  .stage { display: flex; align-items: center; justify-content: center; min-height: 212px; padding: 14px; }
+  .stage.dark    { background: #17171a; }
+  .stage.lightbg { background: #ffffff; }
+  .stage.magenta { background: #ff00ff; }
+  .stage.checker { background-image: repeating-conic-gradient(#c9c9cf 0% 25%, #f2f2f5 0% 50%);
+                   background-size: 16px 16px; }
+  .sprite { flex: none; background-repeat: no-repeat; background-position: 0% 0; }
+
+  .meta { padding: 8px 10px; font-size: 11.5px; color: #9a9aa2;
+          border-top: 1px solid #2e2e34; font-variant-numeric: tabular-nums; }
+  body.light .meta { color: #6b6b73; border-top-color: #e2e2e6; }
+  .meta b { color: inherit; font-weight: 600; }
+
+  .ctrls { display: flex; flex-wrap: wrap; gap: 9px 14px; align-items: center; padding: 10px; }
+  .ctrls .ctl { gap: 6px; }
+  .scrub { display: flex; align-items: center; gap: 8px; padding: 0 10px 12px; }
+  .scrub input[type="range"] { flex: 1 1 auto; width: auto; }
+  .scrub span { font-variant-numeric: tabular-nums; min-width: 68px; color: #9a9aa2; }
+  body.light .scrub span { color: #6b6b73; }
+
+  #drop-overlay {
+    position: fixed; inset: 0; z-index: 50; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(20, 60, 140, .38); border: 3px dashed #6ea8fe;
+    font-size: 18px; font-weight: 600; pointer-events: none;
+  }
+  body.dragging #drop-overlay { display: flex; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>宠物帧动画预览</h1>
+  <div class="hint">拖 .webp / .png 长条 sheet 进页面,可一次多个</div>
+  <div class="spacer"></div>
+
+  <div class="ctl">
+    <label for="size">显示尺寸</label>
+    <input id="size" type="range" min="64" max="256" step="2" value="158">
+    <span id="size-out" style="min-width:52px;font-variant-numeric:tabular-nums">158 px</span>
+  </div>
+
+  <div class="ctl">
+    <label>背景</label>
+    <div class="seg" id="theme-seg">
+      <button data-theme="dark" aria-pressed="true">深色</button>
+      <button data-theme="lightbg" aria-pressed="false">浅色</button>
+      <button data-theme="checker" aria-pressed="false">棋盘</button>
+      <button data-theme="magenta" aria-pressed="false">品红</button>
+    </div>
+  </div>
+
+  <button id="toggle-play" class="primary">全部暂停</button>
+  <button id="clear">清空</button>
+  <button id="pick-btn" class="primary">选择文件…</button>
+  <input id="pick" type="file" accept="image/*" multiple hidden>
+</header>
+
+<div id="empty">
+  <h2>拖入帧动画预览</h2>
+  <p>支持一次拖入多个文件并排对比 —— 用同一尺寸、同一背景,差异才看得出来。</p>
+  <p>帧数自动从像素读出(<code>宽 ÷ 高</code>,因为每帧都是正方);fps 优先取文件名里的
+     <code>Nfps</code>,读不到就默认 8(两者都可以手改)。</p>
+  <p>播放与应用完全同源:<code>background-position</code> + <code>steps(N, jump-none)</code>,不引任何库。</p>
+  <p style="margin-top:14px"><button id="pick-btn2" class="primary">选择文件…</button></p>
+</div>
+
+<div id="grid"></div>
+<div id="drop-overlay">松手即加入对比</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const grid = $("grid");
+  const empty = $("empty");
+
+  /** items: { id, seq, name, url, w, h, frames, fps, state, scrubFrame, el, stageEl } */
+  let items = [];
+  let nextId = 1;
+  let addSeq = 0;
+  let pausedAll = false;
+  let size = 158;          // 恒为偶数 CSS px,与应用 displaySize 同约束
+  let theme = "dark";
+
+  // ---------- 从文件推断参数 ----------
+
+  /** 横向单行 sheet、每帧正方 ⇒ 帧数 = 宽 ÷ 高。读不出整数就退回常见帧宽,再不行交给用户手填。 */
+  function detectFrames(w, h) {
+    if (w > 0 && h > 0 && w % h === 0) return w / h;
+    for (const edge of [512, 256, 1024]) {
+      if (w > 0 && w % edge === 0) return w / edge;
+    }
+    return null;
+  }
+
+  function detectFps(name) {
+    const m = /(\d+)\s*fps/i.exec(name);
+    return m ? Number(m[1]) : 8;
+  }
+
+  /** 状态名:文件名第一个分隔符前的词(idle-… / wait-…),只用于复制 manifest,可改 */
+  function detectState(name) {
+    return name.split(/[-_.\s]/)[0] || "state";
+  }
+
+  // ---------- 播放 ----------
+
+  /** 与应用同一行:时长 = 帧数 ÷ fps,时间函数 = steps(N, jump-none) */
+  function applyPlayback(item) {
+    const el = item.el;
+    if (!el) return;
+    el.style.width = size + "px";
+    el.style.height = size + "px";
+    if (!item.frames) {
+      el.style.animation = "none";
+      el.style.backgroundSize = "100% 100%";
+      return;
+    }
+    el.style.backgroundSize = `${item.frames * 100}% 100%`;
+    el.style.animation = `pet-play ${item.frames / item.fps}s steps(${item.frames}, jump-none) infinite both`;
+    el.style.animationPlayState = pausedAll || item.scrubFrame !== null ? "paused" : "running";
+    if (item.scrubFrame === null) {
+      el.style.backgroundPosition = "0% 0";
+    } else {
+      const denom = Math.max(1, item.frames - 1);
+      el.style.backgroundPosition = `${(100 * item.scrubFrame) / denom}% 0`;
+    }
+  }
+
+  const applySizeToAll = () => items.forEach(applyPlayback);
+  const applyPlaybackToAll = () => items.forEach(applyPlayback);
+
+  function applyThemeToAll() {
+    items.forEach((it) => {
+      if (!it.stageEl) return;
+      it.stageEl.className = "stage " + theme;
+    });
+  }
+
+  // ---------- 卡片 ----------
+
+  function addFile(file) {
+    const url = URL.createObjectURL(file);
+    // 抽出 seq 而不是靠 push 顺序:解码是异步的,先 push 的可能是后加载完的
+    const seq = addSeq++;
+    const probe = new Image();
+    probe.onload = () => {
+      items.push({
+        id: nextId++,
+        seq,
+        name: file.name,
+        url,
+        w: probe.naturalWidth,
+        h: probe.naturalHeight,
+        frames: detectFrames(probe.naturalWidth, probe.naturalHeight),
+        fps: detectFps(file.name),
+        state: detectState(file.name),
+        scrubFrame: null,
+        el: null,
+        stageEl: null,
+      });
+      render();
+    };
+    probe.onerror = () => {
+      URL.revokeObjectURL(url);
+      window.alert("读不出这个文件:" + file.name);
+    };
+    probe.src = url;
+  }
+
+  function removeItem(item) {
+    URL.revokeObjectURL(item.url);
+    items = items.filter((i) => i.id !== item.id);
+    render();
+  }
+
+  function cardFor(item) {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    // 标题行
+    const head = document.createElement("div");
+    head.className = "card-head";
+    const name = document.createElement("div");
+    name.className = "card-name";
+    name.textContent = item.name;
+    name.title = item.name;
+    const x = document.createElement("button");
+    x.className = "x";
+    x.textContent = "✕";
+    x.title = "移除";
+    x.onclick = () => removeItem(item);
+    head.append(name, x);
+
+    // 画面
+    const stage = document.createElement("div");
+    stage.className = "stage " + theme;
+    const sprite = document.createElement("div");
+    sprite.className = "sprite";
+    sprite.style.backgroundImage = 'url("' + item.url + '")';
+    stage.append(sprite);
+    item.el = sprite;
+    item.stageEl = stage;
+
+    // 元信息
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const paintMeta = () => {
+      if (!item.frames) {
+        meta.innerHTML = "<b>" + item.w + "×" + item.h +
+          "</b> · 读不出帧数(宽不是高的整数倍),请手填";
+        return;
+      }
+      meta.innerHTML =
+        "<b>" + item.w + "×" + item.h + "</b> · <b>" + item.frames + "</b> 帧 · <b>" +
+        item.fps + "</b> fps · 单圈 <b>" + (item.frames / item.fps).toFixed(2) +
+        "s</b> · sheetWidth <b>" + item.frames * item.h + "</b>";
+    };
+
+    // 控件
+    const ctrls = document.createElement("div");
+    ctrls.className = "ctrls";
+
+    const field = (labelText, input) => {
+      const w = document.createElement("div");
+      w.className = "ctl";
+      const l = document.createElement("label");
+      l.textContent = labelText;
+      w.append(l, input);
+      return w;
+    };
+
+    const iState = document.createElement("input");
+    iState.type = "text";
+    iState.style.width = "78px";
+    iState.value = item.state;
+    iState.oninput = () => { item.state = iState.value.trim() || "state"; };
+
+    const iFrames = document.createElement("input");
+    iFrames.type = "number";
+    iFrames.min = "2";
+    iFrames.max = "200";
+    iFrames.value = item.frames ?? "";
+
+    const iFps = document.createElement("input");
+    iFps.type = "number";
+    iFps.min = "1";
+    iFps.max = "60";
+    iFps.value = String(item.fps);
+
+    // 逐帧检视:拖它就暂停并定位到某一帧 —— 看接缝就靠这个
+    const scrub = document.createElement("input");
+    scrub.type = "range";
+    scrub.min = "0";
+    scrub.step = "1";
+    scrub.value = "0";
+    const scrubLabel = document.createElement("span");
+    const resume = document.createElement("button");
+    resume.textContent = "播放";
+
+    function paintScrub() {
+      const f = item.frames;
+      if (!f) {
+        scrub.max = "0";
+        scrubLabel.textContent = "—";
+        return;
+      }
+      scrub.max = String(f - 1);
+      const k = item.scrubFrame ?? 0;
+      scrubLabel.textContent = "第 " + (k + 1) + "/" + f + " 帧";
+    }
+
+    scrub.oninput = () => {
+      if (!item.frames) return;
+      item.scrubFrame = Number(scrub.value);
+      applyPlayback(item);
+      paintScrub();
+    };
+    resume.onclick = () => {
+      item.scrubFrame = null;
+      scrub.value = "0";
+      applyPlayback(item);
+      paintScrub();
+    };
+
+    iFrames.oninput = () => {
+      const v = Number(iFrames.value);
+      item.frames = Number.isFinite(v) && v >= 2 ? Math.round(v) : null;
+      item.scrubFrame = null;
+      scrub.value = "0";
+      applyPlayback(item);
+      paintMeta();
+      paintScrub();
+    };
+    iFps.oninput = () => {
+      const v = Number(iFps.value);
+      item.fps = Number.isFinite(v) && v >= 1 ? v : 8;
+      applyPlayback(item);
+      paintMeta();
+    };
+
+    const copy = document.createElement("button");
+    copy.textContent = "复制 manifest";
+    copy.onclick = () => {
+      if (!item.frames) {
+        copy.textContent = "先填帧数";
+        setTimeout(() => { copy.textContent = "复制 manifest"; }, 1200);
+        return;
+      }
+      const snippet = '"' + item.state + '": { "frames": ' + item.frames +
+        ', "fps": ' + item.fps + ', "loop": true, "sheetWidth": ' +
+        item.frames * item.h + ', "sheetHeight": ' + item.h + ' }';
+      copyText(snippet, copy);
+    };
+
+    ctrls.append(
+      field("状态名", iState),
+      field("帧数", iFrames),
+      field("fps", iFps),
+      copy,
+    );
+
+    const scrubRow = document.createElement("div");
+    scrubRow.className = "scrub";
+    scrubRow.append(scrub, scrubLabel, resume);
+
+    card.append(head, stage, meta, ctrls, scrubRow);
+
+    paintMeta();
+    paintScrub();
+    applyPlayback(item);
+    return card;
+  }
+
+  function copyText(text, button) {
+    const done = () => {
+      const old = button.textContent;
+      button.textContent = "已复制";
+      setTimeout(() => { button.textContent = old; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => fallback());
+    } else {
+      fallback();
+    }
+    function fallback() {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.append(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch { window.alert(text); }
+      ta.remove();
+    }
+  }
+
+  function render() {
+    grid.textContent = "";
+    empty.hidden = items.length > 0;
+    [...items].sort((a, b) => a.seq - b.seq).forEach((item) => grid.append(cardFor(item)));
+    $("toggle-play").textContent = pausedAll ? "全部播放" : "全部暂停";
+  }
+
+  // ---------- 全局控件 ----------
+
+  const sizeInput = $("size");
+  sizeInput.oninput = () => {
+    // 与应用 displaySize 同约束:恒为偶数 CSS px(否则盒宽在设备像素上对不齐帧宽)
+    size = 2 * Math.round(Number(sizeInput.value) / 2);
+    $("size-out").textContent = size + " px";
+    applySizeToAll();
+  };
+
+  $("theme-seg").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-theme]");
+    if (!b) return;
+    theme = b.dataset.theme;
+    document.body.classList.toggle("light", theme === "lightbg");
+    [...$("theme-seg").children].forEach((el) =>
+      el.setAttribute("aria-pressed", String(el === b)));
+    applyThemeToAll();
+  });
+
+  $("toggle-play").onclick = () => {
+    pausedAll = !pausedAll;
+    $("toggle-play").textContent = pausedAll ? "全部播放" : "全部暂停";
+    applyPlaybackToAll();
+  };
+
+  $("clear").onclick = () => {
+    items.forEach((i) => URL.revokeObjectURL(i.url));
+    items = [];
+    render();
+  };
+
+  const pick = $("pick");
+  $("pick-btn").onclick = () => pick.click();
+  $("pick-btn2").onclick = () => pick.click();
+  pick.onchange = () => {
+    [...pick.files].forEach(addFile);
+    pick.value = "";
+  };
+
+  // ---------- 拖放 ----------
+  // 整页都是投放区;document 级 preventDefault 必须有,否则拖到页面空白处
+  // 浏览器会直接导航去打开那张图,把预览页顶掉。
+  let dragDepth = 0;
+  window.addEventListener("dragenter", (e) => {
+    e.preventDefault();
+    dragDepth += 1;
+    document.body.classList.add("dragging");
+  });
+  window.addEventListener("dragover", (e) => e.preventDefault());
+  window.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    dragDepth -= 1;
+    if (dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dragging"); }
+  });
+  window.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dragDepth = 0;
+    document.body.classList.remove("dragging");
+    const files = [...(e.dataTransfer?.files ?? [])].filter(
+      (f) => f.type.startsWith("image/") || /\.(webp|png|gif|avif|jpe?g)$/i.test(f.name));
+    if (!files.length) return;
+    files.forEach(addFile);
+  });
+})();
+</script>
+</body>
+</html>
