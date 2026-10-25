@@ -270,6 +270,8 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 ### 4.7 升级、回滚、卸载
 
 > **本期状态（2026-10-25）**：下面的版本化切换、失败回退与旧版清理**未实现**（不在 Task 0–8 清单，见 plan Task 6 未闭合②）。当前换版本的行为：`runtime.json` 版本变了 ⇒ 在 `runtime/<新版本>` 重新准备并启动；旧版本目录保留不自动删；旧版本服务若仍在运行，认领不校验 `record.runtimeVersion`，会继续用旧实例，直到它退出或清掉 `state/service.json`。升级前请先停服务并备份 `state/`、`config/`。卸载行为（只删 npm 包、数据保留、清理顺序）已落地在 README。
+>
+> **后续对（2026-10-25）**：版本化升级/回滚已另立 [2026-10-25-runtime-upgrade-spec.md](2026-10-25-runtime-upgrade-spec.md)（已定稿、待实施）。上面这段「未实现」是当前行为；该对实施后由它替换并回写本块。
 
 - 插件升级若 `runtime.json` 版本不变 ⇒ 不动运行时；变了 ⇒ 后台下载新包，完成后**本次继续用旧版**，下次激活切换（避免运行中换数据面）。
 - 切换：起新版 Qdrant/服务前先停旧版（核对 pid）；新版健康成功才把 `current.json` 指向它；90 秒内起不来 ⇒ 回旧版并报错，同时写 `state/failed-<version>.json`，后续启动停在旧版，直到 `runtime.json` 换版本或用户手动重试。升级前备份 `state/` 与 `config/`；回滚不保证数据兼容（新引擎可能已迁移 sqlite/向量），README 明写「先备份再升级」。
@@ -326,7 +328,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 - 不做官方市场收录与社区索引提交（外部动作，另行处理）。
 - 不做现有 `backend/.deer-flow` 数据自动迁移；用户要沿用数据就保持外部模式或手工拷贝。
 - 不做运行时包的增量更新/差分下载；整包替换。
-- 不做 §4.7 的版本化升级/回滚（本次继续用旧版、90 秒失败回旧版、`failed-<version>.json`、旧版本目录清理）；换版本＝新目录重新准备，后续另立对。
+- 不做 §4.7 的版本化升级/回滚（本次继续用旧版、90 秒失败回旧版、`failed-<version>.json`、旧版本目录清理）；换版本＝新目录重新准备。已另立 [2026-10-25-runtime-upgrade-spec.md](2026-10-25-runtime-upgrade-spec.md)（待实施），不在本对范围。
 - 不把 Qdrant 换成嵌入式向量库；不复活 Docker 路线。
 - 不做已装后换位置的自动迁移（整体拷贝 + 改锚点由用户手工做）；不做自绘目录浏览器。
 - 不把本地视频 ASR 依赖（funasr/torch）打进运行时包；托管包与 `make gateway` 同依赖，视频默认档需另装或改用服务档（登记，见 §8）。
