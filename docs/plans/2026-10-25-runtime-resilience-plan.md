@@ -1,0 +1,98 @@
+# 运行时韧性收尾 Plan
+
+**Spec:** [2026-10-25-runtime-resilience-spec.md](../specs/2026-10-25-runtime-resilience-spec.md)
+**Status:** 待实施（2026-10-25 已拍；D1＝10 s／连续 2 次，D2＝只认日志特征）
+**Date:** 2026-10-25
+**Architecture:** 四件都落在 host 半的 `src/runtime/`，加面板一处横幅：认领看门狗接在 supervisor 的 adopt 之后（复用现有 `timers` 缝与 `probe()`）；端口抢占重试把 `start()` 的「选口→落配置→起两个子进程」抽成可重入的一轮，失败时按日志特征换口重跑一次；锚点告警把 `resolveRoot` 已有的 `warning` 透到 `runtime/status`，面板用现有 `.hrag-rt-banner` 槽位显示；嵌入判定删掉环境变量近似，只看 `embedding_model`。
+
+**硬约束**：只改 `E:\app\python\agent\dsh-harness-rag`；引擎 `engine/` 与主树 `deer-flow` 零改动；token 与任何 `api_key` 不落日志、不进面板、不进提交面；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。`node_modules/`、`dist/`、运行时 zip 不纳入提交。
+
+---
+
+## Task 0 — 落点核实（只读）
+
+> 动到的文件：无（探针在仓外）。
+
+- [ ] **看门狗接入点**：确认 `SupervisorOptions.timers` 可承载递归调度（当前只用于 dispose 的单次计时）；列出四个状态转换点（`adopt` 成功、`ensure` 进入 start、`fail*`、`dispose`）各自该起停看门狗；确认 `probe()` 的 4×`probeIntervalMs` 超时对看门狗够用（要求 ≤2 s）。
+- [ ] **看门狗不得动盘**：确认 `fail()` 会 `killChildren()`＋删 `service.json`＋释放租约（`src/runtime/supervisor.ts:225-233`），因此认领实例必须走单独路径；记录认领状态下 `killChildren()` 为空的现状。
+- [ ] **端口重试的日志原文**：用真实 Qdrant 与 uvicorn 各起一次并预先占住端口，把 Windows 上的报错原文抄下来（期望 `os error 10048` 与 `[Errno 10048]`），钉死匹配串；确认子进程退出时 `state/logs/*.log` 已落盘（tail 能读到 bind 错误）。
+- [ ] **重试的清理面**：确认重跑一轮前必须 `killChildren()`（Qdrant 已起、engine 失败时）；确认 `seedRuntimeConfig` 的 `qdrant_url` 随新端口重写；确认日志文件追加不会让第二轮误判（只在未重试时读 tail）。
+- [ ] **告警槽位**：确认面板 `.hrag-rt-banner` 的层级（`.hrag-root` 级）与关闭态写法；确认 `statusPayload` 里 `resolved.warning` 的读取点（`src/runtime/ops.ts:89-107`）。
+- [ ] **嵌入判定消费面**：全仓确认 `needsEmbeddingConfig` 只有 `panelStatus` 一处消费；确认移除环境变量后 `env` 参数仍被 `sourceZip`/`defaultRoot` 使用（`createRuntimeBridge` 签名不变）。
+
+**实测（实施期回填）**：
+
+---
+
+## Task 1 — 认领看门狗（TDD）（spec §3.1）
+
+> 动到的文件：`src/runtime/supervisor.ts`、`tests/runtime_supervisor.test.ts`。
+
+- [ ] 测试先行：认领成功后单次探测失败不翻状态；连续 2 次失败 ⇒ `phase=error`、`code=adopted_unreachable`、`service.json` 仍在、租约未释放；`dispose()` 后不再探测；重试时重新 `adopt()` 成功回到 `ready/adopted`。
+- [ ] 选项：`watchdogIntervalMs`（默认 10_000）、`watchdogFailures`（默认 2）；用 `timers.set` 递归调度，不引入 `setInterval`。
+- [ ] `adopt()` 成功后起看门狗；`start()` 成功（自管实例）不起——崩溃由 `crash()` 覆盖。
+- [ ] 新增 `failAdopted(code, detail)`：只改 `status`（`error/adopted_unreachable`）与 `logTail`，不杀子进程、不删 `service.json`、不释放租约。
+- [ ] 停止条件：达到阈值、`dispose()`、`ensure()` 进入新一轮、`status.phase !== 'ready'`。
+- [ ] 门禁：`node --test tests/runtime_supervisor.test.ts`；`tsc`。
+
+**实测（实施期回填）**：
+
+---
+
+## Task 2 — 端口抢占重试（TDD）（spec §3.2）
+
+> 动到的文件：`src/runtime/supervisor.ts`、`tests/runtime_supervisor.test.ts`。
+
+- [ ] 测试先行：真实 `net` server 占住首选口、`isFree` 一律返回 true（模拟探空后被抢）⇒ 第一轮 spawn 撞 `EADDRINUSE` 退出 ⇒ 换口重跑一轮 ⇒ `ready`；`spawned.requests` 记录到两次 Qdrant spawn 且端口不同；两个候选口都被占 ⇒ 重试一次后按 `qdrant_exited` 失败，不无限重试。
+- [ ] 触发：子进程在就绪前退出且日志尾部命中 `/address already in use|10048|EADDRINUSE/i`，且本轮尚未重试。
+- [ ] 动作：`killChildren()` → `planPorts({ preferred: { ...ports, [role]: ports[role] + 1 } })` → 重新 seed → 重跑一轮（Qdrant 与 engine 共用同一条重试路径）。
+- [ ] 失败详情：第二轮失败时 `detail` 带 `after one retry`；非绑定原因的提前退出不重试。
+- [ ] 门禁：`node --test tests/runtime_supervisor.test.ts`；`tsc`。
+
+**实测（实施期回填）**：
+
+---
+
+## Task 3 — 锚点告警上屏（TDD）（spec §3.3）
+
+> 动到的文件：`src/runtime/ops.ts`、`client.js`、`tests/runtime_ops.test.ts`。
+
+- [ ] 测试先行：`resolveRoot` 返回 `warning` 时 `statusPayload.warning` 透出；`needs_location` 时不下发 `warning`；external 模式不下发。
+- [ ] `RuntimeStatusPayload` 增加可选 `warning`，仅在 `resolved.kind === 'ok' && resolved.warning` 时写入。
+- [ ] 客户端：`runtime.warning` 存在时在 `.hrag-root` 级渲染 `.hrag-rt-banner`（与嵌入横幅同槽位），文案新键 `rt.warnAnchor`（zh/en），右侧关闭钮复用 `.hrag-rt-bannerclose`；关闭仅本次挂载，不持久化。
+- [ ] 门禁：`node --test tests/runtime_ops.test.ts`；`node --check client.js`；`tsc`。
+
+**实测（实施期回填）**：
+
+---
+
+## Task 4 — 嵌入就绪判定收紧（TDD）（spec §3.4）
+
+> 动到的文件：`src/runtime/bridge.ts`、`tests/runtime_bridge.test.ts`。
+
+- [ ] 测试先行：`needsEmbeddingFrom({config:{embedding_model:''}})` 为 true；有模型为 false；坏 payload 为 false（沿用现有解析口径）。
+- [ ] 抽出纯函数 `needsEmbeddingFrom(payload)` ＝ `!embeddingModelOf(payload)`，`needsEmbeddingConfig` 只调用它；删除三个环境变量名。
+- [ ] 门禁：`node --test tests/runtime_bridge.test.ts`；`tsc`。
+
+**实测（实施期回填）**：
+
+---
+
+## Task 5 — 门禁、真机验收与回写（spec §5）
+
+> 动到的文件：本对 spec/plan。
+
+- [ ] 门禁：`node --check client.js`；`tsc` 0 错；`node --test tests/*.test.ts` 全绿（现有 204 条不回归）。
+- [ ] 真机看门狗：外部模式或第二实例下认领一个服务，kill 掉 ⇒ ≤20 s 内 `runtime/status` 变 `error/adopted_unreachable`、`service.json` 仍在；重启服务后点重试回到 `ready/adopted`。
+- [ ] 真机锚点告警：写坏 `location.json` ⇒ 启动后 root 为默认根、`warning` 非空、面板出现横幅，库可读。
+- [ ] 真机嵌入判定：清空 `embedding_model` 且宿主环境设 `DASHSCOPE_API_KEY` ⇒ 横幅仍出现；配好模型后消失。
+- [ ] 端口被抢：以单测为准（真机很难卡住探空与 spawn 之间的窗口），在实测段写明理由。
+- [ ] 回写 spec Status 与各 Task 实测；未做项归位；提交链回填。
+
+**实测（实施期回填）**：
+
+---
+
+## 提交链（滚动记实）
+
+- 待提交。
