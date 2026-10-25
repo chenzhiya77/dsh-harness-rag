@@ -289,4 +289,4 @@
 - `75db19d` `docs(distribution): document the single-download install`（README 首启流程、运行根与外部模式）
 - `310b7cb` `docs(distribution): record task 7 results in the plan`（Task 7 勾选、实测与未闭合）
 - 待外部条件（Task 8）：npm 发布、同仓 GitHub Release、索引上线、`runtime.json.urls` 回填、`OWNER` 占位替换、GitHub 地址安装实测。Task 0–5 的笔次见 `1d63f4c` 及更早提交，本表自 Task 6 起滚动记实（记链笔自身不列）。
-- Task 8 收口（spec/plan 回写）与记链笔：待提交后回填。
+- `312e252` `docs(distribution): close the pair with task 8 results`（Task 8：spec §5 十九项矩阵、外部动作、§4.6/§4.7/§4.8 回写与不做项归位）
