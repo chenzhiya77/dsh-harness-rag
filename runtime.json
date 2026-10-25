@@ -2,16 +2,16 @@
   "format": 1,
   "packs": {
     "win32-x64": {
-      "runtimeVersion": "0.1.0-1",
+      "runtimeVersion": "0.1.0-2",
       "engineVersion": "0.1.0",
-      "engineCommit": "b34b2d572",
+      "engineCommit": "a4942966b",
       "pythonVersion": "3.12.13",
       "qdrantVersion": "1.20.0",
       "configVersion": 44,
       "urls": [],
-      "size": 330280025,
-      "unpackedSize": 881198854,
-      "sha256": "776558d6d86c3b4f2647b7337ea7c5e68d245af3d9b85108f63caf2cef85c375"
+      "size": 330283067,
+      "unpackedSize": 881202485,
+      "sha256": "05cc423b955e81a5591f9d6bb0ab0253e31f6c7aa4dd6276bae4160c5b0bd015"
     }
   }
 }
