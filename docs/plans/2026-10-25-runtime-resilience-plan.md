@@ -1,7 +1,7 @@
 # 运行时韧性收尾 Plan
 
 **Spec:** [2026-10-25-runtime-resilience-spec.md](../specs/2026-10-25-runtime-resilience-spec.md)
-**Status:** 已实施（2026-10-25；D1＝10 s／连续 2 次，D2＝只认日志特征；唯余锚点横幅真面板目验一条）
+**Status:** 已实施（2026-10-25；D1＝10 s／连续 2 次，D2＝只认日志特征；锚点横幅与 `openBundle` 已在 web 宿主沙箱复验）
 **Date:** 2026-10-25
 **Architecture:** 四件都落在 host 半的 `src/runtime/`，加面板一处横幅：认领看门狗接在 supervisor 的 adopt 之后（复用现有 `timers` 缝与 `probe()`）；端口抢占重试把 `start()` 的「选口→落配置→起两个子进程」抽成可重入的一轮，失败时按日志特征换口重跑一次；锚点告警把 `resolveRoot` 已有的 `warning` 透到 `runtime/status`，面板用现有 `.hrag-rt-banner` 槽位显示；嵌入判定删掉环境变量近似，只看 `embedding_model`。
 
@@ -129,10 +129,11 @@
 - **门禁**：`node --check client.js` 过；`tsc` 0 错（10-25 复跑）；`node --test tests/*.test.ts` **217/217**（Task 1 210 → Task 2 214 → Task 3 216 → Task 4 217）；引擎仓 `harness-rag` `git status` 空、主树 `deer-flow` 只有它自己的既有 docs 改动。
 - **真机看门狗**：`D:\hrag-t6\resilience-accept.mjs` 认领真机实例（engine pid 9504，端口 8021/6334）后 kill 引擎 ⇒ **20,508 ms** 后 `runtime/status` 变 `error`、`code=adopted_unreachable`、`detail="2 consecutive probes failed"`；`state/service.json` 仍在；Qdrant 仍答 200（认领路径没被拆）；用记录 token 重启引擎后 `retry` 回 `ready/adopted`。15 项断言 14 过，唯一「未过」是阈值写法：断言卡 20,500 ms，实测 20,508 ms。看门狗在**上一次探测返回后**才排下一次（单次探测上限 1 s ＋ 间隔 10 s），设计上限本就是 2×11 s＝22 s——spec §4 与 §5.1 的「20 s」已按此改为「22 s 内」。
 - **真机锚点告警**：临时 `DSH_HOME=D:\hrag-t6\anchor-home` 下写入 `{"version":2,"root":"D:/nope"}` ⇒ `statusPayload` 回退默认根、`warning="location.json version is not 1"`、不伪造 `previousRoot`。该 warning 与真机 ready payload（端口/根来自在跑实例）合成 `D:\hrag-t6\resilience-payloads.json`，交给面板宿主探针 `D:\hrag-t5-probe\probe.mjs` 渲染：**43/43**，含「告警横幅出现」「关掉告警后嵌入横幅仍在」「认领错误卡与告警横幅同屏」。
+- **真锚点路径（10-25 在跑宿主补测）**：备份 `~/.dsh/harness-rag/location.json` 后写入 `{"version":2,"root":"D:/nope"}`，真路由 `runtime/status` 回 `root=C:\Users\h7242\.dsh\harness-rag`、`warning="location.json version is not 1"`、无 `previousRoot`；`phase/ports` 仍是在跑栈（supervisor 的根在创建时固定，载荷里的 `root`/`paths` 只是解析面）。还原后 sha256 逐字节一致、`warning` 消失、`root` 回 `D:/hrag-t6/dsh-root/harness-rag`。
 - **真机嵌入判定**：真机 `/api/rag/config` 的 `embedding_model` 为空；给进程环境注入 `DASHSCOPE_API_KEY` 后 `needsEmbeddingFrom` 仍为 true（环境变量不再压制）；喂一个配好模型的 payload ⇒ false。真 DSH 路由 `POST /dsh-harness-rag/api/runtime/status`（127.0.0.1:51134）返回 `phase=ready`、`needsEmbeddingConfig: true`、无 `warning`（锚点有效）。**真面板已见**：在面板旧错误卡上点「重试」，宿主经 `adopt()` 认领同一套在跑实例（engine pid 65544、qdrant pid 69016、`service.json` mtime 11:36:56 均未变），状态回 `ready/managed`，右栏顶部出现「本地服务已就绪；配置嵌…」横幅、KB `smoke-host` 正常列出；198 px 栏宽把横幅文案裁在右缘，与面板其余内容同一裁切面。
 - **端口被抢**：只认单测。理由：要卡住的是 `planPorts` 探空与子进程 bind 之间那一段，真机得在毫秒级抢注一个刚被探空的口，且失败还得同时满足「就绪前退出」与「本轮日志命中 10048」；`tests/runtime_supervisor.test.ts` 用真实 `net` 监听＋恒真 `probePort` 精确模拟该窗口，覆盖 qdrant 换口、engine 换口、双口被占只重试一次、非 bind 退出不重试四条，比真机重复更可控。
 - **真机恢复旁证**：验收驱动遗留的孤儿 Qdrant（pid 49608）占着 `state/qdrant`，让真 DSH 本次启动落在 `qdrant_exited / exit 101`；杀掉孤儿后调真路由 `runtime/retry` ⇒ `starting` → `ready`（8021/6334/6335）。即面板「重试」在真机上确实能把 `qdrant_exited` 拉回来。
-- **遗留（1 条）**：锚点横幅的真面板目验。面板此刻只在锚点有效时开过，要看到锚点横幅得另写坏 `~/.dsh/harness-rag/location.json` 再整启 DSH——那会把运行根切到默认根，代价大于信息量；渲染与关闭行为已由宿主探针用真 payload 覆盖（43/43）。承接：他（需要时点名）。另记一条观察：面板挂在 10:15 的旧错误卡上（宿主在驱动经 API 恢复之前就已挂载，`error` 相位不轮询），点「重试」后经 `adopt()` 认领在跑实例而非重起——`fail()` 会删 `service.json`，只有「外部已恢复」这条旁路才会走到这个分支，结果仍正确。
+- **锚点横幅与「连接已有服务」真宿主复验（10-25 补；隔离沙箱，桌面窗口未重启）**：用 `dsh` CLI 在 `DSH_HOME=D:\hrag-sbx\home` 起一份 web 宿主（`dsh --profile sbx --no-open --port 53100`；profile＝shipped web 模板＋`link:` 本插件，与桌面端加载同一份客户端包），写坏该沙箱的 `location.json` 后打开面板：顶部出现「位置文件无法读取，已改用默认位置 (location.json version is not 1)」＋关闭钮，错误卡与设置卡两种形态都在；点「更改位置」进设置卡，再点「连接已有服务」⇒ 真宿主跳到插件面板的 `dsh-harness-rag` 详情页（v0.1.0、代码来源 `link:E:\app\python\agent\dsh-harness-rag`）⇒ `ctx.get('pluginNavigation').openBundle('dsh-harness-rag')` 的形状与已装身份都对上。证据为 DOM 结构快照（宿主内嵌浏览器无可见视口，取不到像素截图）。
 
 ---
 
@@ -144,4 +145,4 @@
 - `14a9c5c` `feat(runtime): retry startup once when a port is stolen`（Task 2 端口抢占重试）
 - `1a038e5` `feat(runtime): warn in the panel when the location anchor is unreadable`（Task 3 锚点告警上屏）
 - `4429a36` `fix(runtime): decide embedding readiness from the model alone`（Task 4 嵌入就绪判定收紧）
-- 待令：本 Task 5 的回写（本对 spec/plan）随定稿提交。
+- 10-25 沙箱复验补记：本笔 `docs(plans): record local-source acceptance and sandbox checks`（锚点横幅与 `openBundle` 的 web 宿主复验）。

@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落，发布动作与 GitHub 安装实测待外部条件）
+**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落，发布动作与 GitHub 安装实测待外部条件；本地源补测已覆盖 §5.15 篡改、§5.17 下载段、§5.19 中止续传，§5.10 跨 profile 认领已过；余 §5.1 干净 VM、§5.4 UNC、§5.10 同时启动的租约争抢、§5.17 的 `.env` 来源与引擎模型出网）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -172,7 +172,7 @@
 - **host 半补件**：`runtime/status` 改为 `panelStatus(deps)` —— 只有 `managed && phase==='ready'` 才 `await deps.needsEmbeddingConfig()`（该探针会真请求本地服务，准备中不能跑）；`runtime_ops.test.ts` 钉「ready 探一次 / starting 不探」。
 - **缺陷（Task 1 规则）**：`validateRootCandidate` 的 `nested_in_anchor` 把**锚点根本身**也拒了（`containsPath(anchorRoot, parent)` 含等值），导致「设置卡默认位置直接开始」永远红字；改为「等于锚点根放行、其子目录仍拒」，`runtime_paths.test.ts` 加等值用例、`runtime_ops.test.ts` 加 `configure(parent=anchorRoot)` 落锚点用例。
 - 门禁：`node --check client.js` 过；`tsc -p tsconfig.json` 0 错；全量 `node --test tests/*.test.ts` **190/190**。仓外 hostless 探针 `D:\hrag-t5-probe\probe.mjs`（jsdom＋react 18，`react-dom` 在 jsdom 全局就位后动态 import；宿主 primitives 缺失走全回退）：**35/35**，覆盖设置卡（标题/`~` 路径/失效原因/体积）、原生 picker 回填、同步盘确认、校验拒绝红字、picker 退化手输＋「将安装到」、下载百分比 25%→启动不定态、错误卡（阶段/日志尾/重试/更改位置）、错误→设置卡、就绪横幅→→设置页只读 Qdrant、external 无门、status 失败重试。
-- **未闭合**：①真栈手验（Task 6）——首启真实下载/进度/启动、native picker 实点、198px 档实宽；②`pluginNavigation.openBundle` 的实参形状未在真宿主点过（探针里 `ctx.get` 返回 null ⇒ 走「可复制说明」分支）；③探针的 DshMenu 回退会报一次 `<button>` 嵌 `<button>` 的 DOM 警告（真宿主有 HostMenu，不属面板缺陷）；④坏 `location.json` 走 `resolveRoot` 的 `warning` 回落默认根，`runtime/status` 未带该字段、面板也不上屏（spec §4.6 未列；要上屏另议）。
+- **未闭合**：①真栈手验（Task 6）——首启真实下载/进度/启动、native picker 实点、198px 档实宽；②`pluginNavigation.openBundle` 的实参形状未在真宿主点过（探针里 `ctx.get` 返回 null ⇒ 走「可复制说明」分支）；10-25 静态补核宿主实现：`openBundle(name)` 会切「插件」面板、`setTab("installed")`、`setView({kind:"package",name})`，找不到包名时退回列表，且宿主自己的 client 插件一律用 `ctx.get("…")` 取服务；本插件已装身份（profile `package.json` 的依赖与 `bundles` 列表）均为 `dsh-harness-rag` ⇒ 形状与身份对得上；10-25 在 web 宿主沙箱的设置卡上真点「连接已有服务」⇒ 跳到 `dsh-harness-rag` 插件详情页（v0.1.0、来源 `link:…`），真点击已验；③探针的 DshMenu 回退会报一次 `<button>` 嵌 `<button>` 的 DOM 警告（真宿主有 HostMenu，不属面板缺陷）；④坏 `location.json` 走 `resolveRoot` 的 `warning` 回落默认根，`runtime/status` 未带该字段、面板也不上屏（spec §4.6 未列；要上屏另议）。
 
 ## Task 6 — 运行时包构建与真冷启动（spec §4.8）
 
@@ -255,28 +255,29 @@
 | 2 | 默认位置 | 已验 | 驱动 3 轮 `ready`；`runtime/`、`state/`、`config/` 齐全 |
 | 3 | 自定义位置 | 已验 | 10-25 真机：原生选择器实点 `D:\hrag-move` → 目标解析为 `<parent>/harness-rag` → configure 后新根冷启动 14 s 到 `ready`；重启仍走新根、数据完好 |
 | 4 | 选择器边界 | 部分 | 十种拒绝码与同步盘确认＝单测＋Task 5 探针；10-25 真机原生选择器 Esc 取消＝无报错无变更；UNC 选择未点 |
-| 5 | headless 首启 | **未验** | 代码有 2 s 宽限自动准备；无 headless profile 实跑 |
+| 5 | headless 首启 | 已验 | 10-25 隔离 `DSH_HOME` 起 headless profile（shipped headless 模板＋本插件）：无面板、2 s 宽限后自动 `ensure`，约 80 s 到 `ready`（端口 6336/6337/8022，均避开在跑栈），引擎带 token 答 200；旁证——无凭据的 headless 任务 <2 s 退出时宽限计时器 `unref` 不拖住进程、也不会开始准备（符合设计） |
 | 6 | 锚点失效与下载失败 | 已验 | 单测（reason/needs_location）＋探针（红字/错误卡）；真机见过设置卡与错误卡 |
 | 7 | 二次启动 | 已验 | 认领 15/29/18 ms，不重下，数据保留 |
 | 8 | 外部模式 | 已验 | 10-25 真机：脱离 DSH 独立起一套引擎/Qdrant，profile 覆盖 `backendUrl=127.0.0.1:8021` ⇒ `runtime/status` 报 external、不 spawn 子进程；面板无运行时门、直列 `smoke-host`，服务端日志见 knowledge-bases/documents/models 请求；退出 DSH 后外部服务仍存活 |
 | 9 | 端口冲突 | 已验 | 真机 8020/6333 被占 ⇒ 8021/6334/6335；未杀占用进程 |
-| 10 | 崩溃恢复与双实例 | 部分 | kill 引擎 ⇒ `error`、重试起新栈＝单测＋驱动；两个真 DSH profile 并跑未验 |
+| 10 | 崩溃恢复与双实例 | 部分 | kill 引擎 ⇒ `error`、重试起新栈＝单测＋驱动；10-25 本地源补测：home7 profile b 的 location 指向 home6 运行根，53107 从 idle 触发 `runtime/retry` 后 `ready`，root/ports 与 53106 相同，profile b 宿主无新增 qdrant/engine 子进程 ⇒ 跨 profile 认领已验；两个 profile 同时从零启动的租约争抢仍仅单测 |
 | 11 | 退出清理 | 已验 | 10-25 真机「应用→退出」后 DSH 进程与 qdrant/engine 全消失（宿主 Job）；两次退出分别 <5 s（state 保留）与 >5 s（dispose 计时器先到、state 被清），说明计时器不拖慢退出；重启后四个集合各 1/1 恢复、遗留 state 不挡启动；面板开→就绪 PID 与 `service.json` mtime 不变；打包版 asar 无 HMR 模块（插件开关重启生效），第二半以面板开合＋单测覆盖；同轮修掉 `stop()` 只 forget 不 dispose 的偏差（见下） |
 | 12 | 升级/回滚 | 未实现 | 本期不做（§4.7 状态块、§7 已记）；换版本＝新目录重新准备，旧实例若在跑会被继续认领 |
 | 13 | 整体搬迁 | 已验 | 10-25 真机：停止后整树 rename、锚点仍指旧路径 ⇒ `needs_location`（reason＝旧根不存在）；面板改位置→新根 `ready`、`smoke-host` 在列；再手工搬回＋改锚点 ⇒ `ready`、数据完好 |
 | 14 | 鉴权 | 已验 | 200/401；token 只在 `state/service.json`，不进日志/种子配置/面板/`runtime/status`（日志扫描 0 命中） |
-| 15 | 完整性 | 部分 | sha/size 校验、篡改拒绝＝下载器单测；真包篡改未单独跑 |
+| 15 | 完整性 | 已验（篡改） | 10-25 真包篡改：本地 https 源在 zip 中点翻 1 字节 ⇒ `runtime/status` `phase=error`、`code=sha256_mismatch`、expected/got 与清单不符、未落 runtime；源站记录 4 次完整 GET（下载器重试）后停在 error。zip 内 `../` 条目拒绝仍只有解压器单测 |
 | 16 | 门禁 | 已验 | 见下节 |
-| 17 | 代理 | **未验** | 依赖宿主全局 dispatcher 与 `proxyEnvironmentForChild`（Task 0 取证）；本轮无代理环境 |
+| 17 | 代理 | 部分（下载段已验） | 10-25 本地 CONNECT 代理：宿主 `HTTPS_PROXY`/`HTTP_PROXY` 指向 127.0.0.1:53912 ⇒ 代理日志 `CONNECT 192.168.2.9:53911`、330,726,793 B；`runtime/status` `ready`、`installed=true`（6336/6337/8022）。未验：仅 `$DSH_HOME/.env` 来源、引擎模型调用出网 |
 | 18 | 种子可加载 | 已验 | 真引擎从种子启动：`/health` 200、带 token API 200、建库 201 |
-| 19 | 退出中止下载 | 部分 | abort 保留 `.part`／续传＝单测；DSH 退出中止未验 |
+| 19 | 退出中止下载 | 已验（安装链路） | 10-25：`slow` 源在 29,753,344 B 被 abort，重启后 `normal4` 从同一偏移续传 300,526,681 B 完成，12:48:48 落 manifest、53106 回 `ready`；同轮 Qdrant 初始化遇盘满 `os error 112`，只能证明下载/续传/安装链路，不作为索引健康证据 |
 
 - **10-25 真机退出清理（§5.11）与同轮修复**：真机走「应用→退出」（托盘驻留，关窗不算退出）后全部 DSH 进程（主/渲染/工具进程与两个 runner）连同 qdrant/python 一起消失（宿主 `process.on('exit')` → Job kill-on-close）。两次退出落在两条分支：一次宿主在 5 s 内退出 ⇒ `service.json`/`lease.json` 原样留下（下次启动按死 pid 接管租约、正常起栈），一次宿主关停超过 5 s ⇒ dispose 计时器先到、两个文件被清；同一份代码两种时长，说明 5 s 计时器不拖慢宿主退出，也证明修复后的 `dispose` 在真宿主里确实执行。重启后四个集合各 `Recovered 1/1`、遗留 state 不挡冷启动；面板开→就绪期间 PID 与 `service.json` mtime 均未变。打包版 `app.asar` 里 `hmr` 零命中、插件管理器 README 写明「未启用 HMR 时开关在重启后生效」⇒ 第二半不可达，以面板开合＋单测覆盖。读码发现 `bridge.stop()` 只 `forgetSupervisor`、从不 `dispose()`：spec §4.3 的 5 秒去抖是死代码，重载后旧租约（同宿主 pid 存活）会让重试永久 `lease_held`（仓外复现 `D:\hrag-b1\lease-repro.ts`，输出 `A ensure -> ready` / `B retry -> error lease_held`）。修复：`stop()` 改 `dispose()` 并保留单例、`getSupervisor` 复用时重绑 ready 钩子、dispose 计时器 `unref()`（不拖慢宿主退出）、`configureRoot` 先 dispose 再 forget；新增 3 个测试（`reload:` ×2、`stop: the bridge…`），neuter 两处修复后新测试转红。
 - **10-25 真机搬迁与原生选择器（§5.13、§5.3、§5.4）**：停 DSH → 整树 `rename` 到另一父目录、锚点仍指旧路径 → 启动后 `needs_location`（`reason=target root does not exist`），面板露出「上次的位置不可用 ＋ 更改…」；原生选择器实点两次：Esc 取消 ⇒ 卡片无变化、无报错；重选 `D:\hrag-move` ⇒ host 解析为 `D:\hrag-move\harness-rag`、configure 后 14 s 到 `ready`、`smoke-host` 在列；再手工搬回原路径＋改锚点 ⇒ 重启 `ready`、数据完好。**同轮修掉一个真缺陷**：`bridge.pick()` 调宿主 `capability.pick()` 时没传 caller-lifetime `AbortSignal`，而宿主 Win32 对话框驱动第一行就读 `signal.aborted` ⇒ 点「更改…」直接渲染 `Cannot read properties of undefined (reading 'aborted')`、对话框根本不出现；修复＝每次 pick 新建 controller（`stop()` 时 abort 关窗）、自身 abort 视为「无选择」；新增 3 个 bridge 测试（信号传入／取消为 null／卸载中止），neuter 后转红。
 - **10-25 真机外部模式（§5.8）**：停掉托管栈后手工起 `runtime/0.1.0-1` 的 Qdrant＋engine（6334/8021，服务 token 取自 `state/service.json`），profile patch 把 `harness-rag` 覆盖为 `backendUrl=http://127.0.0.1:8021`；启动后 `runtime/status` 报 `mode/phase=external` 且**未启动任何子进程**；面板无运行时门与横幅，直接列出 `smoke-host`；服务端 access log 收到 `knowledge-bases`、`supported-formats`、`documents`、`models/config` 请求；退出 DSH 后外部两个进程仍存活（外部服务不归插件管），随后按显式 pid 停掉、profile 还原、托管模式复跑到 `ready`。
+- **10-25 本地下载源补测（§5.10/5.15/5.17/5.19，证据 `D:\hrag-t6\acceptance-2026-10-25`）**：`D:\hrag-sbx\fixture` 的 `origin.mjs`（normal / tamper / slow，自签 TLS）与 `proxy.mjs` 把 315 MB 运行时件变成可控源。§5.15：tamper 在 zip 中点翻 1 字节 ⇒ `sha256_mismatch`，源站见 4 次完整 GET 后停在 error、未安装。§5.17：宿主代理指向本地 CONNECT 代理 ⇒ 代理记录 330,726,793 B，`runtime/status` `ready`、`installed=true`。§5.10：profile b 指向 home6 根后触发 retry ⇒ `ready` 且无新增子进程（认领，非重起）；同时从零启动的租约争抢仍未验。§5.19：`slow` 在 29,753,344 B abort，重启后从同偏移续传完成并落 manifest；但该轮 Qdrant 初始化遇盘满（`os error 112`），只作为安装链路证据。
 - **本轮收口门禁**：`node --check client.js` 过；`tsc` 0 错；`node --test tests/*.test.ts` **204/204**（含新增 3 个 reload/dispose 测试与 3 个 pick 测试）；`npm pack --dry-run` **37 文件 / 341.4 kB / 1.4 MB**，不含 `engine/`、`scripts/`、`market/`、`tests/`、`docs/specs|plans`；`engine/` 1082 个文件按 blob 与源仓 `b34b2d572` **逐字节一致**（仅多 `UPSTREAM.md`）；引擎源仓 `git status` 空；主树 `deer-flow` 零新增改动（仅有 Task 0 基线的既存未提交面）；提交面密钥形扫描 0 命中；运行时日志无 `Bearer`/token。
 - **外部动作（待外部条件，未执行）**：①创建 GitHub 单仓并首推（仓库根＝插件包，`engine/` 随之）；②`package.json` 的 `OWNER` 占位替换为实际地址；③归档旧引擎仓；④npm 发布 `dsh-harness-rag@0.1.0`；⑤同仓 GitHub Release 上传运行时 zip → **用发布件重算并回填** `runtime.json.urls`/`size`/`unpackedSize`/`sha256` → 重发 npm（顺序：pack 先于引用它的 tag）；⑥`market/index.json` 上线并在 README 填索引 URL；⑦用 `git+https://<repo>.git` 在真 DSH 装一次（Task 0/7 的 GitHub 安装缺口）。
-- **归位（不做／后续）**：不做＝§4.7 版本化升级/回滚（spec §7）；后续真机验＝干净 VM(§5.1)、headless 首启(§5.5)、双 profile 租约(§5.10)、完整性·真包篡改(§5.15)、代理(§5.17)、退出中止下载(§5.19)；其中 §5.15/§5.17/§5.19 的前置＝本地下载源（可控制篡改字节、限速与代理走向），不搭则只剩现有单测证据；登记缺口＝被认领实例无健康看门狗(Task 6 未闭合③)→[韧性对](../specs/2026-10-25-runtime-resilience-spec.md) D1、spawn 后端口被抢不换口重试(Task 3 未闭合③)→D2、坏 `location.json` 的 `warning` 未上屏(Task 5 未闭合④)→D3、`needsEmbeddingConfig` 的环境变量钥匙仍是近似(Task 4 未闭合③，真机已核「种子未配模型⇒NULL」)→D4（D1–D4 已于 10-25 由该对交付）、`openBundle` 实参形状未在真宿主点过(Task 5 未闭合②)＝悬空（本清单唯一无对承接项）。
+- **归位（不做／后续）**：不做＝§4.7 版本化升级/回滚（spec §7）；后续真机验＝干净 VM(§5.1)、UNC 选择(§5.4)、双 profile 同时从零启动的租约争抢(§5.10 余项)、代理的 `.env` 来源与引擎模型出网(§5.17 余项)（headless 首启 §5.5 已于 10-25 沙箱验过；§5.15 篡改、§5.17 下载段、§5.19 中止续传已于 10-25 用本地下载源补测，证据 `D:\hrag-t6\acceptance-2026-10-25`；§5.15 的 `../` 条目拒绝仍只有单测）；登记缺口＝被认领实例无健康看门狗(Task 6 未闭合③)→[韧性对](../specs/2026-10-25-runtime-resilience-spec.md) D1、spawn 后端口被抢不换口重试(Task 3 未闭合③)→D2、坏 `location.json` 的 `warning` 未上屏(Task 5 未闭合④)→D3、`needsEmbeddingConfig` 的环境变量钥匙仍是近似(Task 4 未闭合③，真机已核「种子未配模型⇒NULL」)→D4（D1–D4 已于 10-25 由该对交付）、`openBundle` 形状与真点击均已验(Task 5 未闭合②，10-25 web 宿主实点，悬空项清零)。
 - **提交链**：见末节（Task 8 两笔待提交后回填）。
 
 ---
@@ -293,3 +294,4 @@
 - `310b7cb` `docs(distribution): record task 7 results in the plan`（Task 7 勾选、实测与未闭合）
 - 待外部条件（Task 8）：npm 发布、同仓 GitHub Release、索引上线、`runtime.json.urls` 回填、`OWNER` 占位替换、GitHub 地址安装实测。Task 0–5 的笔次见 `1d63f4c` 及更早提交，本表自 Task 6 起滚动记实（记链笔自身不列）。
 - `312e252` `docs(distribution): close the pair with task 8 results`（Task 8：spec §5 十九项矩阵、外部动作、§4.6/§4.7/§4.8 回写与不做项归位）
+- 10-25 本地源补测回写：本笔 `docs(plans): record local-source acceptance and sandbox checks`；同批 `dd717cc`（tools）、`73c964e`（runtime）、`5b898f3`（docs）。
