@@ -2,7 +2,7 @@
 
 DSH 插件 `dsh-harness-rag` 的内置引擎：只提供知识库 HTTP API。
 
-本目录是内置引擎的源码快照（上游 `harness-rag`），不包含 agent 运行时、IM 通道、调度器、工作台前端与部署编排。
+本目录是内置引擎的后端源码目录，自 2026-10-25 起在本仓分叉维护（源自 `harness-rag` 的一次性快照；来源、基准提交与构建方式见 [UPSTREAM.md](UPSTREAM.md)）。不包含 agent 运行时、IM 通道、调度器、工作台前端与部署编排。
 
 ## 拓扑
 
@@ -66,7 +66,7 @@ curl http://127.0.0.1:8020/health
 | 路由 | 用途 |
 | --- | --- |
 | `/health` | 存活探针 |
-| `/api/knowledge-bases` | 库 CRUD；文档上传/列表/重试/删除/原文/切片/文件/视频流；`recall-test`、`graph`、`chunk-positions`、`vector-projection`、`eval`、`wiki`、`manual-knowledge`、`reindex`、`supported-formats` |
+| `/api/knowledge-bases` | 库 CRUD；文档上传/列表/重试/删除/原文/切片/文件/视频流；`tools`（六件模型工具）、`recall-test`、`graph`、`chunk-positions`、`vector-projection`、`eval`、`wiki`、`manual-knowledge`、`reindex`、`supported-formats` |
 | `/api/rag/config` | RAG 功能模型配置（读合并态；写 `rag_config.json`）及迁移/重灌/探测 |
 | `/api/models` | 模型目录（设置面读写 `models_config.json`） |
 
@@ -113,7 +113,7 @@ backend/tests/knowledge/                   知识库测试
 
 IM 通道、agent/sandbox/浏览器、LangGraph API server/CLI、duckdb、langfuse 等不再安装。harness 中的休眠模块仍在源码树里，但对应包未安装；需要时按模块补装。`tiktoken`／`langgraph-sdk` 由 openai/langgraph 传递安装。
 
-实测：裁剪后 site-packages 226 → 167 个包、685 → 419.4 MB；默认安装加入 ragas 评测依赖后为 199 个包、707 MB（+287.6 MB）；入口导入 3.70 s／1,708 模块（5 次中位，裁剪期实测）。首次 `recall-test` 会一次性加载三个检索工具模块。
+实测：裁剪后 site-packages 226 → 167 个包、685 → 419.4 MB；默认安装加入 ragas 评测依赖后为 199 个包、707 MB（+287.6 MB）；入口导入 3.70 s／1,708 模块（5 次中位，裁剪期实测）。检索工具与文档工具模块按需懒加载，首次调用 `recall-test` 或 `tools` 时才导入。
 
 ## 开发
 
@@ -129,4 +129,4 @@ uv sync --inexact
 
 ## 归属
 
-知识库能力由本项目自行实现；源码树中的 DeerFlow harness 框架部分按 MIT 保留上游声明，见上级 `THIRD_PARTY_NOTICES.md`。
+知识库能力由本项目自行实现；源码树中的第三方 harness 框架部分按 MIT 保留版权声明，见上级 `THIRD_PARTY_NOTICES.md`。
