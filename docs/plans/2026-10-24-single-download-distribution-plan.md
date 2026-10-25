@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·进行中（2026-10-25；Task 0–5 代码完成，Task 3/4/5 余真机门禁，Task 6–8 未开始）
+**Status:** 已拍·进行中（2026-10-25；Task 0–6 代码完成，Task 3/4/5/6 余真机门禁，Task 7–8 未开始）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -176,18 +176,40 @@
 
 ## Task 6 — 运行时包构建与真冷启动（spec §4.8）
 
-> 动到的文件：`scripts/build-runtime-pack.mjs`（新增，构建期，不入 npm 包）、`.gitignore`（若需忽略 `dist/`）。
+> 动到的文件：`scripts/build-runtime-pack.mjs`（新增，构建期，不入 npm 包）、`.gitignore`、`package.json`（devDependency `yazl`）、`src/runtime/provision.ts`、`src/runtime/bridge.ts`、`src/runtime/supervisor.ts`、`runtime.json`、`tests/runtime_provision.test.ts`（新增）、`tests/runtime_bridge.test.ts`（新增）、`tests/runtime_supervisor.test.ts`。
 
-- [ ] 构建器：`--engine <path>`（默认 `./engine`，迁移必须先于本 Task 或显式指向源仓）`--out <dir>`；读单仓 tag/commit 与 `engine/config.example.yaml` 的 `config_version`；`uv` 钉 0.11.2（见 spec §2.4）；`uv python install --install-dir`；`uv export --frozen --no-dev --extra umap --no-hashes --no-emit-project`（剔除两条 `-e`）；**`uv pip sync --python <pack>/python/python.exe --target <pack>/site-packages`**（`uv pip install -r` 会重求解，撞锁里的 `websockets==16.0` override）；把 `uv python install --install-dir` 产出的 `cpython-3.12.x-windows-x86_64-none/` **拍平成 `<pack>/python/`**；下载 Qdrant 固定版本（资产 30,801,664 B）；拷 `engine/backend/` 源码、`engine/config.example.yaml` 与 LICENSE；生成 `runtime-manifest.json` 与 `THIRD_PARTY_NOTICES.md`（覆盖 Python/Qdrant/wheel 许可）；打 zip 并回填 `size`/`unpackedSize`/`sha256`/`runtimeVersion`。
-- [ ] 构建产物不含 `node_modules`、`.venv`、`__pycache__`、测试数据、`backend/.env`、`backend/.deer-flow`、`logs/`、根 `config.yaml`/`models_config.json`/`rag_config.json`；路径长度检查。
-- [ ] 冷启动（默认根）：`DSH_HOME=<空临时目录>`、`DSH_HARNESS_RAG_PACK=<zip>`（仅测试覆盖，指本地 zip）、PATH 去掉 Python/uv/Docker；起 DSH 或直接驱动 host 模块，验证设置卡→开始→下载（本地 file 覆盖）→解压→起两服务→`ready`；库列表可读。
-- [ ] 冷启动（自定义根）：`runtime/configure({parent:'<另一临时目录>'})` ⇒ 实际根 `<parent>/harness-rag`，默认根保留 `location.json` 与既有 `bindings.json`；重启后从自定义根认领；取消选择与非法路径不启动下载。
-- [ ] 二次启动认领：保留 home 重启，在实测预算内 `ready`（初始目标 ≤10 s，Task 6 回填实际值）；kill 引擎后状态 `error`，重启后恢复。
-- [ ] 端口冲突：占 8020/6333 再起，自动改口；占用进程不被杀。
-- [ ] 正常退出：DSH 退出后无 qdrant/python 子进程；HMR 重载不重启服务。
-- [ ] 体积与耗时记录：zip 大小、解压后大小、首启总时长、二次启动时长；把 `size`/`unpackedSize` 回填到 `runtime.json`，并核对面板「约 400 MB / 1.1 GB」文案。
+- [x] 构建器：`--engine <path>`（默认 `./engine`，迁移必须先于本 Task 或显式指向源仓）`--out <dir>`；读单仓 tag/commit 与 `engine/config.example.yaml` 的 `config_version`；`uv` 钉 0.11.2（见 spec §2.4）；`uv python install --install-dir`；`uv export --frozen --no-dev --extra umap --no-hashes --no-emit-project`（剔除两条 `-e`）；**`uv pip sync --python <pack>/python/python.exe --target <pack>/site-packages`**（`uv pip install -r` 会重求解，撞锁里的 `websockets==16.0` override）；把 `uv python install --install-dir` 产出的 `cpython-3.12.x-windows-x86_64-none/` **拍平成 `<pack>/python/`**；下载 Qdrant 固定版本（资产 30,801,664 B）；拷 `engine/backend/` 源码、`engine/config.example.yaml` 与 LICENSE；生成 `runtime-manifest.json` 与 `THIRD_PARTY_NOTICES.md`（覆盖 Python/Qdrant/wheel 许可）；打 zip 并回填 `size`/`unpackedSize`/`sha256`/`runtimeVersion`。
+- [x] 构建产物不含 `node_modules`、`.venv`、`__pycache__`、测试数据、`backend/.env`、`backend/.deer-flow`、`logs/`、根 `config.yaml`/`models_config.json`/`rag_config.json`；路径长度检查。
+- [x] 冷启动（默认根）：`DSH_HOME=<空临时目录>`、`DSH_HARNESS_RAG_PACK=<zip>`（仅测试覆盖，指本地 zip）；直接驱动 host 模块，验证下载覆盖→解压→起两服务→`ready`；库列表可读（设置卡→开始那段由 Task 5 探针覆盖）。
+- [x] 冷启动（自定义根）：`runtime/configure({parent:'<另一临时目录>'})` ⇒ 实际根 `<parent>/harness-rag`，默认根保留 `location.json`；目录布局先建；从该根冷启动至 `ready`；取消选择与非法路径不启动下载（Task 4 单测覆盖）。
+- [x] 二次启动认领：保留 home 重启，在实测预算内 `ready`（初始目标 ≤10 s，实测 15–29 ms）；kill 引擎后状态 `error`，重启/重试后恢复。
+- [x] 端口冲突：8020/6333 被占再起，自动改口；占用进程不被杀。
+- [x] 正常退出：supervisor dispose 后无 qdrant/python 子进程（DSH 退出与 HMR 重载见未闭合①）。
+- [x] 体积与耗时记录：zip 大小、解压后大小、首启总时长、二次启动时长；把 `size`/`unpackedSize` 回填到 `runtime.json`，并核对面板体积文案（面板按清单取值）。
 
 **实测（实施期回填）**：
+
+- **构建（仓外 `D:\hrag-t6`，引擎取源仓 `b34b2d572`）**：`uv` 0.11.2；Python 3.12.13 用 `uv python install --install-dir` 后**拍平**进 `<pack>/python/`（uv 同时建 `cpython-3.12-…` 别名目录，构建器只认带修订号的目录；安装目录可复用，首次下载约 4 分钟、后续 3.7 s）；`uv export` 得 613 行、剔两条 `-e` 后 **611 条**；`uv pip sync --target` **22.3 s**；引擎源码按排除表拷 **628 文件**（新增排除 `.mimosa` 19 MB 本地工具状态、`.pytest-tmp`、`.vscode`；原有 `.deer-flow`/`.venv`/`__pycache__`/`tests`/`docs`/`extension_test_fixtures`/`node_modules`/`.env`/`*.pyc`）；Qdrant 资产 30,801,664 B 走 `gh release download` 并缓存；zip 由 `yazl` 流式写（条目排序、固定 mtime 1980、自动 zip64）。
+- **产物**：**20,075 条目**；zip **330,280,025 B（315.0 MiB）**；解压 **881,198,854 B（840.4 MiB）**；sha256 `776558d6d86c3b4f2647b7337ea7c5e68d245af3d9b85108f63caf2cef85c375`；打包 226.9 s。`runtime.json` 已回填 `runtimeVersion`/`engineCommit`/`pythonVersion`/`configVersion`/`size`/`unpackedSize`/`sha256`；`urls` 仍空 ⇒ 仍是「未发布」占位，发布前回填。
+- **路径预算**：最长条目 120 字符（`engine/backend/packages/harness/deerflow/agents/memory/backends/deermem/deermem/core/message_patterns/reinforcement.yaml`），`\runtime\<version>\` 17 字符 ⇒ 120+17+120 = **257 ≤ 259**，Task 1 的 120 根预算成立；构建器按版本串长度精确校验并打印剩余根预算（122）。首版按固定 20 字符估算是 off-by-one，已改。
+- **开发覆盖**：`DSH_HARNESS_RAG_PACK` 在 `bridge.ts` 读 env 并转绝对路径，`ensureRuntime` 有它时跳过下载、直接解压该 zip（未设时行为不变）；4 条单测：占位包无覆盖 ⇒ `pack_missing`、覆盖文件缺失 ⇒ `pack_missing` 带路径、有覆盖 ⇒ 不走网络且按该 zip 解、已装 ⇒ 不碰 zip。
+- **冷启动驱动**（仓外 `D:\hrag-t6\cold-start.mjs`，经 `createHostSpawn`＋模拟 `ctx.subprocess` 的 collected/terminate 适配器起真进程；最终 **28/28**）：
+  - 默认根：解压→Qdrant→引擎→`ready` **70.6 / 72.7 / 91.4 s**（三轮，含解压；波动来自磁盘缓存）。
+  - 端口：本机 8020/6333 已被既有服务占用 ⇒ 自动落 **8021/6334/6335**，未触碰占用进程；另用两个被占用的临时端口作 preferred ⇒ 实际 **49561/49562/49563**，占用方 socket 仍在监听。
+  - 引擎：`/health` 200；带 token `/api/knowledge-bases` 200、无 token **401**；建库 **201**；`/api/rag/config` 200。
+  - 种子：`config/config.yaml` 的 sqlite 指向 `<root>/state/data`；`rag_config.json` 的 `qdrant_url` 用实际规划端口。
+  - 二次启动认领：**15 / 29 / 18 ms**；认领方 dispose 不影响服务。
+  - kill 引擎：状态翻 `error`（`engine_exited`），`service.json` 清空；`retry` 起新栈 `ready`。
+  - 自定义根：`runtime/configure` 先落锚点与 `downloads/config/state/{data,logs,qdrant}`，再从该根冷启动（再解压）**67.3 / 76.3 s** `ready`，数据落该根。
+  - 退出：全部 dispose 后无 qdrant/python 子进程残留。
+- **缺陷修复 ①（Task 4/5 未闭合③）**：`/api/rag/config` 的有效嵌入模型在 `config.embedding_model`，桥接探针原来读 `effective`/顶层 ⇒ **恒判「未配置」**。新增纯函数 `embeddingModelOf()`（`bridge.ts`）＋2 条单测；驱动侧核到新种子的 `config.embedding_model` 为 `null`。
+- **缺陷修复 ②（Task 3/4）**：`state/current.json` 从未被写入 ⇒ `runtime/status.installed` 恒假、`runtime/configure` 的已装守卫永不触发、错误卡永远多给「更改位置」。supervisor 在 `ready`（新起与认领两条路）写 `{version:1,runtimeVersion,updatedAt}`；两条测试补齐，驱动核到文件与内容。
+- **缺陷修复 ③（Task 3）**：ready 后子进程退出不会改变状态（`kill 引擎 ⇒ error` 不成立）。`fail()` 改为先置 error 再杀子进程（防退出回调重入），引擎/Qdrant 的退出回调接 `crash()`；新增「ready 后 kill 引擎 ⇒ error」用例。
+- **缺陷修复 ④（真机发现）**：`ensureRuntime` 把「未发布包」判在「已安装」之前 ⇒ 已装好运行时在 `runtime.json.urls` 为空（发布前占位）时仍报 `prepare: pack_missing`，面板每秒轮询便每秒重试失败，服务永远起不来。改为先查 `runtime/<version>/runtime-manifest.json`；新增回归用例「未发布包 + 已安装 ⇒ ok」（修前为红）。
+- **真机（10-24 深夜，真 DSH／真 `ctx.subprocess`，根 `D:\hrag-t6\dsh-root\harness-rag`）**：装好的运行时在未发布清单下首启 **约 10 s 到 `ready`**（页面缓存热；托管引擎监听 8021、Qdrant 6334/6335，`/health` 200）；面板显示就绪横幅与空库态；经服务建库（`smoke-host`）后点「刷新」即列出该库。本轮实际看到 setup/错误/准备/就绪/空库，external 未现。
+  - 环境限制（非插件问题）：本机屏幕 1707×1067、DSH 窗口 1280 CSS（dpr 1.5），右栏 575 宽会被窗口右缘裁掉；取证时临时把 `.hrag-root` 夹到 220 px 拍照，随后已移除。
+- 门禁：`tsc` 0 错；全量 **198/198**；`client.js` 仅调试件改动，已还原。
+- **未闭合**：①真机剩两项——HMR 重载不重启、DSH 正常退出清理（该实例关窗后常驻托盘，本轮只能硬杀整树，子进程随 job 退出）；②升级/回滚（spec §4.7 的版本化目录切换、90 s 失败回旧版、清理旧版本）不在 Task 0–8 任何清单里——当前只有同版本重启与重试，需另立对或并入 Task 7/8 再定；③被认领的实例没有健康看门狗（它崩了状态不会自己翻 error，直到下次重启/重试）；④`runtime.json` 的 size/sha 是本机构建值，发布前需用发布件重算并回填 `urls`；⑤spec §4.6 写的「约 400 MB / 1.1 GB」与实测 315.0/840.4 MiB 不符（面板按清单取值，文字在 Task 8 回写）。
 
 ## Task 7 — 发布件、文档与门禁（spec §4.7、§4.8）
 
