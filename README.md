@@ -106,4 +106,4 @@ pnpm run typecheck
 
 ## License
 
-Apache-2.0
+MIT。本插件是 DeerFlow（MIT）知识工作台能力的移植，并基于 DeepSeek Harness（MIT）的插件 API；上游声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

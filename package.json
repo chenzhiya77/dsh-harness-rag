@@ -23,12 +23,14 @@
     "locale",
     "docs/equivalence.md",
     "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
     "runtime.json"
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --pretty false"
   },
-  "license": "Apache-2.0",
+  "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/dsh-tools": ">=0.0.1-rc.1",
     "cordis": ">=4.0.0-rc.7"
