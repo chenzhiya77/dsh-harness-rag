@@ -1,8 +1,87 @@
 # dsh-harness-rag
 
-**Harness RAG for DeepSeek Harness (DSH)** — 三路检索（混合/图谱/wiki）+ 文档续读 + 知识库管理面板，后端为 Harness RAG knowledge 服务（最小 Python 服务）。
+**Harness RAG for DeepSeek Harness (DSH)** — 三路检索（混合/图谱/wiki）+ 文档续读 + 知识库管理面板。默认自带本地知识服务：装一个插件，首次在面板里确认位置，插件自行准备运行时（便携 Python、依赖、Qdrant、引擎源码），不需要系统 Python、uv 或 Docker。
 
-> Status: **T2–T6 已实装并在真栈验收** — 工具面（三检索＋文档两件套：单路 recall-test / 中心窗续读 / 半开输出）、右栏管理面板（T3）、摄取通道后台任务（T4）、子槽声明契约＋命名空间四防（T5）、等价对照表＋原创图标＋三检索真跑（T6）；工具随会话绑定挂/卸（未绑定不挂）；「知识预设」留作可选隔离件。后端已切到主体二 `harness-rag` 最小知识服务（`127.0.0.1:8020`）。未配后端时返回结构化错误。
+> Status: 工具面（三检索＋文档两件套）、右栏管理面板、摄取后台任务、子槽声明契约、单一下载分发（运行时准备/就绪/重试/嵌入模型引导）均已实装；`backendUrl` 为空即内置本地服务，非空仍走外部服务。npm 与 GitHub 安装入口待首次发布（见「安装」）。
+
+## 安装
+
+本仓尚未发布（npm 包与 GitHub 仓库地址在发布前不可用）；当前从本地目录安装：
+
+```sh
+# 本地目录（开发安装，改码即被读取）
+dsh plugin --profile <name> add link:<本仓绝对路径>
+
+# 发布后：npm 包名
+dsh plugin --profile <name> add dsh-harness-rag
+
+# 发布后：GitHub 仓库地址（建议钉 tag 或 commit，不要跟 main）
+dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.git#<tag-or-commit>
+```
+
+三种方式装的是同一份插件代码，首次运行面完全一致。装完重启该 profile 的 DSH，打开右栏「知识库」tab：
+
+1. **确认位置** — 默认 `<DSH_HOME>/harness-rag`（`DSH_HOME` 缺省 `~/.dsh`），可点「更改…」选父目录，实际根为 `<父目录>/harness-rag`。
+2. **开始准备** — 下载运行时包（约 315 MB）并解压（约 840 MB），随后启动内置 Qdrant 与知识服务；首次约 1–2 分钟，之后启动为秒级。
+3. **配置嵌入模型** — 就绪后顶部横幅提示；在「功能模型设置」里选嵌入模型即可上传文档。
+
+平台：首期只提供 **Windows x64** 运行时包；其他平台安装后会在面板明确报「没有可用的运行时包」，此时改用外部服务（见下）。
+
+## 本地服务与数据
+
+内置服务由插件托管，全部落在一个运行根里（跨插件升级与重装保留）：
+
+```text
+<root>/
+├─ runtime/<version>/     # 便携 Python、site-packages、engine 源码、qdrant（按版本保留上一版）
+├─ state/                 # data（sqlite 等）、logs、qdrant 存储、service.json、current.json、lease.json
+├─ config/                # config.yaml、models_config.json、rag_config.json
+└─ downloads/             # 运行时包下载缓存（.part 可续传）
+```
+
+- **端口**：默认 8020（知识服务）/ 6333、6334（Qdrant），被占用时自动换口，不会杀占用进程。开发机已有 Qdrant 时，托管仍会另起一个实例，不影响既有服务。
+- **位置**：只在尚未安装运行时之前可以改。已有运行时想换位置，需要手工迁移：退出 DSH，把整个运行根拷到新位置，改好 `<DSH_HOME>/harness-rag/location.json` 里的 `root`（或删掉该锚点让它回到默认根）。
+- **清理**：先删 `state/`，再删 `runtime/`。
+- **卸载**：DSH 卸载只删插件包；运行根（含知识库数据）原样保留，需要时手工删除。
+- **升级**：插件升级不改 `runtime.json` 版本时不动运行时；换版本会下载新包并在下次启动切换。切换前**先备份 `state/` 与 `config/`**；回滚不保证数据兼容（新引擎可能已迁移存储）。
+- **旧数据**：旧部署的 `backend/.deer-flow` 不会自动迁入托管实例；要沿用它，请继续走外部模式，或手工拷贝。
+- **杀软**：运行时里的 `python.exe`/`qdrant.exe` 未签名，可能被 SmartScreen 或杀软拦截；把运行根加入信任即可。
+- **代理**：下载与引擎出网都跟随宿主/系统代理（`HTTPS_PROXY` 等），插件不覆盖宿主的 dispatcher。
+
+## 外部模式（自带 Harness RAG 服务）
+
+`backendUrl` 非空时完全走外部服务，行为与旧版一致（不下载、不起进程）。插件只需要 **Harness RAG knowledge 服务**（`harness-rag` 仓）：只挂知识库 API 的单进程服务。
+
+```sh
+# 最小形态：只起 knowledge 服务（端口 8020）；会先同步依赖（含 UMAP 投影 extra）
+cd <harness-rag>/backend && make gateway
+# 它跑的就是（backend/Makefile）：
+# uvicorn app.gateway.knowledge_app:app --host 127.0.0.1 --port 8020
+```
+
+- 服务侧需自备：Python 3.12 ＋ 依赖同步（`make gateway` 内置 `uv sync --inexact --extra umap`）、外部 Qdrant（默认 `127.0.0.1:6333`）、`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`；数据在 `backend/.deer-flow/`。
+- 面板或插件配置里填 `backendUrl`（如 `http://127.0.0.1:8020`）与 `apiToken`（引擎开了鉴权时必填，与服务端 `DEER_FLOW_API_TOKEN` 一致）。托管模式的 token 由插件生成，只存 `state/service.json`，面板不显示。
+- 远程部署把 `backendUrl` 指过去即可。
+
+## 市场索引
+
+DSH 没有内置官方插件市场。发布后会提供一份只列本插件的 format 1 索引：在「插件 → 实验性插件」启用「自定义插件市场」，把索引 URL 加到 `indexes` 即可看到。
+
+## 形态
+
+DSH 插件跑在两个世界，本包各有一个半：
+
+```text
+src/index.ts   Host 半（TS）──inject:['tools']── 五工具＋面板数据桥＋摄取 job ──HTTP──> knowledge 服务
+                （默认由插件托管的本地实例；backendUrl 非空时为外部服务）
+client.js      Client 半（JS 工厂）──inject:['slots','sidebarRightTabs','locale']── 右栏「知识库」tab（完整面板）
+```
+
+Host 半在宿主世界注册模型可见工具，并负责运行时的准备、启动与守护；Client 半在浏览器世界注册右栏 tab 类型（右栏「+」→ 引导页 → 「知识库」胶囊）。两半各自声明依赖，不能互吃对面世界的服务。
+
+右栏「知识库」tab 的文档面支持本地文件夹分组：新建/改名/折叠/移动/删除，归属键为 per-kb localStorage（`hrag-doc-folders.<kbId>.v1`），与 Wiki 卡片抽屉同口径；只影响视图，不改变检索范围与检索结果。
+
+本包不含 RAG 逻辑；解析、切片、图谱、wiki、评测、存储全部在 knowledge 服务侧（运行根里的 `runtime/<version>/engine`）。
 
 ## 隔离与 kb_id 解析
 
@@ -11,21 +90,6 @@
 - **kb_id 解析次序**：工具参数 ＞ 会话绑定。两者都没有时返回结构化错误（`not_configured`）。会话绑定在面板顶栏「会话」入口里切换（每个会话至多一个库），工具结果回显 `kb_id`（绑定来源还带 `kb_name`）。
 - **会话绑定**：面板顶栏（库选择器与 ⋯ 之间）的「会话」按钮打开抽屉——给当前会话绑定/切换/移除知识库，并列出已绑定会话（可跳转、可按当前浏览库新建）。绑定存 host 侧 `<DSH_HOME>/harness-rag/bindings.json`（`DSH_HOME` 缺省 `~/.dsh`）。
 - **防同名遮蔽**：工具名统一 `hrag_` 命名空间；宿主按「视图（scope）」解析工具（`get(name, scope)`），agent 视角存在遮蔽面——命名空间是现状下的主防线。
-
-## 形态
-
-DSH 插件跑在两个世界，本包各有一个半：
-
-```text
-src/index.ts   Host 半（TS）──inject:['tools']── 五工具＋面板数据桥＋摄取 job ──HTTP──> Harness RAG knowledge 服务（Python，独立部署）
-client.js      Client 半（JS 工厂）──inject:['slots','sidebarRightTabs','locale']── 右栏「知识库」tab（完整面板）
-```
-
-Host 半在宿主世界注册模型可见工具；Client 半在浏览器世界注册右栏 tab 类型（右栏「+」→ 引导页 → 「知识库」胶囊）。两半各自声明依赖，不能互吃对面世界的服务。
-
-右栏「知识库」tab 的文档面支持本地文件夹分组：新建/改名/折叠/移动/删除，归属键为 per-kb localStorage（`hrag-doc-folders.<kbId>.v1`），与 Wiki 卡片抽屉同口径；只影响视图，不改变检索范围与检索结果。
-
-本包不含 RAG 逻辑；解析、切片、图谱、wiki、评测、存储全部在 Python 服务侧。
 
 ## RAG 功能模型来自 DSH
 
@@ -36,37 +100,7 @@ Host 半在宿主世界注册模型可见工具；Client 半在浏览器世界�
 - 模型目录变化或插件激活时自动同步，也可在「功能模型设置」的「DSH 模型」卡片手动同步。
 - 功能模型是全局作用域：设置对所有知识库生效。
 - 逐腿思考档位（Off / Default / 六档）取该模型声明的档位子集；不选档位即跟随 DSH 默认。
-
-## 安装
-
-前置：DSH（Node `^22.19.0 || >=24.0.0`）；Harness RAG knowledge 服务已起（默认 `http://127.0.0.1:8020`）。
-
-```sh
-dsh plugin --profile <name> add link:<本仓绝对路径>
-# 或发布后：dsh plugin --profile <name> add dsh-harness-rag
-```
-
-重启该 profile 的 web 服务后生效。在 Plugins 页或 bundle 配置里填：
-
-| 配置 | 说明 |
-|---|---|
-| `backendUrl` | knowledge 服务地址（默认 `http://127.0.0.1:8020`） |
-| `apiToken` | Bearer token；引擎开启鉴权时必填（与服务端 `DEER_FLOW_API_TOKEN` 一致）；空=仅对 auth-off 引擎有效 |
-
-## 后端最小形态（部署）
-
-本插件只需要 **Harness RAG knowledge 服务**（主体二 `harness-rag` 仓）：只挂知识库 API 的单进程服务，不含 agent 运行时、IM 通道、调度器与前端。
-
-```sh
-# 最小形态：只起 knowledge 服务（端口 8020）；gateway 会先同步依赖（含 UMAP 投影 extra）
-cd <harness-rag>/backend && make gateway
-# 它跑的就是（backend/Makefile）：
-# uvicorn app.gateway.knowledge_app:app --host 127.0.0.1 --port 8020
-```
-
-- 服务启动前需就绪：Python 3.12 ＋ 依赖同步（`make gateway` 内置 `uv sync --inexact --extra umap`：默认依赖含 ragas，umap extra 提供投影的 UMAP 算法，未装时只有 PCA；直接运行 uvicorn 时需手动同步）；外部 Qdrant（默认 `127.0.0.1:6333`）；`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`。数据在 `backend/.deer-flow/`。
-- 本机验收态可用 `DEER_FLOW_AUTH_DISABLED=1`（只绑回环）；引擎开启 token 鉴权时，插件 `apiToken` 填与服务端一致的 token；远程部署把 `backendUrl` 指过去即可。
-- 部署姿势不变：知识库数据在服务侧本地（Qdrant/存储）；插件只是它的一个客户端。
+- 托管运行时与 `make gateway` 同依赖，**不含本地视频 ASR 依赖**（funasr/torch）：视频默认档需另装，或在设置里改用 ASR 服务档。
 
 ## 模型可见工具（`hrag_` 命名空间）
 
@@ -101,6 +135,8 @@ pnpm run typecheck
 ```
 
 改动后重载：Client 半（`client.js`）随窗口重开即生效；Host 半（`src/`）须桌面端托盘完整退出重启才换代（`link:` 开发安装无须重装，改码即被读取）。
+
+运行时包由仓外构建：`node scripts/build-runtime-pack.mjs --engine ./engine --out <目录>`（需要 `uv` 0.11.2 与 `gh`；产物是 `harness-rag-runtime-win32-x64-<version>.zip`，并把 size/sha256 回填到 `runtime.json`）。开发时可用 `DSH_HARNESS_RAG_PACK=<本地 zip>` 跳过下载、直接解压该包。
 
 面板文案走内联字典（`ctx.locale.register('harnessRag', …)`，三方插件官方模式）；`locale/*.json` 只承载清单显示元数据（title/description），不是词条文件。
 
