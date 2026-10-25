@@ -1,7 +1,7 @@
 import test, { type TestContext } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawn as spawnProcess, type ChildProcess } from 'node:child_process'
-import { createServer as createHttpServer } from 'node:http'
+import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { createServer as createNetServer } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
@@ -286,6 +286,204 @@ test('lease: a stale owner is taken over', async (t) => {
   const status = await supervisor(f, { isAlive: () => false }).ensure()
 
   assert.equal(status.phase, 'ready')
+})
+
+// ── watchdog (adopted instances) ────────────────────────────────────────────
+
+const WATCHDOG_MS = 10_000
+
+interface WatchdogTimers {
+  set: (fn: () => void, ms: number) => unknown
+  clear: (handle: unknown) => void
+  fire: (ms: number) => boolean
+  count: (ms: number) => number
+}
+
+function watchdogTimers(): WatchdogTimers {
+  let next = 1
+  const pending = new Map<number, { fn: () => void; ms: number }>()
+  return {
+    set: (fn, ms) => {
+      const id = next++
+      pending.set(id, { fn, ms })
+      return id
+    },
+    clear: (handle) => {
+      pending.delete(handle as number)
+    },
+    fire: (ms) => {
+      const entry = [...pending.entries()].find(([, item]) => item.ms === ms)
+      if (!entry) return false
+      pending.delete(entry[0])
+      entry[1].fn()
+      return true
+    },
+    count: (ms) => [...pending.values()].filter((item) => item.ms === ms).length,
+  }
+}
+
+async function until(condition: () => boolean, timeoutMs = 5_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline && !condition()) {
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+  assert.ok(condition(), 'condition met before the timeout')
+}
+
+interface AdoptedFixture {
+  f: Fixture
+  sup: Supervisor
+  timers: WatchdogTimers
+  stop: () => Promise<void>
+  start: () => Promise<void>
+}
+
+/** A service another profile owns: recording a live instance means adopted. */
+async function adoptedFixture(t: TestContext): Promise<AdoptedFixture> {
+  const f = await fixture(t)
+  const port = f.preferredPorts.knowledge
+  const handler = (req: IncomingMessage, res: ServerResponse): void => {
+    if (req.url === '/api/knowledge-bases' && req.headers.authorization === 'Bearer live-token') {
+      res.writeHead(200)
+      res.end('[]')
+      return
+    }
+    res.writeHead(401)
+    res.end()
+  }
+  let server = createHttpServer(handler)
+  await new Promise<void>((resolve) => server.listen(port, '127.0.0.1', resolve))
+  t.after(() => {
+    if (server.listening) server.close()
+  })
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'service.json'),
+    JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      qdrantPid: null,
+      runtimeVersion: VERSION,
+      token: 'live-token',
+      ports: f.preferredPorts,
+      startedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+  const timers = watchdogTimers()
+  const sup = supervisor(f, { timers })
+  const status = await sup.ensure()
+  assert.equal(status.adopted, true)
+  return {
+    f,
+    sup,
+    timers,
+    stop: () =>
+      new Promise<void>((resolve) => {
+        if (!server.listening) {
+          resolve()
+          return
+        }
+        server.close(() => resolve())
+      }),
+    start: async () => {
+      server = createHttpServer(handler)
+      await new Promise<void>((resolve) => server.listen(port, '127.0.0.1', resolve))
+    },
+  }
+}
+
+test('watchdog: one failed probe keeps the adopted instance ready', async (t) => {
+  const a = await adoptedFixture(t)
+  await a.stop()
+
+  assert.equal(a.timers.fire(WATCHDOG_MS), true)
+  await until(() => a.timers.count(WATCHDOG_MS) === 1)
+
+  const status = a.sup.status()
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.error, undefined)
+  assert.equal(existsSync(join(a.f.root, 'state', 'service.json')), true)
+})
+
+test('watchdog: two consecutive failures flip to adopted_unreachable and touch nothing', async (t) => {
+  const a = await adoptedFixture(t)
+  const leasePath = join(a.f.root, 'state', 'lease.json')
+  const lease = JSON.stringify({ version: 1, owner: 'other-host', pid: process.pid, startedAt: '2026-10-25T00:00:00.000Z' })
+  writeFileSync(leasePath, lease)
+  await a.stop()
+
+  a.timers.fire(WATCHDOG_MS)
+  await until(() => a.timers.count(WATCHDOG_MS) === 1)
+  a.timers.fire(WATCHDOG_MS)
+  await until(() => a.sup.status().phase === 'error')
+
+  const status = a.sup.status()
+  assert.equal(status.error?.code, 'adopted_unreachable')
+  assert.equal(status.adopted, true)
+  assert.equal(existsSync(join(a.f.root, 'state', 'service.json')), true)
+  assert.equal(readFileSync(leasePath, 'utf8'), lease)
+  assert.equal(a.f.spawned.requests.length, 0)
+})
+
+test('watchdog: a healthy probe resets the failure count', async (t) => {
+  const a = await adoptedFixture(t)
+  await a.stop()
+
+  a.timers.fire(WATCHDOG_MS)
+  await until(() => a.timers.count(WATCHDOG_MS) === 1)
+  assert.equal(a.sup.status().phase, 'ready')
+
+  await a.start()
+  a.timers.fire(WATCHDOG_MS)
+  await until(() => a.timers.count(WATCHDOG_MS) === 1)
+
+  await a.stop()
+  a.timers.fire(WATCHDOG_MS)
+  await until(() => a.timers.count(WATCHDOG_MS) === 1)
+  assert.equal(a.sup.status().phase, 'ready')
+})
+
+test('watchdog: unloading an adopted instance keeps the probes running', async (t) => {
+  const a = await adoptedFixture(t)
+
+  a.sup.dispose()
+
+  assert.equal(existsSync(join(a.f.root, 'state', 'service.json')), true)
+  assert.equal(a.timers.count(WATCHDOG_MS), 1)
+
+  await a.stop()
+  a.timers.fire(WATCHDOG_MS)
+  await until(() => a.timers.count(WATCHDOG_MS) === 1)
+  a.timers.fire(WATCHDOG_MS)
+  await until(() => a.sup.status().phase === 'error')
+  assert.equal(a.sup.status().error?.code, 'adopted_unreachable')
+})
+
+test('watchdog: retry re-adopts once the service answers again', async (t) => {
+  const a = await adoptedFixture(t)
+  await a.stop()
+  a.timers.fire(WATCHDOG_MS)
+  await until(() => a.timers.count(WATCHDOG_MS) === 1)
+  a.timers.fire(WATCHDOG_MS)
+  await until(() => a.sup.status().phase === 'error')
+
+  await a.start()
+  const status = await a.sup.retry()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.adopted, true)
+  assert.equal(a.timers.count(WATCHDOG_MS), 1)
+})
+
+test('watchdog: a self-managed stack does not schedule one', async (t) => {
+  const f = await fixture(t)
+  const timers = watchdogTimers()
+  const sup = supervisor(f, { timers })
+
+  const status = await sup.ensure()
+
+  assert.equal(status.adopted, false)
+  assert.equal(timers.count(WATCHDOG_MS), 0)
 })
 
 // ── failures ────────────────────────────────────────────────────────────────

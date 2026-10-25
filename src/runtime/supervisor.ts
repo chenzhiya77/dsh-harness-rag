@@ -64,6 +64,11 @@ export interface SupervisorOptions {
   disposeGraceMs?: number
   /** Called once the instance answers, whether adopted or freshly started. */
   onReady?: () => void
+  /** Adopted instances only: probe cadence and consecutive misses before the
+   * status flips to `adopted_unreachable`. A self-managed stack is covered by
+   * its exit callbacks. */
+  watchdogIntervalMs?: number
+  watchdogFailures?: number
   timers?: { set: (fn: () => void, ms: number) => unknown; clear: (handle: unknown) => void }
   maxLogBytes?: number
 }
@@ -149,6 +154,8 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
   const probeIntervalMs = options.probeIntervalMs ?? 250
   const disposeGraceMs = options.disposeGraceMs ?? 5_000
   const maxLogBytes = options.maxLogBytes ?? MAX_LOG_BYTES
+  const watchdogIntervalMs = options.watchdogIntervalMs ?? 10_000
+  const watchdogMissesLimit = options.watchdogFailures ?? 2
   const timers = options.timers ?? {
     set: (fn, ms) => setTimeout(fn, ms),
     clear: (handle) => clearTimeout(handle as NodeJS.Timeout),
@@ -267,6 +274,60 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     }
   }
 
+  /** Adopted services are not ours: a periodic probe notices a dead instance,
+   * but nothing is killed, deleted, or released. */
+  let watchdog: unknown | null = null
+  let watchdogMisses = 0
+
+  const stopWatchdog = (): void => {
+    watchdogMisses = 0
+    if (watchdog === null) return
+    timers.clear(watchdog)
+    watchdog = null
+  }
+
+  const failAdopted = (detail: string): RuntimeStatusView => {
+    // Not `fail()`: the record, lease, and processes belong to the other host.
+    setPhase({ phase: 'error', error: { phase: 'adopted', code: 'adopted_unreachable', detail }, logTail: currentLogTail() })
+    return status
+  }
+
+  const scheduleWatchdog = (): void => {
+    // A probe from an earlier episode can land after a retry re-adopted the
+    // service; clearing first keeps exactly one timer.
+    if (watchdog !== null) timers.clear(watchdog)
+    watchdog = timers.set(() => {
+      void probeAdopted()
+    }, watchdogIntervalMs)
+    // Host shutdown must not wait on a health timer; the host reaps the tree.
+    ;(watchdog as { unref?: () => void } | null)?.unref?.()
+  }
+
+  const probeAdopted = async (): Promise<void> => {
+    watchdog = null
+    if (disposed || status.phase !== 'ready' || !status.adopted) return
+    const record = readService()
+    const healthy = record
+      ? await probe(`http://127.0.0.1:${record.ports.knowledge}/api/knowledge-bases`, {
+          authorization: `Bearer ${record.token}`,
+        })
+      : false
+    // The probe outlives a phase change: retry or teardown may have run while
+    // it was in flight.
+    if (disposed || status.phase !== 'ready' || !status.adopted) return
+    if (healthy) {
+      watchdogMisses = 0
+      scheduleWatchdog()
+      return
+    }
+    watchdogMisses += 1
+    if (watchdogMisses >= watchdogMissesLimit) {
+      failAdopted(`${watchdogMisses} consecutive probes failed`)
+      return
+    }
+    scheduleWatchdog()
+  }
+
   const waitFor = async (
     check: () => Promise<boolean>,
     child: () => ChildHandle | null,
@@ -352,6 +413,8 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       error: undefined,
       logTail: currentLogTail(),
     })
+    stopWatchdog()
+    scheduleWatchdog()
     return status
   }
 
@@ -368,6 +431,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
   }
 
   const start = async (): Promise<RuntimeStatusView> => {
+    stopWatchdog()
     setPhase({ phase: 'preparing', adopted: false, error: undefined, logTail: '' })
     if (options.ensureRuntime) {
       const outcome = await options.ensureRuntime({
@@ -476,6 +540,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     ensure,
     status: () => status,
     retry: () => {
+      stopWatchdog()
       setPhase({ phase: 'idle', error: undefined })
       return ensure()
     },
@@ -483,8 +548,12 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       onReady = next
     },
     dispose() {
-      if (status.phase === 'ready' && status.adopted) return
+      // An adopted service is never torn down, in any phase: its record, lease,
+      // and processes belong to the other host. Its watchdog keeps watching so
+      // a reload cannot inherit a stale `ready`.
+      if (status.adopted) return
       disposed = true
+      stopWatchdog()
       const finish = (): void => {
         pendingDispose = null
         killChildren()

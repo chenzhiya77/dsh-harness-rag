@@ -40,14 +40,19 @@
 
 > 动到的文件：`src/runtime/supervisor.ts`、`tests/runtime_supervisor.test.ts`。
 
-- [ ] 测试先行：认领成功后单次探测失败不翻状态；连续 2 次失败 ⇒ `phase=error`、`code=adopted_unreachable`、`service.json` 仍在、租约未释放；`dispose()` 后不再探测；重试时重新 `adopt()` 成功回到 `ready/adopted`。
-- [ ] 选项：`watchdogIntervalMs`（默认 10_000）、`watchdogFailures`（默认 2）；用 `timers.set` 递归调度，不引入 `setInterval`。
-- [ ] `adopt()` 成功后起看门狗；`start()` 成功（自管实例）不起——崩溃由 `crash()` 覆盖。
-- [ ] 新增 `failAdopted(code, detail)`：只改 `status`（`error/adopted_unreachable`）与 `logTail`，不杀子进程、不删 `service.json`、不释放租约（认领路径本就没有租约：`adopt()` 不写 lease，`:212-218`）。
-- [ ] 停止条件：达到阈值、`disposed` 置位、`ensure()` 进入新一轮、`status.phase !== 'ready'`。**不要**在 `dispose()` 的认领早退路径停表（`:485-486`）：认领实例跨插件卸载继续探活，否则重载后 `ensure()` 因 `phase==='ready'` 直接返回，死服务会永远显示就绪。
-- [ ] 门禁：`node --test tests/runtime_supervisor.test.ts`；`tsc`。
+- [x] 测试先行（6 条）：单次探测失败不翻状态；连续 2 次失败 ⇒ `phase=error`、`code=adopted_unreachable`、`service.json` 仍在、他方租约逐字节未动；健康探测清零计数；卸载（adopted 的 `dispose` 早退）后仍继续探测；重试重新 `adopt()` 回到 `ready/adopted` 并重排看门狗；自管实例不排表。
+- [x] 选项：`watchdogIntervalMs`（默认 10_000）、`watchdogFailures`（默认 2）；用 `timers.set` 递归调度，不引入 `setInterval`。
+- [x] `adopt()` 成功后起看门狗；`start()` 成功（自管实例）不起——崩溃由 `crash()` 覆盖。
+- [x] 新增 `failAdopted(code, detail)`：只改 `status`（`error/adopted_unreachable`）与 `logTail`，不杀子进程、不删 `service.json`、不释放租约（认领路径本就没有租约：`adopt()` 不写 lease，`:212-218`）。
+- [x] 停止条件：达到阈值、`disposed` 置位、`ensure()` 进入新一轮、`status.phase !== 'ready'`。**不要**在 `dispose()` 的认领早退路径停表（`:485-486`）：认领实例跨插件卸载继续探活，否则重载后 `ensure()` 因 `phase==='ready'` 直接返回，死服务会永远显示就绪。
+- [x] 门禁：`node --test tests/runtime_supervisor.test.ts`；`tsc`。
 
 **实测（实施期回填）**：
+
+- **实现**：`supervisor.ts` 新增 `watchdogIntervalMs`/`watchdogFailures` 选项与 `stopWatchdog`/`scheduleWatchdog`/`probeAdopted`/`failAdopted`；`adopt()` 成功后 `stopWatchdog()`＋`scheduleWatchdog()`，`start()` 与 `retry()` 入口停表，退出条件每次探测前后各查一遍（探测期间 retry/拆除会改变 `phase`）。探测走既有 `probe()`（1 s 超时），读 `service.json` 的端口与 token；记录缺失按一次失败计。重排前先清旧句柄，旧探测晚到不会叠加计时器。
+- **`dispose()` 守卫修正（实施期发现）**：原守卫只挡 `ready && adopted`；看门狗引入「adopted＋error」后，卸载会走拆除路径删掉他方的 `service.json` 并释放租约。改为 `if (status.adopted) return`——认领实例任何阶段都不拆，看门狗随单例继续。
+- **测试驱动方式**：看门狗在探测完成后才排下一次，测试用假 timers 逐跳 `fire(10_000)`，以「10_000 句柄重新出现」判定一次探测结束；健康/失败交替验证计数清零。
+- **门禁**：`node --test tests/runtime_supervisor.test.ts` **21/21**；`tsc` 0 错；全量 `node --test tests/*.test.ts` **210/210**（原 204＋新增 6）。neuter（取掉 `adopt()` 里的 `stopWatchdog()`＋`scheduleWatchdog()`）⇒ 5 条 watchdog 测试转红、其余 16 条仍绿；还原后 21/21。
 
 ---
 
@@ -95,7 +100,7 @@
 
 > 动到的文件：本对 spec/plan。
 
-- [ ] 门禁：`node --check client.js`；`tsc` 0 错；`node --test tests/*.test.ts` 全绿（现有 204 条不回归）。
+- [ ] 门禁：`node --check client.js`；`tsc` 0 错；`node --test tests/*.test.ts` 全绿（Task 1 起 210 条，Task 2–4 再追加）。
 - [ ] 真机看门狗：外部模式或第二实例下认领一个服务，kill 掉 ⇒ ≤20 s 内 `runtime/status` 变 `error/adopted_unreachable`、`service.json` 仍在；重启服务后点重试回到 `ready/adopted`。
 - [ ] 真机锚点告警：写坏 `location.json` ⇒ 启动后 root 为默认根、`warning` 非空、面板出现横幅，库可读。
 - [ ] 真机嵌入判定：清空 `embedding_model` 且宿主环境设 `DASHSCOPE_API_KEY` ⇒ 横幅仍出现；配好模型后消失。
