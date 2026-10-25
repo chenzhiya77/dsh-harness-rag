@@ -13,14 +13,26 @@
 
 > 动到的文件：无（探针在仓外）。
 
-- [ ] **看门狗接入点**：确认 `SupervisorOptions.timers` 可承载递归调度（当前只用于 dispose 的单次计时）；列出四个状态转换点（`adopt` 成功、`ensure` 进入 start、`fail*`、`dispose`）各自该起停看门狗；确认 `probe()` 的 4×`probeIntervalMs` 超时对看门狗够用（要求 ≤2 s）。
-- [ ] **看门狗不得动盘**：确认 `fail()` 会 `killChildren()`＋删 `service.json`＋释放租约（`src/runtime/supervisor.ts:225-233`），因此认领实例必须走单独路径；记录认领状态下 `killChildren()` 为空的现状。
-- [ ] **端口重试的日志原文**：用真实 Qdrant 与 uvicorn 各起一次并预先占住端口，把 Windows 上的报错原文抄下来（期望 `os error 10048` 与 `[Errno 10048]`），钉死匹配串；确认子进程退出时 `state/logs/*.log` 已落盘（tail 能读到 bind 错误）。
-- [ ] **重试的清理面**：确认重跑一轮前必须 `killChildren()`（Qdrant 已起、engine 失败时）；确认 `seedRuntimeConfig` 的 `qdrant_url` 随新端口重写；确认日志文件追加不会让第二轮误判（只在未重试时读 tail）。
-- [ ] **告警槽位**：确认面板 `.hrag-rt-banner` 的层级（`.hrag-root` 级）与关闭态写法；确认 `statusPayload` 里 `resolved.warning` 的读取点（`src/runtime/ops.ts:89-107`）。
-- [ ] **嵌入判定消费面**：全仓确认 `needsEmbeddingConfig` 只有 `panelStatus` 一处消费；确认移除环境变量后 `env` 参数仍被 `sourceZip`/`defaultRoot` 使用（`createRuntimeBridge` 签名不变）。
+- [x] **看门狗接入点**：确认 `SupervisorOptions.timers` 可承载递归调度（当前只用于 dispose 的单次计时）；列出四个状态转换点（`adopt` 成功、`ensure` 进入 start、`fail*`、`dispose`）各自该起停看门狗；确认 `probe()` 的 4×`probeIntervalMs` 超时对看门狗够用（要求 ≤2 s）。
+- [x] **看门狗不得动盘**：确认 `fail()` 会 `killChildren()`＋删 `service.json`＋释放租约（`src/runtime/supervisor.ts:225-233`），因此认领实例必须走单独路径；记录认领状态下 `killChildren()` 为空的现状。
+- [x] **端口重试的日志原文**：用真实 Qdrant 与 uvicorn 各起一次并预先占住端口，把 Windows 上的报错原文抄下来（期望 `os error 10048` 与 `[Errno 10048]`），钉死匹配串；确认子进程退出时 `state/logs/*.log` 已落盘（tail 能读到 bind 错误）。
+- [x] **重试的清理面**：确认重跑一轮前必须 `killChildren()`（Qdrant 已起、engine 失败时）；确认 `seedRuntimeConfig` 的 `qdrant_url` 随新端口重写；确认日志文件追加不会让第二轮误判（只在未重试时读 tail）。
+- [x] **告警槽位**：确认面板 `.hrag-rt-banner` 的层级（`.hrag-root` 级）与关闭态写法；确认 `statusPayload` 里 `resolved.warning` 的读取点（`src/runtime/ops.ts:89-107`）。
+- [x] **嵌入判定消费面**：全仓确认 `needsEmbeddingConfig` 只有 `panelStatus` 一处消费；确认移除环境变量后 `env` 参数仍被 `sourceZip`/`defaultRoot` 使用（`createRuntimeBridge` 签名不变）。
 
 **实测（实施期回填）**：
+
+- **看门狗接入点**：`timers` 是 `{ set(fn, ms): unknown; clear(handle) }`，递归调度无阻碍（目前只用于 dispose 的单次计时）。四个转换点：`adopt()` 成功 `supervisor.ts:338-356`、`ensure()`→`start()` `:458-472`（`start()` 入口 `:370`）、`fail()` `:225-233`、`dispose()` `:485-503`。`probe()` 超时＝`max(1_000, probeIntervalMs × 4)`＝**1 s**（默认 250 ms），满足 ≤2 s。
+- **认领实例动盘面**：`fail()` 会 `killChildren()`＋删 `service.json`＋释放租约（`:225-233`）；认领路径没有子句柄（`killChildren()` `:245-256` 为空操作），且 `adopt()` 从不取租约（`:212-218`）⇒ `failAdopted` 必须单独实现，不能复用 `fail()`。
+- **真机 bind 原文**（中文 Windows 10；Qdrant 1.20.0、uvicorn 0.46.0；证据 `D:\hrag-t0b\qdrant-probe.out`、`uvicorn-probe.out`）：
+  - Qdrant：`ERROR qdrant: Error while starting REST server: 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。 (os error 10048)`，随后 `Error: … (os error 10048)`，退出码 1。
+  - uvicorn：`ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 26440): [winerror 10048] 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。`，退出码 1。
+  - **英文 `address already in use` 在本机不出现**，只有数值码；裸 `10048` 又会撞日志里的端口号 ⇒ 匹配收窄为 `/(os error|Errno|winerror)\s*10048|EADDRINUSE|address already in use/i`（spec §3.2 已同步）。
+  - 落盘时序：`spawn.ts` 的 `finish()` 先 `drain()` 再触发 exit 监听（`spawn.ts:80-87`），`fail()` 在 `waitFor` 返回后才读 tail（≥1 个 poll 周期）⇒ 退出时 bind 文本已在盘上。
+- **重试清理面**：`seedRuntimeConfig` 每次都重写 `rag_config.json:qdrant_url`（`seed.ts:95-110`），换口后必须重跑；Qdrant 已起而 engine 失败时必须 `killChildren()`（`:245-256`）。日志逐块 append（`:111-129`），`tailOf` 读整文件最后 40 行（`:131-138`）⇒ 旧轮/旧会话的 bind 文本会假命中；改为 spawn 后记 `statSync(log).size`、失败时只读该偏移之后（sink 的 2 MB 轮转发生在创建时、`spawnChild` 返回前）。另：旧 exit 回调没有代际校验，`crash()` 只看 `phase==='ready'`（`:237-240`），第二轮 ready 后旧子进程的迟到 exit 会误翻状态 ⇒ Task 2 用本轮句柄校验。
+- **告警槽位**：横幅是 `.hrag-root` 的直接子节点、在 `HragBoundary` 之前（`client.js:21957-21993`），关闭钮 `.hrag-rt-bannerclose` 已有；词条 zh `client.js:99-101`、en `:1003-1005`。`statusPayload` 从 `currentRoot(deps)`（`ops.ts:89`）拿 `resolved`；external 在 `:78-87` 早退、`needs_location` 在 `:104-107` 写 `previousRoot/reason` ⇒ `warning` 只走 `kind==='ok' && warning` 分支。
+- **嵌入消费面**：实现只有 `bridge.ts:150-165`，唯一消费点 `panelStatus`（`ops.ts:206`），面板读 payload 字段（`client.js:21969`）；`env` 在 `bridge.ts:72/73/76/127` 仍用于 `DSH_HARNESS_RAG_PACK`、`defaultRoot` 与 deps ⇒ 签名不变。
+- **认领卸载的看门狗寿命**：`dispose()` 对「ready 且 adopted」直接早退（`:485-486`），`disposed` 不置位、单例留给重载；若在 `dispose()` 停表，重载后 `ensure()` 因 `phase==='ready'` 直接返回（`:458-464`），服务已死也会永远显示就绪 ⇒ 停止条件改为「`disposed` 置位或 `phase` 离开 ready」，认领实例跨插件卸载继续探活（spec §3.1 已同步）。
 
 ---
 
@@ -31,8 +43,8 @@
 - [ ] 测试先行：认领成功后单次探测失败不翻状态；连续 2 次失败 ⇒ `phase=error`、`code=adopted_unreachable`、`service.json` 仍在、租约未释放；`dispose()` 后不再探测；重试时重新 `adopt()` 成功回到 `ready/adopted`。
 - [ ] 选项：`watchdogIntervalMs`（默认 10_000）、`watchdogFailures`（默认 2）；用 `timers.set` 递归调度，不引入 `setInterval`。
 - [ ] `adopt()` 成功后起看门狗；`start()` 成功（自管实例）不起——崩溃由 `crash()` 覆盖。
-- [ ] 新增 `failAdopted(code, detail)`：只改 `status`（`error/adopted_unreachable`）与 `logTail`，不杀子进程、不删 `service.json`、不释放租约。
-- [ ] 停止条件：达到阈值、`dispose()`、`ensure()` 进入新一轮、`status.phase !== 'ready'`。
+- [ ] 新增 `failAdopted(code, detail)`：只改 `status`（`error/adopted_unreachable`）与 `logTail`，不杀子进程、不删 `service.json`、不释放租约（认领路径本就没有租约：`adopt()` 不写 lease，`:212-218`）。
+- [ ] 停止条件：达到阈值、`disposed` 置位、`ensure()` 进入新一轮、`status.phase !== 'ready'`。**不要**在 `dispose()` 的认领早退路径停表（`:485-486`）：认领实例跨插件卸载继续探活，否则重载后 `ensure()` 因 `phase==='ready'` 直接返回，死服务会永远显示就绪。
 - [ ] 门禁：`node --test tests/runtime_supervisor.test.ts`；`tsc`。
 
 **实测（实施期回填）**：
@@ -44,8 +56,9 @@
 > 动到的文件：`src/runtime/supervisor.ts`、`tests/runtime_supervisor.test.ts`。
 
 - [ ] 测试先行：真实 `net` server 占住首选口、`isFree` 一律返回 true（模拟探空后被抢）⇒ 第一轮 spawn 撞 `EADDRINUSE` 退出 ⇒ 换口重跑一轮 ⇒ `ready`；`spawned.requests` 记录到两次 Qdrant spawn 且端口不同；两个候选口都被占 ⇒ 重试一次后按 `qdrant_exited` 失败，不无限重试。
-- [ ] 触发：子进程在就绪前退出且日志尾部命中 `/address already in use|10048|EADDRINUSE/i`，且本轮尚未重试。
+- [ ] 触发：子进程在就绪前退出且本轮新追加的该角色日志命中 `/(os error|Errno|winerror)\s*10048|EADDRINUSE|address already in use/i`，且本轮尚未重试。检测按偏移：`spawnChild` 返回后记 `statSync(log).size`，失败时只读该偏移之后（旧轮/旧会话的 bind 文本不得假命中）。
 - [ ] 动作：`killChildren()` → `planPorts({ preferred: { ...ports, [role]: ports[role] + 1 } })` → 重新 seed → 重跑一轮（Qdrant 与 engine 共用同一条重试路径）。
+- [ ] 代际校验：exit 回调闭包捕获本轮句柄，与当前 `qdrant`/`engine` 不一致则忽略——`crash()` 只看 `phase==='ready'`，第二轮 ready 后旧子进程的迟到 exit 会误翻状态。
 - [ ] 失败详情：第二轮失败时 `detail` 带 `after one retry`；非绑定原因的提前退出不重试。
 - [ ] 门禁：`node --test tests/runtime_supervisor.test.ts`；`tsc`。
 

@@ -53,12 +53,12 @@
 - 认领成功（`adopt()` 里置 `ready/adopted`）后启动周期探活：每 **10 s** 探一次 `GET <service>/api/knowledge-bases`（带 `service.json` 的 token，超时 2 s）。
 - 连续 **2 次**失败 ⇒ `phase=error`、`error.code='adopted_unreachable'`、`detail` 为最后一次错误；保留 `service.json` 与租约（不是我们的实例，不删、不释放、不杀）。
 - 状态不自动回弹：服务恢复后仍停在错误卡，用户点「重试」⇒ 重新走 `adopt()`（或起栈）。
-- 停止条件：`dispose()`、`phase` 离开 `ready`、重试进入新一轮 `ensure()`。自管实例不需要看门狗（`crash()` 已覆盖）。
+- 停止条件：`disposed` 置位（只发生在自管实例的真正拆除路径）、`phase` 离开 `ready`、重试进入新一轮 `ensure()`。认领实例的 `dispose()` 本就早退（不杀别人的服务、`disposed` 不置位），看门狗随单例跨插件卸载继续探活；否则重载后 `ensure()` 会因 `phase==='ready'` 直接返回，把已死的服务继续显示成就绪。自管实例不需要看门狗（`crash()` 已覆盖）。
 - 探活与 `adopt()` 共用同一 URL/token 读法；探活失败不影响正在进行的其它 op。
 
 ### 3.2 D2 端口抢占重试
 
-- 触发：Qdrant 或 engine 在就绪**之前**退出，且该角色日志尾部命中绑定失败特征（大小写不敏感：`address already in use`、`10048`、`EADDRINUSE`）。
+- 触发：Qdrant 或 engine 在就绪**之前**退出，且该角色日志尾部（只读本轮 spawn 之后追加的部分）命中绑定失败特征：`os error 10048` / `[Errno 10048]` / `[winerror 10048]`、`EADDRINUSE`、`address already in use`（大小写不敏感）。中文 Windows 实测英文原文不出现、只有数值码，裸 `10048` 会撞日志里的端口号，所以数值码必须带前缀。
 - 动作：把该角色端口起点 +1 重新 `planPorts`（另外两个角色保持原值），杀掉本轮残留子进程，整轮重来，**只重试一次**。
 - 第二次仍失败 ⇒ 按原错误上报（`qdrant_exited` / `engine_exited`），`detail` 标明 `after one retry`。
 - 非绑定原因的提前退出（坏配置、缺文件）不触发重试，避免把真错误的失败时间翻倍。
