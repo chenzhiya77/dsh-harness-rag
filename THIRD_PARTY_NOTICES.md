@@ -1,11 +1,15 @@
 # Third-party notices
 
-This package ports and adapts the DeerFlow knowledge workbench and is built
-against the DeepSeek Harness plugin APIs. Portions of the original code,
-behavior and copy derive from the following MIT-licensed projects. Their
-notices are reproduced below as required by the MIT license.
+The RAG capabilities in this package are original work. The bundled engine
+(`engine/`) contains portions of the DeerFlow harness framework, and the
+plugin is built against the DeepSeek Harness plugin APIs. Portions of the
+bundled code derive from the following MIT-licensed projects. Their notices
+are reproduced below as required by the MIT license.
 
 ## DeerFlow
+
+Applies to the harness framework portions bundled under `engine/`; the RAG
+capabilities are original work.
 
 Source: https://github.com/bytedance/deer-flow
 

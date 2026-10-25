@@ -1,8 +1,8 @@
-# Harness RAG 知识服务（主体二）
+# Harness RAG 知识服务（内置引擎）
 
-DSH 插件 `dsh-harness-rag` 的后端引擎：只提供知识库 HTTP API。
+DSH 插件 `dsh-harness-rag` 的内置引擎：只提供知识库 HTTP API。
 
-不包含 agent 运行时、IM 通道、调度器、工作台前端与部署编排。完整的 DeerFlow 产品（对话工作台、频道接入、沙箱）在主体一 `deer-flow` 仓库；本仓库是插件线的独立引擎。
+本目录是内置引擎的源码快照（上游 `harness-rag`），不包含 agent 运行时、IM 通道、调度器、工作台前端与部署编排。
 
 ## 拓扑
 
@@ -55,10 +55,10 @@ curl http://127.0.0.1:8020/health
 - `DEER_FLOW_AUTH_DISABLED=1` 是本机回环的显式逃生口：只对不带 Bearer 的请求生效，启动时告警，不做鉴权。
 - 远程部署请置于 TLS 反向代理之后。
 
-数据冷启动时自动执行数据库迁移。仓库不含知识数据快照；从主体一迁移时：
+数据冷启动时自动执行数据库迁移。仓库不含知识数据快照；从旧部署迁移时：
 
 1. 用 `sqlite3.Connection.backup` 复制 `.deer-flow/data/deerflow.db`（WAL 下不要直接拷文件），并跑一次 `PRAGMA integrity_check`；
-2. 把副本中 `documents.storage_path` 的绝对路径前缀改成本仓库的数据目录；
+2. 把副本中 `documents.storage_path` 的绝对路径前缀改成当前数据目录；
 3. 复制 `.deer-flow/data/knowledge/` 与根 `rag_config.json`。
 
 ## API 面
@@ -101,7 +101,7 @@ backend/tests/knowledge/                   知识库测试
 - 顶层：`frontend/`、`docker/`、`skills/`、`contracts/`、`deploy/`、`pr-build/`。
 - 后端：`app/channels/`、`app/scheduler/`、`app/gateway/github/`、非知识 routers、monolith `app/gateway/app.py`。
 - 测试与文档：非知识测试、产品文档与翻译 README、部署脚本。
-- Qdrant 由宿主提供；本仓库不含 compose 或容器编排。
+- Qdrant 由宿主提供；本目录不含 compose 或容器编排。
 
 ## 依赖与启动面
 
@@ -129,4 +129,4 @@ uv sync --inexact
 
 ## 归属
 
-知识库能力与上游 DeerFlow（MIT）同源；本仓库的裁剪、最小入口与插件对接由本项目维护。
+知识库能力由本项目自行实现；源码树中的 DeerFlow harness 框架部分按 MIT 保留上游声明，见上级 `THIRD_PARTY_NOTICES.md`。

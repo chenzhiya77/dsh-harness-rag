@@ -13,9 +13,12 @@ upstream tracked tree** (no git history, no submodule).
 | Method | `git archive --format=tar <commit> \| tar -x -C engine` |
 | Tracked files | 1082 |
 | License | MIT (`engine/LICENSE`) |
+| Local deltas | `engine/README.md` (doc-only) |
 
-`engine/` is byte-identical to that commit. The runtime pack builder
-(`scripts/build-runtime-pack.mjs`) reads `engine/backend/`,
+The engine code is byte-identical to that commit; `engine/README.md` carries
+doc-only edits for the consolidated plugin layout. `engine/UPSTREAM.md` is
+repository-side metadata and is not part of the snapshot. The runtime pack
+builder (`scripts/build-runtime-pack.mjs`) reads `engine/backend/`,
 `engine/config.example.yaml` and `engine/backend/uv.lock` from here; the
 backend behaviour must not be edited in this repository.
 
@@ -25,5 +28,6 @@ backend behaviour must not be edited in this repository.
    `feat/rag-knowledge-base`.
 2. Re-extract: `git archive --format=tar <commit> | tar -x -C engine`
    after clearing the old tree.
-3. Update this file and `runtime.json` (`engineCommit`, `engineVersion`,
+3. Re-apply the doc-only edits to `engine/README.md` (see Local deltas).
+4. Update this file and `runtime.json` (`engineCommit`, `engineVersion`,
    `runtimeVersion`) and rebuild the runtime pack.

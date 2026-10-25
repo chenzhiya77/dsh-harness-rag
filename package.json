@@ -31,6 +31,7 @@
     "presets",
     "locale",
     "docs/equivalence.md",
+    "docs/plugin-manual.md",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
