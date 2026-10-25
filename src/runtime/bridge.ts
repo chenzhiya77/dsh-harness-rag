@@ -77,6 +77,7 @@ export function createRuntimeBridge(
   })()
   let supervisor: Supervisor | null = null
   let pickerService: BridgeHost['directoryPicker'] | null = null
+  let pickController: AbortController | null = null
   const readyListeners: ReadyListener[] = []
 
   host.inject(['directoryPicker'], (fresh) => {
@@ -129,7 +130,19 @@ export function createRuntimeBridge(
     pick: async () => {
       const capability = pickerService?.capability?.()
       if (!capability?.pick) return null
-      return capability.pick()
+      // The host's native chooser reads the caller-lifetime signal on entry
+      // (win32 dialog driver) and closes the dialog when it aborts.
+      pickController?.abort()
+      const controller = new AbortController()
+      pickController = controller
+      try {
+        return await capability.pick(controller.signal)
+      } catch (error) {
+        if (controller.signal.aborted) return null
+        throw error
+      } finally {
+        if (pickController === controller) pickController = null
+      }
     },
     supervisor: () => currentSupervisor(),
     version,
@@ -185,6 +198,8 @@ export function createRuntimeBridge(
     },
     stop: () => {
       clearTimeout(grace)
+      // An open native chooser belongs to this plugin instance; unload closes it.
+      pickController?.abort()
       // The singleton stays registered so a reload within the grace period
       // takes it over (cancelling the pending kill) instead of rebuilding it.
       supervisor?.dispose()
