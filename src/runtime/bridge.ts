@@ -151,6 +151,9 @@ export function createRuntimeBridge(
       }
     },
     configureRoot: (nextRoot) => {
+      // The old root's service is ours: stop it, and drop the singleton so a
+      // later move back does not resurrect a half-disposed instance.
+      supervisor?.dispose()
       forgetSupervisor(root, version)
       root = nextRoot
       supervisor = null
@@ -182,7 +185,9 @@ export function createRuntimeBridge(
     },
     stop: () => {
       clearTimeout(grace)
-      forgetSupervisor(root, version)
+      // The singleton stays registered so a reload within the grace period
+      // takes it over (cancelling the pending kill) instead of rebuilding it.
+      supervisor?.dispose()
     },
   }
 }

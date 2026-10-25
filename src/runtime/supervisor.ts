@@ -73,6 +73,9 @@ export interface Supervisor {
   ensure(): Promise<RuntimeStatusView>
   status(): RuntimeStatusView
   retry(): Promise<RuntimeStatusView>
+  /** Follow the newest plugin instance: the singleton outlives a reload, and
+   * the package that takes it over brings a fresh ready hook. */
+  rebind(onReady?: () => void): void
   dispose(): void
 }
 
@@ -171,6 +174,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
   let startPromise: Promise<RuntimeStatusView> | null = null
   let pendingDispose: unknown | null = null
   let disposed = false
+  let onReady = options.onReady
 
   const setPhase = (patch: Partial<RuntimeStatusView>): void => {
     status = { ...status, ...patch }
@@ -337,7 +341,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     const base = `http://127.0.0.1:${record.ports.knowledge}`
     const healthy = await probe(`${base}/api/knowledge-bases`, { authorization: `Bearer ${record.token}` })
     if (!healthy) return null
-    options.onReady?.()
+    onReady?.()
     markCurrent(record.runtimeVersion)
     setPhase({
       phase: 'ready',
@@ -446,7 +450,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       startedAt: now(),
     })
     markCurrent(runtimeVersion)
-    options.onReady?.()
+    onReady?.()
     setPhase({ phase: 'ready', adopted: false, error: undefined, logTail: currentLogTail() })
     return status
   }
@@ -475,6 +479,9 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       setPhase({ phase: 'idle', error: undefined })
       return ensure()
     },
+    rebind: (next) => {
+      onReady = next
+    },
     dispose() {
       if (status.phase === 'ready' && status.adopted) return
       disposed = true
@@ -490,6 +497,9 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         return
       }
       pendingDispose = timers.set(finish, disposeGraceMs)
+      // A plugin unload during host shutdown must not hold the process open for
+      // the whole grace period; the host's Job still reaps the tree on exit.
+      ;(pendingDispose as { unref?: () => void } | null)?.unref?.()
     },
   }
 }
@@ -500,11 +510,13 @@ export function supervisorKey(root: string, runtimeVersion: string): string {
 
 const registry = globalThis as unknown as Record<string, unknown>
 
-/** One supervisor per root and version, surviving plugin reloads. */
+/** One supervisor per root and version, surviving plugin reloads. A reload
+ * rebinds the ready hook first: the old package's listener is gone with it. */
 export function getSupervisor(options: SupervisorOptions): Supervisor {
   const key = supervisorKey(options.root, options.runtimeVersion)
   const existing = registry[key] as Supervisor | undefined
   if (existing) {
+    existing.rebind(options.onReady)
     void existing.ensure()
     return existing
   }

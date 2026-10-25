@@ -7,7 +7,11 @@ import type { AddressInfo } from 'node:net'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { sanitizeService, type SpawnFn, type SpawnRequest } from '../src/runtime/process.ts'
+import { createRuntimeBridge, type BridgeHost } from '../src/runtime/bridge.ts'
+import { readManifest } from '../src/runtime/manifest.ts'
+import { defaultConfig } from '../src/settings.ts'
 import {
   createSupervisor,
   forgetSupervisor,
@@ -16,6 +20,7 @@ import {
 } from '../src/runtime/supervisor.ts'
 
 const VERSION = '2.1.0-1'
+const PACKAGE_ROOT = fileURLToPath(new URL('../', import.meta.url))
 
 const QDRANT_STUB = `
 import { createServer } from 'node:http'
@@ -117,9 +122,9 @@ interface Fixture {
   spawned: Spawned
 }
 
-async function fixture(t: TestContext, mode: 'ok' | 'crash-engine' = 'ok'): Promise<Fixture> {
+async function fixture(t: TestContext, mode: 'ok' | 'crash-engine' = 'ok', version = VERSION): Promise<Fixture> {
   const root = mkdtempSync(join(tmpdir(), 'hrag-sup-'))
-  const runtime = join(root, 'runtime', VERSION)
+  const runtime = join(root, 'runtime', version)
   mkdirSync(join(runtime, 'engine'), { recursive: true })
   writeFileSync(join(runtime, 'engine', 'config.example.yaml'), 'config_version: 44\nsandbox:\n  use: x\n')
   mkdirSync(join(runtime, 'qdrant'), { recursive: true })
@@ -411,5 +416,124 @@ test('singleton: one supervisor per root and a pending dispose is cancelled by e
   assert.equal(pending.size, 0, 'ensure cancels the pending dispose')
 
   for (const fire of [...pending.values()]) fire()
+  assert.equal(existsSync(join(f.root, 'state', 'service.json')), true)
+})
+
+// ── plugin reload: the singleton is handed over, not forgotten ──────────────
+
+test('reload: the ready hook follows the newest plugin instance', async (t) => {
+  const f = await fixture(t)
+  const hits: string[] = []
+  const sup = supervisor(f, { onReady: () => hits.push('first') })
+
+  assert.equal((await sup.ensure()).phase, 'ready')
+
+  sup.rebind(() => hits.push('second'))
+  const again = await sup.retry()
+
+  assert.equal(again.phase, 'ready')
+  assert.equal(again.adopted, true)
+  assert.deepEqual(hits, ['first', 'second'])
+})
+
+test('reload: the singleton is handed over and the pending kill is cancelled', async (t) => {
+  const f = await fixture(t)
+  const pending = new Map<number, () => void>()
+  let nextId = 0
+  const timers = {
+    set: (fn: () => void) => {
+      pending.set(++nextId, fn)
+      return nextId
+    },
+    clear: (handle: unknown) => {
+      pending.delete(handle as number)
+    },
+  }
+  const hits: string[] = []
+  const base = {
+    root: f.root,
+    runtimeVersion: VERSION,
+    token: 'test-token',
+    spawn: f.spawned.spawn,
+    preferredPorts: f.preferredPorts,
+    probePort: async () => true,
+    readyTimeoutMs: 8_000,
+    probeIntervalMs: 40,
+    disposeGraceMs: 5_000,
+    timers,
+  }
+  t.after(() => forgetSupervisor(f.root, VERSION))
+
+  const first = getSupervisor({ ...base, onReady: () => hits.push('first') })
+  await first.ensure()
+  first.dispose()
+  assert.equal(pending.size, 1, 'dispose is deferred')
+
+  const second = getSupervisor({ ...base, onReady: () => hits.push('second') })
+  assert.equal(second, first, 'the same instance comes back')
+  await second.ensure()
+  assert.equal(pending.size, 0, 'the reload cancels the pending kill')
+
+  await second.retry()
+  assert.deepEqual(hits, ['first', 'second'], 'the new instance receives ready events')
+})
+
+test('stop: the bridge disposes the running singleton instead of forgetting it', async (t) => {
+  const read = readManifest({ packageRoot: PACKAGE_ROOT })
+  assert.equal(read.ok, true)
+  if (!read.ok) return
+  const version = read.manifest.packs[`${process.platform}-${process.arch}`]?.runtimeVersion
+  if (!version) {
+    t.skip('no runtime pack for this platform')
+    return
+  }
+
+  const f = await fixture(t, 'ok', version)
+  const pending = new Map<number, () => void>()
+  let nextId = 0
+  const timers = {
+    set: (fn: () => void) => {
+      pending.set(++nextId, fn)
+      return nextId
+    },
+    clear: (handle: unknown) => {
+      pending.delete(handle as number)
+    },
+  }
+  const options = {
+    root: f.root,
+    runtimeVersion: version,
+    token: 'test-token',
+    spawn: f.spawned.spawn,
+    preferredPorts: f.preferredPorts,
+    probePort: async () => true,
+    readyTimeoutMs: 8_000,
+    probeIntervalMs: 40,
+    disposeGraceMs: 5_000,
+    timers,
+  }
+  t.after(() => forgetSupervisor(f.root, version))
+
+  const sup = getSupervisor(options)
+  assert.equal((await sup.ensure()).phase, 'ready')
+
+  const home = mkdtempSync(join(tmpdir(), 'hrag-home-'))
+  const anchor = join(home, 'harness-rag')
+  mkdirSync(anchor, { recursive: true })
+  writeFileSync(join(anchor, 'location.json'), JSON.stringify({ version: 1, root: f.root }))
+  const host: BridgeHost = {
+    get: (name) => (name === 'subprocess' ? { spawn: f.spawned.spawn } : undefined),
+    inject: () => {},
+  }
+  const bridge = createRuntimeBridge(host, defaultConfig, { DSH_HOME: home })
+
+  assert.equal(bridge.ops.supervisor(), sup, 'the bridge picks up the live singleton')
+  bridge.stop()
+  assert.equal(pending.size, 1, 'stop defers the kill')
+
+  const reloaded = getSupervisor(options)
+  assert.equal(reloaded, sup, 'the singleton stays registered for a reload')
+  await reloaded.ensure()
+  assert.equal(pending.size, 0, 'the reload cancels the pending kill')
   assert.equal(existsSync(join(f.root, 'state', 'service.json')), true)
 })

@@ -227,7 +227,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 ### 4.3 服务守护
 
-- 单例：`globalThis.__hragRuntime` 持有 supervisor；HMR 重载复用，`dispose` 后 5 秒内无新实例接管才停服务，避免开发期反复重启。
+- 单例：`globalThis` 按「运行根 + 运行时版本」持有 supervisor；插件卸载走 `dispose`（5 秒内无新实例接管才停服务，避免开发期反复重启），重载的实例复用同一 supervisor 并重绑 ready 钩子。宿主未启用 HMR 时插件开关在重启后生效，这条路径只影响开发构建。
 - 起停：Qdrant 与 knowledge 都经 **`ctx.subprocess.spawn`**（Windows 用 kill-on-close Job、`windowsHide`；子环境由 `scrubbedParentEnv` 自动带代理并剥凭据/`DSH_*`，显式 `env` 最后并入）。插件不能直接 import `dsh-http-proxy`（loader 的 peer 面只有 `dsh-tools` + `cordis`），所以不要走裸 `child_process`，否则 `.env` 里的代理到不了子进程。
 - 退出：Node `exit`/`SIGINT`/`SIGTERM` 时**尽力**终止（`ctx.subprocess` 的 Job 句柄关闭会带走整棵树；裸 `taskkill /T` 是异步子进程，不能保证在 exit 前完成）；下次激活按 `service.json` 认领/清理。认领来的实例不视为自己所有，正常退出不杀；只有确认 pid 与可执行路径都在本 home 的 `runtime/` 下、且没有其他宿主持有租约时才清理。核对失败不杀，只记日志。
 - 跨进程：`state/lease.json` 单写者租约（pid/token/心跳）；第二个宿主发现租约有效则只认领、不启动、不杀别人的子进程；租约陈旧（pid 不存在/心跳超时）才接管。

@@ -184,7 +184,7 @@
 - [x] 冷启动（自定义根）：`runtime/configure({parent:'<另一临时目录>'})` ⇒ 实际根 `<parent>/harness-rag`，默认根保留 `location.json`；目录布局先建；从该根冷启动至 `ready`；取消选择与非法路径不启动下载（Task 4 单测覆盖）。
 - [x] 二次启动认领：保留 home 重启，在实测预算内 `ready`（初始目标 ≤10 s，实测 15–29 ms）；kill 引擎后状态 `error`，重启/重试后恢复。
 - [x] 端口冲突：8020/6333 被占再起，自动改口；占用进程不被杀。
-- [x] 正常退出：supervisor dispose 后无 qdrant/python 子进程（DSH 退出与 HMR 重载见未闭合①）。
+- [x] 正常退出：supervisor dispose 后无 qdrant/python 子进程（DSH 正常退出与面板开合已于 10-25 真机验证，见 Task 8 §5.11）。
 - [x] 体积与耗时记录：zip 大小、解压后大小、首启总时长、二次启动时长；把 `size`/`unpackedSize` 回填到 `runtime.json`，并核对面板体积文案（面板按清单取值）。
 
 **实测（实施期回填）**：
@@ -209,7 +209,7 @@
 - **真机（10-24 深夜，真 DSH／真 `ctx.subprocess`，根 `D:\hrag-t6\dsh-root\harness-rag`）**：装好的运行时在未发布清单下首启 **约 10 s 到 `ready`**（页面缓存热；托管引擎监听 8021、Qdrant 6334/6335，`/health` 200）；面板显示就绪横幅与空库态；经服务建库（`smoke-host`）后点「刷新」即列出该库。本轮实际看到 setup/错误/准备/就绪/空库，external 未现。
   - 环境限制（非插件问题）：本机屏幕 1707×1067、DSH 窗口 1280 CSS（dpr 1.5），右栏 575 宽会被窗口右缘裁掉；取证时临时把 `.hrag-root` 夹到 220 px 拍照，随后已移除。
 - 门禁：`tsc` 0 错；全量 **198/198**；`client.js` 仅调试件改动，已还原。
-- **未闭合**：①真机剩两项——HMR 重载不重启、DSH 正常退出清理（该实例关窗后常驻托盘，本轮只能硬杀整树，子进程随 job 退出）；②升级/回滚（spec §4.7 的版本化目录切换、90 s 失败回旧版、清理旧版本）不在 Task 0–8 任何清单里——当前只有同版本重启与重试，需另立对或并入 Task 7/8 再定；③被认领的实例没有健康看门狗（它崩了状态不会自己翻 error，直到下次重启/重试）；④`runtime.json` 的 size/sha 是本机构建值，发布前需用发布件重算并回填 `urls`；⑤spec §4.6 写的「约 400 MB / 1.1 GB」与实测 315.0/840.4 MiB 不符（面板按清单取值，文字在 Task 8 回写；**Task 8 已改 315 MB／840 MB**）。
+- **未闭合**：①（已闭合 10-25）真机走「应用→退出」后 DSH 与 qdrant/python 全消失，遗留的 `service.json`/`lease.json` 不挡下一次启动；打包版无 HMR 模块，重载路径以面板开合＋单测覆盖（见 Task 8 §5.11）；②升级/回滚（spec §4.7 的版本化目录切换、90 s 失败回旧版、清理旧版本）不在 Task 0–8 任何清单里——当前只有同版本重启与重试，需另立对或并入 Task 7/8 再定；③被认领的实例没有健康看门狗（它崩了状态不会自己翻 error，直到下次重启/重试）；④`runtime.json` 的 size/sha 是本机构建值，发布前需用发布件重算并回填 `urls`；⑤spec §4.6 写的「约 400 MB / 1.1 GB」与实测 315.0/840.4 MiB 不符（面板按清单取值，文字在 Task 8 回写；**Task 8 已改 315 MB／840 MB**）。
 
 ## Task 7 — 发布件、文档与门禁（spec §4.7、§4.8）
 
@@ -261,7 +261,7 @@
 | 8 | 外部模式 | 部分 | 单测（原样透传）＋探针（无门、直拉库列表）；本轮真机未跑（旧默认路径） |
 | 9 | 端口冲突 | 已验 | 真机 8020/6333 被占 ⇒ 8021/6334/6335；未杀占用进程 |
 | 10 | 崩溃恢复与双实例 | 部分 | kill 引擎 ⇒ `error`、重试起新栈＝单测＋驱动；两个真 DSH profile 并跑未验 |
-| 11 | 退出清理 | 部分 | `dispose` 后无残留＝驱动；DSH 正常退出/HMR 见 Task 6 未闭合①（只硬杀过整树） |
+| 11 | 退出清理 | 已验 | 10-25 真机「应用→退出」3 秒内 DSH＋qdrant＋engine 全消失（宿主 Job），重启后四个集合各 1/1 恢复、遗留 state 不挡启动；面板关→开 PID 与 `service.json` mtime 不变；打包版 asar 无 HMR 模块（插件开关重启生效），第二半以面板开合＋单测覆盖；同轮修掉 `stop()` 只 forget 不 dispose 的偏差（见下） |
 | 12 | 升级/回滚 | 未实现 | 本期不做（§4.7 状态块、§7 已记）；换版本＝新目录重新准备，旧实例若在跑会被继续认领 |
 | 13 | 整体搬迁 | **未验** | 手工搬 `runtime/state/config`＋改锚点；路径逻辑仅单测 |
 | 14 | 鉴权 | 已验 | 200/401；token 只在 `state/service.json`，不进日志/种子配置/面板/`runtime/status`（日志扫描 0 命中） |
@@ -271,9 +271,10 @@
 | 18 | 种子可加载 | 已验 | 真引擎从种子启动：`/health` 200、带 token API 200、建库 201 |
 | 19 | 退出中止下载 | 部分 | abort 保留 `.part`／续传＝单测；DSH 退出中止未验 |
 
-- **本轮收口门禁**：`node --check client.js` 过；`tsc` 0 错；`node --test tests/*.test.ts` **198/198**；`npm pack --dry-run` **37 文件 / 341.4 kB / 1.4 MB**，不含 `engine/`、`scripts/`、`market/`、`tests/`、`docs/specs|plans`；`engine/` 1082 个文件按 blob 与源仓 `b34b2d572` **逐字节一致**（仅多 `UPSTREAM.md`）；引擎源仓 `git status` 空；主树 `deer-flow` 零新增改动（仅有 Task 0 基线的既存未提交面）；提交面密钥形扫描 0 命中；运行时日志无 `Bearer`/token。
+- **10-25 真机退出清理（§5.11）与同轮修复**：真机走「应用→退出」（托盘驻留，关窗不算退出）后 **3 秒内** 全部 DSH 进程（主/渲染/工具进程与两个 runner）连同 qdrant/python 一起消失（宿主 `process.on('exit')` → Job kill-on-close），重启后四个集合各 `Recovered 1/1`、遗留的 `service.json`/`lease.json` 不挡冷启动；面板关→开期间两个 PID 与 `service.json` mtime 均未变。打包版 `app.asar` 里 `hmr` 零命中、插件管理器 README 写明「未启用 HMR 时开关在重启后生效」⇒ 第二半不可达，以面板开合＋单测覆盖。读码发现 `bridge.stop()` 只 `forgetSupervisor`、从不 `dispose()`：spec §4.3 的 5 秒去抖是死代码，重载后旧租约（同宿主 pid 存活）会让重试永久 `lease_held`（仓外复现 `D:\hrag-b1\lease-repro.ts`，输出 `A ensure -> ready` / `B retry -> error lease_held`）。修复：`stop()` 改 `dispose()` 并保留单例、`getSupervisor` 复用时重绑 ready 钩子、dispose 计时器 `unref()`（不拖慢宿主退出）、`configureRoot` 先 dispose 再 forget；新增 3 个测试（`reload:` ×2、`stop: the bridge…`），neuter 两处修复后新测试转红。
+- **本轮收口门禁**：`node --check client.js` 过；`tsc` 0 错；`node --test tests/*.test.ts` **201/201**（含新增 3 个 reload/dispose 测试）；`npm pack --dry-run` **37 文件 / 341.4 kB / 1.4 MB**，不含 `engine/`、`scripts/`、`market/`、`tests/`、`docs/specs|plans`；`engine/` 1082 个文件按 blob 与源仓 `b34b2d572` **逐字节一致**（仅多 `UPSTREAM.md`）；引擎源仓 `git status` 空；主树 `deer-flow` 零新增改动（仅有 Task 0 基线的既存未提交面）；提交面密钥形扫描 0 命中；运行时日志无 `Bearer`/token。
 - **外部动作（待外部条件，未执行）**：①创建 GitHub 单仓并首推（仓库根＝插件包，`engine/` 随之）；②`package.json` 的 `OWNER` 占位替换为实际地址；③归档旧引擎仓；④npm 发布 `dsh-harness-rag@0.1.0`；⑤同仓 GitHub Release 上传运行时 zip → **用发布件重算并回填** `runtime.json.urls`/`size`/`unpackedSize`/`sha256` → 重发 npm（顺序：pack 先于引用它的 tag）；⑥`market/index.json` 上线并在 README 填索引 URL；⑦用 `git+https://<repo>.git` 在真 DSH 装一次（Task 0/7 的 GitHub 安装缺口）。
-- **归位（不做／后续）**：不做＝§4.7 版本化升级/回滚（spec §7）；后续真机验＝headless 首启(§5.5)、双 profile 租约(§5.10)、HMR／DSH 退出(§5.11)、整体搬迁(§5.13)、代理(§5.17)、退出中止下载(§5.19)、干净 VM(§5.1)、原生选择器与自定根重启(§5.3)、外部模式真机(§5.8)；登记缺口＝被认领实例无健康看门狗(Task 6 未闭合③)、spawn 后端口被抢不换口重试(Task 3 未闭合③)、`openBundle` 实参形状未在真宿主点过(Task 5 未闭合②)、坏 `location.json` 的 `warning` 未上屏(Task 5 未闭合④)、`needsEmbeddingConfig` 的环境变量钥匙仍是近似(Task 4 未闭合③，真机已核「种子未配模型⇒NULL」)。
+- **归位（不做／后续）**：不做＝§4.7 版本化升级/回滚（spec §7）；后续真机验＝headless 首启(§5.5)、双 profile 租约(§5.10)、整体搬迁(§5.13)、代理(§5.17)、退出中止下载(§5.19)、干净 VM(§5.1)、原生选择器与自定根重启(§5.3)、外部模式真机(§5.8)；登记缺口＝被认领实例无健康看门狗(Task 6 未闭合③)、spawn 后端口被抢不换口重试(Task 3 未闭合③)、`openBundle` 实参形状未在真宿主点过(Task 5 未闭合②)、坏 `location.json` 的 `warning` 未上屏(Task 5 未闭合④)、`needsEmbeddingConfig` 的环境变量钥匙仍是近似(Task 4 未闭合③，真机已核「种子未配模型⇒NULL」)。
 - **提交链**：见末节（Task 8 两笔待提交后回填）。
 
 ---
