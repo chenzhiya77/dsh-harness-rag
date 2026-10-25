@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Config } from '../settings.ts'
 import { createEffectiveConfig, type EffectiveConfig } from './config.ts'
@@ -42,6 +42,14 @@ function packOf(platform: string): RuntimePack | null {
   return read.ok ? (read.manifest.packs[platform] ?? null) : null
 }
 
+/** `/api/rag/config` reports the effective values under `config`; a blank or
+ * absent model means the seed still needs one. */
+export function embeddingModelOf(payload: unknown): string | null {
+  const record = payload as { config?: { embedding_model?: unknown } } | null
+  const value = record?.config?.embedding_model
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
 function readService(root: string): ServiceRecord | null {
   try {
     return sanitizeService(JSON.parse(readFileSync(join(stateDir(root), 'service.json'), 'utf8')))
@@ -60,6 +68,8 @@ export function createRuntimeBridge(
   const platform = `${process.platform}-${process.arch}`
   const pack = packOf(platform)
   const version = pack?.runtimeVersion ?? '0.0.0-0'
+  // Dev-only override (spec §4.4): a locally built zip replaces the download.
+  const sourceZip = env.DSH_HARNESS_RAG_PACK?.trim() ? resolve(env.DSH_HARNESS_RAG_PACK.trim()) : undefined
   const anchorRoot = defaultRoot(env)
   let root = (() => {
     const resolved = resolveRoot({ anchorRoot, env })
@@ -89,7 +99,15 @@ export function createRuntimeBridge(
       spawn: createHostSpawn(subprocess),
       ensureRuntime: (hooks) =>
         pack
-          ? ensureRuntime({ root, version, platform, pack, signal: hooks.signal, onProgress: hooks.onProgress })
+          ? ensureRuntime({
+              root,
+              version,
+              platform,
+              pack,
+              sourceZip,
+              signal: hooks.signal,
+              onProgress: hooks.onProgress,
+            })
           : Promise.resolve({ kind: 'failed', code: 'pack_missing' }),
       onReady: () => {
         for (const listener of readyListeners) void listener.syncNow({ force: true })
@@ -126,12 +144,7 @@ export function createRuntimeBridge(
           headers: { authorization: `Bearer ${record.token}` },
         })
         if (!response.ok) return false
-        const payload = (await response.json()) as {
-          embedding_model?: string | null
-          effective?: { embedding_model?: string | null }
-        }
-        const model = payload.effective?.embedding_model ?? payload.embedding_model ?? null
-        if (model) return false
+        if (embeddingModelOf(await response.json())) return false
         return !(env.DASHSCOPE_API_KEY || env.EMBEDDING_API_KEY || env.RAG_EMBEDDING_API_KEY)
       } catch {
         return false

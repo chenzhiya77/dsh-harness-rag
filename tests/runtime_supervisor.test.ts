@@ -168,6 +168,7 @@ test('start: qdrant comes up first, the engine second, and service.json records 
   assert.deepEqual(record.ports, status.ports)
   assert.ok(record.pid > 0)
   assert.ok(record.qdrantPid && record.qdrantPid > 0)
+  assert.deepEqual(JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8')).runtimeVersion, VERSION)
 })
 
 test('start: qdrant receives the six storage and service variables', async (t) => {
@@ -251,6 +252,7 @@ test('adopt: a live instance is reused and nothing is spawned', async (t) => {
   assert.equal(status.phase, 'ready')
   assert.equal(status.adopted, true)
   assert.equal(f.spawned.requests.length, 0)
+  assert.equal(JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8')).runtimeVersion, VERSION)
 })
 
 test('lease: a live foreign owner blocks startup without spawning', async (t) => {
@@ -288,6 +290,26 @@ test('fail: an engine that exits during startup reports its phase, not a timeout
 
   const status = await supervisor(f).ensure()
 
+  assert.equal(status.phase, 'error')
+  assert.equal(status.error?.phase, 'engine')
+  assert.equal(status.error?.code, 'engine_exited')
+  assert.equal(existsSync(join(f.root, 'state', 'service.json')), false)
+  assert.equal(existsSync(join(f.root, 'state', 'lease.json')), false)
+})
+
+test('crash: an engine that dies after ready flips the status to error', async (t) => {
+  const f = await fixture(t)
+  const sup = supervisor(f)
+  const ready = await sup.ensure()
+  assert.equal(ready.phase, 'ready')
+
+  f.spawned.children[1].kill()
+  const deadline = Date.now() + 5_000
+  while (Date.now() < deadline && sup.status().phase === 'ready') {
+    await new Promise((resolve) => setTimeout(resolve, 25))
+  }
+
+  const status = sup.status()
   assert.equal(status.phase, 'error')
   assert.equal(status.error?.phase, 'engine')
   assert.equal(status.error?.code, 'engine_exited')

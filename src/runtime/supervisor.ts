@@ -155,6 +155,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
 
   const runtime = runtimeDir(root, runtimeVersion)
   const statePath = join(stateDir(root), 'service.json')
+  const currentPath = join(stateDir(root), 'current.json')
   const leasePath = join(stateDir(root), 'lease.json')
   const logs = logsDir(root)
 
@@ -190,6 +191,12 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     }
   }
 
+  /** `state/current.json` marks the version this root is on; `runtime/status`
+   * reports it as `installed` and `runtime/configure` refuses to move it. */
+  const markCurrent = (runningVersion: string): void => {
+    writeJson(currentPath, { version: 1, runtimeVersion: runningVersion, updatedAt: now() })
+  }
+
   const readLease = (): LeaseRecord | null => {
     try {
       return sanitizeLease(JSON.parse(readFileSync(leasePath, 'utf8')))
@@ -212,11 +219,20 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
   }
 
   const fail = (phase: string, code: string, detail?: string): RuntimeStatusView => {
+    // Set the error phase first: killing the children fires their exit callbacks,
+    // and those must not re-enter fail() through the post-ready crash handler.
+    setPhase({ phase: 'error', error: { phase, code, detail }, logTail: currentLogTail() })
     killChildren()
     rmSync(statePath, { force: true })
     releaseLease()
-    setPhase({ phase: 'error', error: { phase, code, detail }, logTail: currentLogTail() })
     return status
+  }
+
+  /** A supervised child that dies after `ready` takes the whole instance down:
+   * the panel flips to the error card and the retry path starts a fresh stack. */
+  const crash = (role: 'qdrant' | 'engine', code: number | null | undefined): void => {
+    if (disposed || status.phase !== 'ready') return
+    fail(role, `${role}_exited`, `exit ${String(code)}`)
   }
 
   const currentLogTail = (): string =>
@@ -322,6 +338,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     const healthy = await probe(`${base}/api/knowledge-bases`, { authorization: `Bearer ${record.token}` })
     if (!healthy) return null
     options.onReady?.()
+    markCurrent(record.runtimeVersion)
     setPhase({
       phase: 'ready',
       adopted: true,
@@ -384,6 +401,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     let qdrantExit: number | null | undefined
     qdrant = spawnChild(qdrantRequest(ports), 'qdrant.log', (code) => {
       qdrantExit = code ?? -1
+      crash('qdrant', code)
     })
     const qdrantReady = await waitFor(
       () => probe(`http://127.0.0.1:${ports.qdrantHttp}/readyz`),
@@ -399,6 +417,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     let engineExit: number | null | undefined
     engine = spawnChild(engineRequest(ports, token), 'engine.log', (code) => {
       engineExit = code ?? -1
+      crash('engine', code)
     })
     const engineReady = await waitFor(
       () =>
@@ -426,6 +445,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       ports,
       startedAt: now(),
     })
+    markCurrent(runtimeVersion)
     options.onReady?.()
     setPhase({ phase: 'ready', adopted: false, error: undefined, logTail: currentLogTail() })
     return status
