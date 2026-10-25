@@ -253,4 +253,8 @@
 - `a94a453` `build(runtime): add the platform pack builder`（Task 6 构建器、`yazl` devDependency、`runtime.json` 体积/sha 回填）
 - `8197fce` `chore(repo): relicense the plugin under MIT`（spec §4.8 许可面：LICENSE、THIRD_PARTY_NOTICES、README/package.json）
 - `dfc0283` `docs(distribution): record task 6 build and real-host results in the plan`（Task 6 实测、缺陷修复 ④与未闭合）
-- 待实施：①`chore(repo): vendor the harness-rag backend into engine/`（Task 7 迁移）②`docs(distribution): document single-download install`（Task 7–8）。Task 0–5 的笔次见 `1d63f4c` 及更早提交，本表自 Task 6 起滚动记实。
+- `fa05a8d` `chore(repo): vendor the harness-rag engine under engine/`（Task 7 迁移：快照 `b34b2d572`，1082 文件逐字节一致＋`engine/UPSTREAM.md`）
+- `fc2a3ac` `chore(distribution): prepare the npm package and market index`（发布面：去 `private`、`publishConfig`、`engines.dsh`、`files` 补 `presets`、`market/index.json`）
+- `75db19d` `docs(distribution): document the single-download install`（README 首启流程、运行根与外部模式）
+- `310b7cb` `docs(distribution): record task 7 results in the plan`（Task 7 勾选、实测与未闭合）
+- 待外部条件（Task 8）：npm 发布、同仓 GitHub Release、索引上线、`runtime.json.urls` 回填、`OWNER` 占位替换、GitHub 地址安装实测。Task 0–5 的笔次见 `1d63f4c` 及更早提交，本表自 Task 6 起滚动记实（记链笔自身不列）。
