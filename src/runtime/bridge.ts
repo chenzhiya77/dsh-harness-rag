@@ -50,6 +50,12 @@ export function embeddingModelOf(payload: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
+/** A model is mandatory and has no default: a provider key in the environment
+ * cannot stand in for it. */
+export function needsEmbeddingFrom(payload: unknown): boolean {
+  return !embeddingModelOf(payload)
+}
+
 function readService(root: string): ServiceRecord | null {
   try {
     return sanitizeService(JSON.parse(readFileSync(join(stateDir(root), 'service.json'), 'utf8')))
@@ -157,8 +163,7 @@ export function createRuntimeBridge(
           headers: { authorization: `Bearer ${record.token}` },
         })
         if (!response.ok) return false
-        if (embeddingModelOf(await response.json())) return false
-        return !(env.DASHSCOPE_API_KEY || env.EMBEDDING_API_KEY || env.RAG_EMBEDDING_API_KEY)
+        return needsEmbeddingFrom(await response.json())
       } catch {
         return false
       }

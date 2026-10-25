@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createRuntimeBridge, embeddingModelOf, type BridgeHost } from '../src/runtime/bridge.ts'
+import { createRuntimeBridge, embeddingModelOf, needsEmbeddingFrom, type BridgeHost } from '../src/runtime/bridge.ts'
 import { defaultConfig } from '../src/settings.ts'
 
 const ENV = { DSH_HOME: 'C:/hrag-bridge-test' }
@@ -31,6 +31,15 @@ test('embedding model: missing or malformed payloads mean "not configured"', () 
   assert.equal(embeddingModelOf({}), null)
   assert.equal(embeddingModelOf({ embedding_model: 'legacy-field' }), null)
   assert.equal(embeddingModelOf({ config: { embedding_model: 42 } }), null)
+})
+
+test('embedding readiness: only the model decides, never the environment', () => {
+  assert.equal(needsEmbeddingFrom({ config: { embedding_model: 'text-embedding-v4' } }), false)
+  assert.equal(needsEmbeddingFrom({ config: { embedding_model: '' } }), true)
+  assert.equal(needsEmbeddingFrom({ config: { embedding_model: '   ' } }), true)
+  assert.equal(needsEmbeddingFrom({ config: { embedding_model: null } }), true)
+  assert.equal(needsEmbeddingFrom({ config: {} }), true)
+  assert.equal(needsEmbeddingFrom(null), true)
 })
 
 // The host's native chooser reads the caller-lifetime signal on entry, so the

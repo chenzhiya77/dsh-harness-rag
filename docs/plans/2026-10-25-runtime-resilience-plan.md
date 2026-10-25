@@ -100,11 +100,16 @@
 
 > 动到的文件：`src/runtime/bridge.ts`、`tests/runtime_bridge.test.ts`。
 
-- [ ] 测试先行：`needsEmbeddingFrom({config:{embedding_model:''}})` 为 true；有模型为 false；坏 payload 为 false（沿用现有解析口径）。
-- [ ] 抽出纯函数 `needsEmbeddingFrom(payload)` ＝ `!embeddingModelOf(payload)`，`needsEmbeddingConfig` 只调用它；删除三个环境变量名。
-- [ ] 门禁：`node --test tests/runtime_bridge.test.ts`；`tsc`。
+- [x] 测试先行：`needsEmbeddingFrom({config:{embedding_model:''}})` 为 true；有模型为 false；缺键/坏 payload 也为 true（没有可用模型，沿用 `embeddingModelOf` 的解析口径）。
+- [x] 抽出纯函数 `needsEmbeddingFrom(payload)` ＝ `!embeddingModelOf(payload)`，`needsEmbeddingConfig` 只调用它；删除三个环境变量名。
+- [x] 门禁：`node --test tests/runtime_bridge.test.ts`；`tsc`。
 
 **实测（实施期回填）**：
+
+- **实现**：`bridge.ts` 新增导出 `needsEmbeddingFrom(payload)`；`needsEmbeddingConfig` 的返回改为它，删除 `DASHSCOPE_API_KEY`/`EMBEDDING_API_KEY`/`RAG_EMBEDDING_API_KEY` 近似（全仓 `src/` 已无这三个名字）。`env` 仍用于 `DSH_HARNESS_RAG_PACK`、`defaultRoot` 与 deps，`createRuntimeBridge` 签名不变。
+- **实施期修正**：plan 原写「坏 payload 为 false」有误——坏/缺 payload 意味着没有可用模型，按引擎口径应为 true；测试按 true 写。
+- **测试**：1 条 6 个断言（有模型 false；空串、纯空白、null、缺键、`null` payload 均 true）。
+- **门禁**：`node --test tests/runtime_bridge.test.ts` **6/6**；`tsc` 0 错；全量 **217/217**。neuter（`needsEmbeddingFrom` 恒 false）⇒ 1 条转红，还原后 6/6。三个环境变量的删除本身无单测守护，由 Task 5 真机「设 `DASHSCOPE_API_KEY` 仍出横幅」验证。
 
 ---
 
@@ -112,7 +117,7 @@
 
 > 动到的文件：本对 spec/plan。
 
-- [ ] 门禁：`node --check client.js`；`tsc` 0 错；`node --test tests/*.test.ts` 全绿（Task 1 起 210 条，Task 2 后 214 条，Task 3 后 216 条，Task 4 再追加）。
+- [ ] 门禁：`node --check client.js`；`tsc` 0 错；`node --test tests/*.test.ts` 全绿（Task 1 起 210 条，Task 2 后 214 条，Task 3 后 216 条，Task 4 后 217 条）。
 - [ ] 真机看门狗：外部模式或第二实例下认领一个服务，kill 掉 ⇒ ≤20 s 内 `runtime/status` 变 `error/adopted_unreachable`、`service.json` 仍在；重启服务后点重试回到 `ready/adopted`。
 - [ ] 真机锚点告警：写坏 `location.json` ⇒ 启动后 root 为默认根、`warning` 非空、面板出现横幅，库可读。
 - [ ] 真机嵌入判定：清空 `embedding_model` 且宿主环境设 `DASHSCOPE_API_KEY` ⇒ 横幅仍出现；配好模型后消失。
