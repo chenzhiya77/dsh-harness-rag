@@ -1,6 +1,6 @@
 # 单一下载分发（插件自带本地运行环境） —— spec
 
-**Status:** 已拍·实施中（2026-10-25；D1–D15 全甲，Task 0 落点核实完成）
+**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落，发布动作与 GitHub 安装实测待外部条件）
 **Date:** 2026-10-24
 **来源:** 10-24 他问「当前的插件有两个文件夹……用户下载插件肯定是只下载一个插件，后端不能放在插件文件夹中吗」；随后明确目标是「用户只需要点击下载插件就能下载完全部的东西，可以直接使用」，并问 DSH 插件发布在哪、是否有官方市场；确认方向后令起 spec/plan。
 **承接:** 现行部署两件式（[README.md](../../README.md) §安装/§后端最小形态，`README.md:40-69`）；配置默认值 `src/settings.ts:15-19`；后端地址的唯一消费面 `src/http.ts:29-48` 与 `src/kb_proxy.ts:395/450/543`；引擎路径环境变量 `engine/backend/packages/harness/deerflow/config/runtime_paths.py`（并入单仓后的位置）。
@@ -257,9 +257,9 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 ### 4.6 面板首次运行面
 
 - 面板挂载先调 `runtime/status`：
-  - `phase:'needs_location'` ⇒ 设置卡（居中，复用 `.hrag-state-fill`）：标题「准备本地知识服务」；位置行「安装到」+ 默认根（`~/.dsh/harness-rag` 这类宿主符号形式，悬停给绝对路径）+「更改…」；若锚点存在但目标不可用，位置行上方显示原因与旧路径（「上次的位置不可用」），并给「改回默认」；说明「首次使用需下载约 400 MB，安装后约 1.1 GB」（数值读 `runtime.json` 的 `size`/`unpackedSize`）；主按钮「开始准备」，次按钮「连接已有服务」——点击时 `ctx.get('pluginNavigation')` 懒取（这是插件管理 UI 提供的 client 反射服务，不写进 `inject`，否则缺件时整个面板挂不上）再调 `openBundle('dsh-harness-rag')`；不可用时按钮改为可复制的说明「Plugins → Harness RAG → backendUrl」。**只选一个运行根**：运行时（Python/依赖/引擎/Qdrant）、`state/`、`config/` 都在其下，不提供「依赖」与「数据」分开选。
+  - `phase:'needs_location'` ⇒ 设置卡（居中，复用 `.hrag-state-fill`）：标题「准备本地知识服务」；位置行「安装到」+ 默认根（`~/.dsh/harness-rag` 这类宿主符号形式，悬停给绝对路径）+「更改…」；若锚点存在但目标不可用，位置行上方显示原因与旧路径（「上次的位置不可用」），并给「改回默认」；说明「首次使用需下载约 315 MB，安装后约 840 MB」（数值读 `runtime.json` 的 `size`/`unpackedSize`，实测 zip 330,280,025 B / 解压 881,198,854 B）；主按钮「开始准备」，次按钮「连接已有服务」——点击时 `ctx.get('pluginNavigation')` 懒取（这是插件管理 UI 提供的 client 反射服务，不写进 `inject`，否则缺件时整个面板挂不上）再调 `openBundle('dsh-harness-rag')`；不可用时按钮改为可复制的说明「Plugins → Harness RAG → backendUrl」。**只选一个运行根**：运行时（Python/依赖/引擎/Qdrant）、`state/`、`config/` 都在其下，不提供「依赖」与「数据」分开选。
   - 「更改…」调 `runtime/pickDirectory`：宿主 `directoryPicker` 原生选择器返回**父目录**，插件追加 `harness-rag` 并回填；若 basename 已是 `harness-rag`，确认后直接用该目录。选择器不可用（远程 Web 只有 browse 能力）⇒ 同一行原地变为可编辑绝对路径。`runtime/status` 带 `picker: 'native'|'browse'|'none'`，客户端据此决定「更改…」还是直接可编辑。选完只回填不落盘；点「开始准备」才 `runtime/configure` 并开始下载；校验失败在位置行下给红字，不进入下载态。
-  - `phase ∈ downloading|verifying|extracting|starting` ⇒ 整块居中状态：标题「正在准备本地知识服务」、副文案阶段、进度条（下载有百分比，其余为不确定态）、「首次使用需下载约 400 MB」。
+  - `phase ∈ downloading|verifying|extracting|starting` ⇒ 整块居中状态：标题「正在准备本地知识服务」、副文案阶段、进度条（下载有百分比，其余为不确定态）、「首次使用需下载约 315 MB」。
   - `error` ⇒ 标题「本地知识服务未能启动」、阶段与错误、`重试`（`runtime/retry`）、日志路径可复制；若尚未生成 `state/current.json`，多给一个「更改位置」（回到设置卡并改写锚点）。
   - `ready` ⇒ 正常六 tab；若 `needsEmbeddingConfig` 为真，在内容上方加一条可关闭横幅「本地服务已就绪；配置嵌入模型后即可上传文档」。
 - 轮询 1 秒，`needs_location`/`ready`/`error` 停（设置卡不轮询）；不新增 tab、不改顶栏。
@@ -269,6 +269,8 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 ### 4.7 升级、回滚、卸载
 
+> **本期状态（2026-10-25）**：下面的版本化切换、失败回退与旧版清理**未实现**（不在 Task 0–8 清单，见 plan Task 6 未闭合②）。当前换版本的行为：`runtime.json` 版本变了 ⇒ 在 `runtime/<新版本>` 重新准备并启动；旧版本目录保留不自动删；旧版本服务若仍在运行，认领不校验 `record.runtimeVersion`，会继续用旧实例，直到它退出或清掉 `state/service.json`。升级前请先停服务并备份 `state/`、`config/`。卸载行为（只删 npm 包、数据保留、清理顺序）已落地在 README。
+
 - 插件升级若 `runtime.json` 版本不变 ⇒ 不动运行时；变了 ⇒ 后台下载新包，完成后**本次继续用旧版**，下次激活切换（避免运行中换数据面）。
 - 切换：起新版 Qdrant/服务前先停旧版（核对 pid）；新版健康成功才把 `current.json` 指向它；90 秒内起不来 ⇒ 回旧版并报错，同时写 `state/failed-<version>.json`，后续启动停在旧版，直到 `runtime.json` 换版本或用户手动重试。升级前备份 `state/` 与 `config/`；回滚不保证数据兼容（新引擎可能已迁移 sqlite/向量），README 明写「先备份再升级」。
 - 保留上一版；下一次成功切换后删更老的版本目录（`runtime/` 下不在 current/previous 的）。
@@ -277,11 +279,11 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 ### 4.8 发布件
 
 - `package.json`：去掉 `private`，`license: MIT`（与主树/引擎一致，10-25 已改），补 `LICENSE` 与 `THIRD_PARTY_NOTICES.md`（DeerFlow/DSH 的 MIT 声明；运行时包另生成一份覆盖 Python（PSF-2.0）/Qdrant（Apache-2.0）/关键 wheel 的 notices）、`repository`/`homepage`、`engines.dsh`（建议 `>=0.2.1-rc.2 <0.3.0`，Task 0 钉值）、`files` 含 `runtime.json`/`LICENSE`/`THIRD_PARTY_NOTICES.md`、运行依赖 `yauzl`。
-- `runtime.json`（包根）：`format:1`、`packs["win32-x64"]={runtimeVersion, engineVersion, engineCommit, pythonVersion, qdrantVersion, configVersion, urls[], size, unpackedSize, sha256}`。`size`/`unpackedSize` 都用来做空间检查与面板体积说明；未发布时 `urls: []`/`size: 0` 是显式占位，按 `pack_missing` 处理。
+- `runtime.json`（包根）：`format:1`、`packs["win32-x64"]={runtimeVersion, engineVersion, engineCommit, pythonVersion, qdrantVersion, configVersion, urls[], size, unpackedSize, sha256}`。`size`/`unpackedSize` 都用来做空间检查与面板体积说明。**未发布时 `urls: []` 表示没有下载源**：未安装运行时报 `pack_missing`（可用 `DSH_HARNESS_RAG_PACK=<本地 zip>` 开发覆盖），已安装的 `runtime/<version>/runtime-manifest.json` 仍直接可用（Task 6 修复）。`size`/`unpackedSize`/`sha256` 在本地构建后即回填，发布前用发布件重算。
 - `market/index.json`：形态 1；`source: {type:"npm"}`；`engines.dsh` 与包一致；图标用内联 data URL（`icon.svg` 872 B < 32 KiB）；`publishTimestamp` 为 Unix 秒。
 - 运行时包命名 `harness-rag-runtime-win32-x64-<runtimeVersion>.zip`，**发在同一仓库的 GitHub Releases**；清单里的 sha256 与 size 在构建末尾回填。
 - 构建命令（Task 0 实测口径）：`uv python install --install-dir <tmp>` 产出 `cpython-3.12.x-windows-x86_64-none/`，**拍平成 `<pack>/python/`**；`uv export --frozen --no-dev --extra umap --no-hashes --no-emit-project` 后剔除两条 `-e`，用 **`uv pip sync --python <pack>/python/python.exe --target <pack>/site-packages`** 安装（`uv pip install -r` 会重求解，撞锁里的 `websockets==16.0` override 而失败）；`engine/config.example.yaml` 与 `engine/backend/uv.lock` 随包。
-- 仓库形态：**单仓**。仓库根就是插件包（`package.json`、`client.js`、`src/`、`runtime.json`），引擎源码在 `engine/`（`engine/backend/` + `engine/backend/uv.lock` + `engine/config.example.yaml`）。`files` 明确排除 `engine/`、`scripts/`、`market/`、`docs/specs`、`docs/plans`、`tests/`，npm 包约 1.5 MB（基线 307.6 kB tarball / 1.2 MB 解包）；DSH「添加插件」填 GitHub 仓库地址时，根就是合法包，直接可装。**依赖不进仓**——Python wheel、便携 Python、Qdrant 二进制都在构建期下载并打进 Release 资产；git 里只有源码、清单与锁文件。`engine/` 也不进运行时包的意外文件：`backend/.env`、`backend/.deer-flow`、`logs/`、根 `config.yaml`/`models_config.json`/`rag_config.json` 一律排除。
+- 仓库形态：**单仓**。仓库根就是插件包（`package.json`、`client.js`、`src/`、`runtime.json`），引擎源码在 `engine/`（`engine/backend/` + `engine/backend/uv.lock` + `engine/config.example.yaml`）。`files` 明确排除 `engine/`、`scripts/`、`market/`、`docs/specs`、`docs/plans`、`tests/`，npm 包实测 37 文件 / 341.4 kB tarball / 1.4 MB 解包（基线 307.6 kB / 1.2 MB）；DSH「添加插件」填 GitHub 仓库地址时，根就是合法包，直接可装。**依赖不进仓**——Python wheel、便携 Python、Qdrant 二进制都在构建期下载并打进 Release 资产；git 里只有源码、清单与锁文件。`engine/` 也不进运行时包的意外文件：`backend/.env`、`backend/.deer-flow`、`logs/`、根 `config.yaml`/`models_config.json`/`rag_config.json` 一律排除。
 - 迁移：源分支 `feat/rag-knowledge-base`（不是 `master`）；引擎 `.git` 172 MB，**默认不保留完整历史**——`git subtree add --squash` 实测 42 s、gc 后 `.git` 16 MB（快照提交同为 16 MB），或快照提交 + `engine/UPSTREAM.md` 记录源仓、源 commit 与并入日期。完整历史会让 GitHub 地址安装变成重克隆，与「只点一次」冲突。旧引擎仓归档，不再保留第二份权威副本。
 - 发布顺序：npm 包 → 同仓 GitHub Release（运行时包）→ 索引 JSON 上线 → README 给索引 URL 与 GitHub 安装示例。前三步依赖 remote/凭据，属外部动作。
 - npm、GitHub 仓库地址、本地目录三种安装装的是同一份插件代码，首次运行面完全一致；GitHub 安装建议用 tag/commit，从 `main` 装时该提交的 `runtime.json` 必须已指向已上传的 pack（发布顺序保证 tag 提交先有 pack 再发布）。
@@ -324,6 +326,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 - 不做官方市场收录与社区索引提交（外部动作，另行处理）。
 - 不做现有 `backend/.deer-flow` 数据自动迁移；用户要沿用数据就保持外部模式或手工拷贝。
 - 不做运行时包的增量更新/差分下载；整包替换。
+- 不做 §4.7 的版本化升级/回滚（本次继续用旧版、90 秒失败回旧版、`failed-<version>.json`、旧版本目录清理）；换版本＝新目录重新准备，后续另立对。
 - 不把 Qdrant 换成嵌入式向量库；不复活 Docker 路线。
 - 不做已装后换位置的自动迁移（整体拷贝 + 改锚点由用户手工做）；不做自绘目录浏览器。
 - 不把本地视频 ASR 依赖（funasr/torch）打进运行时包；托管包与 `make gateway` 同依赖，视频默认档需另装或改用服务档（登记，见 §8）。

@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·进行中（2026-10-25；Task 0–7 落地（Task 7 余 GitHub 安装实测与发布件上传，属外部条件），Task 8 未开始）
+**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落，发布动作与 GitHub 安装实测待外部条件）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -17,15 +17,15 @@
 - [x] **目录选择器**：host `ctx.inject(['directoryPicker'], …)` 在 desktop 组合可用；`capability()` 为 `{kind:'native', pick(signal)}`，`pick()` 返回绝对路径、取消返回 `null`；与工作区「添加工作区」同款。记录 browse-only/缺服务时的退化判据。
 - [x] **headless 判定**：插件激活时如何区分「有客户端世界」与 headless/纯 CLI（`webServer` 注入、Electron 标志、`ctx.get` 任一可用判据）；GUI 出设置卡、headless 自动默认根的边界；`webServer` 晚到是否需要短暂宽限。
 - [x] **盘符与空间**：`fs.statfs` 在 Windows 的可用性与返回字段；UNC/网络盘识别方式；OneDrive 等同步盘识别（环境变量/路径），供二次确认用；空间检查按 `size + unpackedSize × 1.1`，确认 `unpackedSize` 从清单读取。
-- [ ] **插件安装面**：`dsh plugin --profile desktop add <本地 tgz>`、`link:`、以及 **GitHub 仓库地址**三种安装下包根解析（`import.meta.url` 到 `runtime.json`）一致；GitHub 地址安装用一个「根是插件包＋含 `engine/` 子目录」的测试仓验证 pnpm 只装包面、不因 `engine/` 失败；确认常规 `dependencies` 会被 pnpm 装进 profile，且 `yauzl` 无构建脚本；确认 `engines.dsh` 的 SemVer 范围对 `0.2.1-rc.2`（当前 DSH）通过，并记录正确范围。**实测缺口：GitHub 地址未测（仓无 remote）；tgz/link 与 engines 已过。**
+- [x] **插件安装面**：`dsh plugin --profile desktop add <本地 tgz>`、`link:`、以及 **GitHub 仓库地址**三种安装下包根解析（`import.meta.url` 到 `runtime.json`）一致；GitHub 地址安装用一个「根是插件包＋含 `engine/` 子目录」的测试仓验证 pnpm 只装包面、不因 `engine/` 失败；确认常规 `dependencies` 会被 pnpm 装进 profile，且 `yauzl` 无构建脚本；确认 `engines.dsh` 的 SemVer 范围对 `0.2.1-rc.2`（当前 DSH）通过，并记录正确范围。**实测缺口：GitHub 地址未测（仓无 remote）；tgz/link 与 engines 已过。** **收口（Task 8）**：本地两径、包面、engines 均已过；GitHub 地址安装归外部条件（Task 8 外部动作⑦）。
 - [x] **单仓迁移**：源分支是 `feat/rag-knowledge-base`（不是 `master`）。在临时克隆上试 `git subtree add --squash --prefix engine <harness-rag> feat/rag-knowledge-base`，记录耗时/冲突/路径长度与克隆体积；引擎 `.git` 172 MB，默认不保留完整历史，若 squash 仍太大则用「快照提交 + `engine/UPSTREAM.md`」；确认并入后 `npm pack` 不含 `engine/`。
 - [x] **包管理器姿态**：复核 pnpm 11 对依赖脚本的拦截与 DSH 的批准流程（只读 README＋实装一次带 script 的假包），确认「不靠 postinstall」这条没有暗坑。
 - [x] **引擎可搬运**：用 `uv python install --install-dir <tmp>/python 3.12`（产出 `<tmp>/python/cpython-3.12.x-windows-x86_64-none/python.exe`）；在 `backend/` 跑 `uv export --frozen --no-dev --extra umap --no-hashes --no-emit-project`（剔除两条 `-e`）后用 **`uv pip sync --python <py> --target <tmp>/site-packages`** 建一套（`uv pip install -r` 会重求解并失败）；以 `PYTHONPATH=site-packages;backend;backend/packages/harness;backend/packages/extension-api` 跑 `python -m uvicorn app.gateway.knowledge_app:app`。验证：能 import（含 UMAP）、用 `engine/config.example.yaml` 种出的 config 能被 `get_app_config()` 加载、`/health` 返回 `harness-rag-knowledge`、带 token 的 `/api/knowledge-bases` 200、缺 token 401。失败则记录首个坏包，评估 D3 丙退路。
 - [x] **路径与配置**：五个环境变量（`DEER_FLOW_PROJECT_ROOT/HOME/CONFIG_PATH/MODELS_CONFIG_PATH/RAG_CONFIG_PATH`）全设到临时 home 时，配置写入、sqlite、data、Qdrant URL 实际落点；`config.yaml` 从 `engine/config.example.yaml` 整份种子化并**追加** `database:{backend: sqlite, sqlite_dir:<abs>}`（示例里该段是注释；只写 `config_version` + `database` 的种子会因 `sandbox.use` 必填而失败）；模型/rag 的显式 env 要求文件存在；记录 `config_version` 读取方式与 `resolve_config_path() or project_root()` 的优先级。
 - [x] **Qdrant Windows**：下载 v1.20.0 `qdrant-x86_64-pc-windows-msvc.zip` 到仓外，验证 `QDRANT__SERVICE__HOST/HTTP_PORT/GRPC_PORT`、`QDRANT__STORAGE__STORAGE_PATH`、`QDRANT__STORAGE__SNAPSHOTS_PATH`、`QDRANT__TELEMETRY_DISABLED` 环境覆盖、`/readyz`、`taskkill /T` 后的再次启动（storage 可恢复）。
-- [ ] **进程归属核对**：对 `service.json` 里的 pid 用 PowerShell `Get-CimInstance Win32_Process` 读 `ExecutablePath`，确认能判定「是否在本 home 的 runtime 下」；记录命令与耗时。另验证 `state/lease.json` 单写者：两个宿主同时启动时后启动者只认领、不杀别人的子进程；租约陈旧可接管。**实测缺口：ExecutablePath 已过（523 ms）；双宿主 lease 留 Task 3。**
+- [x] **进程归属核对**：对 `service.json` 里的 pid 用 PowerShell `Get-CimInstance Win32_Process` 读 `ExecutablePath`，确认能判定「是否在本 home 的 runtime 下」；记录命令与耗时。另验证 `state/lease.json` 单写者：两个宿主同时启动时后启动者只认领、不杀别人的子进程；租约陈旧可接管。**实测缺口：ExecutablePath 已过（523 ms）；双宿主 lease 留 Task 3。** **收口（Task 8）**：`ExecutablePath` 已过；租约由 Task 3 单测覆盖（外来存活＝不 spawn、陈旧＝接管），两个真 DSH profile 并跑未验（§5.10 记缺口）。
 - [x] **解压件**：比较 `yauzl` 与 `fflate` 的流式解压与 zip-slip 防护写法，定一个并记录依赖版本；实测运行时包内最长条目路径 + home 前缀是否触 Windows 260 字符上限。
-- [ ] **宿主 UI 面**：面板现有居中状态块（`.hrag-state-fill`，`client.js` 样式段）、`ToasterHost`、设置入口（嵌入模型所在面）的实际打开方式；设置页「Qdrant 地址」的只读态是否可复用现有控件；`pluginNavigation.openBundle('dsh-harness-rag')` 是否可从 client 半注入、不可用时的退化文案；确认无需新槽位。**实测缺口：只读态需 Task 5 真面板验（primitives 包不在 asar 内）；其余已定位。**
+- [x] **宿主 UI 面**：面板现有居中状态块（`.hrag-state-fill`，`client.js` 样式段）、`ToasterHost`、设置入口（嵌入模型所在面）的实际打开方式；设置页「Qdrant 地址」的只读态是否可复用现有控件；`pluginNavigation.openBundle('dsh-harness-rag')` 是否可从 client 半注入、不可用时的退化文案；确认无需新槽位。**实测缺口：只读态需 Task 5 真面板验（primitives 包不在 asar 内）；其余已定位。** **收口（Task 8）**：只读态在真面板见过、`openBundle` 的缺件退化分支由 Task 5 探针覆盖；真宿主里 `openBundle` 的实参形状未点（探针 `ctx.get` 为 null），登记为后续小验。
 - [x] **工作区基线**：插件 HEAD 与未提交面；引擎 `git status` 空；主树零改动；记录 `npm pack --dry-run` 当前内容，作为 Task 7 对照。
 
 **实测**：2026-10-25（只读；探针与下载物在仓外 `D:\hrag-t0\`，已清理；三树零改动）。
@@ -103,10 +103,10 @@
 > 动到的文件：`src/runtime/seed.ts`（新增）、`src/runtime/ports.ts`（新增）、`src/runtime/supervisor.ts`（新增）、`src/runtime/process.ts`（新增）、`tests/runtime_supervisor.test.ts`（新增）、`tests/runtime_seed.test.ts`（新增）。
 
 - [x] 测试先行（纯函数）：端口规划（默认口空闲/占用/双占用，bind 失败换口重试）；配置种子内容（从 `engine/config.example.yaml` 拷贝出的 `config.yaml` 必须能被 `AppConfig` 加载，含 `sandbox.use`；绝对 `sqlite_dir`；`rag_config.json.qdrant_url`；空 `models_config.json`）；读-改-写只动 `sqlite_dir`/`qdrant_url` 两个键；`service.json`/`current.json`/`lease.json` 清洗与坏 JSON 处理。
-- [ ] 守护（用 Node 桩子进程模拟 Qdrant/knowledge）：启动顺序、Qdrant 六个环境变量（host/HTTP/GRPC/storage/snapshots/telemetry）、**经 `ctx.subprocess.spawn` 起子进程**（Windows kill-on-close Job、`windowsHide`、`scrubbedParentEnv` 自带代理；`DEER_FLOW_API_TOKEN` 走显式 `env`，不靠环境继承）、就绪探测（`/readyz`、`/health`、带 token 的 `/api/knowledge-bases`）、超时、退出码→`error`、日志落盘与轮转、正常停止（尽力 + 下次清理）、认领（service.json + token 200）、`lease.json` 单写者、pid 归属核对失败不杀、bind 失败换口重试。
+- [x] 守护（用 Node 桩子进程模拟 Qdrant/knowledge）：启动顺序、Qdrant 六个环境变量（host/HTTP/GRPC/storage/snapshots/telemetry）、**经 `ctx.subprocess.spawn` 起子进程**（Windows kill-on-close Job、`windowsHide`、`scrubbedParentEnv` 自带代理；`DEER_FLOW_API_TOKEN` 走显式 `env`，不靠环境继承）、就绪探测（`/readyz`、`/health`、带 token 的 `/api/knowledge-bases`）、超时、退出码→`error`、日志落盘与轮转、正常停止（尽力 + 下次清理）、认领（service.json + token 200）、`lease.json` 单写者、pid 归属核对失败不杀、bind 失败换口重试。**收口（Task 8）**：除「spawn 后被抢端口的换口重试」外全部落地（真 `ctx.subprocess` 接线在 Task 4、真机在 Task 6）；换口重试登记为后续（spec §4.5 只要求启动前探测）。
 - [x] 单例与去抖：`globalThis` 复用；dispose 后 5 秒内新实例接管则取消停止（假定时器）。
 - [x] `seed.ts`：`config.yaml` 首次从 `config.example.yaml` 整份拷贝，**再追加** `database:{backend: sqlite, sqlite_dir:<运行根>/state/data}`（示例里该段是注释，没有可改写的既有键）；`rag_config.json`/`models_config.json` 只在文件不存在时写；每次启动只按当前运行根改 `sqlite_dir`、按实际端口修补 `qdrant_url`，其余键保留（托管模式只拥有这两个键）。
-- [ ] 门禁：`node --test tests/runtime_*.test.ts`；`tsc`；真机起一次 Qdrant+引擎（用 Task 0 的临时运行时）验证。
+- [x] 门禁：`node --test tests/runtime_*.test.ts`；`tsc`；真机起一次 Qdrant+引擎（用 Task 0 的临时运行时）验证。**收口（Task 8）**：单测与 `tsc` 全过；真机起栈由 Task 6 冷启动＋真 DSH 完成。
 
 **实测（实施期回填）**：
 
@@ -209,7 +209,7 @@
 - **真机（10-24 深夜，真 DSH／真 `ctx.subprocess`，根 `D:\hrag-t6\dsh-root\harness-rag`）**：装好的运行时在未发布清单下首启 **约 10 s 到 `ready`**（页面缓存热；托管引擎监听 8021、Qdrant 6334/6335，`/health` 200）；面板显示就绪横幅与空库态；经服务建库（`smoke-host`）后点「刷新」即列出该库。本轮实际看到 setup/错误/准备/就绪/空库，external 未现。
   - 环境限制（非插件问题）：本机屏幕 1707×1067、DSH 窗口 1280 CSS（dpr 1.5），右栏 575 宽会被窗口右缘裁掉；取证时临时把 `.hrag-root` 夹到 220 px 拍照，随后已移除。
 - 门禁：`tsc` 0 错；全量 **198/198**；`client.js` 仅调试件改动，已还原。
-- **未闭合**：①真机剩两项——HMR 重载不重启、DSH 正常退出清理（该实例关窗后常驻托盘，本轮只能硬杀整树，子进程随 job 退出）；②升级/回滚（spec §4.7 的版本化目录切换、90 s 失败回旧版、清理旧版本）不在 Task 0–8 任何清单里——当前只有同版本重启与重试，需另立对或并入 Task 7/8 再定；③被认领的实例没有健康看门狗（它崩了状态不会自己翻 error，直到下次重启/重试）；④`runtime.json` 的 size/sha 是本机构建值，发布前需用发布件重算并回填 `urls`；⑤spec §4.6 写的「约 400 MB / 1.1 GB」与实测 315.0/840.4 MiB 不符（面板按清单取值，文字在 Task 8 回写）。
+- **未闭合**：①真机剩两项——HMR 重载不重启、DSH 正常退出清理（该实例关窗后常驻托盘，本轮只能硬杀整树，子进程随 job 退出）；②升级/回滚（spec §4.7 的版本化目录切换、90 s 失败回旧版、清理旧版本）不在 Task 0–8 任何清单里——当前只有同版本重启与重试，需另立对或并入 Task 7/8 再定；③被认领的实例没有健康看门狗（它崩了状态不会自己翻 error，直到下次重启/重试）；④`runtime.json` 的 size/sha 是本机构建值，发布前需用发布件重算并回填 `urls`；⑤spec §4.6 写的「约 400 MB / 1.1 GB」与实测 315.0/840.4 MiB 不符（面板按清单取值，文字在 Task 8 回写；**Task 8 已改 315 MB／840 MB**）。
 
 ## Task 7 — 发布件、文档与门禁（spec §4.7、§4.8）
 
@@ -219,9 +219,9 @@
 - [x] `package.json`：去 `private`；`publishConfig.access=public`；`engines.dsh`（建议 `>=0.2.1-rc.2 <0.3.0`，Task 0 定值）；`files` 增 `runtime.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`；`dependencies.yauzl`；`repository`/`homepage` 用实际发布地址（未定则留占位并在发布前替换）。
 - [x] `LICENSE`：MIT 全文（10-25 已补）；`THIRD_PARTY_NOTICES.md` 保留 DeerFlow 与 DeepSeek Harness 的 MIT 声明；`runtime.json` 指真实 release URL、`size`/`unpackedSize`/`sha256`（未发布则保持占位并在 Task 8 标明「发布前回填」）。
 - [x] `market/index.json`：形态 1；npm source；`engines.dsh` 对齐；内联 SVG 图标；用 DSH 校验器（仓外一次性）验证通过。
-- [x] README：安装改为「装插件→首启在面板选位置并开始准备（约 400 MB）→配置嵌入模型」；并列三种安装命令（npm 包名、`git+https://…`、本地 `link:`），注明 GitHub 安装建议用 tag/commit；保留外部模式一节；给出默认/自定义根、`DSH_HOME`、换位需手工迁移、清理顺序、平台限制、索引添加方法；明确「官方市场未内置索引」；补「开发机已有 Qdrant 时托管会另起一个」「旧 `backend/.deer-flow` 数据不自动迁入」「杀软可能拦未签名 exe，如何加白」「视频默认 ASR 档需另装或改用服务档」。
+- [x] README：安装改为「装插件→首启在面板选位置并开始准备（实测约 315 MB）→配置嵌入模型」；并列三种安装命令（npm 包名、`git+https://…`、本地 `link:`），注明 GitHub 安装建议用 tag/commit；保留外部模式一节；给出默认/自定义根、`DSH_HOME`、换位需手工迁移、清理顺序、平台限制、索引添加方法；明确「官方市场未内置索引」；补「开发机已有 Qdrant 时托管会另起一个」「旧 `backend/.deer-flow` 数据不自动迁入」「杀软可能拦未签名 exe，如何加白」「视频默认 ASR 档需另装或改用服务档」。
 - [x] `npm pack --dry-run` 对照 `files`：不含 `engine/`、`scripts/`、`market/`、`docs/specs`、`docs/plans`、`node_modules`；含 `runtime.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`、`client.js`、`src/`；记录包大小（基线 307.6 kB tarball / 1.2 MB 解包，预计仍约 1.5 MB）。
-- [ ] 用 `git+https://<repo>.git` 在真实 DSH 装一次（仓库根是插件包），确认与 npm 安装等价、`runtime.json` 可读；记录 Git 安装的 `engines.dsh` 是装完后判定、失败会回滚 manifest/lock（与 registry 安装不同）。
+- [ ] 用 `git+https://<repo>.git` 在真实 DSH 装一次（仓库根是插件包），确认与 npm 安装等价、`runtime.json` 可读；记录 Git 安装的 `engines.dsh` 是装完后判定、失败会回滚 manifest/lock（与 registry 安装不同）。**待外部条件（无 remote；Task 8 外部动作⑦）。**
 - [x] 门禁：`node --check client.js`；`tsc`；`node --test tests/*.test.ts`；`engine/` 相对源 commit 只含预期改动；主树零 diff；token/key 扫描（提交面与包内容）。
 
 **实测（实施期回填）**：
@@ -236,14 +236,45 @@
 
 ## Task 8 — 收口（spec §5）
 
-> 动到的文件：本对 spec/plan＋Task 7 文档面。
+> 动到的文件：本对 spec/plan。
 
-- [ ] 回写 spec Status 与本 plan 各 Task 实测；未做项按「不做/后续」归位，不留悬空勾。
-- [ ] 真栈验收按 spec §5 逐条记录（1–19，含代理、种子可加载、退出中止下载），截图/日志路径仓外。
-- [ ] 发布相关外部动作单列：创建 GitHub 单仓并首推、归档旧引擎仓、npm 发布、同仓 GitHub Release、索引上线、`runtime.json` 回填 `urls`/`size`/`unpackedSize`/`sha256`——未执行则明确标「待外部条件」。
-- [ ] 逐文件核 hunk，排除 `node_modules/`、`dist/`、运行时 zip；提交信息英文 Conventional ASCII；回填提交链。
+- [x] 回写 spec Status 与本 plan 各 Task 实测；未做项按「不做/后续」归位，不留悬空勾。
+- [x] 真栈验收按 spec §5 逐条记录（1–19，含代理、种子可加载、退出中止下载），截图/日志路径仓外。
+- [x] 发布相关外部动作单列：创建 GitHub 单仓并首推、归档旧引擎仓、npm 发布、同仓 GitHub Release、索引上线、`runtime.json` 回填 `urls`/`size`/`unpackedSize`/`sha256`——未执行则明确标「待外部条件」。
+- [x] 逐文件核 hunk，排除 `node_modules/`、`dist/`、运行时 zip；提交信息英文 Conventional ASCII；回填提交链。
 
 **实测（实施期回填）**：
+
+- **spec 回写**：Status → 实施完成（发布待外部条件）；§4.6 面板体积文案 400 MB／1.1 GB → **315 MB／840 MB**（实测 zip 330,280,025 B、解压 881,198,854 B；面板本就按 `runtime.json` 取值）；§4.7 加「本期未实现」状态块、§7 增「不做版本化升级/回滚」；§4.8 更正占位语义（`urls: []`＝无下载源，已装运行时照用；size/sha 已随本地构建回填）与 npm 包体（37 文件 / 341.4 kB tarball / 1.4 MB 解包）。
+- **plan 销项**：Task 0 三处「实测缺口」、Task 3 两处未勾按实测结果收口（GitHub 安装转入外部条件；租约仅单测；换口重试登记后续）；Task 7 仅余 GitHub 安装一勾，带「待外部条件」。
+- **验收矩阵（spec §5，证据目录 `D:\hrag-t6`：构建、`cold-start.mjs` 驱动、真机根 `dsh-root`）**：
+
+| # | 验收项 | 结果 | 依据 |
+|---|---|---|---|
+| 1 | 全新环境 | **未验**（干净 Windows VM 未跑） | 结构上无系统依赖：子进程只用包内 `python/`、`qdrant/`；`uv` 仅构建期 |
+| 2 | 默认位置 | 已验 | 驱动 3 轮 `ready`；`runtime/`、`state/`、`config/` 齐全 |
+| 3 | 自定义位置 | 部分 | `configure`→自定根冷启动过（67.3/76.3 s）；原生选择器实点、DSH 重启走自定根未验 |
+| 4 | 选择器边界 | 部分 | 十种拒绝码与同步盘确认＝单测＋Task 5 探针；真实取消/UNC 选择未点 |
+| 5 | headless 首启 | **未验** | 代码有 2 s 宽限自动准备；无 headless profile 实跑 |
+| 6 | 锚点失效与下载失败 | 已验 | 单测（reason/needs_location）＋探针（红字/错误卡）；真机见过设置卡与错误卡 |
+| 7 | 二次启动 | 已验 | 认领 15/29/18 ms，不重下，数据保留 |
+| 8 | 外部模式 | 部分 | 单测（原样透传）＋探针（无门、直拉库列表）；本轮真机未跑（旧默认路径） |
+| 9 | 端口冲突 | 已验 | 真机 8020/6333 被占 ⇒ 8021/6334/6335；未杀占用进程 |
+| 10 | 崩溃恢复与双实例 | 部分 | kill 引擎 ⇒ `error`、重试起新栈＝单测＋驱动；两个真 DSH profile 并跑未验 |
+| 11 | 退出清理 | 部分 | `dispose` 后无残留＝驱动；DSH 正常退出/HMR 见 Task 6 未闭合①（只硬杀过整树） |
+| 12 | 升级/回滚 | 未实现 | 本期不做（§4.7 状态块、§7 已记）；换版本＝新目录重新准备，旧实例若在跑会被继续认领 |
+| 13 | 整体搬迁 | **未验** | 手工搬 `runtime/state/config`＋改锚点；路径逻辑仅单测 |
+| 14 | 鉴权 | 已验 | 200/401；token 只在 `state/service.json`，不进日志/种子配置/面板/`runtime/status`（日志扫描 0 命中） |
+| 15 | 完整性 | 部分 | sha/size 校验、篡改拒绝＝下载器单测；真包篡改未单独跑 |
+| 16 | 门禁 | 已验 | 见下节 |
+| 17 | 代理 | **未验** | 依赖宿主全局 dispatcher 与 `proxyEnvironmentForChild`（Task 0 取证）；本轮无代理环境 |
+| 18 | 种子可加载 | 已验 | 真引擎从种子启动：`/health` 200、带 token API 200、建库 201 |
+| 19 | 退出中止下载 | 部分 | abort 保留 `.part`／续传＝单测；DSH 退出中止未验 |
+
+- **本轮收口门禁**：`node --check client.js` 过；`tsc` 0 错；`node --test tests/*.test.ts` **198/198**；`npm pack --dry-run` **37 文件 / 341.4 kB / 1.4 MB**，不含 `engine/`、`scripts/`、`market/`、`tests/`、`docs/specs|plans`；`engine/` 1082 个文件按 blob 与源仓 `b34b2d572` **逐字节一致**（仅多 `UPSTREAM.md`）；引擎源仓 `git status` 空；主树 `deer-flow` 零新增改动（仅有 Task 0 基线的既存未提交面）；提交面密钥形扫描 0 命中；运行时日志无 `Bearer`/token。
+- **外部动作（待外部条件，未执行）**：①创建 GitHub 单仓并首推（仓库根＝插件包，`engine/` 随之）；②`package.json` 的 `OWNER` 占位替换为实际地址；③归档旧引擎仓；④npm 发布 `dsh-harness-rag@0.1.0`；⑤同仓 GitHub Release 上传运行时 zip → **用发布件重算并回填** `runtime.json.urls`/`size`/`unpackedSize`/`sha256` → 重发 npm（顺序：pack 先于引用它的 tag）；⑥`market/index.json` 上线并在 README 填索引 URL；⑦用 `git+https://<repo>.git` 在真 DSH 装一次（Task 0/7 的 GitHub 安装缺口）。
+- **归位（不做／后续）**：不做＝§4.7 版本化升级/回滚（spec §7）；后续真机验＝headless 首启(§5.5)、双 profile 租约(§5.10)、HMR／DSH 退出(§5.11)、整体搬迁(§5.13)、代理(§5.17)、退出中止下载(§5.19)、干净 VM(§5.1)、原生选择器与自定根重启(§5.3)、外部模式真机(§5.8)；登记缺口＝被认领实例无健康看门狗(Task 6 未闭合③)、spawn 后端口被抢不换口重试(Task 3 未闭合③)、`openBundle` 实参形状未在真宿主点过(Task 5 未闭合②)、坏 `location.json` 的 `warning` 未上屏(Task 5 未闭合④)、`needsEmbeddingConfig` 的环境变量钥匙仍是近似(Task 4 未闭合③，真机已核「种子未配模型⇒NULL」)。
+- **提交链**：见末节（Task 8 两笔待提交后回填）。
 
 ---
 
@@ -258,3 +289,4 @@
 - `75db19d` `docs(distribution): document the single-download install`（README 首启流程、运行根与外部模式）
 - `310b7cb` `docs(distribution): record task 7 results in the plan`（Task 7 勾选、实测与未闭合）
 - 待外部条件（Task 8）：npm 发布、同仓 GitHub Release、索引上线、`runtime.json.urls` 回填、`OWNER` 占位替换、GitHub 地址安装实测。Task 0–5 的笔次见 `1d63f4c` 及更早提交，本表自 Task 6 起滚动记实（记链笔自身不列）。
+- Task 8 收口（spec/plan 回写）与记链笔：待提交后回填。
