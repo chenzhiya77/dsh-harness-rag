@@ -33,7 +33,7 @@ dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.g
 
 ```text
 <root>/
-├─ runtime/<version>/     # 便携 Python、site-packages、engine 源码、qdrant（按版本保留上一版）
+├─ runtime/<version>/     # 便携 Python、site-packages、engine 源码、qdrant（按版本存放；当前不自动清理旧版）
 ├─ state/                 # data（sqlite 等）、logs、qdrant 存储、service.json、current.json、lease.json
 ├─ config/                # config.yaml、models_config.json、rag_config.json
 └─ downloads/             # 运行时包下载缓存（.part 可续传）
@@ -43,7 +43,7 @@ dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.g
 - **位置**：只在尚未安装运行时之前可以改。已有运行时想换位置，需要手工迁移：退出 DSH，把整个运行根拷到新位置，改好 `<DSH_HOME>/harness-rag/location.json` 里的 `root`（或删掉该锚点让它回到默认根）。
 - **清理**：先删 `state/`，再删 `runtime/`。
 - **卸载**：DSH 卸载只删插件包；运行根（含知识库数据）原样保留，需要时手工删除。
-- **升级**：插件升级不改 `runtime.json` 版本时不动运行时；换版本会下载新包并在下次启动切换。切换前**先备份 `state/` 与 `config/`**；回滚不保证数据兼容（新引擎可能已迁移存储）。
+- **升级**：插件升级不改 `runtime.json` 版本时不动运行时；换版本时，旧服务如果仍在运行，插件会继续认领旧版（不下载、不切换）；旧服务退出或清掉 `state/service.json` 后，重启/重试才准备并启动新版本。旧版本目录当前保留、不自动清理。升级前**先备份 `state/` 与 `config/`**；当前没有自动回滚，手工换回旧版也不保证数据兼容（新引擎可能已迁移存储）。
 - **旧数据**：旧部署的 `backend/.deer-flow` 不会自动迁入托管实例；要沿用它，请继续走外部模式，或手工拷贝。
 - **杀软**：运行时里的 `python.exe`/`qdrant.exe` 未签名，可能被 SmartScreen 或杀软拦截；把运行根加入信任即可。
 - **代理**：下载与引擎出网都跟随宿主/系统代理（`HTTPS_PROXY` 等），插件不覆盖宿主的 dispatcher。
