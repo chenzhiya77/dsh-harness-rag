@@ -3,7 +3,6 @@
   "description": "Harness RAG for DeepSeek Harness: three-path retrieval (hybrid/graph/wiki), document continuation reading, and a knowledge-base management panel over the Harness RAG knowledge service.",
   "version": "0.1.0",
   "icon": "./icon.svg",
-  "private": true,
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
@@ -13,13 +12,23 @@
     "./package.json": "./package.json"
   },
   "engines": {
-    "node": "^22.19.0 || >=24.0.0"
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.1-rc.2 <0.3.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OWNER/dsh-harness-rag.git"
+  },
+  "homepage": "https://github.com/OWNER/dsh-harness-rag#readme",
   "files": [
     "icon.svg",
     "src",
     "client.js",
     "cordis.patch.yml",
+    "presets",
     "locale",
     "docs/equivalence.md",
     "README.md",
