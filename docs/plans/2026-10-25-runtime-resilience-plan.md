@@ -60,14 +60,21 @@
 
 > 动到的文件：`src/runtime/supervisor.ts`、`tests/runtime_supervisor.test.ts`。
 
-- [ ] 测试先行：真实 `net` server 占住首选口、`isFree` 一律返回 true（模拟探空后被抢）⇒ 第一轮 spawn 撞 `EADDRINUSE` 退出 ⇒ 换口重跑一轮 ⇒ `ready`；`spawned.requests` 记录到两次 Qdrant spawn 且端口不同；两个候选口都被占 ⇒ 重试一次后按 `qdrant_exited` 失败，不无限重试。
-- [ ] 触发：子进程在就绪前退出且本轮新追加的该角色日志命中 `/(os error|Errno|winerror)\s*10048|EADDRINUSE|address already in use/i`，且本轮尚未重试。检测按偏移：`spawnChild` 返回后记 `statSync(log).size`，失败时只读该偏移之后（旧轮/旧会话的 bind 文本不得假命中）。
-- [ ] 动作：`killChildren()` → `planPorts({ preferred: { ...ports, [role]: ports[role] + 1 } })` → 重新 seed → 重跑一轮（Qdrant 与 engine 共用同一条重试路径）。
-- [ ] 代际校验：exit 回调闭包捕获本轮句柄，与当前 `qdrant`/`engine` 不一致则忽略——`crash()` 只看 `phase==='ready'`，第二轮 ready 后旧子进程的迟到 exit 会误翻状态。
-- [ ] 失败详情：第二轮失败时 `detail` 带 `after one retry`；非绑定原因的提前退出不重试。
-- [ ] 门禁：`node --test tests/runtime_supervisor.test.ts`；`tsc`。
+- [x] 测试先行：真实 `net` server 占住首选口、`isFree` 一律返回 true（模拟探空后被抢）⇒ 第一轮 spawn 撞 `EADDRINUSE` 退出 ⇒ 换口重跑一轮 ⇒ `ready`；`spawned.requests` 记录到两次 Qdrant spawn 且端口不同；两个候选口都被占 ⇒ 重试一次后按 `qdrant_exited` 失败，不无限重试。
+- [x] 触发：子进程在就绪前退出且本轮新追加的该角色日志命中 `/(os error|Errno|winerror)\s*10048|EADDRINUSE|address already in use/i`，且本轮尚未重试。检测按偏移：建 sink 后、spawn 前记 `statSync(log).size`，失败时只读该偏移之后（按字节切，中文报错不截断；旧轮/旧会话的 bind 文本不得假命中）。
+- [x] 动作：`killChildren()` → 等本轮子进程真正退出（≤3 s）→ 仅失败角色端口 +1（qdrant→`qdrantHttp`、engine→`knowledge`）重新 `planPorts` → 重新 seed → 重跑一轮（Qdrant 与 engine 共用同一条重试路径）。
+- [x] 代际校验：exit 回调判「本轮句柄是否仍是当前 `qdrant`/`engine`」，不是则忽略——`crash()` 只看 `phase==='ready'`，第二轮 ready 后旧子进程的迟到 exit 会误翻状态。
+- [x] 失败详情：第二轮失败时 `detail` 带 `after one retry`；非绑定原因的提前退出不重试。
+- [x] 门禁：`node --test tests/runtime_supervisor.test.ts`；`tsc`。
 
 **实测（实施期回填）**：
+
+- **实现**：`start()` 拆成「`planPorts` → seed → `runRound`」的可重入循环；`runRound(ports)` 返回 `ready` / `exited`（带失败角色与本轮日志）/ `timeout`。`spawnChild` 改为返回 `{ child, appended() }`：建 sink（含 2 MB 轮转）后、spawn 前取字节偏移，`readFrom` 用 `Buffer.subarray(offset).toString('utf8')` 按字节切——直接对字符串 `slice` 会因中文报错（UTF-16 码元与字节不等）截错。
+- **重试路径**：条件是「未重试 ＋ 就绪前退出 ＋ 本轮该角色日志命中 bind 特征」；`killChildren()` 后 `whenExited()` 等本轮句柄真正退出（每句柄一个 waiter，兜底 3 s、已退出立即返回），再只把失败角色端口 +1、重跑整轮。第二轮失败时 `detail` 形如 `exit 1 after one retry`。
+- **代际校验**：exit 包装先判 `qdrant !== qdrantSpawn.child`（engine 同理），旧轮被 kill 的迟到 exit 不会触发 `crash()`；`whenExited` 的退出状态挂在 `WeakMap<ChildHandle>` 上。
+- **测试**：4 条（qdrant 换口后 ready、两口都被占只重试一次、engine 换口只动 `knowledge` 且 qdrant 原口重启、非 bind 的 `process.exit(3)` 不重试）；占口用真实 `net` 监听，`probePort` 恒 true 模拟「探空到 spawn 之间被抢」。
+- **实施期修正**：重试的 `preferred` 键必须是 `qdrantHttp`/`knowledge`，不能用角色名；第一版 `{ ...ports, [outcome.role]: … }` 生成 `{ qdrant: … }` 被 `planPorts` 忽略，测试 14/16 转红后改正。
+- **门禁**：单文件 **25/25**；`tsc` 0 错；全量 `node --test tests/*.test.ts` **214/214**。neuter（重试分支短路 `false &&`）⇒ 3 条 retry 测试转红、其余 22 条仍绿；还原后 25/25。
 
 ---
 
@@ -100,7 +107,7 @@
 
 > 动到的文件：本对 spec/plan。
 
-- [ ] 门禁：`node --check client.js`；`tsc` 0 错；`node --test tests/*.test.ts` 全绿（Task 1 起 210 条，Task 2–4 再追加）。
+- [ ] 门禁：`node --check client.js`；`tsc` 0 错；`node --test tests/*.test.ts` 全绿（Task 1 起 210 条，Task 2 后 214 条，Task 3–4 再追加）。
 - [ ] 真机看门狗：外部模式或第二实例下认领一个服务，kill 掉 ⇒ ≤20 s 内 `runtime/status` 变 `error/adopted_unreachable`、`service.json` 仍在；重启服务后点重试回到 `ready/adopted`。
 - [ ] 真机锚点告警：写坏 `location.json` ⇒ 启动后 root 为默认根、`warning` 非空、面板出现横幅，库可读。
 - [ ] 真机嵌入判定：清空 `embedding_model` 且宿主环境设 `DASHSCOPE_API_KEY` ⇒ 横幅仍出现；配好模型后消失。

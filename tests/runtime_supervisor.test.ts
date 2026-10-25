@@ -486,6 +486,75 @@ test('watchdog: a self-managed stack does not schedule one', async (t) => {
   assert.equal(timers.count(WATCHDOG_MS), 0)
 })
 
+// ── startup port retry ──────────────────────────────────────────────────────
+
+/** A real listener on the planned port: `probePort` still reports it free, so
+ * the bind failure only shows up when the child starts. */
+async function occupy(t: TestContext, port: number): Promise<void> {
+  const server = createNetServer()
+  await new Promise<void>((resolve) => server.listen(port, '127.0.0.1', resolve))
+  t.after(() => server.close())
+}
+
+const isQdrant = (request: SpawnRequest): boolean => request.command.endsWith('qdrant.exe')
+const enginePortOf = (request: SpawnRequest): number => Number(request.args[request.args.indexOf('--port') + 1])
+
+test('retry: a stolen qdrant port is re-planned once and the stack comes up', async (t) => {
+  const f = await fixture(t)
+  await occupy(t, f.preferredPorts.qdrantHttp)
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'ready')
+  const qdrantPorts = f.spawned.requests
+    .filter(isQdrant)
+    .map((request) => Number(request.env.QDRANT__SERVICE__HTTP_PORT))
+  assert.deepEqual(qdrantPorts, [f.preferredPorts.qdrantHttp, f.preferredPorts.qdrantHttp + 1])
+  const rag = JSON.parse(readFileSync(join(f.root, 'config', 'rag_config.json'), 'utf8'))
+  assert.equal(rag.qdrant_url, `http://127.0.0.1:${f.preferredPorts.qdrantHttp + 1}`)
+})
+
+test('retry: a second bind failure reports qdrant_exited after one retry', async (t) => {
+  const f = await fixture(t)
+  await occupy(t, f.preferredPorts.qdrantHttp)
+  await occupy(t, f.preferredPorts.qdrantHttp + 1)
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'error')
+  assert.equal(status.error?.code, 'qdrant_exited')
+  assert.match(status.error?.detail ?? '', /after one retry/)
+  assert.equal(f.spawned.requests.filter(isQdrant).length, 2)
+  assert.equal(f.spawned.requests.filter((request) => !isQdrant(request)).length, 0)
+})
+
+test('retry: an engine bind failure re-plans only the engine port', async (t) => {
+  const f = await fixture(t)
+  await occupy(t, f.preferredPorts.knowledge)
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'ready')
+  const qdrantPorts = f.spawned.requests
+    .filter(isQdrant)
+    .map((request) => Number(request.env.QDRANT__SERVICE__HTTP_PORT))
+  const enginePorts = f.spawned.requests.filter((request) => !isQdrant(request)).map(enginePortOf)
+  assert.deepEqual(qdrantPorts, [f.preferredPorts.qdrantHttp, f.preferredPorts.qdrantHttp])
+  assert.deepEqual(enginePorts, [f.preferredPorts.knowledge, f.preferredPorts.knowledge + 1])
+})
+
+test('retry: a startup failure without bind text is not retried', async (t) => {
+  const f = await fixture(t, 'crash-engine')
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'error')
+  assert.equal(status.error?.code, 'engine_exited')
+  assert.doesNotMatch(status.error?.detail ?? '', /after one retry/)
+  assert.equal(f.spawned.requests.filter(isQdrant).length, 1)
+  assert.equal(f.spawned.requests.filter((request) => !isQdrant(request)).length, 1)
+})
+
 // ── failures ────────────────────────────────────────────────────────────────
 
 test('fail: an engine that exits during startup reports its phase, not a timeout', async (t) => {

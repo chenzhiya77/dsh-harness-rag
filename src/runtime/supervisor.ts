@@ -142,6 +142,28 @@ function tailOf(path: string, lines = LOG_TAIL_LINES): string {
   }
 }
 
+/** Only the bytes this round appended: an older run's bind error must not
+ * trigger a retry. */
+function readFrom(path: string, offset: number): string {
+  try {
+    return readFileSync(path).subarray(offset).toString('utf8')
+  } catch {
+    return ''
+  }
+}
+
+function sizeOf(path: string): number {
+  try {
+    return statSync(path).size
+  } catch {
+    return 0
+  }
+}
+
+/** Windows reports the port conflict as a numeric code; the English phrase only
+ * appears on English locales. */
+const BIND_FAILURE = /(os error|Errno|winerror)\s*10048|EADDRINUSE|address already in use/i
+
 export function createSupervisor(options: SupervisorOptions): Supervisor {
   const root = options.root
   const runtimeVersion = options.runtimeVersion
@@ -343,13 +365,41 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     }
   }
 
-  const spawnChild = (request: SpawnRequest, logName: string, onExit: (code: number | null) => void): ChildHandle => {
+  const exitWatchers = new WeakMap<ChildHandle, { exited: boolean; waiters: Array<() => void> }>()
+
+  /** The offset is taken before the child starts and after the sink's rotation,
+   * so `appended()` only ever returns this round's output. */
+  const spawnChild = (
+    request: SpawnRequest,
+    logName: string,
+    onExit: (code: number | null) => void,
+  ): { child: ChildHandle; appended: () => string } => {
     const sink = createLogSink(join(logs, logName), maxLogBytes)
+    const offset = sizeOf(sink.path)
     const child = options.spawn(request)
+    const state = { exited: false, waiters: [] as Array<() => void> }
+    exitWatchers.set(child, state)
     child.onData('stdout', (chunk) => sink.write(chunk))
     child.onData('stderr', (chunk) => sink.write(chunk))
-    child.onExit(onExit)
-    return child
+    child.onExit((code) => {
+      state.exited = true
+      for (const waiter of state.waiters.splice(0)) waiter()
+      onExit(code)
+    })
+    return { child, appended: () => readFrom(sink.path, offset) }
+  }
+
+  /** Windows termination is asynchronous: a retry must not rebind a port the
+   * previous child still holds. Resolves on exit, or after a bounded wait. */
+  const whenExited = (child: ChildHandle | null): Promise<void> => {
+    if (!child) return Promise.resolve()
+    const state = exitWatchers.get(child)
+    if (!state || state.exited) return Promise.resolve()
+    return new Promise((resolve) => {
+      state.waiters.push(resolve)
+      const timer = setTimeout(resolve, 3_000)
+      timer.unref?.()
+    })
   }
 
   const qdrantRequest = (ports: PortPlan): SpawnRequest => ({
@@ -430,6 +480,58 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     rmSync(statePath, { force: true })
   }
 
+  type RoundOutcome =
+    | { kind: 'ready' }
+    | { kind: 'exited'; role: 'qdrant' | 'engine'; code: number | null | undefined; log: string }
+    | { kind: 'timeout'; role: 'qdrant' | 'engine' }
+
+  /** One attempt: Qdrant first, the engine second. Killed children are the
+   * caller's business, so a retry can rebuild the round from planPorts. */
+  const runRound = async (ports: PortPlan): Promise<RoundOutcome> => {
+    let qdrantExit: number | null | undefined
+    const qdrantSpawn = spawnChild(qdrantRequest(ports), 'qdrant.log', (code) => {
+      if (qdrant !== qdrantSpawn.child) return
+      qdrantExit = code ?? -1
+      crash('qdrant', code)
+    })
+    qdrant = qdrantSpawn.child
+    const qdrantReady = await waitFor(
+      () => probe(`http://127.0.0.1:${ports.qdrantHttp}/readyz`),
+      () => qdrant,
+      () => qdrantExit !== undefined,
+    )
+    if (qdrantReady !== 'ready') {
+      return qdrantReady === 'exited'
+        ? { kind: 'exited', role: 'qdrant', code: qdrantExit, log: qdrantSpawn.appended() }
+        : { kind: 'timeout', role: 'qdrant' }
+    }
+
+    let engineExit: number | null | undefined
+    const engineSpawn = spawnChild(engineRequest(ports, token), 'engine.log', (code) => {
+      if (engine !== engineSpawn.child) return
+      engineExit = code ?? -1
+      crash('engine', code)
+    })
+    engine = engineSpawn.child
+    const engineReady = await waitFor(
+      () =>
+        probe(`http://127.0.0.1:${ports.knowledge}/health`).then(async (healthy) => {
+          if (!healthy) return false
+          return probe(`http://127.0.0.1:${ports.knowledge}/api/knowledge-bases`, {
+            authorization: `Bearer ${token}`,
+          })
+        }),
+      () => engine,
+      () => engineExit !== undefined,
+    )
+    if (engineReady !== 'ready') {
+      return engineReady === 'exited'
+        ? { kind: 'exited', role: 'engine', code: engineExit, log: engineSpawn.appended() }
+        : { kind: 'timeout', role: 'engine' }
+    }
+    return { kind: 'ready' }
+  }
+
   const start = async (): Promise<RuntimeStatusView> => {
     stopWatchdog()
     setPhase({ phase: 'preparing', adopted: false, error: undefined, logTail: '' })
@@ -451,72 +553,60 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     if (acquireLease() === 'held') return fail('lease', 'lease_held')
     cleanStale()
 
-    const planned = await planPorts({
-      preferred: options.preferredPorts,
-      isFree: (port) => probePort(port),
-    })
-    if (!planned.ok) return fail('ports', planned.code, planned.role)
-    const ports = planned.ports
-    setPhase({ ports })
+    let preferred: Partial<PortPlan> | undefined = options.preferredPorts
+    let retried = false
+    for (;;) {
+      const planned = await planPorts({
+        preferred,
+        isFree: (port) => probePort(port),
+      })
+      if (!planned.ok) return fail('ports', planned.code, planned.role)
+      const ports = planned.ports
+      setPhase({ ports })
 
-    const seeded = seedRuntimeConfig({
-      root,
-      engineRoot: join(runtime, 'engine'),
-      qdrantUrl: `http://127.0.0.1:${ports.qdrantHttp}`,
-    })
-    if (!seeded.ok) return fail('seed', seeded.code, seeded.detail)
+      const seeded = seedRuntimeConfig({
+        root,
+        engineRoot: join(runtime, 'engine'),
+        qdrantUrl: `http://127.0.0.1:${ports.qdrantHttp}`,
+      })
+      if (!seeded.ok) return fail('seed', seeded.code, seeded.detail)
 
-    let qdrantExit: number | null | undefined
-    qdrant = spawnChild(qdrantRequest(ports), 'qdrant.log', (code) => {
-      qdrantExit = code ?? -1
-      crash('qdrant', code)
-    })
-    const qdrantReady = await waitFor(
-      () => probe(`http://127.0.0.1:${ports.qdrantHttp}/readyz`),
-      () => qdrant,
-      () => qdrantExit !== undefined,
-    )
-    if (qdrantReady !== 'ready') {
-      return qdrantReady === 'exited'
-        ? fail('qdrant', 'qdrant_exited', `exit ${String(qdrantExit)}`)
-        : fail('qdrant', 'qdrant_not_ready')
+      const outcome = await runRound(ports)
+      if (outcome.kind === 'ready') {
+        writeJson(statePath, {
+          version: 1,
+          pid: engine?.pid ?? null,
+          qdrantPid: qdrant?.pid ?? null,
+          runtimeVersion,
+          token,
+          ports,
+          startedAt: now(),
+        })
+        markCurrent(runtimeVersion)
+        onReady?.()
+        setPhase({ phase: 'ready', adopted: false, error: undefined, logTail: currentLogTail() })
+        return status
+      }
+
+      // Only a bind conflict earns the one retry: a real startup failure must
+      // not double its own failure time.
+      if (!retried && outcome.kind === 'exited' && BIND_FAILURE.test(outcome.log)) {
+        retried = true
+        const children = [qdrant, engine]
+        killChildren()
+        await Promise.all(children.map((child) => whenExited(child)))
+        const next = { ...ports }
+        const key = outcome.role === 'qdrant' ? 'qdrantHttp' : 'knowledge'
+        next[key] = ports[key] + 1
+        preferred = next
+        continue
+      }
+
+      const suffix = retried ? ' after one retry' : ''
+      return outcome.kind === 'exited'
+        ? fail(outcome.role, `${outcome.role}_exited`, `exit ${String(outcome.code)}${suffix}`)
+        : fail(outcome.role, `${outcome.role}_not_ready`)
     }
-
-    let engineExit: number | null | undefined
-    engine = spawnChild(engineRequest(ports, token), 'engine.log', (code) => {
-      engineExit = code ?? -1
-      crash('engine', code)
-    })
-    const engineReady = await waitFor(
-      () =>
-        probe(`http://127.0.0.1:${ports.knowledge}/health`).then(async (healthy) => {
-          if (!healthy) return false
-          return probe(`http://127.0.0.1:${ports.knowledge}/api/knowledge-bases`, {
-            authorization: `Bearer ${token}`,
-          })
-        }),
-      () => engine,
-      () => engineExit !== undefined,
-    )
-    if (engineReady !== 'ready') {
-      return engineReady === 'exited'
-        ? fail('engine', 'engine_exited', `exit ${String(engineExit)}`)
-        : fail('engine', 'engine_not_ready')
-    }
-
-    writeJson(statePath, {
-      version: 1,
-      pid: engine.pid ?? null,
-      qdrantPid: qdrant.pid ?? null,
-      runtimeVersion,
-      token,
-      ports,
-      startedAt: now(),
-    })
-    markCurrent(runtimeVersion)
-    onReady?.()
-    setPhase({ phase: 'ready', adopted: false, error: undefined, logTail: currentLogTail() })
-    return status
   }
 
   const ensure = async (): Promise<RuntimeStatusView> => {
