@@ -82,12 +82,17 @@
 
 > 动到的文件：`src/runtime/ops.ts`、`client.js`、`tests/runtime_ops.test.ts`。
 
-- [ ] 测试先行：`resolveRoot` 返回 `warning` 时 `statusPayload.warning` 透出；`needs_location` 时不下发 `warning`；external 模式不下发。
-- [ ] `RuntimeStatusPayload` 增加可选 `warning`，仅在 `resolved.kind === 'ok' && resolved.warning` 时写入。
-- [ ] 客户端：`runtime.warning` 存在时在 `.hrag-root` 级渲染 `.hrag-rt-banner`（与嵌入横幅同槽位），文案新键 `rt.warnAnchor`（zh/en），右侧关闭钮复用 `.hrag-rt-bannerclose`；关闭仅本次挂载，不持久化。
-- [ ] 门禁：`node --test tests/runtime_ops.test.ts`；`node --check client.js`；`tsc`。
+- [x] 测试先行：`resolveRoot` 返回 `warning` 时 `statusPayload.warning` 透出；`needs_location` 时不下发 `warning`；external 模式不下发。
+- [x] `RuntimeStatusPayload` 增加可选 `warning`，仅在 `resolved.kind === 'ok' && resolved.warning` 时写入。
+- [x] 客户端：`runtime.warning` 存在时在 `.hrag-root` 级渲染 `.hrag-rt-banner`（与嵌入横幅同槽位，排在它上面），文案新键 `rt.warnAnchor`（zh/en）＋原始原因，右侧关闭钮复用 `.hrag-rt-bannerclose`；关闭仅本次挂载，不持久化。
+- [x] 门禁：`node --test tests/runtime_ops.test.ts`；`node --check client.js`；`tsc`。
 
 **实测（实施期回填）**：
+
+- **服务端**：`RuntimeStatusPayload` 新增可选 `warning`；`statusPayload` 在 `resolved.kind === 'ok' && resolved.warning` 时透出。external 在 `ops.ts:78-87` 早退、`needs_location` 走 `previousRoot/reason` 另一支，两者都不会带 `warning`。
+- **面板**：`.hrag-root` 的直接子节点、嵌入横幅之前渲染 `.hrag-rt-banner`，内容＝`rt.warnAnchor`＋括号内的原始原因；关闭钮复用 `.hrag-rt-bannerclose` 与 `rt.dismiss`；`anchorWarnOff` 只在本挂载内有效。
+- **测试**：3 条（坏 JSON ⇒ `warning` 含 `not valid JSON`、root 回退默认、无 `previousRoot`；`needs_location` 不带 `warning`；external 不带 `warning`）。
+- **门禁**：`node --test tests/runtime_ops.test.ts` **20/20**；`node --check client.js` 过；`tsc` 0 错；全量 **216/216**。neuter（注释掉 `payload.warning` 赋值）⇒ 1 条转红，还原后 20/20。客户端横幅无单测，观感与真机行为留给 Task 5 的锚点验收。
 
 ---
 
@@ -107,7 +112,7 @@
 
 > 动到的文件：本对 spec/plan。
 
-- [ ] 门禁：`node --check client.js`；`tsc` 0 错；`node --test tests/*.test.ts` 全绿（Task 1 起 210 条，Task 2 后 214 条，Task 3–4 再追加）。
+- [ ] 门禁：`node --check client.js`；`tsc` 0 错；`node --test tests/*.test.ts` 全绿（Task 1 起 210 条，Task 2 后 214 条，Task 3 后 216 条，Task 4 再追加）。
 - [ ] 真机看门狗：外部模式或第二实例下认领一个服务，kill 掉 ⇒ ≤20 s 内 `runtime/status` 变 `error/adopted_unreachable`、`service.json` 仍在；重启服务后点重试回到 `ready/adopted`。
 - [ ] 真机锚点告警：写坏 `location.json` ⇒ 启动后 root 为默认根、`warning` 非空、面板出现横幅，库可读。
 - [ ] 真机嵌入判定：清空 `embedding_model` 且宿主环境设 `DASHSCOPE_API_KEY` ⇒ 横幅仍出现；配好模型后消失。

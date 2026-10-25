@@ -99,6 +99,7 @@ window.__ModuleLoader__.load({
       'rt.embedBanner': '本地服务已就绪；配置嵌入模型后即可上传文档',
       'rt.embedAction': '去配置',
       'rt.dismiss': '关闭',
+      'rt.warnAnchor': '位置文件无法读取，已改用默认位置',
       'rt.qdrantManaged': '由内置服务管理',
       'shell.upload': '上传',
       'upload.uploading': '上传中…',
@@ -1003,6 +1004,7 @@ window.__ModuleLoader__.load({
       'rt.embedBanner': 'The local service is ready; configure an embedding model to start uploading documents',
       'rt.embedAction': 'Configure',
       'rt.dismiss': 'Dismiss',
+      'rt.warnAnchor': 'The location file could not be read; using the default location',
       'rt.qdrantManaged': 'Managed by the built-in service',
       'shell.upload': 'Upload',
       'upload.uploading': 'Uploading…',
@@ -20964,6 +20966,7 @@ window.__ModuleLoader__.load({
       const [runtimeSetupForced, setRuntimeSetupForced] = React.useState(false)
       const [runtimeCopied, setRuntimeCopied] = React.useState(false)
       const [embedBannerOff, setEmbedBannerOff] = React.useState(false)
+      const [anchorWarnOff, setAnchorWarnOff] = React.useState(false)
       const [connectHint, setConnectHint] = React.useState(false)
       const runtimeLoadedRef = React.useRef(false)
 
@@ -21965,6 +21968,25 @@ window.__ModuleLoader__.load({
             onDragLeave: panelDragLeave,
             onDrop: panelDrop,
           },
+          // 锚点告警（Task 3）：location.json 读不出来，服务已回退默认位置；只提示，不阻断。
+          runtime && runtime.mode === 'managed' && runtime.warning && !anchorWarnOff
+            ? h(
+                'div',
+                { className: 'hrag-rt-banner' },
+                h('span', null, t('rt.warnAnchor') + ' (' + runtime.warning + ')'),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-rt-bannerclose',
+                    'aria-label': t('rt.dismiss'),
+                    title: t('rt.dismiss'),
+                    onClick: () => setAnchorWarnOff(true),
+                  },
+                  dshCloseIcon(),
+                ),
+              )
+            : null,
           // 引导横幅（Task 5）：托管模式已就绪但还没配嵌入模型，可关；空库态也显示。
           runtime && runtime.mode === 'managed' && runtime.phase === 'ready' && runtime.needsEmbeddingConfig && !embedBannerOff
             ? h(

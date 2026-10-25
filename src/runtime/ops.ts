@@ -26,6 +26,8 @@ export interface RuntimeStatusPayload {
   anchorRoot: string
   previousRoot?: string
   reason?: string
+  /** The anchor file was unreadable; this root is the default fallback. */
+  warning?: string
   version: string
   ports?: PortPlan
   progress?: DownloadProgress
@@ -101,6 +103,7 @@ export function statusPayload(deps: RuntimeOpsDeps): RuntimeStatusPayload {
     installed: existsSync(join(stateDir(root), 'current.json')),
     paths: layoutOf(root),
   }
+  if (resolved.kind === 'ok' && resolved.warning) payload.warning = resolved.warning
   if (needsLocation) {
     payload.previousRoot = resolved.previousRoot
     payload.reason = resolved.reason

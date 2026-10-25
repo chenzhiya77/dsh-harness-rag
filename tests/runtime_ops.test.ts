@@ -121,6 +121,30 @@ test('status: a recorded root that vanished asks for a location', () => {
   assert.equal(payload.phase, 'needs_location')
   assert.equal(payload.previousRoot, gone)
   assert.match(payload.reason ?? '', /does not exist/)
+  assert.equal(payload.warning, undefined)
+})
+
+test('status: a malformed anchor falls back to the default root and reports why', () => {
+  const f = fixture({}, 'ready')
+  mkdirSync(f.anchorRoot, { recursive: true })
+  writeFileSync(join(f.anchorRoot, 'location.json'), '{not json')
+
+  const payload = statusPayload(f.deps)
+
+  assert.equal(payload.phase, 'ready')
+  assert.equal(payload.root, join(f.home, 'harness-rag'))
+  assert.match(payload.warning ?? '', /not valid JSON/)
+  assert.equal(payload.previousRoot, undefined)
+})
+
+test('status: external mode never reports an anchor warning', () => {
+  const f = fixture({ config: { ...defaultConfig, backendUrl: 'http://127.0.0.1:8020' } })
+  mkdirSync(f.anchorRoot, { recursive: true })
+  writeFileSync(join(f.anchorRoot, 'location.json'), '{not json')
+
+  const payload = statusPayload(f.deps)
+
+  assert.equal(payload.warning, undefined)
 })
 
 test('status: headless ignores a broken anchor and follows the default root', () => {
