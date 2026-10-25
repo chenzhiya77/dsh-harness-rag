@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Body, File, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import FileResponse
@@ -151,6 +151,72 @@ class VectorProjectionQueryRequest(BaseModel):
         if not value:
             raise ValueError("text must not be blank")
         return value
+
+
+class ToolCallBase(BaseModel):
+    """One model-facing tool call; ``run_id`` scopes the shared citation counter.
+
+    The model-facing seam is deliberately separate from ``recall-test``: the
+    panel projection trims fields and strips the citation note, while tools
+    must receive the native ``_*_impl`` payload. ``extra="forbid"`` makes a
+    misplaced parameter (e.g. ``doc_id`` on graph_search) fail loudly instead
+    of being silently ignored.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str | None = Field(default=None, max_length=200, pattern=r"^[A-Za-z0-9._:-]+$")
+
+
+class HybridSearchToolCall(ToolCallBase):
+    name: Literal["hybrid_search"]
+    query: str
+    top_k: int = Field(default=5, ge=1, le=20)
+    doc_id: str | None = None
+
+    @field_validator("query")
+    @classmethod
+    def _query_not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("query must not be blank")
+        return value
+
+
+class GraphSearchToolCall(ToolCallBase):
+    name: Literal["graph_search"]
+    query: str | None = None
+    entity: str | None = None
+    hops: Literal[1, 2] = 2
+
+
+class WikiSearchToolCall(ToolCallBase):
+    name: Literal["wiki_search"]
+    query: str | None = None
+    title: str | None = None
+    top_k: int = Field(default=3, ge=1, le=20)
+
+
+class ListDocumentsToolCall(ToolCallBase):
+    name: Literal["list_knowledge_documents"]
+
+
+class ReadDocumentToolCall(ToolCallBase):
+    name: Literal["read_knowledge_document"]
+    doc_id: str | None = None
+    chunk_id: str | None = None
+    offset: int = Field(default=0, ge=0)
+    limit: int = Field(default=20, ge=1, le=50)
+
+
+class ListWikiEntriesToolCall(ToolCallBase):
+    name: Literal["list_wiki_entries"]
+
+
+ToolCall = Annotated[
+    HybridSearchToolCall | GraphSearchToolCall | WikiSearchToolCall | ListDocumentsToolCall | ReadDocumentToolCall | ListWikiEntriesToolCall,
+    Field(discriminator="name"),
+]
 
 
 def _service(request: Request) -> KnowledgeService:
@@ -692,6 +758,16 @@ async def recall_test(request: Request, kb_id: str, body: RecallTestRequest):
     """
     service = await _require_kb_access(request, kb_id)
     return await service.recall_test(kb_id=kb_id, user_id=_user_id(request), query=body.query, top_k=body.top_k, path=body.path)
+
+
+@router.post("/{kb_id}/tools")
+async def call_tool(request: Request, kb_id: str, body: ToolCall):
+    """Model-facing tool seam: one native tool call, no recall-test projection."""
+    service = await _require_kb_access(request, kb_id)
+    payload = body.model_dump()
+    name = payload.pop("name")
+    run_id = payload.pop("run_id", None)
+    return await service.run_tool(kb_id=kb_id, user_id=_user_id(request), name=name, args=payload, run_id=run_id)
 
 
 class ChunkPositionsRequest(BaseModel):

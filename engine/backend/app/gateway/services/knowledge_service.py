@@ -58,6 +58,8 @@ from deerflow.uploads.manager import normalize_filename
 from deerflow.utils.file_io import run_file_io
 from deerflow.utils.time import coerce_iso
 
+from .citation_runs import CitationRunCache
+
 #: 历史列表单页上限（spec 2026-08-27 §6.1）——超出直接 clamp，不报错。
 MAX_EVAL_RUNS_LIMIT = 200
 
@@ -69,6 +71,11 @@ logger = logging.getLogger(__name__)
 _hybrid_search_impl: Any = None
 _graph_search_impl: Any = None
 _wiki_search_impl: Any = None
+
+
+_list_documents_impl: Any = None
+_read_document_impl: Any = None
+_list_wiki_entries_impl: Any = None
 
 
 def _load_search_impls() -> None:
@@ -85,6 +92,24 @@ def _load_search_impls() -> None:
         from deerflow.tools.builtins.wiki_search_tool import _wiki_search_impl as wiki_impl
 
         _wiki_search_impl = wiki_impl
+
+
+def _load_document_impls() -> None:
+    global _list_documents_impl, _read_document_impl, _list_wiki_entries_impl
+    if _list_documents_impl is None:
+        from deerflow.tools.builtins.knowledge_documents_tool import (
+            _list_documents_impl as list_documents_impl,
+        )
+        from deerflow.tools.builtins.knowledge_documents_tool import (
+            _read_document_impl as read_document_impl,
+        )
+
+        _list_documents_impl = list_documents_impl
+        _read_document_impl = read_document_impl
+    if _list_wiki_entries_impl is None:
+        from deerflow.tools.builtins.wiki_entries_tool import _list_wiki_entries_impl as list_wiki_entries_impl
+
+        _list_wiki_entries_impl = list_wiki_entries_impl
 
 
 class DocumentProcessingError(RuntimeError):
@@ -273,6 +298,7 @@ class KnowledgeService:
         self.synthesis_trigger_fn = synthesis_trigger_fn or self._schedule_question_synthesis
         self.reindex_fn = reindex_fn or self._schedule_reindex
         self.projection_cache = projection_cache or ProjectionCache()
+        self._citation_runs = CitationRunCache()
         self._wiki_tasks: set[asyncio.Task[None]] = set()
         self._eval_tasks: set[asyncio.Task[None]] = set()
         self._synthesis_tasks: set[asyncio.Task[None]] = set()
@@ -1143,6 +1169,23 @@ class KnowledgeService:
         source = graph_source if graph_source is not None else ("rerank" if rag.graph_rerank else "cosine")
         return {"vector": rerank_label, "graph": rerank_label if source == "rerank" else "embedding cosine", "wiki": "embedding cosine"}
 
+    @staticmethod
+    def _graph_search_kwargs(rag: Any, evidence_limit: int) -> dict[str, Any]:
+        """Config-driven graph knobs shared by recall-test and the model tool seam."""
+        return {
+            "reranker": build_reranker() if rag.graph_rerank else None,
+            "per_entity_cap": rag.graph_per_entity_cap,
+            "per_edge_cap": rag.graph_per_edge_cap,
+            "hop0_guarantee": rag.graph_hop0_guarantee,
+            "evidence_limit": evidence_limit,
+            "graph_rerank": rag.graph_rerank,
+            "rerank_threshold": rag.graph_rerank_threshold,
+            "hop_penalty": rag.graph_hop_penalty,
+            "neighbor_min_score": rag.graph_neighbor_min_score,
+            "max_expanded_nodes": rag.graph_max_expanded_nodes,
+            "hub_degree_threshold": rag.graph_hub_degree_threshold,
+        }
+
     async def recall_test(self, *, kb_id: str, user_id: str, query: str, top_k: int, path: str | None = None) -> dict[str, Any]:
         """Fan one query out to the three retrieval paths (spec P1).
 
@@ -1194,19 +1237,8 @@ class KnowledgeService:
                     store=self.store,
                     graph_store=self.graph_store,
                     vector_store=self.vector_store,
-                    # mirror the online wrapper's config-driven parameters;
-                    # the recall test's top_k maps to evidence_limit
-                    reranker=build_reranker() if rag.graph_rerank else None,
-                    per_entity_cap=rag.graph_per_entity_cap,
-                    per_edge_cap=rag.graph_per_edge_cap,
-                    hop0_guarantee=rag.graph_hop0_guarantee,
-                    evidence_limit=top_k,
-                    graph_rerank=rag.graph_rerank,
-                    rerank_threshold=rag.graph_rerank_threshold,
-                    hop_penalty=rag.graph_hop_penalty,
-                    neighbor_min_score=rag.graph_neighbor_min_score,
-                    max_expanded_nodes=rag.graph_max_expanded_nodes,
-                    hub_degree_threshold=rag.graph_hub_degree_threshold,
+                    # The recall test's top_k maps to evidence_limit.
+                    **self._graph_search_kwargs(rag, top_k),
                 )
             )
 
@@ -1343,6 +1375,73 @@ class KnowledgeService:
             "elapsed_ms": {"vector": vector_ms, "graph": graph_ms, "wiki": wiki_ms},
             **mismatch_flag,
         }
+
+    # ── model tool calls ─────────────────────────────────────────────────
+
+    def _tool_runtime(self, *, kb_id: str, user_id: str, run_id: str | None = None) -> SimpleNamespace:
+        """Runtime for one model tool call; ``run_id`` shares the citation counter."""
+        context = self._citation_runs.context(user_id=user_id, run_id=run_id) if run_id else {}
+        context["kb_id"] = kb_id
+        context["user_id"] = user_id
+        return SimpleNamespace(context=context)
+
+    async def run_tool(self, *, kb_id: str, user_id: str, name: str, args: dict[str, Any], run_id: str | None = None) -> dict[str, Any]:
+        """Dispatch one model-facing call to the native ``_*_impl``.
+
+        The native payload (including the model-directed citation note) is
+        returned unchanged; ``recall-test`` keeps its own panel projection.
+        """
+        if name in ("hybrid_search", "graph_search", "wiki_search"):
+            from deerflow.config.app_config import get_app_config
+
+            _load_search_impls()
+            rag = get_app_config().rag
+            runtime = self._tool_runtime(kb_id=kb_id, user_id=user_id, run_id=run_id)
+            if name == "hybrid_search":
+                return await _hybrid_search_impl(
+                    args["query"],
+                    runtime,
+                    store=self.store,
+                    vector_store=self.vector_store,
+                    top_k=args["top_k"],
+                    doc_id=args.get("doc_id"),
+                )
+            if name == "graph_search":
+                return await _graph_search_impl(
+                    args.get("query"),
+                    runtime,
+                    entity=args.get("entity"),
+                    hops=args["hops"],
+                    store=self.store,
+                    graph_store=self.graph_store,
+                    vector_store=self.vector_store,
+                    **self._graph_search_kwargs(rag, rag.graph_evidence_limit),
+                )
+            return await _wiki_search_impl(
+                args.get("query"),
+                runtime,
+                title=args.get("title"),
+                store=self.store,
+                wiki_store=self.wiki_store,
+                vector_store=self.vector_store,
+                top_k=args["top_k"],
+            )
+        if name in ("list_knowledge_documents", "read_knowledge_document", "list_wiki_entries"):
+            _load_document_impls()
+            runtime = self._tool_runtime(kb_id=kb_id, user_id=user_id, run_id=run_id)
+            if name == "list_knowledge_documents":
+                return await _list_documents_impl(runtime, store=self.store)
+            if name == "read_knowledge_document":
+                return await _read_document_impl(
+                    runtime,
+                    doc_id=args.get("doc_id"),
+                    chunk_id=args.get("chunk_id"),
+                    offset=args["offset"],
+                    limit=args["limit"],
+                    store=self.store,
+                )
+            return await _list_wiki_entries_impl(runtime, store=self.store, wiki_store=self.wiki_store)
+        raise ValueError(f"unknown tool: {name}")
 
     async def _chunk_position_map(self, chunk_ids: Iterable[str]) -> dict[str, int]:
         """chunk_id → 文档存活切片中的位次（1-based，chunk_index 升序，空洞不占位）。
