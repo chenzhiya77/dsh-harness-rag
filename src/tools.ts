@@ -238,5 +238,39 @@ export function buildToolDefinitions(config: Config, bindings: BindingsStore) {
     },
   }))
 
+  definitions.push(defineTool({
+    name: 'hrag_list_wiki_entries',
+    description: 'List the generated wiki entries of a knowledge base (titles + status). Entries cover only head entities that passed the eligibility bar; use hrag_wiki_search for entry content.',
+    parameters: {
+      kb_id: { type: 'string' as const, description: kbDescription },
+    },
+    output: output({
+      kb_id: { type: 'string' },
+      kb_name: { type: 'string' },
+      entries: { type: 'json' },
+      message: { type: 'string' },
+    }),
+    async execute(args, exec) {
+      const target = kb(args, exec)
+      const payload = await api<Record<string, unknown> | null>(
+        config,
+        `/api/knowledge-bases/${target.kbId}/wiki/entries`,
+        { signal: exec.signal },
+      )
+      const rows = Array.isArray(payload?.entries) ? (payload.entries as Array<Record<string, unknown>>) : []
+      const entries = rows.map((row) => ({
+        title: row.title,
+        status: row.status,
+        updated_at: row.updated_at,
+      }))
+      const ready = entries.filter((entry) => entry.status === 'ready').length
+      const pending = entries.length - ready
+      const message = entries.length === 0
+        ? '当前知识库中还没有百科条目。'
+        : `共 ${entries.length} 条百科条目（就绪 ${ready} · 待更新 ${pending}）。`
+      return { ...echo(target), entries: entries as JsonValue, message }
+    },
+  }))
+
   return definitions
 }

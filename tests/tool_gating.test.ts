@@ -13,6 +13,7 @@ export const TOOL_NAMES = [
   'hrag_graph_search',
   'hrag_hybrid_search',
   'hrag_list_documents',
+  'hrag_list_wiki_entries',
   'hrag_read_document',
   'hrag_wiki_search',
 ]
@@ -47,12 +48,12 @@ function fakeAgent(id: string) {
   return { agent, registered, disposed }
 }
 
-test('definitions: the five knowledge tools, by name', () => {
+test('definitions: the six knowledge tools, by name', () => {
   const definitions = buildToolDefinitions(CONFIG, fakeStore({}))
   assert.deepEqual(definitions.map((definition) => definition.name).sort(), TOOL_NAMES)
 })
 
-test('mount: a bound agent receives all five tools once', () => {
+test('mount: a bound agent receives all six tools once', () => {
   const gating = createToolGating({ config: CONFIG, bindings: fakeStore({ s1: { kbId: 'kb', updatedAt: NOW } }) })
   const first = fakeAgent('s1')
   assert.equal(gating.mountAgent(first.agent), true)
@@ -111,4 +112,37 @@ test('forget: agent disposal drops the record without running disposers', () => 
   const again = fakeAgent('s1')
   assert.equal(gating.mountAgent(again.agent), true)
   assert.equal(again.registered.length, TOOL_NAMES.length)
+})
+
+test('wiki entries: lists titles and statuses with honest counts', async () => {
+  const originalFetch = globalThis.fetch
+  const urls: string[] = []
+  globalThis.fetch = (async (input: unknown) => {
+    urls.push(String(input))
+    return new Response(JSON.stringify({
+      entries: [
+        { id: 'w1', title: 'Alpha', summary: 'a', status: 'ready', updated_at: '2026-10-24T00:00:00Z' },
+        { id: 'w2', title: 'Beta', summary: 'b', status: 'stale', updated_at: '2026-10-23T00:00:00Z' },
+      ],
+      generation: 'idle',
+      last_run: null,
+    }), { status: 200, headers: { 'content-type': 'application/json' } })
+  }) as typeof globalThis.fetch
+  try {
+    const definitions = buildToolDefinitions(CONFIG, fakeStore({}))
+    const tool = definitions.find((definition) => definition.name === 'hrag_list_wiki_entries')
+    assert.ok(tool)
+    const result = await tool.execute({ kb_id: 'kb-1' }, { signal: undefined } as never)
+    assert.deepEqual(urls, ['http://127.0.0.1:8020/api/knowledge-bases/kb-1/wiki/entries'])
+    assert.deepEqual(result, {
+      kb_id: 'kb-1',
+      entries: [
+        { title: 'Alpha', status: 'ready', updated_at: '2026-10-24T00:00:00Z' },
+        { title: 'Beta', status: 'stale', updated_at: '2026-10-23T00:00:00Z' },
+      ],
+      message: '共 2 条百科条目（就绪 1 · 待更新 1）。',
+    })
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 })

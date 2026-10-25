@@ -13,7 +13,7 @@ export interface GatingAgent {
 }
 
 export interface ToolGating {
-  /** Register the five knowledge tools into one agent's scope; true when this
+  /** Register the six knowledge tools into one agent's scope; true when this
    * call mounted them (bound agents only, once per agent). */
   mountAgent(agent: GatingAgent): boolean
   /** Run the disposers and drop the record; true when the session was mounted. */
