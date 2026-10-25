@@ -31,6 +31,15 @@ here directly. There is no whole-tree re-vendor and no submodule.
 Use `git log` in this repository for the authoritative change history; the
 list above is a map of the fork point, not a changelog.
 
+## Fork commits
+
+- `c78e80b` feat(engine): expose model-facing knowledge tool endpoints
+- `36c76fc` feat(tools): align the six hrag tool contracts with the main tree
+- `26cdab7` docs(engine): record the fork and the explicit build commit
+- `84f037d` docs(tools): sync the product docs with the aligned tool surface
+- `a494296` docs(plan): close out the tool parity pair
+- `486973c` build(runtime): rebuild the pack at 0.1.0-2
+
 ## Building the runtime pack
 
 `scripts/build-runtime-pack.mjs` resolves the engine commit from, in order:
