@@ -52,7 +52,7 @@ window.__ModuleLoader__.load({
       'shell.errorTitle': '知识库面板加载失败',
       'shell.retry': '重试',
       'shell.empty': '暂无知识库',
-      'shell.emptyHint': '先在 DeerFlow 工作台创建知识库，再点「刷新」。',
+      'shell.emptyHint': '创建知识库后点「刷新」重新加载。',
       'shell.refresh': '刷新',
       // 首启运行时门（Task 5）：设置卡 / 进度 / 错误三态。
       'rt.loading': '正在检查本地服务…',
@@ -976,7 +976,7 @@ window.__ModuleLoader__.load({
       'shell.errorTitle': 'The knowledge panel failed to load',
       'shell.retry': 'Retry',
       'shell.empty': 'No knowledge bases yet',
-      'shell.emptyHint': 'Create one in the DeerFlow workbench, then hit Refresh.',
+      'shell.emptyHint': 'Create a knowledge base, then hit Refresh.',
       'shell.refresh': 'Refresh',
       // First-run runtime gate (Task 5): setup / progress / error.
       'rt.loading': 'Checking the local service…',
@@ -15339,7 +15339,7 @@ window.__ModuleLoader__.load({
       return 'hrag-card-drawers.' + String(kbId) + '.v1'
     }
 
-    /** 旧键（T5 前；工作台 `card-drawers.ts` 串逐字复制）——仅一次性迁移读用，勿删。 */
+    /** 旧存储键（T5 前）——仅一次性迁移读用，勿删。 */
     function legacyCardDrawersKey(kbId) {
       return 'deerflow.knowledge.card-drawers.' + String(kbId) + '.v1'
     }

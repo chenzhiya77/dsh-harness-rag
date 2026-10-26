@@ -1,17 +1,15 @@
 # Third-party notices
 
 The RAG capabilities in this package are original work. The bundled engine
-(`engine/`) contains portions of the DeerFlow harness framework, and the
+(`engine/`) contains portions of a third-party harness framework, and the
 plugin is built against the DeepSeek Harness plugin APIs. Portions of the
 bundled code derive from the following MIT-licensed projects. Their notices
 are reproduced below as required by the MIT license.
 
-## DeerFlow
+## Bundled harness framework (MIT)
 
 Applies to the harness framework portions bundled under `engine/`; the RAG
-capabilities are original work.
-
-Source: https://github.com/bytedance/deer-flow
+capabilities are original work. The notice is reproduced verbatim.
 
 ```text
 MIT License
