@@ -1,6 +1,6 @@
 # 运行时版本化升级、回滚与旧版清理 —— plan
 
-**Status:** 已实施（2026-10-26；Task 0–8 全落；Task 9 真机覆盖进行中——横幅实点已完成，五项待做）
+**Status:** 已实施（2026-10-26；Task 0–9 全落；Task 9 真机覆盖完成：五类横幅、pending、platform_unsupported、no_space、provision_held、headless、90 秒超时、并发 provision、清理删除失败；真孤儿与桌面宿主内置验证未做）
 **Date:** 2026-10-25
 **配套 spec:** [../specs/2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md)
 
@@ -115,7 +115,7 @@
 - 重试：`retry()` 删目标失败文件、清 `upgrade.json`/`prepError` 后重跑决策；旧版健康则只认领并回 `pending/ready`，旧版不在则本次走 `switchTo`。
 - 并发：`ensure()` 单飞；切换期间 `phase='switching'`；租约仍由目标 supervisor 在启动时获取。
 - 门禁：`tsc` 0 错；`runtime_upgrade`+`runtime_supervisor` 52/52；非 G11 247/247；全量 275/275（G11 的 run_id 用例已恢复）。
-- 说明：①50 s+30 s 的成功长跑与 91 s 超时用可注入时钟按比例验证（总 90 被共享截止截断、单角色时间也够），未做真实分钟级等待；②「旧版目录缺失」以旧版 `ensure()` 报错等价覆盖，未单独删目录；③Task 4 的旧版清理未接，成功切换暂不删更老版本。
+- 说明：①50 s+30 s 的成功长跑与 91 s 超时用可注入时钟按比例验证（总 90 被共享截止截断、单角色时间也够），本轮未做真实分钟级等待（Task 9 已真机 90 秒整栈超时）；②「旧版目录缺失」以旧版 `ensure()` 报错等价覆盖，未单独删目录；③Task 4 的旧版清理未接，成功切换暂不删更老版本。
 
 ## Task 4 — provision 锁、旧版清理、配置版本确认
 
@@ -157,7 +157,7 @@
 - op：`runtime/upgrade` 加入 `PRIVILEGED_OPS` 与 runtime op 表；只接受 `confirm|retry`，非法 action 抛 `bad_request`；协调者的 `upgrade_state` 被转成 `RuntimeOpError`，`kb_proxy` 的 `RuntimeOpError` 分支按 `upgrade_state→409`、其余 `→400` 返回。`confirm` 只写 `confirmedConfigVersion`；`retry` 清失败记录并重跑决策（旧服务在则不切，旧服务不在可本次启动目标）。
 - 面板：zh/en 增 `rt.phase.switching` 与 8 条升级词条＋原因映射；`runtimeStageKey` 认 `switching`；轮询在 `ready` 且升级状态非 `pending/blocked` 时停；横幅置于锚点告警之前，ready/blocked 可关，needs_confirmation/failed 不可关，failed 带「下次启动重试」与复制日志，pending 带百分比。
 - 检查：`tsc` 0 错；`runtime_ops` 26/26；全量 290/290；`node --check client.js` 通过。
-- 未做：没有起浏览器实点横幅/按钮（需要重启 DSH 加载新 `client.js`，候令），本轮只到静态检查与单测；`runtime/upgrade` 返回 `statusPayload`，不触发嵌入探针。
+- 本轮未做：没有起浏览器实点横幅/按钮（需要重启 DSH 加载新 `client.js`，候令），只到静态检查与单测；`runtime/upgrade` 返回 `statusPayload`，不触发嵌入探针。Task 9 已在隔离宿主用 headless Chrome＋CDP 实点全部横幅与按钮。
 
 ## Task 6 — 真机验收
 
@@ -185,7 +185,7 @@
 - **清单/冲突/租约/同版本**：非法 JSON → `blocked`/`manifest_invalid`，当前 0.1.0-4 照用；current 手改 0.1.0-3 + 健康 service 0.1.0-4 → 回写 current/previous，无第二套栈；service 改 0.1.0-9（无 runtime）→ `blocked`/`state_version_conflict`，进程不变；A(upg) 持 lease、B(upg2) target 0.1.0-5 → `blocked`/`upgrade_blocked_by_instance`，A 与 current 不变；target==current==0.1.0-4 → 无 `upgrade.json`、不清理、current 不变。
 - **验收中发现并修复**：`selectPack` 在 `urls=[]` 时先判 `pack_missing`，本地 `DSH_HARNESS_RAG_PACK` 覆盖无法生效，正常升级路径起不来；`selectPack`/`loadPack` 增 `allowUnpublished`（仅本地覆盖时接受已构建未发布条目，仍拒 `0.0.0-0` 与 0 size），bridge 在覆盖非空时传入；`tests/runtime_manifest.test.ts` 增 3 例。另记一条环境边角：陈旧 `lease.json` 的 pid 被无关 `bash.exe` 复用，曾误报 `upgrade_blocked_by_instance`，删陈旧租约后 `retry` 恢复；未改代码。
 - **门禁**：`tsc` 0 错；`node --check client.js` 过；`node --test tests/*.test.ts` **296/296**、fail 0；`engine/` `git status` 0 行；主树 `deer-flow` 脏面 mtime 为 10-06/10-10，属既有未提交面、本轮零新增；证据启动 token/auth cookie 已删除或脱敏，快照 token 为 `<redacted>`。
-- **未覆盖**：浏览器实点横幅/按钮（browser-use 被 DSH web 鉴权挡）；headless 实跑；无主残留（端口仍应答 + pid null；Task 8 已实现）；90 秒超时真机（本轮走的是 `qdrant_exited` 立即失败）；`platform_unsupported`、并发 provision、`no_space`、清理删除失败的真机分支（均有单测，不宣称真机通过）。plan 原写的“复制 0.1.0-2 zip 改坏”以合成坏包替代；0.1.0-3/4/5 的“好版本”用已装目录复制/硬链接，正常 0.1.0-2 升级仍用真实 zip 与解压。
+- **未覆盖（本轮）**：浏览器实点横幅/按钮（browser-use 被 DSH web 鉴权挡）；headless 实跑；无主残留（端口仍应答 + pid null；Task 8 已实现）；90 秒超时真机（本轮走的是 `qdrant_exited` 立即失败）；`platform_unsupported`、并发 provision、`no_space`、清理删除失败的真机分支（均有单测，不宣称真机通过）。plan 原写的“复制 0.1.0-2 zip 改坏”以合成坏包替代；0.1.0-3/4/5 的“好版本”用已装目录复制/硬链接，正常 0.1.0-2 升级仍用真实 zip 与解压。**（Task 9 已补齐：浏览器实点、headless、90 秒、platform_unsupported、no_space、并发 provision、清理删除失败；无主残留由 Task 8 实现并实点。）**
 - 代码修复与 plan 回填按“修复/回填”两次提交收口；Task 7 的文档与提交链见下。
 
 ## Task 7 — 文档、回写与提交链
@@ -213,7 +213,7 @@
 - README/手册：README 增「版本化升级/回滚」段落与状态行；手册把「升级」改成完成态并新增「升级与回滚」节，覆盖准备/切换/回滚、配置确认、保留与清理、备份口径、五类横幅、租约/残留/provision 锁的手工处理、本地 pack 仅开发态。
 - 分发回写：spec §4.7 改为最终行为（不再写「先停旧版」），§7 的「不做版本化升级」改为已交付；plan Task 6 未闭合②标已闭合，归位行与历史回写行同步。
 - 本对回写：spec Status → 已实施；§5 增实测段；§8 的「无主残留」「手册超前」两行按实际更新；§3.2 的无主残留自动 blocked 标为实现偏差。
-- **偏差/未覆盖**：§5.8「端口仍应答但 pid 为 null ⇒ `upgrade_blocked_stale_instance`」当时未实现（2026-10-26 Task 8 已实现：健康实例照常 adopt、升级 blocked；单测覆盖、未真机）；Task 6 的浏览器实点、headless、90 秒超时真机、`platform_unsupported`/并发/`no_space`/清理删除失败真机仍未覆盖。手册已改为自动判定 + 手工清理。
+- **偏差/未覆盖**：§5.8「端口仍应答但 pid 为 null ⇒ `upgrade_blocked_stale_instance`」当时未实现（2026-10-26 Task 8 已实现：健康实例照常 adopt、升级 blocked；单测覆盖；Task 9 隔离宿主实点）；Task 6 的浏览器实点、headless、90 秒超时真机、`platform_unsupported`/并发/`no_space`/清理删除失败真机当时未覆盖（Task 9 已全部覆盖）。手册已改为自动判定 + 手工清理。
 - **提交链实际**：Task 1 `36865c9`、Task 2 `946d192`、Task 3 `37b6095`、Task 4 `8a1732c`、Task 5 `8135daa`、Task 6 修复 `98523c1`、Task 6 验收 `233071e`、Task 7 文档 `ea3fef9`/`8e19766`。原计划的 6 笔不含 Task 2 协调者与 Task 6 修复/验收，按实际拆分为 9 笔。
 - **门禁**：文档改动后复跑 `tsc` 0、`node --test tests/*.test.ts` 296/296、`node --check client.js`；`engine/` 零 diff。Task 0 手册笔已单独提交 `ce6b327`。
 
@@ -235,24 +235,34 @@
 - 真机：2026-10-26 在隔离宿主把 `service.json` 的 pid 置 null、保留真实监听后启动，API 返回 `upgrade_blocked_stale_instance`，面板显示「旧实例残留」并可关闭（Task 9；证据 `D:\hrag-t6\acceptance-2026-10-26-banner`）。真孤儿（宿主崩溃残留）仍未复现。
 - 实点修复：默认探活误用了「端口空闲探测」（bind），判定永远不触发；新增 `probePortAnswer`（connect）与单测，修复后同场景阻塞成立。
 
-## Task 9 — 真机覆盖（2026-10-26 进行中）
+## Task 9 — 真机覆盖（2026-10-26 已完成）
 
-> 动到的文件：`src/runtime/supervisor.ts`（探活修复）、`tests/runtime_supervisor.test.ts`、本对 spec/plan。
+> 动到的文件：`src/runtime/supervisor.ts`（探活修复）、`tests/runtime_supervisor.test.ts`、`client.js`（pending 百分比条件）、本对 spec/plan。
 
 - [x] 升级横幅实点：就绪关闭、配置确认、失败重试＋复制日志、租约被占关闭、旧实例残留关闭；刷新后就绪横幅重现。
 - [x] 实点发现并修复：默认端口探活用了 bind（判空闲）当「应答」，`probePortAnswer`（connect）替换；+1 单测。
+- [x] `pending` 横幅实点（准备中瞬时态）：限速 https 包源驱动真实下载，2%→98% 逐秒递增；解压/校验不再显示回跳的百分比（按 §3.3 修为仅下载阶段带百分比）；就绪后横幅转「已就绪」且轮询停止。
+- [x] `platform_unsupported` 与 `no_space` 真机（共用环境：清单无 win32 条目 / 声明超大 `unpackedSize`）。
+- [x] pending 的 `provision_held` 真机：活 pid 持锁时 pending 无进度且继续轮询，释放后 1 s 内开始下载并转就绪。
 - [x] 门禁：`tsc` 0；全量 **305/305**；`node --check client.js` 通过；`engine/` 零 diff。
-- [ ] headless 实跑。
-- [ ] 90 秒整栈超时真机。
-- [ ] `platform_unsupported`、并发 provision、`no_space`、清理删除失败真机。
-- [ ] `pending` 横幅实点（准备中瞬时态）。
+- [x] headless 实跑：同配置目标自动 `ready`；配置 45 落 `needs_confirmation` 并在宿主输出记日志。
+- [x] 90 秒整栈超时真机：engine 桩不监听 → +91 s `engine_not_ready`，+102 s 回滚就绪 `rolledBack=true`。
+- [x] 并发 provision、清理删除失败真机：共享根只下载一次；独占锁目录保留并只记日志。
 
 **实测（实施期回填）**：2026-10-26 完成横幅实点。
 - 环境：隔离 `DSH_HOME=D:\hrag-t6\dsh-home-banner`（profile `bnr`，3090）；插件为 `git archive HEAD` 副本 link 安装；旧版/目标版硬链接克隆；旧服务手工常驻（8030/6340/6341）；Chrome headless＋CDP 9223 打开 `?token=` 驱动 DOM 与截图。
 - 结果：五类横幅（就绪/配置确认/失败/租约被占/旧实例残留）全部按 spec 显示；关闭、确认（写 `confirmedConfigVersion=45`）、重试（清失败文件）、复制日志（`writeText` 捕获 `state/logs`）均生效；就绪横幅关闭后刷新重现。
 - 缺陷：探活方向反了（bind 判空闲）；修复后 API 由 `needs_confirmation` 转为 `upgrade_blocked_stale_instance`。
-- 未覆盖：`pending` 瞬时态、剪贴板读取（headless 权限拒，改用 `writeText` 钩子）、真孤儿进程。
-- 证据：`D:\hrag-t6\acceptance-2026-10-26-banner`（README＋11 张截图＋日志＋探针脚本）。
+- pending：合成目标包（只含 manifest＋填充）经本机自签 https 源限速 32 KiB/200 ms 下载；多个目标版本重复实点，下载 33–38 s，横幅 `正在准备新版本 {0}… · N%` 每秒递增且无关闭钮；旧服务全程健康、`current` 不动；就绪后转「已就绪」并出现关闭钮，`runtime/status` 轮询停止（31 次后 6 s 内不再增加）。
+- pending 实点发现并修复：横幅把 `verify`/`extract` 进度也渲染成百分比，下载 97% 后跳到 32%；按 §3.3「解压/校验显示不确定态」改为仅 `phase==='download'` 带百分比（`client.js` 一处），用 810 MB 解压包复验：样本 98%→无百分比→就绪，无回跳。
+- 三分支（共用一套隔离环境，逐分支换清单/重启宿主）：`platform_unsupported` → 保持旧服务、`phase=ready`、`upgrade=blocked`/`pack:null`、不写 `upgrade.json`，横幅可关闭；`no_space` → 声明 `unpackedSize=2e12` 触发，`detail` 记 `needs 2200005244865 bytes, 9847103488 available`，下载目录为空、限速源无请求；`provision_held` → 活 pid 持锁时 `pending` 无 `progress`，横幅无百分比、无关闭钮、每秒轮询，释放锁后 1 s 内源收到 GET，18% 截图后转就绪，56 次轮询后停。
+- 三分支观察（已修并实点）：无目标包时协调者把 `targetVersion` 填成当前版本，`platform_unsupported` 横幅曾显示「新版本 0.1.0-2 暂时无法启用。」；按用户裁定只改客户端——`runtime.pack === null` 时改用新词条 `rt.upgradeBlockedNoTarget`（「暂时无法启用新版本。」/「A new version cannot be enabled yet.」），协调者不动。实点显示「暂时无法启用新版本。 运行时包不可用。」，`no_space` 回归仍带目标版本号。
+- 并发 provision（共用环境，两宿主 3090/3091 指向同一运行根；B 用 `runtime/configure` 写锚点）：目标 0.1.0-25 由 A 单次下载 33 s（`received=327680/5244866`），B 期间 `pending` 无 `progress`、源无第二个 GET；A 就绪后 B 复用 manifest 转 `ready`，两边 `current` 仍 0.1.0-2（旧服务健康只 adopt）。前一窗清单 `size` 差 1 字节曾触发 4 次 `size_mismatch`，改回 5244866 后干净窗口见 `server-clean-pass.log`。
+- headless（profile `hlr`，假 OpenAI 提供方 9100）：目标 0.1.0-23（config 44）无面板、无确认通道，激活 2 s 后自动 ensure，`upgrade.json=ready`、命令输出 `OK`；目标 0.1.0-24（config 45）落 `needs_confirmation`，宿主输出 `runtime upgrade to 0.1.0-24 needs confirmation (config 44 -> 45)`，随后 `OK`。`.credentials.yaml` 的 `refs` 只做文件引用，进程仍需 `FAKE_API_KEY` 环境变量，否则 `MISSING_CREDENTIAL`。
+- 90 秒超时：目标 0.1.0-21 的 engine 换成 `time.sleep(300)` 桩；+3 s `switching`、Qdrant 监听、engine 不监听；+91 s 写 `failed-0.1.0-21.json`（`engine_not_ready`、`rolledBack=false`）；回滚旧版 0.1.0-2（端口被占，升到 6335/6336/8020）后 +102 s `ready`、`upgrade=failed`、`rolledBack=true`，旧 engine HTTP 200，`current` 不变；失败文件保留、不自动重试。
+- 清理删除失败：`runtime/` 预置 `0.1.0-0`（`0-locked.bin` 由 PowerShell `FileShare.None` 独占，`unlink` 探测 EBUSY）、`0.1.0-1/20/23/24/25` 可删，另有当前 0.1.0-2 与目标 0.1.0-22（21 换回真 engine 后改名）。停旧栈后 +2 s `switching`、+9 s `ready`；`current=0.1.0-22`/`previous=0.1.0-2`，失败文件清空；`0.1.0-1/20/23/24/25` 删除，`0.1.0-0` 保留，宿主日志 `[harness-rag] could not remove runtime 0.1.0-0: EPERM, Permission denied`，不挡 `ready`；目标栈 engine/Qdrant HTTP 200。
+- 未覆盖：剪贴板读取（headless 权限拒，改用 `writeText` 钩子）、真孤儿进程（宿主崩溃后残留）、桌面宿主内置验证（全部在隔离宿主）。
+- 证据：`D:\hrag-t6\acceptance-2026-10-26-banner`（README＋截图＋日志＋探针脚本；pending 在 `pending/`，三分支与四分支分别在 `branches/`、`branches/{concurrent,headless,timeout90,cleanup}`）。
 
 ## 验收对应
 

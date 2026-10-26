@@ -1,6 +1,6 @@
 # 运行时版本化升级、回滚与旧版清理 —— spec
 
-**Status:** 已实施（2026-10-26；Task 6 真机验收，证据 `D:\hrag-t6\acceptance-2026-10-25-upgrade`；Task 8 补齐 §5.8 无主残留判定（单测＋隔离宿主实点）；Task 9 升级横幅实点完成，余五项真机分支待做）
+**Status:** 已实施（2026-10-26；Task 6 真机验收，证据 `D:\hrag-t6\acceptance-2026-10-25-upgrade`；Task 8 补齐 §5.8 无主残留判定（单测＋隔离宿主实点）；Task 9 真机覆盖完成：五类横幅、pending、platform_unsupported、no_space、provision_held、headless、90 秒超时、并发 provision、清理删除失败，证据 `D:\hrag-t6\acceptance-2026-10-26-banner`）
 **Date:** 2026-10-25
 **来源:** 分发 spec §4.7 的后续对。现场已具备跨版本条件：`0.1.0-1` 已安装并在运行，`0.1.0-2` 包已构建且 `runtime.json` 已指向它；本对把 §4.7 从文字落成实现。
 **承接:** [2026-10-24-single-download-distribution-spec.md](2026-10-24-single-download-distribution-spec.md) §4.2 步 4、§4.3、§4.6、§4.7；[2026-10-24-single-download-distribution-plan.md](../plans/2026-10-24-single-download-distribution-plan.md) Task 6 未闭合②与 §7「不做版本化升级/回滚」；[2026-10-25-runtime-resilience-spec.md](2026-10-25-runtime-resilience-spec.md) 的认领看门狗与锚点横幅。
@@ -136,11 +136,11 @@ upgrade?: {
 - 切换中新增 `phase='switching'`，面板走现有整块进度卡，文案「正在切换运行时版本…」。
 - 升级横幅只在 `phase==='ready'`（旧服务可用）时显示；`phase` 非 ready 时用现有整块状态卡，避免横幅与进度卡重复。
 - 面板复用 `.hrag-rt-banner` 槽位，放在锚点告警与嵌入引导之前：
-  - `pending`：`正在准备新版本 {0}…`（有进度时带百分比）。
+  - `pending`：`正在准备新版本 {0}…`（下载阶段带百分比；解压/校验显示不确定态，不带百分比）。
   - `ready`：`新版本 {0} 已就绪，重启 DSH 后启用。` 可关闭。
   - `needs_confirmation`：`新版本 {0} 会改变配置格式；升级前请备份 state/ 与 config/。` 主按钮「确认升级（重启后生效）」，不可关闭。
   - `failed`：`升级到 {0} 失败，已回到 {1}。` 主按钮「下次启动重试」，附日志路径可复制；不可关闭。
-  - `blocked`：`新版本 {0} 暂时无法启用。` 附原因（租约被占用/旧实例残留/下载失败）与日志路径；可关闭。
+  - `blocked`：`新版本 {0} 暂时无法启用。` 附原因（租约被占用/旧实例残留/下载失败）；无目标版本（`runtime.pack` 为空，如 `platform_unsupported`/`pack_missing`）时改用 `暂时无法启用新版本。`，不带版本号；可关闭。
 - 新 op `runtime/upgrade`，body `{action:'confirm'|'retry'}`，加入 `PRIVILEGED_OPS`：
   - `confirm`：仅在 `needs_confirmation` 时接受，把目标 `configVersion` 写入 `upgrade.json.confirmedConfigVersion`；有旧服务时等下次 DSH 启动，没有旧服务时本次激活可直接启动目标。
   - `retry`：仅在 `failed` 时接受，删除 `failed-<target>.json`，状态回 `pending`；有旧服务时等下次 DSH 启动，没有旧服务时本次激活可直接启动目标。
@@ -188,7 +188,7 @@ upgrade?: {
 13. **版本记录冲突**：手工把 `current.json` 改成旧版、`service.json` 保持新版且健康 → 启动后以 service 为准回写 current，不启动第二套栈；service 版本无对应 runtime ⇒ `blocked`（`state_version_conflict`），不启动。
 14. **门禁**：`tsc` 0 错；`node --test tests/*.test.ts` 全绿；`node --check client.js` 通过；`engine/` 与主树零 diff；token 不出现在日志、状态、面板与失败文件。
 
-**实测（2026-10-26）**：1–7、9、12、13 已真机覆盖（plan Task 6；证据根 `D:\hrag-t6\acceptance-2026-10-25-upgrade`）；4 走的是目标 `qdrant_exited` 立即失败，90 秒超时仅单测；10 的并发准备、11 的 `no_space` 为单测（本地 pack 分支已真机）；12 的 `platform_unsupported` 仅单测（非法 JSON 已真机）；8「端口仍应答但 pid 为 null ⇒ blocked」已由 Task 8 实现（2026-10-26），单测覆盖健康/不健康两条阻塞与三条反例；Task 9 在隔离宿主把 `service.json` 的 pid 置 null 后实点，API 与面板均出现 `upgrade_blocked_stale_instance`（真孤儿未复现）。14 门禁 Task 8 为 304/304，探活修复后 **305/305**、client check 通过、engine 零 diff。升级横幅就绪/配置确认/失败/租约被占/旧实例残留已在隔离宿主实点（headless Chrome＋CDP）；`pending` 瞬时态未截到；headless 实跑未做。
+**实测（2026-10-26）**：1–7、9、10、12、13 已真机覆盖（plan Task 6；证据根 `D:\hrag-t6\acceptance-2026-10-25-upgrade`）；4 首轮走的是目标 `qdrant_exited` 立即失败，Task 9 补齐 90 秒真机（engine 桩 300 s 不监听 → +91 s `engine_not_ready`、`rolledBack=false`，+102 s 回滚就绪且 `rolledBack=true`、当前版本不变）；10 的并发准备 Task 9 真机（两宿主共享运行根，A 单次下载 33 s，B 期间 `pending` 无进度、不下载，A 就绪后 B 复用 manifest 转 `ready`，目标只下载一次）；11 的 `no_space` 已真机（声明超大 `unpackedSize` 触发，未实际占满磁盘）；12 的 `platform_unsupported` 已真机（清单无 win32 条目），非法 JSON 已真机；8「端口仍应答但 pid 为 null ⇒ blocked」已由 Task 8 实现（2026-10-26），单测覆盖健康/不健康两条阻塞与三条反例；Task 9 在隔离宿主把 `service.json` 的 pid 置 null 后实点，API 与面板均出现 `upgrade_blocked_stale_instance`（真孤儿未复现）。9 的删除失败 Task 9 真机：被独占锁的 `0.1.0-0` 保留并记 `could not remove runtime 0.1.0-0: EPERM`，同轮其余旧版删除、切换仍 `ready`。14 门禁 Task 8 为 304/304，探活修复后 **305/305**、client check 通过、engine 零 diff。升级横幅就绪/配置确认/失败/租约被占/旧实例残留已在隔离宿主实点（headless Chrome＋CDP）；`pending` 已用限速 https 包源实点（横幅百分比仅在下载阶段递增，解压/校验无百分比，就绪后轮询停止）；headless 已实跑（同配置目标自动 `ready`，配置 45 落 `needs_confirmation` 并在宿主输出记日志）。无目标清单的横幅文案已按裁定只改客户端（`runtime.pack === null` 用「暂时无法启用新版本。」，协调者不动），`platform_unsupported` 与 `no_space` 均已复验。
 
 ## 6. 影响面
 
