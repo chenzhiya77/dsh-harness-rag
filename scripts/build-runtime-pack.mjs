@@ -43,6 +43,8 @@ const GH_MIN_VERSION = '2.40.0'
 const PLATFORM = 'win32-x64'
 const FIXED_MTIME = new Date('1980-01-01T00:00:00Z')
 const ROOT_BUDGET = 120
+const EXTRA_REQUIREMENTS_FILE = join(PACKAGE_ROOT, 'scripts', 'runtime-extra-requirements.txt')
+const PINNED_REQUIREMENT = /^([A-Za-z0-9][A-Za-z0-9._-]*)==([A-Za-z0-9][A-Za-z0-9._+!-]*)(?:\s*;\s*.+)?$/
 
 const EXCLUDED_DIRS = new Set([
   '.deer-flow',
@@ -156,6 +158,39 @@ const compareVersions = (left, right) => {
   }
   return 0
 }
+const normalizePackageName = (name) => name.toLowerCase().replace(/[-_.]+/g, '-')
+const requirementPackage = (line) => {
+  const match = PINNED_REQUIREMENT.exec(line)
+  return match ? normalizePackageName(match[1]) : undefined
+}
+const readExtraRequirements = () => {
+  let text
+  try {
+    text = readFileSync(EXTRA_REQUIREMENTS_FILE, 'utf8')
+  } catch {
+    fail(`extra requirements file is missing or unreadable: ${EXTRA_REQUIREMENTS_FILE}`)
+  }
+  const seen = new Set()
+  const pins = []
+  text.split(/\r?\n/).forEach((raw, index) => {
+    const line = raw.trim()
+    if (!line || line.startsWith('#')) return
+    const match = PINNED_REQUIREMENT.exec(line)
+    if (!match) {
+      fail(`bad extra requirement at ${EXTRA_REQUIREMENTS_FILE}:${index + 1}: ${line}`)
+      return
+    }
+    const name = normalizePackageName(match[1])
+    if (seen.has(name)) {
+      fail(`duplicate extra requirement "${match[1]}" at ${EXTRA_REQUIREMENTS_FILE}:${index + 1}`)
+      return
+    }
+    seen.add(name)
+    pins.push(line)
+  })
+  if (pins.length === 0) fail(`extra requirements file has no pinned requirements: ${EXTRA_REQUIREMENTS_FILE}`)
+  return pins
+}
 const resolveEngineCommit = (root, override) => {
   if (override !== undefined) {
     const normalized = override.toLowerCase()
@@ -198,11 +233,14 @@ if (compareVersions(ghVersion, GH_MIN_VERSION) < 0) {
 }
 console.log(`[build]   engine commit ${engineCommitInfo.commit} (${engineCommitInfo.source})`)
 console.log(`[build]   uv ${uvVersion}, gh ${ghVersion}, Python ${PYTHON_VERSION}, Qdrant ${QDRANT_VERSION}`)
+const extraRequirements = readExtraRequirements()
+console.log(`[build]   extra requirements ${extraRequirements.length} (${EXTRA_REQUIREMENTS_FILE})`)
 done()
 
 if (args.printInputs) {
   console.log(`[build] engine: ${engineRoot}`)
   console.log(`[build] out:    ${outDir}`)
+  for (const line of extraRequirements) console.log(`[build] extra:  ${line}`)
   process.exit(0)
 }
 
@@ -261,10 +299,83 @@ const kept = exported
   .split(/\r?\n/)
   .filter((line) => line.trim() && !/^(-e|--editable)\s/.test(line.trim()))
 if (kept.length < 300) fail(`the export looks wrong (${kept.length} requirement lines)`)
-writeFileSync(requirements, `${kept.join('\n')}\n`)
+const lockedPackages = new Set(kept.map(requirementPackage).filter(Boolean))
+for (const line of extraRequirements) {
+  const name = requirementPackage(line)
+  if (name && lockedPackages.has(name)) fail(`extra requirement "${name}" is already pinned by the engine lock export`)
+}
+const requirementsToInstall = [...kept, ...extraRequirements]
+writeFileSync(requirements, `${requirementsToInstall.join('\n')}\n`)
 
-step(`install ${kept.length} requirements into site-packages (uv pip sync)`)
+step(`install ${lockedPackages.size} locked packages + ${extraRequirements.length} extra into site-packages (uv pip sync)`)
 run('uv', ['pip', 'sync', '--python', pythonExe, '--target', join(packDir, 'site-packages'), requirements])
+done()
+
+step('smoke-test python-calamine')
+const smokeXlsx = join(workDir, 'calamine-smoke.xlsx')
+const smokeSitePackages = join(packDir, 'site-packages')
+const smokeScript = `import os
+import sys
+import zipfile
+
+import python_calamine
+from python_calamine import CalamineWorkbook
+
+path = sys.argv[1]
+assert os.path.normcase(python_calamine.__file__).startswith(os.path.normcase(sys.argv[2])), python_calamine.__file__
+parts = {
+    "[Content_Types].xml": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+</Types>""",
+    "_rels/.rels": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>""",
+    "xl/workbook.xml": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets><sheet name="Data" sheetId="1" r:id="rId1"/></sheets>
+</workbook>""",
+    "xl/_rels/workbook.xml.rels": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+</Relationships>""",
+    "xl/worksheets/sheet1.xml": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<sheetData>
+<row r="1"><c r="A1" t="inlineStr"><is><t>name</t></is></c><c r="B1" t="inlineStr"><is><t>value</t></is></c></row>
+<row r="2"><c r="A2" t="inlineStr"><is><t>alpha</t></is></c><c r="B2"><v>1</v></c></row>
+</sheetData>
+</worksheet>""",
+}
+with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
+    for name, data in parts.items():
+        archive.writestr(name, data)
+workbook = CalamineWorkbook.from_path(path)
+rows = workbook.get_sheet_by_name(workbook.sheet_names[0]).to_python()
+assert rows[0] == ["name", "value"], rows
+assert rows[1][0] == "alpha" and rows[1][1] == 1, rows
+print(python_calamine.__file__)`
+const smoke = spawnSync(pythonExe, ['-c', smokeScript, smokeXlsx, smokeSitePackages], {
+  cwd: workDir,
+  encoding: 'utf8',
+  env: {
+    ...process.env,
+    PYTHONPATH: smokeSitePackages,
+    PYTHONNOUSERSITE: '1',
+    PYTHONUTF8: '1',
+    PYTHONIOENCODING: 'utf-8',
+  },
+})
+if (smoke.status !== 0) {
+  const detail = (smoke.stderr || smoke.stdout || smoke.error?.message || '').trim()
+  fail(`python-calamine smoke test failed (exit ${smoke.status}): ${detail}`)
+}
+console.log(`[build]   ${(smoke.stdout ?? '').trim()}`)
+rmSync(smokeXlsx, { force: true })
 done()
 
 // ── 3. engine source ─────────────────────────────────────────────────────────

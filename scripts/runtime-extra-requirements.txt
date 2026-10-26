@@ -1,0 +1,4 @@
+# Extra wheels installed into the runtime pack on top of the frozen engine lock.
+# These packages are NOT in engine/backend/uv.lock; keep one exact pin per line.
+# python-calamine backs .xlsx/.xls parsing (the engine imports it lazily).
+python-calamine==0.8.2
