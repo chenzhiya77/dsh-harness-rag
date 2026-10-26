@@ -1,6 +1,6 @@
 # 单一下载分发（插件自带本地运行环境） —— spec
 
-**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 公开仓、`v0.1.0` Release 与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；§5.10 同时启动与 §5.17 `.env` 代理/引擎出网已于 2026-10-26 补测（证据 `D:\hrag-t6\acceptance-2026-10-26-lease-proxy`）；npm 发布与索引上线待外部条件）
+**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 公开仓、`v0.1.0` Release 与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；§5.10 同时启动与 §5.17 `.env` 代理/引擎出网已于 2026-10-26 补测（证据 `D:\hrag-t6\acceptance-2026-10-26-lease-proxy`）；npm 发布与索引上线待外部条件）。**2026-10-26 RAG 面复审追加 §9：R1 已定甲并进入实施（Task 0–1 完成，构建脚本与额外 pin 已改；运行时 pack 与发布未动），R2–R5 待裁、K1 已知降级。**
 **Date:** 2026-10-24
 **来源:** 10-24 他问「当前的插件有两个文件夹……用户下载插件肯定是只下载一个插件，后端不能放在插件文件夹中吗」；随后明确目标是「用户只需要点击下载插件就能下载完全部的东西，可以直接使用」，并问 DSH 插件发布在哪、是否有官方市场；确认方向后令起 spec/plan。
 **承接:** 现行部署两件式（[README.md](../../README.md) §安装/§后端最小形态，`README.md:40-69`）；配置默认值 `src/settings.ts:15-19`；后端地址的唯一消费面 `src/http.ts:29-48` 与 `src/kb_proxy.ts:395/450/543`；引擎路径环境变量 `engine/backend/packages/harness/deerflow/config/runtime_paths.py`（并入单仓后的位置）。
@@ -321,6 +321,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 ## 7. 不做
 
 - 不做本地嵌入模型与「零配置摄入」；不在本对动引擎的 embedding provider。
+  - **注（2026-10-26）**：本条仅指不把嵌入模型/本地推理随包内置、不做零配置自动发现或启动；RAG 五条功能腿跟随 DSH 宿主模型（可含本地模型），嵌入则是 RAG 独立 provider，可经 `openai-compatible` 指向本地 `/v1/embeddings`（重排/解析同理可接本地服务）。
 - 不做 macOS/Linux 运行时包；清单留位，平台不支持时明确报错。
 - 不做系统服务、开机自启、托盘常驻。
 - 不做官方市场收录与社区索引提交（外部动作，另行处理）。
@@ -356,3 +357,64 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 | 视频 ASR 默认档缺 funasr/torch | 二者不在 `uv.lock`，当前 venv 也没有 | 本对不改；README/§7 登记「默认档需另装或改用服务档」 |
 
 后续（非本对）：本地嵌入 spec（让新装用户不填 key 也能摄入）；mac/Linux 运行时包与 CI 矩阵；精简运行时 profile；运行时包增量更新；官方/社区索引收录。
+
+§9 的 R1 已定甲并已立 plan；R2–R5 待裁，裁决后另立 plan；未裁前不排期。
+
+## 9. 2026-10-26 RAG 面复审登记
+
+> 本节记录复审发现与 R1 实施状态。R1 已定甲并进入实施（Task 0–1 完成，构建脚本与额外 pin 已改），R2–R5 待裁，K1 为已知降级。R1 的 pack 重建在 Task 2；R2–R5 裁决前不改 README/面板文案、不动 `runtime.json`，也不改变 §7/§8 的已拍结论。
+
+### 9.1 基线与结论
+
+- 基线：deer-flow `feat/rag-knowledge-base@372b2f4b0`（2026-10-13）对插件 `master@6901b85` + `engine/` 快照（源 `b34b2d572`，2026-10-25）。
+- 比法：knowledge 逐文件；网关路由、builtin 工具与测试；面板组件与宿主数据桥 op；依赖表与 0.1.0-2 运行时解包内容。本轮为静态对比，未新增真机证据；运行时缺件按解包树核对。
+- 核心结论：**RAG 引擎、接口与面板功能没有缺口**。
+  - knowledge 两边均 72 个源文件；仅 10 个有差异，全部是五条腿的 `reasoning_effort` 透传，无删除的功能分支。
+  - 知识路由 deer-flow 54 条，插件 54 条全有；插件另加 `POST /{kb_id}/tools`（`knowledge_bases.py:764`，共 55 条）。
+  - `tools/builtins` 逐文件一致；6 个知识工具同名同语义；插件多模型调用 seam（`knowledge_service.py:1388`）。
+  - 测试：插件 1571 个 `test_` 函数，deer-flow 1532 个；无删除用例，插件多 4 个测试文件。
+  - 面板：deer-flow 56 个组件/页面 + 22 个 core 模块；除 chat/citation 族（对话面板、引用标记、引用来源、线程导入）外均有对应；后者的不做口径见 `README.md:78` 与 `README.md:93`。
+  - 插件反超：按腿推理档位、`/tools` seam、检索纪律、引用计数器、文档文件夹、运行时托管与升级。
+- 本节所称“缺口”只指**可选件未随包兑现**或**文档/文案未写明**，不是算法、接口或数据模型被裁。
+
+### 9.2 登记与裁决
+
+> **R1 已定（2026-10-26）：甲（打进运行时 pack）。** R2–R5 仍待裁；R1 的实施计划见 [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
+
+| 编号 | 事实 | 触发与影响 | 选项 | 验收 |
+|---|---|---|---|---|
+| R1（已定甲） | **Excel 可选件未随包**：`README.md:45` 承诺 `.xlsx/.xls`；解析器惰性导入 `python_calamine`（`parser.py:391`），缺包直接抛错（`parser.py:393`）；`python-calamine` 不在 `engine/backend/uv.lock` / `engine/backend/packages/harness/pyproject.toml`，0.1.0-2 的 `site-packages` 也没有（解包约 1.6 MB）。表格门控 `rag.table.enabled` 默认 false（`config.example.yaml:2739-2741`）；CSV 不受影响，TSV 走 csv 解析、不依赖 calamine。 | 用户开启表格门控后上传 `.xlsx/.xls` 必失败；默认关闭时这些后缀在 allowlist 外，用户看不到。 | 甲（已定）：把 wheel 纳入托管运行时 pack（体积代价约 1.6 MB）；外部模式仍需自行安装，另行记录。乙：只登记“需另装”。丙：不做。 | 甲：干净托管运行时开表门控，`.xlsx` 能解析到 ready。乙：拒绝时文案指向安装步骤，不出现裸 ImportError。 |
+| R2 | **视频前置未写全**：探针硬依赖外部 `ffprobe`（`probe.py:31`，缺失即抛）；抽帧调用 `ffmpeg`（`frames.py:57`）；0.1.0-2 解包树中没有这两个二进制（根层与 `site-packages` 已查）。`rag.video.asr_model` 无默认值（`app_config.py:157`；未声明时 `worker.py:824-828` 直接报配置错）；默认 ASR 是 funasr（`app_config.py:156`），运行时未带（§7 已登记）；服务档只吃 ≤5 分钟（`asr.py:162`），更长回落 `funasr`（`asr.py:177-178`），在托管包同样不可用。README 只写了 funasr/torch（`README.md:46`、`plugin-manual.md:130`）。视频门控默认 false（`config.example.yaml:2715-2716`）。 | 开视频门控后：无 ffmpeg/ffprobe 时探测腿硬失败；有 ffmpeg 但未设 `asr_model` 时配置错误；服务档 >5 分钟仍回落到缺失的 funasr，ASR 腿失败（文档可按其他腿 ready，见 `worker.py:817`）。 | 甲：只补文档（推荐，不改 pack 体积）：写明 ffmpeg/ffprobe、`asr_model`、本地 ASR、服务档 5 分钟与回落后果。乙：把 ffmpeg/ffprobe 打进 pack（体积/许可面明显增大）。丙：不做（不建议，README 已承诺视频）。 | 甲：干净机器按文档装 ffmpeg、设 `asr_model` 后，≤5 分钟服务档 ASR 成功；>5 分钟得到明确的 ASR 失败而不是误以为服务档可用。乙：无外部 ffmpeg 也能 probe/抽帧。 |
+| R3 | **tiktoken 成传递依赖 + BPE 未随包**：`chunker.py:28` 顶层 `import tiktoken`，`count_tokens` 用 `cl100k_base`（`chunker.py:45`）；`tiktoken` 已不在 `engine/backend/packages/harness/pyproject.toml` 的直接依赖，当前由 ragas/langchain-openai 传递带入（`engine/backend/uv.lock`）；0.1.0-2 的 `site-packages` 有 tiktoken 0.12.0，但没有 BPE 缓存。首次 `get_encoding` 会从 tiktoken 的固定地址取约 1.6 MB，默认缓存在 `%TEMP%/data-gym-cache` 或 `TIKTOKEN_CACHE_DIR`。 | 当前可用；锁变化可能断。干净 VM / 离线首次摄入多一个网络点，失败时不像模型端点那样有面板引导。 | 甲：`tiktoken` 加回直接依赖，构建时把 BPE 缓存放入 pack 并设 `TIKTOKEN_CACHE_DIR`（推荐）。乙：只加直接依赖，文档写明首次需联网。丙：维持现状（不建议，属于隐性依赖）。 | 甲：断网/干净 VM 首次切分成功。乙：首次联网按文档可预期完成。 |
+| R4 | **MinerU 未配置的落点不对**：默认 `parse_provider=mineru-cloud`（`app_config.py:233`）；无 token 时 `parser.py:600-603` 抛 `MineruAuthError`；面板把含 `mineru_api_token` 的错误归为 `serviceUnconfigured`（`client.js:3403`），文案是“文档解析服务未配置，请联系管理员”（`client.js:301`）；面板设置里其实有 MinerU token 字段（`client.js:19236`）；手册首启只引导嵌入模型（`plugin-manual.md:26`），没提 MinerU token。 | 单用户桌面第一次上传 PDF/Office/图片即失败；“请联系管理员”没有可操作路径（实际应在「功能模型设置」填 token）。 | 甲：首启加一步“MinerU token（可选但常用）”，并把错误文案改成“去功能模型设置填写 MinerU Token”（推荐）。乙：只改文案。丙：不动。 | 未配置时上传 PDF 得到可操作的指向；配置后解析成功。 |
+| R5 | **Langfuse 裁剪后的残留**：`langfuse` 已从 `harness/pyproject.toml` 直接依赖移除；评测引擎缺包时 `push_scores_to_langfuse` 明确跳过（`ragas_eval.py:656-691`）；面板仍保留“查看 Trace”按钮逻辑，只在 `layer2.langfuse_trace_url` 存在时显示（`client.js:12413`），实际不会出现；README/手册没有提 trace。 | 当前无死链、无报错；但这是一项相对 deer-flow 的真实能力损失（有 Langfuse 环境时也无法推送/跳转）。 | 甲：确认不支持，保留惰性代码并在评测文档写一句“无 trace”（最小改动）。乙：补 `langfuse` 依赖与配置入口。丙：删掉残留按钮代码（如果确定永不支持）。 | 甲：文档与界面一致，不出现“应该有但没有”的预期。乙：配置后 trace URL 可出现。丙：代码无死入口。 |
+| K1 | **scenedetect 未随包**：视频分镜惰性导入 `scenedetect`（`worker.py:145`），缺失时回落 `fallback_window_seconds` 等距窗口（`app_config.py:154`）。 | 只降分镜精度，不阻塞；不影响 ffmpeg/ASR 的硬前置。 | 不处理（已知降级）。 | 视频仍能出分镜卡；日志可见降级。 |
+
+### 9.3 已排除的假缺口
+
+- **chunk_id 窗口**：插件接口有 `chunk_id` 窗口参数（`knowledge_bases.py:350-359`），读文档工具也有；deer-flow 前端同样分页，不用该窗口。不是缺口。
+- **KB 排序 / 上次打开库 / 文档原文件下载 / 召回迷你图 / 出题合成与锚定核验 / 人工卡片 / Wiki 编辑 / 投影 / 图谱 LOD**：逐项有对应实现，不列缺口。
+- **langchain-google-genai**：RAG 目标白名单只有 openai-compatible / anthropic / deepseek（`model_target.py:32-33`），不涉及 RAG。
+- **duckdb / sse-starlette / langgraph-api 等**：保留的 knowledge 路径没有 import。
+- **Chat / 引用**：`README.md:78` 与 `README.md:93` 已明确不做；按已拍口径，不算缺口。
+
+### 9.4 发布影响
+
+- **R1（已定甲）**：重建托管运行时 pack，bump `runtimeVersion`（`0.1.0-3`），新增 Release 资产并更新 `runtime.json`；GitHub 安装需要新插件 tag/release（如 `v0.1.1`），已装用户也需先升级插件，既有运行时升级链才会看到新 pack。不覆盖 `v0.1.0` 的既有资产；执行细节见 [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
+- **R2–R5（未裁）**：发布影响按选项定，不预先混写。R4 的 UI 文案与 R5 的删入口属于插件 patch；R3 甲或 R2 乙才重建 pack。R2/R3 若裁 pack 方案，另立 plan。
+- R1 实施前 `runtime.json` 保持 `0.1.0-2`；当前 `v0.1.0` 仍为有效发布。
+- 外部模式不在 R1 的 pack 修复范围内：`make gateway` 环境仍需自行安装 `python-calamine`，README/手册必须把托管与外部两种模式分开写。
+
+### 9.5 验收补充（裁决后并入 §5）
+
+- **5.20 表格门控（R1）**：干净托管运行时开启 `rag.table.enabled`，上传 `.xlsx` 到 ready；`.xls` 有夹具才验，否则记录“同一 calamine 路径、未独立覆盖”。
+- **5.21 视频前置（R2）**：无 ffmpeg/ffprobe 时得到明确错误；装 ffmpeg、设 `asr_model` 后，≤5 分钟服务档 ASR 成功；>5 分钟验证回落失败被标为 `asr=failed`、文档仍可 ready。
+- **5.22 干净 VM 首次切分（R3）**：断网或空 tiktoken 缓存下首次摄入；按裁决结果验证「包内 BPE 成功」或「联网后成功且文档有说明」。
+- **5.23 MinerU 未配置（R4）**：新装后先传 PDF，验证提示指向「功能模型设置」且配置后解析成功。
+- **5.24 评测 trace（R5）**：无 Langfuse 时评测页不出现不可用的 trace 入口；若补 langfuse，则验证有 trace 时可跳转。
+
+### 9.6 本轮状态
+
+- R1 已定甲，plan Task 0–1 已完成（只读核实 + 构建脚本注入/冒烟）；插件运行时代码、运行时 pack、README/手册、面板、`runtime.json` 均未改；当前发布仍为 `v0.1.0`。
+- R2–R5 待裁；K1 已知降级。
+- R1 按 plan 实施；R2–R5 裁决后另立 plan，未裁前不排期。
