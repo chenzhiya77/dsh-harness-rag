@@ -10,29 +10,34 @@
 
 > 目的：把 spec 依赖的行号、现有行为、测试缝和现场状态钉死；发现与 spec 冲突先停下登记，不带旧前提写代码。
 
-- [ ] 核对版本接线：`src/runtime/bridge.ts:76`（单一 `version`）、`src/runtime/supervisor.ts:190-193`（`readyTimeoutMs` 默认 120000）、`:247-249`（`markCurrent` 不写 `previousVersion`）、`:473-493`（`adopt` 不校验版本）、`:562-577`（`ensureRuntime` 在 `acquireLease` 之前）、`:690-709`（单例键 `root+runtimeVersion`）。
-- [ ] 核对旧实例身份：`src/runtime/process.ts:24-33`（`pid` 可为 null 的注释）、`:58-87`（`sanitizeService`/`sanitizeLease`）、`src/runtime/supervisor.ts:190-191`（`executablePath` 默认返回 null）、`:497-505`（`cleanStale` 的杀进程条件）。
-- [ ] 核对 current/upgrade 预留：`src/runtime/manifest.ts:29-35`（`RuntimeCurrent.previousVersion`）、`:147-158`（`sanitizeCurrent`）、`src/runtime/ops.ts:19-41`（payload 字段）、`:103`（`installed` 只看文件存在）、`:186-212`（`retryRuntime`/`panelStatus`）。
-- [ ] 核对运行时包：`scripts/build-runtime-pack.mjs:312-322`（`runtime-manifest.json` 带 `configVersion`）、`src/runtime/download.ts:175-177`（下载前空间检查）、`src/runtime/zip.ts:146-163`（`.tmp` 后 rename）、`src/runtime/provision.ts`（已装 manifest 直接复用）。
-- [ ] 核对面板：`client.js:20959-21017`（runtime gate/轮询/停轮询条件）、`:21420-21720`（设置卡/错误卡/进度卡/重试）、`:21950-22010`（锚点与嵌入横幅槽位）、`:83-88`/`:988-992`（阶段词条）。
-- [ ] 核对 op 注册：`src/kb_proxy.ts:391`（`PRIVILEGED_OPS`）、`:432-435`（runtime op 表）；确认 `runtime/upgrade` 不与现有 op 冲突。
-- [ ] 现场取证（只读）：
+- [x] 核对版本接线：`src/runtime/bridge.ts:76`（单一 `version`）、`src/runtime/supervisor.ts:190-193`（`readyTimeoutMs` 默认 120000）、`:247-249`（`markCurrent` 不写 `previousVersion`）、`:473-493`（`adopt` 不校验版本，并在 `:480` 回写 current）、`:562-577`（`ensureRuntime` 在 `acquireLease` 之前）、`:600-609`（先 service 后 current）、`:690-709`（单例键 `root+runtimeVersion`）。
+- [x] 核对旧实例身份：`src/runtime/process.ts:24-33`（`pid` 可为 null 的注释）、`:58-87`（`sanitizeService`/`sanitizeLease`）、`src/runtime/supervisor.ts:190-191`（`executablePath` 默认返回 null）、`:497-505`（`cleanStale` 的杀进程条件）。
+- [x] 核对 current/upgrade 预留：`src/runtime/manifest.ts:29-35`（`RuntimeCurrent.previousVersion`）、`:147-158`（`sanitizeCurrent`）、`src/runtime/ops.ts:19-41`（payload 字段）、`:103`（`installed` 只看文件存在）、`:186-212`（`retryRuntime`/`panelStatus`）。
+- [x] 核对运行时包：`scripts/build-runtime-pack.mjs:312-322`（`runtime-manifest.json` 带 `configVersion`）、`src/runtime/download.ts:175-177`（下载前空间检查）、`src/runtime/zip.ts:146-163`（`.tmp` 后 rename；`:144`/`:153` 只判 manifest 存在）、`src/runtime/provision.ts:28`（已装 manifest 直接复用；`:29-36` 本地包只判存在）。
+- [x] 核对面板：`client.js:20959-21017`（runtime gate/轮询/停轮询条件；`:21017` 在 `ready`/`error`/`needs_location` 停）、`:21420-21720`（设置卡/错误卡/进度卡/重试）、`:21950-22010`（锚点与嵌入横幅槽位）、`:83-88`/`:988-992`（阶段词条）、`:3262`（`runtimeStageKey`）。
+- [x] 核对 op 注册：`src/kb_proxy.ts:391`（`PRIVILEGED_OPS` 现有三项）、`:432-435`（runtime op 表四项）；`runtime/upgrade` 不存在，无冲突。
+- [x] 现场取证（只读）：
   - `D:\hrag-t6\dsh-root\harness-rag\state\current.json` = `0.1.0-1`；
   - `state/service.json` = `0.1.0-1`、ports 8021/6334/6335、pid/qdrantPid null；
-  - `state/lease.json` owner 是当前 DSH 宿主；
+  - `state/lease.json` owner `2f7b3b10f04feb20`、pid 75512（当前 DSH 宿主）；8021 由 pid 65544 持有；
   - `runtime/0.1.0-1/runtime-manifest.json` = `configVersion 44`，与 `0.1.0-2` 相同；
   - `dist/harness-rag-runtime-win32-x64-0.1.0-2.zip` 330,283,067 B、sha `05cc423b…`；
   - `runtime.json` 的 `urls` 为空。
-- [ ] 确认「DSH 正常退出会带走旧服务」的既有证据（分发 §5.11 退出清理实测）；若本机需要重验，只在用户批准重启后做，并记录 8021 是否消失、lease 是否陈旧。未验前不假设。
+- [x] 确认「DSH 正常退出会带走旧服务」的既有证据（分发 §5.11 退出清理实测）；若本机需要重验，只在用户批准重启后做，并记录 8021 是否消失、lease 是否陈旧。未验前不假设。
 - [x] **手册现状修正（2026-10-25 已改）**：`docs/plugin-manual.md:36` 改为「按版本存放；当前不自动清理旧版」；`:46` 改为「旧服务仍在运行则继续认领旧版；旧服务退出后重启/重试才准备并启动新版本；旧版目录当前保留；当前没有自动回滚」。Task 7 实施完成后再升级为完成态。
-- [ ] 核对 pack 不可用分支：`src/runtime/bridge.ts:75-76` 的 `0.0.0-0` 退化；Task 2 必须改成「有当前版本时 `blocked` + `pack_missing`/`platform_unsupported`，不写 bogus target」。
-- [ ] 核对 current/service 写入顺序：`src/runtime/supervisor.ts:600-609` 先写 service 再写 current；记录崩溃窗口，Task 1/2 的冲突规则要覆盖。
-- [ ] 核对首次 `runtime/status` 在 `ensure()` 前的 `version` 来源：`src/runtime/ops.ts:77` 先填目标版本；Task 1 改成优先读 current。
-- [ ] 确认落点：优先新增 `src/runtime/upgrade.ts` 作为根级协调者；若与 `getSupervisor` 生命周期或 `ops.supervisor()` 消费面冲突，先记录备选（bridge 内控制器），再改 spec/plan。
-- [ ] 确认测试缝：supervisor 的 `spawn`/`fetchImpl`/`timers`/`readyTimeoutMs`/`isAlive`/`executablePath` 可注入；provision 的 `extract` 可注入；coordinator 的时钟与 FS 可注入。
-- [ ] 记录「不改 engine」的核对结论；若发现必须改 engine 才能完成回滚，先停下摊证据，不擅自扩围。
+- [x] 核对 pack 不可用分支：`src/runtime/bridge.ts:75-76` 的 `0.0.0-0` 退化、`:118` pack 为空时返回 `pack_missing`；Task 2 改成「有当前版本时 `blocked` + `pack_missing`/`platform_unsupported`，不写 bogus target」。
+- [x] 核对 current/service 写入顺序：`src/runtime/supervisor.ts:600-609` 先写 service 再写 current；崩溃窗口规则落 Task 1/2。
+- [x] 核对首次 `runtime/status` 在 `ensure()` 前的 `version` 来源：`src/runtime/ops.ts:77` 先填目标版本，只有存在 view 时才被 `:112` 覆盖；Task 1 改成优先读 current。
+- [x] 确认落点：新增 `src/runtime/upgrade.ts` 成立——`getSupervisor` 仅 `bridge.ts:103` 引用，`ops.supervisor()` 只消费 `{status,ensure,retry}`；备选（bridge 内控制器）不启用。
+- [x] 确认测试缝：supervisor 的 `spawn`/`fetchImpl`/`timers`/`readyTimeoutMs`/`isAlive`/`executablePath` 可注入；provision 的 `extract` 可注入；coordinator 的时钟与 FS 可注入。
+- [x] 记录「不改 engine」的核对结论：spec §6 改动面全在 host 与面板；引擎从 `runtime/<version>/engine` 启动，回滚＝启旧目录，无需引擎配合。
 
-**实测（实施期回填）**：手册两行已于 2026-10-25 改为现状；其余 Task 0 项待实施。
+**实测（实施期回填）**：2026-10-25 只读核对完成，未发现与 spec 冲突项，Task 0 全部闭合（手册修正已于 `ce6b327` 落盘）。
+- 代码事实：`bridge.ts:76` 目标为空时退化为 `0.0.0-0`，`:118` 才返回 `pack_missing`；`supervisor.ts:480` 在 `adopt` 内回写 current、`:609` 在启动成功后回写，`:600-608` 的 service 写入先于 `:609` 的 current ⇒ 崩溃窗口真实存在；`zip.ts:144`/`:153` 与 `provision.ts:28` 都只判 `runtime-manifest.json` 存在、不校验内容；`process.ts` 的 pid 可空与 `supervisor.ts:191` 的 `executablePath=null` 一致；`kb_proxy.ts:391` 三个特权 op、`:432-435` 四个 runtime op。
+- 现场：`current.json`=0.1.0-1；`service.json`=0.1.0-1、ports 6334/6335/8021、pid/qdrantPid null；`lease.json` owner `2f7b3b10f04feb20`/pid 75512（本 DSH）；8021 由 pid 65544 持有；`0.1.0-1` 与 `0.1.0-2` 的 `configVersion` 均 44；0.1.0-2 zip 330,283,067 B / sha `05cc423b…`；`runtime.json.urls=[]` ⇒ 本机验收必须带 `DSH_HARNESS_RAG_PACK` 绝对路径。
+- 退出清理：沿用分发 plan §5.11 的 10-25 真机证据（Task 8 行 187/264：退出后 DSH 与 qdrant/engine 全消失，宿主 Job 回收）；本轮不重验，切换后的实况由 Task 6 重启覆盖。
+- 落点/测试缝：`src/runtime/upgrade.ts` 无生命周期冲突（supervisor 仅 bridge 引用，ops 只消费三方法）；supervisor 六个注入缝、provision `extract` 均已在现有测试中使用。
+- 并行会话（G11）只动 `src/index.ts`（仅注释）、`src/tool_gating.ts`、`tests/tool_gating.test.ts`、`src/retrieval_discipline.ts` 与两份 rag-soul-section 文档，不碰 runtime 接线与面板。
 
 ## Task 1 — 版本状态模型与 current 所有权
 
