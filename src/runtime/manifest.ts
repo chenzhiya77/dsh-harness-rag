@@ -157,17 +157,32 @@ export function readManifest(options: { packageRoot: string }): { ok: true; mani
   return validateManifest(raw)
 }
 
-export function selectPack(manifest: RuntimeManifest, platform: string): PackSelection {
+export function selectPack(
+  manifest: RuntimeManifest,
+  platform: string,
+  options: { allowUnpublished?: boolean } = {},
+): PackSelection {
   const pack = manifest.packs[platform]
   if (!pack) return { ok: false, code: 'platform_unsupported' }
-  if (isUnpublished(pack)) return { ok: false, code: 'pack_missing' }
+  if (isUnpublished(pack)) {
+    if (!options.allowUnpublished) return { ok: false, code: 'pack_missing' }
+    // The local zip supplies the bytes, but a real build must have filled the
+    // size metadata; the 0.0.0-0 placeholder must never become a target.
+    if (pack.runtimeVersion === '0.0.0-0' || pack.size === 0 || pack.unpackedSize === 0) {
+      return { ok: false, code: 'pack_missing' }
+    }
+  }
   return { ok: true, platform, pack }
 }
 
-export function loadPack(options: { packageRoot: string; platform: string }): PackSelection {
+export function loadPack(options: {
+  packageRoot: string
+  platform: string
+  allowUnpublished?: boolean
+}): PackSelection {
   const read = readManifest({ packageRoot: options.packageRoot })
   if (!read.ok) return read
-  return selectPack(read.manifest, options.platform)
+  return selectPack(read.manifest, options.platform, { allowUnpublished: options.allowUnpublished })
 }
 
 /** Keep only a well-formed record; a damaged `current.json` degrades to null

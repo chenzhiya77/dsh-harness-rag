@@ -121,6 +121,34 @@ test('validate: a partially filled pack is still an unpublished placeholder', ()
   if (!selected.ok) assert.equal(selected.code, 'pack_missing')
 })
 
+test('select: a locally built unpublished pack needs the override allowance', () => {
+  const local = pack({ urls: [], size: 123, unpackedSize: 456 })
+  const result = validateManifest(manifest({ packs: { 'win32-x64': local } }))
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  const blocked = selectPack(result.manifest, 'win32-x64')
+  assert.equal(blocked.ok, false)
+  if (!blocked.ok) assert.equal(blocked.code, 'pack_missing')
+  const allowed = selectPack(result.manifest, 'win32-x64', { allowUnpublished: true })
+  assert.equal(allowed.ok, true)
+  if (allowed.ok) assert.equal(allowed.pack.runtimeVersion, '2.1.0-1')
+})
+
+test('select: the override allowance still refuses placeholder metadata', () => {
+  for (const placeholder of [
+    pack({ runtimeVersion: '0.0.0-0', urls: [], size: 123, unpackedSize: 456 }),
+    pack({ urls: [], size: 0, unpackedSize: 456 }),
+    pack({ urls: [], size: 123, unpackedSize: 0 }),
+  ]) {
+    const result = validateManifest(manifest({ packs: { 'win32-x64': placeholder } }))
+    assert.equal(result.ok, true)
+    if (!result.ok) continue
+    const selected = selectPack(result.manifest, 'win32-x64', { allowUnpublished: true })
+    assert.equal(selected.ok, false)
+    if (!selected.ok) assert.equal(selected.code, 'pack_missing')
+  }
+})
+
 // ── selectPack / loadPack ───────────────────────────────────────────────────
 
 test('select: an absent platform is platform_unsupported', () => {
@@ -150,6 +178,14 @@ test('load: reads runtime.json from the package root', () => {
   const dir = tempDir()
   writeFileSync(join(dir, 'runtime.json'), JSON.stringify(manifest()))
   const loaded = loadPack({ packageRoot: dir, platform: 'win32-x64' })
+  assert.equal(loaded.ok, true)
+  if (loaded.ok) assert.equal(loaded.pack.size, 123)
+})
+
+test('load: the override allowance survives the manifest read', () => {
+  const dir = tempDir()
+  writeFileSync(join(dir, 'runtime.json'), JSON.stringify(manifest({ packs: { 'win32-x64': pack({ urls: [] }) } })))
+  const loaded = loadPack({ packageRoot: dir, platform: 'win32-x64', allowUnpublished: true })
   assert.equal(loaded.ok, true)
   if (loaded.ok) assert.equal(loaded.pack.size, 123)
 })

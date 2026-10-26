@@ -69,7 +69,13 @@ export function createRuntimeBridge(
   env: NodeJS.ProcessEnv = process.env,
 ): RuntimeBridge {
   const platform = `${process.platform}-${process.arch}`
-  const selection = loadPack({ packageRoot: PACKAGE_ROOT, platform })
+  // Dev-only override (spec §4.4): a locally built zip replaces the download.
+  const sourceZip = env.DSH_HARNESS_RAG_PACK?.trim() ? resolve(env.DSH_HARNESS_RAG_PACK.trim()) : undefined
+  const selection = loadPack({
+    packageRoot: PACKAGE_ROOT,
+    platform,
+    allowUnpublished: Boolean(sourceZip),
+  })
   const pack = selection.ok ? selection.pack : null
   const target: UpgradeTarget | null = selection.ok
     ? {
@@ -80,8 +86,6 @@ export function createRuntimeBridge(
     : null
   const targetError = selection.ok ? undefined : { code: selection.code }
   const version = pack?.runtimeVersion ?? ''
-  // Dev-only override (spec §4.4): a locally built zip replaces the download.
-  const sourceZip = env.DSH_HARNESS_RAG_PACK?.trim() ? resolve(env.DSH_HARNESS_RAG_PACK.trim()) : undefined
   const anchorRoot = defaultRoot(env)
   let root = (() => {
     const resolved = resolveRoot({ anchorRoot, env })
