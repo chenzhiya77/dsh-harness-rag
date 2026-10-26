@@ -17,6 +17,8 @@ import { sanitizeService, type ServiceRecord } from './process.ts'
 import {
   forgetSupervisor,
   leaseHeldByOther,
+  leaseOwner,
+  probeTcpPort,
   type EnsureStep,
   type RuntimeStatusView,
   type RuntimeUpgradeView,
@@ -47,6 +49,7 @@ export interface UpgradeCoordinatorOptions {
   activate?: (target: Supervisor, fromVersion: string) => Promise<RuntimeStatusView>
   now?: () => string
   isAlive?: (pid: number) => boolean
+  probePort?: (port: number) => Promise<boolean>
   log?: (message: string) => void
 }
 
@@ -150,6 +153,7 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
   const root = options.root
   const target = options.target
   const now = options.now ?? (() => new Date().toISOString())
+  const probePort = options.probePort ?? probeTcpPort
   const created = new Map<string, Supervisor>()
 
   const initialCurrent = readCurrent(root)
@@ -484,6 +488,32 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
       }
       running = old
       publishView(await old!.ensure())
+      return status()
+    }
+
+    // An answering service record with no pid and no live lease owner is an
+    // orphan we cannot stop safely. Adopt it so the library keeps working,
+    // but hold the upgrade for a manual stop instead of guessing a pid.
+    const leaseState = leaseOwner(root, options.isAlive)
+    const staleAnswer =
+      service && currentVersion && service.runtimeVersion === currentVersion && service.pid === null &&
+      !foreignLease && (leaseState === 'stale' || leaseState === 'none')
+        ? await probePort(service.ports.knowledge)
+        : false
+    if (staleAnswer) {
+      const error = { phase: 'lease', code: 'upgrade_blocked_stale_instance', detail: currentVersion ?? '' }
+      if (oldHealthy && old) {
+        const adopted = await old.adopt()
+        if (adopted) {
+          running = old
+          publishView(adopted)
+        }
+      }
+      if (!running) {
+        publishView({ phase: 'idle', adopted: false, runtimeVersion: currentVersion ?? '', root, logTail: '' })
+      }
+      upgrade = { ...base, state: 'blocked', error }
+      persist(fromVersion, 'blocked', error)
       return status()
     }
 

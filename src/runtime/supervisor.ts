@@ -133,7 +133,7 @@ function defaultIsAlive(pid: number): boolean {
   }
 }
 
-function defaultProbePort(port: number): Promise<boolean> {
+export function probeTcpPort(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const server = createNetServer()
     server.once('error', () => resolve(false))
@@ -258,7 +258,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
   const nowMs = options.nowMs ?? Date.now
   const isAlive = options.isAlive ?? defaultIsAlive
   const executablePath = options.executablePath ?? (() => null)
-  const probePort = options.probePort ?? defaultProbePort
+  const probePort = options.probePort ?? probeTcpPort
   const readyTimeoutMs = options.readyTimeoutMs ?? 120_000
   const probeIntervalMs = options.probeIntervalMs ?? 250
   const disposeGraceMs = options.disposeGraceMs ?? 5_000
@@ -819,11 +819,24 @@ export function readLeaseRecord(root: string): LeaseRecord | null {
   }
 }
 
+export type LeaseOwner = 'none' | 'ours' | 'foreign' | 'stale'
+
+/** Who owns the root's lease: a live other host, this process (a previous
+ * supervisor for another version), a dead pid, or nobody. */
+export function leaseOwner(
+  root: string,
+  isAlive: (pid: number) => boolean = defaultIsAlive,
+): LeaseOwner {
+  const lease = readLeaseRecord(root)
+  if (!lease) return 'none'
+  if (lease.pid === process.pid) return 'ours'
+  return isAlive(lease.pid) ? 'foreign' : 'stale'
+}
+
 /** Another live host owns the root's lease. A lease written by this process is
  * ours (a previous supervisor for another version), so treat it as free. */
 export function leaseHeldByOther(root: string, isAlive: (pid: number) => boolean = defaultIsAlive): boolean {
-  const lease = readLeaseRecord(root)
-  return Boolean(lease && lease.pid !== process.pid && isAlive(lease.pid))
+  return leaseOwner(root, isAlive) === 'foreign'
 }
 
 export function readLogTail(root: string): string {

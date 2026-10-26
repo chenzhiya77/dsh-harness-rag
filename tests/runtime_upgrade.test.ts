@@ -98,6 +98,7 @@ interface FixtureOptions {
   provisionResult?: EnsureStep
   activate?: boolean
   isAlive?: (pid: number) => boolean
+  probePort?: (port: number) => Promise<boolean>
   target?: UpgradeTarget | null
   targetError?: { code: string; detail?: string }
   log?: (message: string) => void
@@ -116,6 +117,18 @@ function install(root: string, version: string, configVersion: number): void {
 function writeState(root: string, name: string, value: unknown): void {
   mkdirSync(join(root, 'state'), { recursive: true })
   writeFileSync(join(root, 'state', name), JSON.stringify(value))
+}
+
+function serviceRecord(version: string, pid: number | null = null): Record<string, unknown> {
+  return {
+    version: 1,
+    pid,
+    qdrantPid: null,
+    runtimeVersion: version,
+    token: 'test-token',
+    ports: { qdrantHttp: 1, qdrantGrpc: 2, knowledge: 3 },
+    startedAt: STAMP,
+  }
 }
 
 function fixture(options: FixtureOptions = {}): Fixture {
@@ -159,6 +172,7 @@ function fixture(options: FixtureOptions = {}): Fixture {
     targetError: options.targetError,
     headless: true,
     isAlive: options.isAlive ?? (() => false),
+    probePort: options.probePort ?? (async () => false),
     supervisorFor,
     provision: async (_version, hooks) => {
       calls.provision += 1
@@ -322,6 +336,74 @@ test('upgrade: an unhealthy old version with a foreign lease is blocked without 
   assert.equal(f.calls.provision, 0)
   assert.equal(f.calls.activate, 0)
   assert.equal(f.supervisors.get(OLD)?.calls.ensure, 0)
+})
+
+test('upgrade: a stale instance with no pid that still answers blocks the upgrade', async () => {
+  const f = fixture({ oldHealthy: true, probePort: async () => true })
+  writeState(f.root, 'service.json', serviceRecord(OLD))
+  writeState(f.root, 'lease.json', { version: 1, owner: 'gone', pid: FOREIGN_PID, startedAt: STAMP })
+
+  const status = await f.coordinator.ensure()
+  await settle()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.upgrade?.state, 'blocked')
+  assert.equal(status.upgrade?.error?.code, 'upgrade_blocked_stale_instance')
+  assert.equal(f.supervisors.get(OLD)?.calls.adopt, 1)
+  assert.equal(f.calls.provision, 0)
+  assert.equal(f.calls.activate, 0)
+})
+
+test('upgrade: an unhealthy stale instance that still answers is not replaced', async () => {
+  const f = fixture({ oldHealthy: false, probePort: async () => true })
+  writeState(f.root, 'service.json', serviceRecord(OLD))
+  writeState(f.root, 'lease.json', { version: 1, owner: 'gone', pid: FOREIGN_PID, startedAt: STAMP })
+
+  const status = await f.coordinator.ensure()
+
+  assert.equal(status.phase, 'idle')
+  assert.equal(status.upgrade?.state, 'blocked')
+  assert.equal(status.upgrade?.error?.code, 'upgrade_blocked_stale_instance')
+  assert.equal(f.calls.provision, 0)
+  assert.equal(f.calls.activate, 0)
+  assert.equal(f.supervisors.get(OLD)?.calls.ensure, 0)
+})
+
+test('upgrade: a stale record whose port is closed does not block the target', async () => {
+  const f = fixture({ oldHealthy: false, targetInstalled: true, activate: true, probePort: async () => false })
+  writeState(f.root, 'service.json', serviceRecord(OLD))
+  writeState(f.root, 'lease.json', { version: 1, owner: 'gone', pid: FOREIGN_PID, startedAt: STAMP })
+
+  const status = await f.coordinator.ensure()
+
+  assert.equal(f.calls.activate, 1)
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.upgrade, undefined)
+})
+
+test('upgrade: our own lease keeps a healthy instance on the prepare path', async () => {
+  const f = fixture({ oldHealthy: true, probePort: async () => true })
+  writeState(f.root, 'service.json', serviceRecord(OLD))
+  writeState(f.root, 'lease.json', { version: 1, owner: 'this-host', pid: process.pid, startedAt: STAMP })
+
+  const status = await f.coordinator.ensure()
+  await settle()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.upgrade?.state, 'pending')
+  assert.equal(f.calls.provision, 1)
+})
+
+test('upgrade: a recorded pid is not treated as an orphan', async () => {
+  const f = fixture({ oldHealthy: true, probePort: async () => true })
+  writeState(f.root, 'service.json', serviceRecord(OLD, 1234))
+  writeState(f.root, 'lease.json', { version: 1, owner: 'gone', pid: FOREIGN_PID, startedAt: STAMP })
+
+  const status = await f.coordinator.ensure()
+  await settle()
+
+  assert.equal(status.upgrade?.state, 'pending')
+  assert.equal(f.calls.provision, 1)
 })
 
 test('upgrade: an unhealthy old version with a changed config version stops at confirmation', async () => {
