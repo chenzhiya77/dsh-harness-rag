@@ -1,6 +1,6 @@
 # R1 Excel 可选件随运行时包 —— plan
 
-**Status:** 已拍·实施中（2026-10-26 Task 0–1 完成；Task 2–4 待做；只覆盖 spec §9 R1，R2–R5 仍待裁）
+**Status:** 已拍·实施中（2026-10-26 Task 0–2 完成；Task 3–4 待做；只覆盖 spec §9 R1，R2–R5 仍待裁）
 **Date:** 2026-10-26
 **配套 spec:** [2026-10-24-single-download-distribution-spec.md §9 R1](../specs/2026-10-24-single-download-distribution-spec.md)
 
@@ -53,14 +53,23 @@
 
 > 动到的文件：无（构建产物在仓外 `D:\hrag-r1`；如临时夹具脚本放仓外）。
 
-- [ ] 构建完整 `0.1.0-3` 包：`node scripts/build-runtime-pack.mjs --engine ./engine --out D:\hrag-r1 --runtime-version 0.1.0-3 --engine-commit a4942966b`（R1 不改引擎；`engine/backend` 自该提交零 diff，沿用当前 `runtime.json.engineCommit`）；**不要带 `--update-manifest`**；记录 zip 大小、解压大小、sha256；核对 `runtime-manifest.json` 与 `site-packages/python_calamine-0.8.2.dist-info` 均在包内。
-- [ ] 本地包匹配：复制插件包到 `D:\hrag-r1\plugin-test`，只改副本 `runtime.json` 的 `packs.win32-x64.runtimeVersion` 为 `0.1.0-3`，并把 `size`/`unpackedSize`/`sha256` 填成刚构建 zip 的真实值（`urls: []` 可留空；`allowUnpublished` 仍拒绝 `size=0`/`unpackedSize=0`，`sha256` 需 64 位 hex）；确认 `loadPack` 目标版本与 zip manifest 一致。**不改仓库 `runtime.json`**。
-- [ ] 隔离运行：从 `plugin-test` 用隔离 `DSH_HOME` 启动，或直接把包解到临时运行根起 Qdrant 与 knowledge 服务；不碰桌面托管栈。
-- [ ] 开启表格门控：临时 `config.yaml` 设 `rag.table.enabled: true`；通过 API 建库、上传/解析一个真实 `.xlsx`，轮询到 `ready`，验证切片/表格内容可读；`.tsv` 与 `.csv` 做回归。`.xls` 若有夹具再验；没有则记录“同一 calamine 路径、未独立覆盖”。
-- [ ] 门控关闭对照：`rag.table.enabled: false` 时 `.xlsx` 仍在 allowlist 外，确认原有拒绝行为未被改宽。
-- [ ] 版本与身份：确认引擎实际 import 的是 pack 内的 `python_calamine`（不是宿主/系统环境）；日志无密钥；证据写 `D:\hrag-r1\...`（README、日志、请求/响应摘要、包内 dist-info 清单）。
+- [x] 构建完整 `0.1.0-3` 包：`node scripts/build-runtime-pack.mjs --engine ./engine --out D:\hrag-r1 --runtime-version 0.1.0-3 --engine-commit a4942966b`（R1 不改引擎；`engine/backend` 自该提交零 diff，沿用当前 `runtime.json.engineCommit`）；**不要带 `--update-manifest`**；记录 zip 大小、解压大小、sha256；核对 `runtime-manifest.json` 与 `site-packages/python_calamine-0.8.2.dist-info` 均在包内。
+- [x] 本地包匹配：复制插件包到 `D:\hrag-r1\plugin-test`，只改副本 `runtime.json` 的 `packs.win32-x64.runtimeVersion` 为 `0.1.0-3`，并把 `size`/`unpackedSize`/`sha256` 填成刚构建 zip 的真实值（`urls: []` 可留空；`allowUnpublished` 仍拒绝 `size=0`/`unpackedSize=0`，`sha256` 需 64 位 hex）；确认 `loadPack` 目标版本与 zip manifest 一致。**不改仓库 `runtime.json`**。
+- [x] 隔离运行：从 `plugin-test` 用隔离 `DSH_HOME` 启动，或直接把包解到临时运行根起 Qdrant 与 knowledge 服务；不碰桌面托管栈。
+- [x] 开启表格门控：临时 `config.yaml` 设 `rag.table.enabled: true`；通过 API 建库、上传/解析一个真实 `.xlsx`，轮询到 `ready`，验证切片/表格内容可读；`.tsv` 与 `.csv` 做回归。`.xls` 若有夹具再验；没有则记录“同一 calamine 路径、未独立覆盖”。
+- [x] 门控关闭对照：`rag.table.enabled: false` 时 `.xlsx` 仍在 allowlist 外，确认原有拒绝行为未被改宽。
+- [x] 版本与身份：确认引擎实际 import 的是 pack 内的 `python_calamine`（不是宿主/系统环境）；日志无密钥；证据写 `D:\hrag-r1\...`（README、日志、请求/响应摘要、包内 dist-info 清单）。
 
-**实测（实施期回填）**：
+**实测（2026-10-26）**：
+
+- **构建**：命令 exit 0；zip `D:\hrag-r1\harness-rag-runtime-win32-x64-0.1.0-3.zip`，331,053,658 B，sha256 `90421f0f071bc2772cfe645af9eb48ecf1b33c5c61cba3139c360f6d93aca745`，20,086 entries，解压文件总字节 882,903,724；日志 `D:\hrag-r1\build-0.1.0-3.log`。未带 `--update-manifest`；仓库 `runtime.json` 仍为 `0.1.0-2`。
+- **包内核对**：`runtime-manifest.json` 为 `0.1.0-3`/`a4942966b`/`configVersion 44`；`site-packages/python_calamine-0.8.2.dist-info/`、`python/python.exe`、`qdrant/qdrant.exe` 均在 zip；构建期冒烟打印包内 `python_calamine.__file__`。
+- **本地包匹配**：`D:\hrag-r1\plugin-test\runtime.json` 目标 `0.1.0-3`、`urls: []`、真实 size/unpacked/sha；`loadPack({allowUnpublished:true})` ok 且版本与 zip manifest 一致；`allowUnpublished:false` → `pack_missing`。仓库 `runtime.json` 未改（`git diff` 空）。
+- **隔离运行**：解压 zip 到 `D:\hrag-r1\run\pack-0.1.0-3`；Qdrant 6433/6434；knowledge 服务 8021；fake OpenAI-compatible 提供方 9101 仅用于让摄入到 `ready`（不属于 pack）。
+- **门控开启**：`rag.table.enabled: true`；`/supported-formats` 含 `.csv/.tsv/.xls/.xlsx`；`fixture.xlsx`/`.tsv`/`.csv` 均 `ready`、1 chunk、vector/graph done；三份切片正文均为 `| name | qty | note | ... alpha ... beta ...`。`.xls` 无夹具，记录“同一 calamine 路径、未独立覆盖”。
+- **门控关闭**：重启后 `/supported-formats` 不含 `.tsv/.xls/.xlsx`，`.csv` 保留；`.xlsx` 与 `.tsv` 上传均 400（`unsupported file type`）。
+- **身份/安全**：服务进程 exe 为包内 `python.exe`；同 PYTHONPATH 下 `python_calamine.__file__` 指向包内 `site-packages`；日志中 token 与三个 fake key 出现次数均为 0，无 traceback/ImportError。
+- **证据**：`D:\hrag-r1\evidence\zip\README.md` 及同目录 JSON/日志/哈希；本 plan/spec 的 Task 2 状态已回填。
 
 ## Task 3 — 版本、文档与发布（候令）
 

@@ -1,6 +1,6 @@
 # 单一下载分发（插件自带本地运行环境） —— spec
 
-**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 公开仓、`v0.1.0` Release 与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；§5.10 同时启动与 §5.17 `.env` 代理/引擎出网已于 2026-10-26 补测（证据 `D:\hrag-t6\acceptance-2026-10-26-lease-proxy`）；npm 发布与索引上线待外部条件）。**2026-10-26 RAG 面复审追加 §9：R1 已定甲并进入实施（Task 0–1 完成，构建脚本与额外 pin 已改；运行时 pack 与发布未动），R2–R5 待裁、K1 已知降级。**
+**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 公开仓、`v0.1.0` Release 与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；§5.10 同时启动与 §5.17 `.env` 代理/引擎出网已于 2026-10-26 补测（证据 `D:\hrag-t6\acceptance-2026-10-26-lease-proxy`）；npm 发布与索引上线待外部条件）。**2026-10-26 RAG 面复审追加 §9：R1 已定甲并进入实施（Task 0–2 完成，0.1.0-3 包已建但未发布；runtime.json 与安装文档仍指 v0.1.0），R2–R5 待裁、K1 已知降级。**
 **Date:** 2026-10-24
 **来源:** 10-24 他问「当前的插件有两个文件夹……用户下载插件肯定是只下载一个插件，后端不能放在插件文件夹中吗」；随后明确目标是「用户只需要点击下载插件就能下载完全部的东西，可以直接使用」，并问 DSH 插件发布在哪、是否有官方市场；确认方向后令起 spec/plan。
 **承接:** 现行部署两件式（[README.md](../../README.md) §安装/§后端最小形态，`README.md:40-69`）；配置默认值 `src/settings.ts:15-19`；后端地址的唯一消费面 `src/http.ts:29-48` 与 `src/kb_proxy.ts:395/450/543`；引擎路径环境变量 `engine/backend/packages/harness/deerflow/config/runtime_paths.py`（并入单仓后的位置）。
@@ -362,7 +362,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 ## 9. 2026-10-26 RAG 面复审登记
 
-> 本节记录复审发现与 R1 实施状态。R1 已定甲并进入实施（Task 0–1 完成，构建脚本与额外 pin 已改），R2–R5 待裁，K1 为已知降级。R1 的 pack 重建在 Task 2；R2–R5 裁决前不改 README/面板文案、不动 `runtime.json`，也不改变 §7/§8 的已拍结论。
+> 本节记录复审发现与 R1 实施状态。R1 已定甲并进入实施（Task 0–2 完成，0.1.0-3 包已建但未发布），R2–R5 待裁，K1 为已知降级。R2–R5 裁决前不改 README/面板文案、不动 `runtime.json`，也不改变 §7/§8 的已拍结论。
 
 ### 9.1 基线与结论
 
@@ -402,12 +402,12 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 - **R1（已定甲）**：重建托管运行时 pack，bump `runtimeVersion`（`0.1.0-3`），新增 Release 资产并更新 `runtime.json`；GitHub 安装需要新插件 tag/release（如 `v0.1.1`），已装用户也需先升级插件，既有运行时升级链才会看到新 pack。不覆盖 `v0.1.0` 的既有资产；执行细节见 [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
 - **R2–R5（未裁）**：发布影响按选项定，不预先混写。R4 的 UI 文案与 R5 的删入口属于插件 patch；R3 甲或 R2 乙才重建 pack。R2/R3 若裁 pack 方案，另立 plan。
-- R1 实施前 `runtime.json` 保持 `0.1.0-2`；当前 `v0.1.0` 仍为有效发布。
+- R1 发布前 `runtime.json` 保持 `0.1.0-2`；当前 `v0.1.0` 仍为有效发布，`0.1.0-3` 已建包、未上传。
 - 外部模式不在 R1 的 pack 修复范围内：`make gateway` 环境仍需自行安装 `python-calamine`，README/手册必须把托管与外部两种模式分开写。
 
 ### 9.5 验收补充（裁决后并入 §5）
 
-- **5.20 表格门控（R1）**：干净托管运行时开启 `rag.table.enabled`，上传 `.xlsx` 到 ready；`.xls` 有夹具才验，否则记录“同一 calamine 路径、未独立覆盖”。
+- **5.20 表格门控（R1，已验 2026-10-26）**：干净托管运行时 `0.1.0-3` 开启 `rag.table.enabled`，`.xlsx`/`.tsv`/`.csv` 均到 `ready` 且切片为同一 GFM 表；门控关闭时 `.xlsx`/`.tsv` 被 400 拒绝、`.csv` 保留。`.xls` 无夹具，记录“同一 calamine 路径、未独立覆盖”。证据 `D:\hrag-r1\evidence\zip`。
 - **5.21 视频前置（R2）**：无 ffmpeg/ffprobe 时得到明确错误；装 ffmpeg、设 `asr_model` 后，≤5 分钟服务档 ASR 成功；>5 分钟验证回落失败被标为 `asr=failed`、文档仍可 ready。
 - **5.22 干净 VM 首次切分（R3）**：断网或空 tiktoken 缓存下首次摄入；按裁决结果验证「包内 BPE 成功」或「联网后成功且文档有说明」。
 - **5.23 MinerU 未配置（R4）**：新装后先传 PDF，验证提示指向「功能模型设置」且配置后解析成功。
@@ -415,6 +415,6 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 ### 9.6 本轮状态
 
-- R1 已定甲，plan Task 0–1 已完成（只读核实 + 构建脚本注入/冒烟）；插件运行时代码、运行时 pack、README/手册、面板、`runtime.json` 均未改；当前发布仍为 `v0.1.0`。
+- R1 已定甲，plan Task 0–2 已完成（只读核实、构建脚本注入/冒烟、`0.1.0-3` 真包构建与 Excel/门控验收）；仓库内插件运行时代码、README/手册、面板、`runtime.json` 均未改；`0.1.0-3` 包在仓外 `D:\hrag-r1`、未上传，当前发布仍为 `v0.1.0`。
 - R2–R5 待裁；K1 已知降级。
 - R1 按 plan 实施；R2–R5 裁决后另立 plan，未裁前不排期。
