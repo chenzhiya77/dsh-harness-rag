@@ -2,21 +2,21 @@
 
 > 原根 README，现作为安装、运行与契约的操作手册保留；产品介绍见根 [README](../README.md)。
 
-现状：工具面（三检索＋文档两件＋百科清单）、右栏管理面板、摄取后台任务、子槽声明契约、单一下载分发（运行时准备/就绪/重试/嵌入模型引导）与版本化升级/回滚/旧版清理均已实装；`backendUrl` 为空即内置本地服务，非空仍走外部服务。npm 与 GitHub 安装入口待首次发布（见「安装」）。
+现状：工具面（三检索＋文档两件＋百科清单）、右栏管理面板、摄取后台任务、子槽声明契约、单一下载分发（运行时准备/就绪/重试/嵌入模型引导）与版本化升级/回滚/旧版清理均已实装；`backendUrl` 为空即内置本地服务，非空仍走外部服务。GitHub 安装入口已发布（v0.1.0，见「安装」）；npm 待发布。
 
 ## 安装
 
-本仓尚未发布（npm 包与 GitHub 仓库地址在发布前不可用）；当前从本地目录安装：
+GitHub 安装可用（钉 tag `v0.1.0`，不要跟 main）；npm 包尚未发布：
 
 ```sh
 # 本地目录（开发安装，改码即被读取）
 dsh plugin --profile <name> add link:<本仓绝对路径>
 
-# 发布后：npm 包名
-dsh plugin --profile <name> add dsh-harness-rag
+# GitHub（钉 tag；运行时包从同仓 Release 下载）
+dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.0
 
-# 发布后：GitHub 仓库地址（建议钉 tag 或 commit，不要跟 main）
-dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.git#<tag-or-commit>
+# npm（发布后可用）
+dsh plugin --profile <name> add dsh-harness-rag
 ```
 
 三种方式装的是同一份插件代码，首次运行面完全一致。装完重启该 profile 的 DSH，打开右栏「知识库」tab：
@@ -73,7 +73,7 @@ dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.g
 - `service.json` 的 `pid` 为 null、知识服务端口仍应答、且租约不存在或已陈旧时，插件判定为「旧实例残留」：服务仍可继续用，但升级会停在 `blocked` 并显示「旧实例残留」。插件不会猜 pid、也不强杀；请确认端口（默认 8020/6333/6334）上的进程属于本运行根后手工停止，再重启 DSH 或点重试。
 - `state/provision.lock` 的持有者已退出但锁仍在（例如 pid 无法判定）：确认没有其他宿主正在准备后删除该文件，再重试。
 
-**开发态本地包**：仅开发/验收用 `DSH_HARNESS_RAG_PACK=<本地 zip 绝对路径>` 覆盖下载，发布版不启用；本地包同样做空间检查与 manifest 的 `runtimeVersion`/`configVersion` 校验。`runtime.json` 的 `urls` 为空表示“未发布”，正式发布前必须回填下载地址、`size` 与 `sha256`。
+**开发态本地包**：仅开发/验收用 `DSH_HARNESS_RAG_PACK=<本地 zip 绝对路径>` 覆盖下载，发布版不启用；本地包同样做空间检查与 manifest 的 `runtimeVersion`/`configVersion` 校验。`runtime.json` 已回填 GitHub Release 下载地址（v0.1.0）与 `size`/`sha256`；本地包只用于开发/验收覆盖。
 
 ## 外部模式（自带 Harness RAG 服务）
 
@@ -108,7 +108,7 @@ Host 半在宿主世界注册模型可见工具，并负责运行时的准备、
 
 右栏「知识库」tab 的文档面支持本地文件夹分组：新建/改名/折叠/移动/删除，归属键为 per-kb localStorage（`hrag-doc-folders.<kbId>.v1`），与 Wiki 卡片抽屉同口径；只影响视图，不改变检索范围与检索结果。
 
-本包不含 RAG 逻辑；解析、切片、图谱、wiki、评测、存储全部在 knowledge 服务侧（运行根里的 `runtime/<version>/engine`）。
+本包不含 RAG 逻辑；解析、切片、图谱、wiki、评测、存储全部在 knowledge 服务侧（运行根里的 `runtime/<version>/engine`）。发布包的 Host 入口是 `src/index.ts` 的编译产物 `lib/index.js`（`npm run build:plugin`），源码与 `lib/` 同时入库。
 
 ## 隔离与 kb_id 解析
 

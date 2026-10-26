@@ -1,7 +1,7 @@
 # 单一下载分发（插件自带本地运行环境） Plan
 
 **Spec:** [2026-10-24-single-download-distribution-spec.md](../specs/2026-10-24-single-download-distribution-spec.md)
-**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落，发布动作与 GitHub 安装实测待外部条件；本地源补测已覆盖 §5.15 篡改、§5.17 下载段、§5.19 中止续传，§5.10 跨 profile 认领已过；余 §5.1 干净 VM、§5.4 UNC、§5.10 同时启动的租约争抢、§5.17 的 `.env` 来源与引擎模型出网）
+**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 发布与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；npm 发布、索引上线与旧引擎仓归档待外部条件；本地源补测已覆盖 §5.15 篡改、§5.17 下载段、§5.19 中止续传，§5.10 跨 profile 认领已过；余 §5.1 干净 VM、§5.4 UNC、§5.10 同时启动的租约争抢、§5.17 的 `.env` 来源与引擎模型出网）
 **Date:** 2026-10-25
 **Architecture:** **单仓**：仓库根就是插件包（npm 与 GitHub 仓库地址两种安装入口共用同一个根），后端源码在 `engine/`。薄 npm 包装插件两半＋`runtime.json`；host 半在首次激活时把平台运行时包（便携 Python＋`--target` site-packages＋`engine/` 源码＋Qdrant）下载到 `<DSH_HOME>/harness-rag/runtime/<版本>`（`DSH_HOME` 缺省 `~/.dsh`），配置与数据留在同级 `config/`、`state/`；host 以进程级单例托管 Qdrant 与 knowledge 服务，面板经 `runtime/status` 显示准备进度。`backendUrl` 为空即托管，非空仍是今天的外部模式。
 
@@ -17,7 +17,7 @@
 - [x] **目录选择器**：host `ctx.inject(['directoryPicker'], …)` 在 desktop 组合可用；`capability()` 为 `{kind:'native', pick(signal)}`，`pick()` 返回绝对路径、取消返回 `null`；与工作区「添加工作区」同款。记录 browse-only/缺服务时的退化判据。
 - [x] **headless 判定**：插件激活时如何区分「有客户端世界」与 headless/纯 CLI（`webServer` 注入、Electron 标志、`ctx.get` 任一可用判据）；GUI 出设置卡、headless 自动默认根的边界；`webServer` 晚到是否需要短暂宽限。
 - [x] **盘符与空间**：`fs.statfs` 在 Windows 的可用性与返回字段；UNC/网络盘识别方式；OneDrive 等同步盘识别（环境变量/路径），供二次确认用；空间检查按 `size + unpackedSize × 1.1`，确认 `unpackedSize` 从清单读取。
-- [x] **插件安装面**：`dsh plugin --profile desktop add <本地 tgz>`、`link:`、以及 **GitHub 仓库地址**三种安装下包根解析（`import.meta.url` 到 `runtime.json`）一致；GitHub 地址安装用一个「根是插件包＋含 `engine/` 子目录」的测试仓验证 pnpm 只装包面、不因 `engine/` 失败；确认常规 `dependencies` 会被 pnpm 装进 profile，且 `yauzl` 无构建脚本；确认 `engines.dsh` 的 SemVer 范围对 `0.2.1-rc.2`（当前 DSH）通过，并记录正确范围。**实测缺口：GitHub 地址未测（仓无 remote）；tgz/link 与 engines 已过。** **收口（Task 8）**：本地两径、包面、engines 均已过；GitHub 地址安装归外部条件（Task 8 外部动作⑦）。
+- [x] **插件安装面**：`dsh plugin --profile desktop add <本地 tgz>`、`link:`、以及 **GitHub 仓库地址**三种安装下包根解析（`import.meta.url` 到 `runtime.json`）一致；GitHub 地址安装用一个「根是插件包＋含 `engine/` 子目录」的测试仓验证 pnpm 只装包面、不因 `engine/` 失败；确认常规 `dependencies` 会被 pnpm 装进 profile，且 `yauzl` 无构建脚本；确认 `engines.dsh` 的 SemVer 范围对 `0.2.1-rc.2`（当前 DSH）通过，并记录正确范围。**实测缺口：GitHub 地址未测（仓无 remote）；tgz/link 与 engines 已过。** **收口（Task 8）**：本地两径、包面、engines 均已过。**2026-10-26**：GitHub 地址安装已实测——首测发现 `src/index.ts` 在 `node_modules` 下无法剥类型，补 `lib/` 编译入口后复测通过（见「发布收口」）。
 - [x] **单仓迁移**：源分支是 `feat/rag-knowledge-base`（不是 `master`）。在临时克隆上试 `git subtree add --squash --prefix engine <harness-rag> feat/rag-knowledge-base`，记录耗时/冲突/路径长度与克隆体积；引擎 `.git` 172 MB，默认不保留完整历史，若 squash 仍太大则用「快照提交 + `engine/UPSTREAM.md`」；确认并入后 `npm pack` 不含 `engine/`。
 - [x] **包管理器姿态**：复核 pnpm 11 对依赖脚本的拦截与 DSH 的批准流程（只读 README＋实装一次带 script 的假包），确认「不靠 postinstall」这条没有暗坑。
 - [x] **引擎可搬运**：用 `uv python install --install-dir <tmp>/python 3.12`（产出 `<tmp>/python/cpython-3.12.x-windows-x86_64-none/python.exe`）；在 `backend/` 跑 `uv export --frozen --no-dev --extra umap --no-hashes --no-emit-project`（剔除两条 `-e`）后用 **`uv pip sync --python <py> --target <tmp>/site-packages`** 建一套（`uv pip install -r` 会重求解并失败）；以 `PYTHONPATH=site-packages;backend;backend/packages/harness;backend/packages/extension-api` 跑 `python -m uvicorn app.gateway.knowledge_app:app`。验证：能 import（含 UMAP）、用 `engine/config.example.yaml` 种出的 config 能被 `get_app_config()` 加载、`/health` 返回 `harness-rag-knowledge`、带 token 的 `/api/knowledge-bases` 200、缺 token 401。失败则记录首个坏包，评估 D3 丙退路。
@@ -221,18 +221,18 @@
 - [x] `market/index.json`：形态 1；npm source；`engines.dsh` 对齐；内联 SVG 图标；用 DSH 校验器（仓外一次性）验证通过。
 - [x] README：安装改为「装插件→首启在面板选位置并开始准备（实测约 315 MB）→配置嵌入模型」；并列三种安装命令（npm 包名、`git+https://…`、本地 `link:`），注明 GitHub 安装建议用 tag/commit；保留外部模式一节；给出默认/自定义根、`DSH_HOME`、换位需手工迁移、清理顺序、平台限制、索引添加方法；明确「官方市场未内置索引」；补「开发机已有 Qdrant 时托管会另起一个」「旧 `backend/.deer-flow` 数据不自动迁入」「杀软可能拦未签名 exe，如何加白」「视频默认 ASR 档需另装或改用服务档」。
 - [x] `npm pack --dry-run` 对照 `files`：不含 `engine/`、`scripts/`、`market/`、`docs/specs`、`docs/plans`、`node_modules`；含 `runtime.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`、`client.js`、`src/`；记录包大小（基线 307.6 kB tarball / 1.2 MB 解包，预计仍约 1.5 MB）。
-- [ ] 用 `git+https://<repo>.git` 在真实 DSH 装一次（仓库根是插件包），确认与 npm 安装等价、`runtime.json` 可读；记录 Git 安装的 `engines.dsh` 是装完后判定、失败会回滚 manifest/lock（与 registry 安装不同）。**待外部条件（无 remote；Task 8 外部动作⑦）。**
+- [x] 用 `git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.0` 在隔离 DSH 装一次（仓库根是插件包），lock 解析到 `6bb2a44`、插件激活并 `ready`；[包入口缺陷见「发布收口」]。Git 安装的 `engines.dsh` 是装完后判定、失败会回滚 manifest/lock（与 registry 安装不同）。
 - [x] 门禁：`node --check client.js`；`tsc`；`node --test tests/*.test.ts`；`engine/` 相对源 commit 只含预期改动；主树零 diff；token/key 扫描（提交面与包内容）。
 
 **实测（实施期回填）**：
 
 - **并入引擎**：`git archive b34b2d572 | tar -x -C engine` 快照（不保留历史，`.git` 不增）；**1082/1082 文件逐字节等于源 commit**（按 git blob sha 全量比对），额外仅 `engine/UPSTREAM.md`（源仓/分支/commit/日期/更新法）。`git archive` 会按源仓 `.gitattributes` 把 `*.cmd` 转 CRLF，唯一的 `scripts/run-with-git-bash.cmd` 已按 blob 还原为 LF；并入树自带 `.gitattributes`，后续 checkout 行为与源仓一致。
-- **package.json**：去 `private`；`publishConfig.access=public`；`engines.dsh=>=0.2.1-rc.2 <0.3.0`（Task 0 实核）；`repository`/`homepage` 为 `OWNER` 占位（发布前替换）；**`files` 增 `presets`**——README 引用了 `presets/knowledge.patch.yml`，原白名单漏项，npm 装法会缺件。
+- **package.json**：去 `private`；`publishConfig.access=public`；`engines.dsh=>=0.2.1-rc.2 <0.3.0`（Task 0 实核）；`repository`/`homepage` 为 `OWNER` 占位（2026-10-26 已替换为 `chenzhiya77`）；**`files` 增 `presets`**——README 引用了 `presets/knowledge.patch.yml`，原白名单漏项，npm 装法会缺件。
 - **market/index.json**：format 1，npm source，`engines.dsh` 与包一致，`publishTimestamp=1792904630`，图标为 `icon.svg`（872 B）的内联 base64 data URL（1,190 B < 32 KiB）。用 app.asar 里的 `@deepseek-ai/dsh-plugin-market-index` 校验器（仓外 `D:\hrag-t7`，`parseMarketIndex` + `marketInstallTarget`）实跑通过：插件 `dsh-harness-rag`、版本 `0.1.0`、安装目标 `dsh-harness-rag@0.1.0`。
-- **README**：安装改为「装插件→选位置→开始准备（约 315 MB 下载 / 840 MB 落盘）→配置嵌入模型」，三种安装命令并列并注明发布前只可用 `link:`；新增运行根布局、端口占用与换口、换位手迁、清理顺序（先 `state/` 后 `runtime/`）、卸载保留、升级备份、旧 `.deer-flow` 不迁入、杀软加白、代理、市场索引添加、外部模式（原「后端最小形态」整节保留）与本地 ASR 依赖说明。
+- **README**：安装改为「装插件→选位置→开始准备（约 315 MB 下载 / 840 MB 落盘）→配置嵌入模型」，三种安装命令并列并注明发布前只可用 `link:`（2026-10-26 已改为 GitHub 可用、npm 待发布）；新增运行根布局、端口占用与换口、换位手迁、清理顺序（先 `state/` 后 `runtime/`）、卸载保留、升级备份、旧 `.deer-flow` 不迁入、杀软加白、代理、市场索引添加、外部模式（原「后端最小形态」整节保留）与本地 ASR 依赖说明。
 - **npm pack --dry-run**：**37 文件 / 341,354 B tarball / 1,362,291 B 解包**；含 `runtime.json`、`LICENSE`、`THIRD_PARTY_NOTICES.md`、`client.js`、`src/`、`presets/`；不含 `engine/`、`scripts/`、`market/`、`tests/`、`docs/specs`、`docs/plans`、`node_modules`（逐条核对）。
 - **门禁**：`node --check client.js` 过；`tsc` 0 错；全量 **198/198**；`engine/` 1082/1082 字节一致（额外仅 `UPSTREAM.md`）；主树 `deer-flow` 未动（既有脏面 mtime 均为 10-06/10-10）；密钥扫描（`sk-`/`AKIA`/`ghp_`/私钥头/`xox*` 与长值 `api_key|secret|password` 赋值）零命中——唯一 `api_key=` 是引擎上游测试占位 `sk-super-secret-never-log`。
-- **未闭合**：①GitHub 地址安装实测（仓无 remote，Task 8 外部件）；②npm 发布、索引上线、Release 上传与 `runtime.json.urls` 回填（外部动作）；③`repository`/`homepage` 的 `OWNER` 占位待替换。
+- **未闭合（2026-10-26 更新）**：①（已闭合）GitHub 地址安装实测通过；②（部分闭合）Release 上传与 `runtime.json.urls` 回填已完成；npm 发布、索引上线待外部条件；③（已闭合）`repository`/`homepage` 已替换为 `chenzhiya77/dsh-harness-rag`。
 
 ## Task 8 — 收口（spec §5）
 
@@ -246,7 +246,7 @@
 **实测（实施期回填）**：
 
 - **spec 回写**：Status → 实施完成（发布待外部条件）；§4.6 面板体积文案 400 MB／1.1 GB → **315 MB／840 MB**（实测 zip 330,280,025 B、解压 881,198,854 B；面板本就按 `runtime.json` 取值）；§4.7 加「本期未实现」状态块、§7 增「不做版本化升级/回滚」（2026-10-26 由升级对替换为已实现）；§4.8 更正占位语义（`urls: []`＝无下载源，已装运行时照用；size/sha 已随本地构建回填）与 npm 包体（37 文件 / 341.4 kB tarball / 1.4 MB 解包）。
-- **plan 销项**：Task 0 三处「实测缺口」、Task 3 两处未勾按实测结果收口（GitHub 安装转入外部条件；租约仅单测；换口重试登记后续）；Task 7 仅余 GitHub 安装一勾，带「待外部条件」。
+- **plan 销项**：Task 0 三处「实测缺口」、Task 3 两处未勾按实测结果收口（GitHub 安装转入外部条件；租约仅单测；换口重试登记后续）；Task 7 仅余 GitHub 安装一勾，带「待外部条件」（2026-10-26 已勾并实测）。
 - **验收矩阵（spec §5，证据目录 `D:\hrag-t6`：构建、`cold-start.mjs` 驱动、真机根 `dsh-root`）**：
 
 | # | 验收项 | 结果 | 依据 |
@@ -276,7 +276,8 @@
 - **10-25 真机外部模式（§5.8）**：停掉托管栈后手工起 `runtime/0.1.0-1` 的 Qdrant＋engine（6334/8021，服务 token 取自 `state/service.json`），profile patch 把 `harness-rag` 覆盖为 `backendUrl=http://127.0.0.1:8021`；启动后 `runtime/status` 报 `mode/phase=external` 且**未启动任何子进程**；面板无运行时门与横幅，直接列出 `smoke-host`；服务端 access log 收到 `knowledge-bases`、`supported-formats`、`documents`、`models/config` 请求；退出 DSH 后外部两个进程仍存活（外部服务不归插件管），随后按显式 pid 停掉、profile 还原、托管模式复跑到 `ready`。
 - **10-25 本地下载源补测（§5.10/5.15/5.17/5.19，证据 `D:\hrag-t6\acceptance-2026-10-25`）**：`D:\hrag-sbx\fixture` 的 `origin.mjs`（normal / tamper / slow，自签 TLS）与 `proxy.mjs` 把 315 MB 运行时件变成可控源。§5.15：tamper 在 zip 中点翻 1 字节 ⇒ `sha256_mismatch`，源站见 4 次完整 GET 后停在 error、未安装。§5.17：宿主代理指向本地 CONNECT 代理 ⇒ 代理记录 330,726,793 B，`runtime/status` `ready`、`installed=true`。§5.10：profile b 指向 home6 根后触发 retry ⇒ `ready` 且无新增子进程（认领，非重起）；同时从零启动的租约争抢仍未验。§5.19：`slow` 在 29,753,344 B abort，重启后从同偏移续传完成并落 manifest；但该轮 Qdrant 初始化遇盘满（`os error 112`），只作为安装链路证据。
 - **本轮收口门禁**：`node --check client.js` 过；`tsc` 0 错；`node --test tests/*.test.ts` **204/204**（含新增 3 个 reload/dispose 测试与 3 个 pick 测试）；`npm pack --dry-run` **37 文件 / 341.4 kB / 1.4 MB**，不含 `engine/`、`scripts/`、`market/`、`tests/`、`docs/specs|plans`；`engine/` 1082 个文件按 blob 与源仓 `b34b2d572` **逐字节一致**（仅多 `UPSTREAM.md`）；引擎源仓 `git status` 空；主树 `deer-flow` 零新增改动（仅有 Task 0 基线的既存未提交面）；提交面密钥形扫描 0 命中；运行时日志无 `Bearer`/token。
-- **外部动作（待外部条件，未执行）**：①创建 GitHub 单仓并首推（仓库根＝插件包，`engine/` 随之）；②`package.json` 的 `OWNER` 占位替换为实际地址；③归档旧引擎仓；④npm 发布 `dsh-harness-rag@0.1.0`；⑤同仓 GitHub Release 上传运行时 zip → **用发布件重算并回填** `runtime.json.urls`/`size`/`unpackedSize`/`sha256` → 重发 npm（顺序：pack 先于引用它的 tag）；⑥`market/index.json` 上线并在 README 填索引 URL；⑦用 `git+https://<repo>.git` 在真 DSH 装一次（Task 0/7 的 GitHub 安装缺口）。
+- **外部动作（2026-10-26 更新）**：①已完成——创建公开仓 `chenzhiya77/dsh-harness-rag` 并首推（仓库根＝插件包，`engine/` 随之）；②已完成——`package.json`/`market/index.json`/README 的 `OWNER` 占位替换；③待办——归档旧引擎仓；④待办——npm 发布 `dsh-harness-rag@0.1.0`（本机 `npm whoami` 未登录）；⑤已完成——同仓 GitHub Release `v0.1.0` 上传运行时 zip，`runtime.json.urls`/`size`/`unpackedSize`/`sha256` 已回填（重发 npm 随④）；⑥待办——`market/index.json` 上线并填索引 URL；⑦已完成——`git+https` 真装实测。
+- **发布收口（2026-10-26）**：公开仓 `https://github.com/chenzhiya77/dsh-harness-rag`；Release `v0.1.0`（tag→`6bb2a44`）资产 `harness-rag-runtime-win32-x64-0.1.0-2.zip` 330,283,067 B、sha `05cc423b…`，匿名 HEAD 200 且流式下载 sha 一致。**GitHub 安装首测暴露阻断**：`main` 指向 `src/index.ts`，装进 `node_modules` 后宿主报 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`、插件不激活；修法＝`tsconfig.build.json` 产出 `lib/*.js`（`rewriteRelativeImportExtensions`）、`main`/`exports` 改 `./lib/index.js`、`files` 加 `lib`、`prepack` 重建，补 `tests/package_entry.test.ts`（提交 `6bb2a44`），tag 重指到该提交（首版 0 下载）。修复后从 GitHub 重装成功、6×2 s 到 `ready`；空运行根冷启动 113 s 到 `ready`，下载件 330,283,067 B，`current=0.1.0-2`，`/health` 与 API 均 200。证据 `D:\hrag-t6\acceptance-2026-10-26-release`。
 - **归位（不做／后续）**：§4.7 版本化升级/回滚已由 [2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md) 交付（2026-10-26，真机验收见其 plan Task 6）；后续真机验＝干净 VM(§5.1)、UNC 选择(§5.4)、双 profile 同时从零启动的租约争抢(§5.10 余项)、代理的 `.env` 来源与引擎模型出网(§5.17 余项)（headless 首启 §5.5 已于 10-25 沙箱验过；§5.15 篡改、§5.17 下载段、§5.19 中止续传已于 10-25 用本地下载源补测，证据 `D:\hrag-t6\acceptance-2026-10-25`；§5.15 的 `../` 条目拒绝仍只有单测）；登记缺口＝被认领实例无健康看门狗(Task 6 未闭合③)→[韧性对](../specs/2026-10-25-runtime-resilience-spec.md) D1、spawn 后端口被抢不换口重试(Task 3 未闭合③)→D2、坏 `location.json` 的 `warning` 未上屏(Task 5 未闭合④)→D3、`needsEmbeddingConfig` 的环境变量钥匙仍是近似(Task 4 未闭合③，真机已核「种子未配模型⇒NULL」)→D4（D1–D4 已于 10-25 由该对交付）、`openBundle` 形状与真点击均已验(Task 5 未闭合②，10-25 web 宿主实点，悬空项清零)。
 - **提交链**：见末节（Task 8 两笔待提交后回填）。
 
@@ -292,6 +293,6 @@
 - `fc2a3ac` `chore(distribution): prepare the npm package and market index`（发布面：去 `private`、`publishConfig`、`engines.dsh`、`files` 补 `presets`、`market/index.json`）
 - `75db19d` `docs(distribution): document the single-download install`（README 首启流程、运行根与外部模式）
 - `310b7cb` `docs(distribution): record task 7 results in the plan`（Task 7 勾选、实测与未闭合）
-- 待外部条件（Task 8）：npm 发布、同仓 GitHub Release、索引上线、`runtime.json.urls` 回填、`OWNER` 占位替换、GitHub 地址安装实测。Task 0–5 的笔次见 `1d63f4c` 及更早提交，本表自 Task 6 起滚动记实（记链笔自身不列）。
+- 外部动作状态（2026-10-26）：GitHub 单仓、`OWNER` 替换、GitHub Release、`runtime.json.urls` 回填、GitHub 地址安装实测已完成；待办＝npm 发布、索引上线、旧引擎仓归档。`6bb2a44` 为发布阻断修复（编译入口）。Task 0–5 的笔次见 `1d63f4c` 及更早提交，本表自 Task 6 起滚动记实（记链笔自身不列）。
 - `312e252` `docs(distribution): close the pair with task 8 results`（Task 8：spec §5 十九项矩阵、外部动作、§4.6/§4.7/§4.8 回写与不做项归位）
 - 10-25 本地源补测回写：本笔 `docs(plans): record local-source acceptance and sandbox checks`；同批 `dd717cc`（tools）、`73c964e`（runtime）、`5b898f3`（docs）。

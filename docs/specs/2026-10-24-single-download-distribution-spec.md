@@ -1,6 +1,6 @@
 # 单一下载分发（插件自带本地运行环境） —— spec
 
-**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落，发布动作与 GitHub 安装实测待外部条件）
+**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 公开仓、`v0.1.0` Release 与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；npm 发布与索引上线待外部条件）
 **Date:** 2026-10-24
 **来源:** 10-24 他问「当前的插件有两个文件夹……用户下载插件肯定是只下载一个插件，后端不能放在插件文件夹中吗」；随后明确目标是「用户只需要点击下载插件就能下载完全部的东西，可以直接使用」，并问 DSH 插件发布在哪、是否有官方市场；确认方向后令起 spec/plan。
 **承接:** 现行部署两件式（[README.md](../../README.md) §安装/§后端最小形态，`README.md:40-69`）；配置默认值 `src/settings.ts:15-19`；后端地址的唯一消费面 `src/http.ts:29-48` 与 `src/kb_proxy.ts:395/450/543`；引擎路径环境变量 `engine/backend/packages/harness/deerflow/config/runtime_paths.py`（并入单仓后的位置）。

@@ -48,7 +48,7 @@
 
 - `runtime.json` 目标 `0.1.0-2`，`dist/harness-rag-runtime-win32-x64-0.1.0-2.zip` 330,283,067 B / sha `05cc423b…` 与清单一致。
 - 运行根只装了 `0.1.0-1`，`current.json` 是 `0.1.0-1`；其 `runtime-manifest.json` 的 `configVersion` 也是 44，与 `0.1.0-2` 相同 ⇒ 正常升级走自动切换，不需要配置确认。
-- `runtime.json` 的 `urls` 仍为空。因此本对的真机验收用 `DSH_HARNESS_RAG_PACK` 指向本地 `0.1.0-2` zip（Task 6 用绝对路径）；真实下载源属发布外部条件，不在本对。
+- `runtime.json` 的 `urls` 当时为空（2026-10-26 发布收口已回填 GitHub Release v0.1.0）。本对真机验收用 `DSH_HARNESS_RAG_PACK` 指向本地 `0.1.0-2` zip（Task 6 用绝对路径）；真实下载源不在本对。
 - 手册两行已按现状修正（2026-10-25）：`docs/plugin-manual.md:36` 改为「按版本存放；当前不自动清理旧版」，`:46` 改为「旧服务仍在运行则继续认领旧版；旧服务退出后重启/重试才准备并启动新版本；当前没有自动回滚」。实施完成后再升级为完成态。
 
 ## 3. 设计
@@ -215,7 +215,7 @@ upgrade?: {
 | 90 秒误判慢机器 | Qdrant/引擎首次索引恢复慢 | 失败会回旧版，不丢服务；实测值可再调单个常量 |
 | 两个宿主同时准备 | 同一运行根、同一目标版本 | `provision.lock`；后台不等待、下次轮询/激活复用；首装前台最长 10 分钟；超时 `provision_held` |
 | 旧版目录删不掉 | 文件被占用/杀软扫描 | 只记日志，不挡 `ready`；下次成功切换再清 |
-| 目标源为空 | `runtime.json.urls=[]` | 开发态用本地 `DSH_HARNESS_RAG_PACK`；发布前填 urls，属外部条件 |
+| 目标源为空 | `runtime.json.urls=[]` | 2026-10-26 已填 GitHub Release URL；开发态仍可用本地 `DSH_HARNESS_RAG_PACK` 覆盖 |
 | 切换停机 | 旧版退出到新版就绪之间 | 面板 `switching` 状态；正常路径只发生在 DSH 启动阶段，用户已在等待启动 |
 | current/service 版本记录冲突 | 崩溃窗口/手工改文件 | 以健康 service 为准回写；无对应 runtime 则 `blocked`；测试覆盖 |
 | 目标清单不可用 | `runtime.json` 缺失/平台不支持 | 保持当前，`blocked` `pack_missing`/`platform_unsupported`；不写 `0.0.0-0` |

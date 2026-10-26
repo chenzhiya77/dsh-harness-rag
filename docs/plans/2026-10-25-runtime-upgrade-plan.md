@@ -22,7 +22,7 @@
   - `state/lease.json` owner `2f7b3b10f04feb20`、pid 75512（当前 DSH 宿主）；8021 由 pid 65544 持有；
   - `runtime/0.1.0-1/runtime-manifest.json` = `configVersion 44`，与 `0.1.0-2` 相同；
   - `dist/harness-rag-runtime-win32-x64-0.1.0-2.zip` 330,283,067 B、sha `05cc423b…`；
-  - `runtime.json` 的 `urls` 为空。
+  - `runtime.json` 的 `urls` 为空（2026-10-26 发布收口已回填）。
 - [x] 确认「DSH 正常退出会带走旧服务」的既有证据（分发 §5.11 退出清理实测）；若本机需要重验，只在用户批准重启后做，并记录 8021 是否消失、lease 是否陈旧。未验前不假设。
 - [x] **手册现状修正（2026-10-25 已改）**：`docs/plugin-manual.md:36` 改为「按版本存放；当前不自动清理旧版」；`:46` 改为「旧服务仍在运行则继续认领旧版；旧服务退出后重启/重试才准备并启动新版本；旧版目录当前保留；当前没有自动回滚」。Task 7 实施完成后再升级为完成态。
 - [x] 核对 pack 不可用分支：`src/runtime/bridge.ts:75-76` 的 `0.0.0-0` 退化、`:118` pack 为空时返回 `pack_missing`；Task 2 改成「有当前版本时 `blocked` + `pack_missing`/`platform_unsupported`，不写 bogus target」。
@@ -34,7 +34,7 @@
 
 **实测（实施期回填）**：2026-10-25 只读核对完成，未发现与 spec 冲突项，Task 0 全部闭合（手册修正已于 `ce6b327` 落盘）。
 - 代码事实：`bridge.ts:76` 目标为空时退化为 `0.0.0-0`，`:118` 才返回 `pack_missing`；`supervisor.ts:480` 在 `adopt` 内回写 current、`:609` 在启动成功后回写，`:600-608` 的 service 写入先于 `:609` 的 current ⇒ 崩溃窗口真实存在；`zip.ts:144`/`:153` 与 `provision.ts:28` 都只判 `runtime-manifest.json` 存在、不校验内容；`process.ts` 的 pid 可空与 `supervisor.ts:191` 的 `executablePath=null` 一致；`kb_proxy.ts:391` 三个特权 op、`:432-435` 四个 runtime op。
-- 现场：`current.json`=0.1.0-1；`service.json`=0.1.0-1、ports 6334/6335/8021、pid/qdrantPid null；`lease.json` owner `2f7b3b10f04feb20`/pid 75512（本 DSH）；8021 由 pid 65544 持有；`0.1.0-1` 与 `0.1.0-2` 的 `configVersion` 均 44；0.1.0-2 zip 330,283,067 B / sha `05cc423b…`；`runtime.json.urls=[]` ⇒ 本机验收必须带 `DSH_HARNESS_RAG_PACK` 绝对路径。
+- 现场：`current.json`=0.1.0-1；`service.json`=0.1.0-1、ports 6334/6335/8021、pid/qdrantPid null；`lease.json` owner `2f7b3b10f04feb20`/pid 75512（本 DSH）；8021 由 pid 65544 持有；`0.1.0-1` 与 `0.1.0-2` 的 `configVersion` 均 44；0.1.0-2 zip 330,283,067 B / sha `05cc423b…`；`runtime.json.urls=[]`（当时；2026-10-26 已回填 GitHub Release URL）⇒ 本机验收必须带 `DSH_HARNESS_RAG_PACK` 绝对路径。
 - 退出清理：沿用分发 plan §5.11 的 10-25 真机证据（Task 8 行 187/264：退出后 DSH 与 qdrant/engine 全消失，宿主 Job 回收）；本轮不重验，切换后的实况由 Task 6 重启覆盖。
 - 落点/测试缝：`src/runtime/upgrade.ts` 无生命周期冲突（supervisor 仅 bridge 引用，ops 只消费三方法）；supervisor 六个注入缝、provision `extract` 均已在现有测试中使用。
 - 并行会话（G11）只动 `src/index.ts`（仅注释）、`src/tool_gating.ts`、`tests/tool_gating.test.ts`、`src/retrieval_discipline.ts` 与两份 rag-soul-section 文档，不碰 runtime 接线与面板。
