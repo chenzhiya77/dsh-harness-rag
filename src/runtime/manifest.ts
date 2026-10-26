@@ -45,6 +45,7 @@ export interface UpgradeRecord {
   configVersion: number
   state: UpgradeState
   confirmedConfigVersion?: number
+  error?: { phase: string; code: string; detail?: string }
   requestedAt: string
   updatedAt: string
 }
@@ -189,6 +190,19 @@ export function sanitizeCurrent(raw: unknown): RuntimeCurrent | null {
 const isUpgradeState = (value: unknown): value is UpgradeState =>
   value === 'pending' || value === 'ready' || value === 'needs_confirmation' || value === 'blocked'
 
+function sanitizeError(raw: unknown): { phase: string; code: string; detail?: string } | null {
+  if (!isRecord(raw)) return null
+  const phase = typeof raw.phase === 'string' ? raw.phase.trim() : ''
+  const code = typeof raw.code === 'string' ? raw.code.trim() : ''
+  if (!phase || !code) return null
+  const error: { phase: string; code: string; detail?: string } = { phase, code }
+  if (raw.detail !== undefined) {
+    if (typeof raw.detail !== 'string') return null
+    error.detail = raw.detail
+  }
+  return error
+}
+
 export function sanitizeUpgrade(raw: unknown): UpgradeRecord | null {
   if (!isRecord(raw) || raw.version !== 1) return null
   const targetVersion = typeof raw.targetVersion === 'string' ? raw.targetVersion.trim() : ''
@@ -213,20 +227,12 @@ export function sanitizeUpgrade(raw: unknown): UpgradeRecord | null {
     if (!isCount(raw.confirmedConfigVersion) || raw.confirmedConfigVersion === 0) return null
     record.confirmedConfigVersion = raw.confirmedConfigVersion
   }
-  return record
-}
-
-function sanitizeFailedError(raw: unknown): FailedRecord['error'] | null {
-  if (!isRecord(raw)) return null
-  const phase = typeof raw.phase === 'string' ? raw.phase.trim() : ''
-  const code = typeof raw.code === 'string' ? raw.code.trim() : ''
-  if (!phase || !code) return null
-  const error: FailedRecord['error'] = { phase, code }
-  if (raw.detail !== undefined) {
-    if (typeof raw.detail !== 'string') return null
-    error.detail = raw.detail
+  if (raw.error !== undefined) {
+    const error = sanitizeError(raw.error)
+    if (!error) return null
+    record.error = error
   }
-  return error
+  return record
 }
 
 /** A failed record's `fromVersion` is empty only for a first install, which
@@ -239,7 +245,7 @@ export function sanitizeFailed(raw: unknown): FailedRecord | null {
   if (fromVersion !== '' && !isRuntimeVersion(fromVersion)) return null
   const failedAt = typeof raw.failedAt === 'string' ? raw.failedAt.trim() : ''
   if (!failedAt) return null
-  const error = sanitizeFailedError(raw.error)
+  const error = sanitizeError(raw.error)
   if (!error) return null
   if (typeof raw.rolledBack !== 'boolean') return null
   return { version: 1, runtimeVersion, fromVersion, failedAt, error, rolledBack: raw.rolledBack }

@@ -63,9 +63,9 @@
 
 > 动到的文件：新增 `src/runtime/upgrade.ts`、`src/runtime/bridge.ts`、`src/runtime/ops.ts`、`tests/runtime_upgrade.test.ts`、`tests/runtime_bridge.test.ts`。
 
-- [ ] 新增 `createUpgradeCoordinator`，接口至少 `status()`、`ensure()`、`retry()`、`confirm()`、`dispose()`；内部持有 current/target、旧版 supervisor、目标 supervisor、升级记录与后台准备的 AbortController。
-- [ ] `ensure()` 单飞：轮询/面板重复调用只复用同一个 in-flight promise；`dispose()`/`configureRoot` 中止后台下载并释放 provision 锁。
-- [ ] 实现 spec §3.2 的八行决策表（从上到下先命中先执行）：
+- [x] 新增 `createUpgradeCoordinator`，接口至少 `status()`、`ensure()`、`retry()`、`confirm()`、`dispose()`；内部持有 current/target、旧版 supervisor、目标 supervisor、升级记录与后台准备的 AbortController。
+- [x] `ensure()` 单飞：轮询/面板重复调用只复用同一个 in-flight promise；`dispose()`/`configureRoot` 中止后台下载并释放 provision 锁。
+- [x] 实现 spec §3.2 的八行决策表（从上到下先命中先执行）：
   - 目标 == 当前，或既无 current 也无 service 且无失败记录 ⇒ 原逻辑；
   - 失败记录存在：有 current 时保持/启动旧版，无 current 时 `phase=error`（`upgrade_failed`）；状态 `failed`，不自动重试；
   - 旧实例健康 + 租约被另一个存活宿主持有 ⇒ 认领旧版、后台准备、`blocked`，不切；
@@ -74,19 +74,25 @@
   - 旧实例不健康 + 租约被另一个存活宿主持有 ⇒ `blocked`，不启动、不杀；
   - 旧实例不健康 + 租约空闲 + 配置版本不同且未确认 ⇒ `needs_confirmation`；
   - 旧实例不健康 + 租约空闲 + 包就绪 + 配置相同/已确认 + 无失败记录 ⇒ 启动目标（Task 3）。
-- [ ] current 缺失但 `service.json` 合法时，以 `service.json.runtimeVersion` 作为当前版本；两者都缺才按首次安装处理。
-- [ ] 目标清单不可用：pack 缺失/非法/平台不支持 ⇒ 目标为空；有 current 时 `blocked` + `pack_missing`/`platform_unsupported`，无 current 时 `error`；不把 `0.0.0-0` 写进 `upgrade.json`/`current.json`。
-- [ ] current/service 冲突：健康 service 的版本优先并回写 current；service 版本无对应已装 runtime 时 `blocked`（`state_version_conflict`），不启动第二套栈。
-- [ ] 决策阶段旧版只读探测：给 supervisor 增加 `probe()` 或 `ensure({adoptOnly:true})`，不复用会在探测失败后自动 `start()` 的路径；只有回滚/明确运行旧版时才启动旧版。`getSupervisor` 现有单例的 `ensure()` 也要避开这条探测路径。
-- [ ] 按版本构造 supervisor：`ensureRuntime` 闭包必须绑定该 supervisor 的 `runtimeVersion`；旧版只复用已装 manifest，缺失时回滚失败，绝不能拿目标版本的 pack 回调去准备旧版。
-- [ ] 后台准备：目标包缺失时调现有 `ensureRuntime`（下载源 `urls` 或 `DSH_HARNESS_RAG_PACK`），进度写入 `upgrade.progress`；下载/校验/解压/锁等待失败保持旧版，状态 `blocked` + `upgrade.error`，**不写** `failed-<version>.json`（该文件只给健康门失败），下一次激活自动重试。
-- [ ] 「不热切换」：同一宿主内的插件重载即使旧服务健康也只准备包，不拆旧 supervisor、不换版本；用注册表里是否已有当前版本的 supervisor 单例来区分重载与新进程。旧服务已不在且租约空闲时，本进程可启动目标作为恢复；不允许先停健康旧版再起目标。横幅提示重启 DSH。
-- [ ] headless：配置版本相同允许切换；不同则停在旧版并把 `needs_confirmation` 写入状态与日志；外部模式完全绕过。
-- [ ] bridge 接线：`ensureSupervisor` 不再直接把 `version` 当唯一版本；`ops.supervisor()` 返回协调者 facade，面板的 `runtime/status`、`runtime/retry` 仍走原入口；`configureRoot` 换根时释放协调者与旧 supervisor。
-- [ ] 单测：决策表八行各一例（含旧实例健康 + 配置版本不同 ⇒ `needs_confirmation`）；旧实例健康时不启动目标、不改 current；租约占用不杀；headless/外部分支；插件重载不切换；pack 缺失/平台不支持；current/service 冲突；旧版已死 + 租约空闲时本进程恢复启动目标；旧版健康时绝不主动停。
-- [ ] 门禁：`tsc` 0 错；`runtime_upgrade` 全绿；现有 supervisor/bridge 测试无回归。
+- [x] current 缺失但 `service.json` 合法时，以 `service.json.runtimeVersion` 作为当前版本；两者都缺才按首次安装处理。
+- [x] 目标清单不可用：pack 缺失/非法/平台不支持 ⇒ 目标为空；有 current 时 `blocked` + `pack_missing`/`platform_unsupported`，无 current 时 `error`；不把 `0.0.0-0` 写进 `upgrade.json`/`current.json`。
+- [x] current/service 冲突：健康 service 的版本优先并回写 current；service 版本无对应已装 runtime 时 `blocked`（`state_version_conflict`），不启动第二套栈。
+- [x] 决策阶段旧版只读探测：给 supervisor 增加 `probe()` 或 `ensure({adoptOnly:true})`，不复用会在探测失败后自动 `start()` 的路径；只有回滚/明确运行旧版时才启动旧版。`getSupervisor` 现有单例的 `ensure()` 也要避开这条探测路径。
+- [x] 按版本构造 supervisor：`ensureRuntime` 闭包必须绑定该 supervisor 的 `runtimeVersion`；旧版只复用已装 manifest，缺失时回滚失败，绝不能拿目标版本的 pack 回调去准备旧版。
+- [x] 后台准备：目标包缺失时调现有 `ensureRuntime`（下载源 `urls` 或 `DSH_HARNESS_RAG_PACK`），进度写入 `upgrade.progress`；下载/校验/解压/锁等待失败保持旧版，状态 `blocked` + `upgrade.error`，**不写** `failed-<version>.json`（该文件只给健康门失败），下一次激活自动重试。
+- [x] 「不热切换」：同一宿主内的插件重载即使旧服务健康也只准备包，不拆旧 supervisor、不换版本；用注册表里是否已有当前版本的 supervisor 单例来区分重载与新进程。旧服务已不在且租约空闲时，本进程可启动目标作为恢复；不允许先停健康旧版再起目标。横幅提示重启 DSH。
+- [x] headless：配置版本相同允许切换；不同则停在旧版并把 `needs_confirmation` 写入状态与日志；外部模式完全绕过。
+- [x] bridge 接线：`ensureSupervisor` 不再直接把 `version` 当唯一版本；`ops.supervisor()` 返回协调者 facade，面板的 `runtime/status`、`runtime/retry` 仍走原入口；`configureRoot` 换根时释放协调者与旧 supervisor。
+- [x] 单测：决策表八行各一例（含旧实例健康 + 配置版本不同 ⇒ `needs_confirmation`）；旧实例健康时不启动目标、不改 current；租约占用不杀；headless/外部分支；插件重载不切换；pack 缺失/平台不支持；current/service 冲突；旧版已死 + 租约空闲时本进程恢复启动目标；旧版健康时绝不主动停。
+- [x] 门禁：`tsc` 0 错；`runtime_upgrade` 全绿；现有 supervisor/bridge 测试无回归。
 
-**实测（实施期回填）**：
+**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+- 新增 `src/runtime/upgrade.ts`：`createUpgradeCoordinator` 持有按版本 supervisor 表、current/target、`upgrade.json` 读写、后台准备与 `AbortController`；`ensure()` 单飞，`dispose(forget?)` 中止准备并按需注销单例。
+- 决策表八行全部落地：同版本/首次走原 supervisor；失败文件优先；旧版健康时只 `probe()`+`adopt()`（新增公开只认领接口），按租约/配置给 `blocked|pending→ready|needs_confirmation`，绝不 `ensure()` 起第二套；旧版不健康时按租约→配置→包就绪顺序，最后交给 `activate`（Task 3 注入，bridge 暂不传）。current 缺失回退 service 版本；current 落后于健康 service 时回写并记 `previousVersion`。
+- 准备：目标包缺失时后台 `ensureRuntime`，进度写 `upgrade.progress`；失败写 `upgrade.error` + `blocked`，不写失败文件；`dispose` 中止下载。`UpgradeRecord` 按 spec §3.1 补了 `error` 字段与校验。
+- supervisor 增 `probe()`（只读）、`adopt()`（只认领不启动）、`leaseHeldByOther()`；`RuntimePhase` 提前加入 `switching`。bridge 改为按版本工厂（旧版无 `ensureRuntime` 闭包），`ops.supervisor()` 返回协调者，`configureRoot` 调 `dispose(true)`。
+- 门禁：`tsc` 0 错；`runtime_upgrade` 14/14；非 G11 测试 241/241；全量里唯一失败是并行会话 G11 的 `tests/tool_gating.test.ts`（run_id 用例），与本任务无关。
+- 与 plan 的差异：①「用注册表单例区分重载与新进程」未单独实现——旧版健康一律不切已覆盖 spec 补充规则，区分只影响能否停健康旧版，而本对禁止停；②provision 锁的释放随 Task 4，本任务先保证中止下载；③为保持插件重载语义，协调者构造时即持有目标 supervisor 单例，`stop()` 照旧只 dispose 不注销。
 
 ## Task 3 — 切换、90 秒共享预算、回滚与失败记录
 

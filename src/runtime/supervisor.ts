@@ -20,7 +20,7 @@ import { planCurrent, readCurrent, writeCurrent, type CurrentPlan } from './mani
 import { RUNTIME_MANIFEST } from './zip.ts'
 import type { DownloadProgress } from './download.ts'
 
-export type RuntimePhase = 'idle' | 'preparing' | 'starting' | 'ready' | 'error'
+export type RuntimePhase = 'idle' | 'preparing' | 'starting' | 'ready' | 'switching' | 'error'
 
 export interface RuntimeError {
   phase: string
@@ -91,6 +91,11 @@ export interface SupervisorOptions {
 export interface Supervisor {
   readonly root: string
   ensure(): Promise<RuntimeStatusView>
+  /** Read-only: the healthy service record for this supervisor's version, or
+   * null. Never spawns, never touches `current.json`. */
+  probe(): Promise<ServiceRecord | null>
+  /** Adopt the healthy service if it still answers; never starts a new stack. */
+  adopt(): Promise<RuntimeStatusView | null>
   status(): RuntimeStatusView
   retry(): Promise<RuntimeStatusView>
   /** Follow the newest plugin instance: the singleton outlives a reload, and
@@ -271,13 +276,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     }
   }
 
-  const readLease = (): LeaseRecord | null => {
-    try {
-      return sanitizeLease(JSON.parse(readFileSync(leasePath, 'utf8')))
-    } catch {
-      return null
-    }
-  }
+  const readLease = (): LeaseRecord | null => readLeaseRecord(root)
 
   const acquireLease = (): 'acquired' | 'held' => {
     mkdirSync(stateDir(root), { recursive: true })
@@ -493,15 +492,21 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     },
   })
 
-  /** Only a record for the version this supervisor owns can be adopted; a
-   * leftover from another version is left for the coordinator to classify. */
-  const adopt = async (expectedVersion: string): Promise<RuntimeStatusView | null> => {
+  /** Only a record for the expected version that answers counts. Read-only. */
+  const probeService = async (expectedVersion: string): Promise<ServiceRecord | null> => {
     const record = readService()
     if (!record) return null
     if (record.runtimeVersion !== expectedVersion) return null
     const base = `http://127.0.0.1:${record.ports.knowledge}`
     const healthy = await probe(`${base}/api/knowledge-bases`, { authorization: `Bearer ${record.token}` })
-    if (!healthy) return null
+    return healthy ? record : null
+  }
+
+  /** Only a record for the version this supervisor owns can be adopted; a
+   * leftover from another version is left for the coordinator to classify. */
+  const adopt = async (expectedVersion: string): Promise<RuntimeStatusView | null> => {
+    const record = await probeService(expectedVersion)
+    if (!record) return null
     const plan = currentPlan(record.runtimeVersion)
     applyCurrent(record.runtimeVersion, plan)
     onReady?.()
@@ -690,6 +695,8 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
   return {
     root,
     ensure,
+    probe: () => probeService(runtimeVersion),
+    adopt: () => adopt(runtimeVersion),
     status: () => status,
     retry: () => {
       stopWatchdog()
@@ -748,6 +755,21 @@ export function getSupervisor(options: SupervisorOptions): Supervisor {
 
 export function forgetSupervisor(root: string, runtimeVersion: string): void {
   delete registry[supervisorKey(root, runtimeVersion)]
+}
+
+export function readLeaseRecord(root: string): LeaseRecord | null {
+  try {
+    return sanitizeLease(JSON.parse(readFileSync(join(stateDir(root), 'lease.json'), 'utf8')))
+  } catch {
+    return null
+  }
+}
+
+/** Another live host owns the root's lease. A lease written by this process is
+ * ours (a previous supervisor for another version), so treat it as free. */
+export function leaseHeldByOther(root: string, isAlive: (pid: number) => boolean = defaultIsAlive): boolean {
+  const lease = readLeaseRecord(root)
+  return Boolean(lease && lease.pid !== process.pid && isAlive(lease.pid))
 }
 
 export function readLogTail(root: string): string {

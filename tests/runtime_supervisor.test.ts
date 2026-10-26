@@ -1002,7 +1002,10 @@ test('stop: the bridge disposes the running singleton instead of forgetting it',
   }
   const bridge = createRuntimeBridge(host, defaultConfig, { DSH_HOME: home })
 
-  assert.equal(bridge.ops.supervisor(), sup, 'the bridge picks up the live singleton')
+  const facade = bridge.ops.supervisor()
+  assert.ok(facade, 'the bridge exposes the coordinator facade')
+  assert.equal((await facade.ensure()).phase, 'ready')
+  assert.equal(facade.status().runtimeVersion, version)
   bridge.stop()
   assert.equal(pending.size, 1, 'stop defers the kill')
 

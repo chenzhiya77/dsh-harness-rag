@@ -3,14 +3,16 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Config } from '../settings.ts'
 import { createEffectiveConfig, type EffectiveConfig } from './config.ts'
-import { readManifest, type RuntimePack } from './manifest.ts'
+import { loadPack, type RuntimePack } from './manifest.ts'
 import { statusPayload, type PickerKind, type RuntimeOpsDeps } from './ops.ts'
 import { defaultRoot, stateDir } from './paths.ts'
 import { resolveRoot } from './location.ts'
 import { ensureRuntime } from './provision.ts'
 import { createHostSpawn, type HostSubprocess } from './spawn.ts'
-import { forgetSupervisor, getSupervisor, type Supervisor } from './supervisor.ts'
+import { getSupervisor, type Supervisor } from './supervisor.ts'
+import { createUpgradeCoordinator, type UpgradeCoordinator, type UpgradeTarget } from './upgrade.ts'
 import { sanitizeService, type ServiceRecord } from './process.ts'
+import type { DownloadProgress } from './download.ts'
 
 const PACKAGE_ROOT = fileURLToPath(new URL('../../', import.meta.url))
 
@@ -35,11 +37,6 @@ export interface RuntimeBridge {
   /** Resync the chat model catalog once the service answers. */
   addReadyListener(listener: ReadyListener): void
   stop(): void
-}
-
-function packOf(platform: string): RuntimePack | null {
-  const read = readManifest({ packageRoot: PACKAGE_ROOT })
-  return read.ok ? (read.manifest.packs[platform] ?? null) : null
 }
 
 /** `/api/rag/config` reports the effective values under `config`; a blank or
@@ -72,8 +69,17 @@ export function createRuntimeBridge(
   env: NodeJS.ProcessEnv = process.env,
 ): RuntimeBridge {
   const platform = `${process.platform}-${process.arch}`
-  const pack = packOf(platform)
-  const version = pack?.runtimeVersion ?? '0.0.0-0'
+  const selection = loadPack({ packageRoot: PACKAGE_ROOT, platform })
+  const pack = selection.ok ? selection.pack : null
+  const target: UpgradeTarget | null = selection.ok
+    ? {
+        version: selection.pack.runtimeVersion,
+        pack: selection.pack,
+        configVersion: selection.pack.configVersion,
+      }
+    : null
+  const targetError = selection.ok ? undefined : { code: selection.code }
+  const version = pack?.runtimeVersion ?? ''
   // Dev-only override (spec §4.4): a locally built zip replaces the download.
   const sourceZip = env.DSH_HARNESS_RAG_PACK?.trim() ? resolve(env.DSH_HARNESS_RAG_PACK.trim()) : undefined
   const anchorRoot = defaultRoot(env)
@@ -81,7 +87,7 @@ export function createRuntimeBridge(
     const resolved = resolveRoot({ anchorRoot, env })
     return resolved.kind === 'ok' ? resolved.root : defaultRoot(env)
   })()
-  let supervisor: Supervisor | null = null
+  let coordinator: UpgradeCoordinator | null = null
   let pickerService: BridgeHost['directoryPicker'] | null = null
   let pickController: AbortController | null = null
   const readyListeners: ReadyListener[] = []
@@ -97,18 +103,46 @@ export function createRuntimeBridge(
 
   const headless = (): boolean => host.get('webServer') === undefined
 
-  const ensureSupervisor = (): Supervisor | null => {
+  const supervisorFor = (subprocess: HostSubprocess, runtimeVersion: string): Supervisor =>
+    getSupervisor({
+      root,
+      runtimeVersion,
+      spawn: createHostSpawn(subprocess),
+      // Only the target pack is provisionable; an old version must already be
+      // installed, so its supervisor starts from disk without a download.
+      ensureRuntime:
+        pack && runtimeVersion === pack.runtimeVersion
+          ? (hooks: { signal: AbortSignal; onProgress: (progress: DownloadProgress) => void }) =>
+              ensureRuntime({
+                root,
+                version: runtimeVersion,
+                platform,
+                pack,
+                sourceZip,
+                signal: hooks.signal,
+                onProgress: hooks.onProgress,
+              })
+          : undefined,
+      onReady: () => {
+        for (const listener of readyListeners) void listener.syncNow({ force: true })
+      },
+    })
+
+  const currentCoordinator = (): UpgradeCoordinator | null => {
+    if (coordinator) return coordinator
     const subprocess = host.get('subprocess') as HostSubprocess | undefined
     if (!subprocess) return null
-    return getSupervisor({
+    coordinator = createUpgradeCoordinator({
       root,
-      runtimeVersion: version,
-      spawn: createHostSpawn(subprocess),
-      ensureRuntime: (hooks) =>
+      target,
+      targetError,
+      headless: headless(),
+      supervisorFor: (runtimeVersion) => supervisorFor(subprocess, runtimeVersion),
+      provision: (_runtimeVersion, hooks) =>
         pack
           ? ensureRuntime({
               root,
-              version,
+              version: pack.runtimeVersion,
               platform,
               pack,
               sourceZip,
@@ -116,15 +150,9 @@ export function createRuntimeBridge(
               onProgress: hooks.onProgress,
             })
           : Promise.resolve({ kind: 'failed', code: 'pack_missing' }),
-      onReady: () => {
-        for (const listener of readyListeners) void listener.syncNow({ force: true })
-      },
+      log: (message) => console.log(`[harness-rag] ${message}`),
     })
-  }
-
-  const currentSupervisor = (): Supervisor | null => {
-    supervisor ??= ensureSupervisor()
-    return supervisor
+    return coordinator
   }
 
   const deps: RuntimeOpsDeps = {
@@ -150,11 +178,11 @@ export function createRuntimeBridge(
         if (pickController === controller) pickController = null
       }
     },
-    supervisor: () => currentSupervisor(),
+    supervisor: () => currentCoordinator(),
     version,
     pack: () => (pack ? { size: pack.size, unpackedSize: pack.unpackedSize } : null),
     needsEmbeddingConfig: async () => {
-      const view = currentSupervisor()?.status()
+      const view = currentCoordinator()?.status()
       if (view?.phase !== 'ready') return false
       const record = readService(root)
       if (!record) return false
@@ -169,12 +197,11 @@ export function createRuntimeBridge(
       }
     },
     configureRoot: (nextRoot) => {
-      // The old root's service is ours: stop it, and drop the singleton so a
-      // later move back does not resurrect a half-disposed instance.
-      supervisor?.dispose()
-      forgetSupervisor(root, version)
+      // The old root's service is ours: stop it, and drop every supervisor the
+      // coordinator created so a later move back starts clean.
+      coordinator?.dispose(true)
+      coordinator = null
       root = nextRoot
-      supervisor = null
     },
   }
 
@@ -191,7 +218,7 @@ export function createRuntimeBridge(
   // Headless has no panel to confirm the first run: after a short grace for a
   // late web server, provision with the default root on its own.
   const grace = setTimeout(() => {
-    if (headless()) void currentSupervisor()?.ensure()
+    if (headless()) void currentCoordinator()?.ensure()
   }, 2_000)
   grace.unref?.()
 
@@ -207,7 +234,7 @@ export function createRuntimeBridge(
       pickController?.abort()
       // The singleton stays registered so a reload within the grace period
       // takes it over (cancelling the pending kill) instead of rebuilding it.
-      supervisor?.dispose()
+      coordinator?.dispose()
     },
   }
 }
