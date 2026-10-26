@@ -208,7 +208,7 @@ test('load: the shipped runtime.json is valid and its win32-x64 pack is publishe
   const loaded = loadPack({ packageRoot: PACKAGE_ROOT, platform: 'win32-x64' })
   assert.equal(loaded.ok, true)
   if (loaded.ok) {
-    assert.equal(loaded.pack.runtimeVersion, '0.1.0-2')
+    assert.equal(loaded.pack.runtimeVersion, '0.1.0-3')
     assert.equal(loaded.pack.configVersion, 44)
     assert.ok(loaded.pack.urls.length > 0)
     assert.ok(loaded.pack.urls.every((url) => url.startsWith('https://')))
