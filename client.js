@@ -93,6 +93,7 @@ window.__ModuleLoader__.load({
       'rt.upgradeFailed': '升级到 {0} 失败，已回到 {1}。',
       'rt.upgradeRetry': '下次启动重试',
       'rt.upgradeBlocked': '新版本 {0} 暂时无法启用。',
+      'rt.upgradeBlockedNoTarget': '暂时无法启用新版本。',
       'rt.upgradeReason.lease': '旧实例仍被占用',
       'rt.upgradeReason.stale': '旧实例残留',
       'rt.upgradeReason.conflict': '版本状态不一致',
@@ -1017,6 +1018,7 @@ window.__ModuleLoader__.load({
       'rt.upgradeFailed': 'Upgrade to {0} failed; rolled back to {1}.',
       'rt.upgradeRetry': 'Retry on next start',
       'rt.upgradeBlocked': 'Version {0} cannot start yet.',
+      'rt.upgradeBlockedNoTarget': 'A new version cannot be enabled yet.',
       'rt.upgradeReason.lease': 'the old instance still holds the lease',
       'rt.upgradeReason.stale': 'a stale old instance is still answering',
       'rt.upgradeReason.conflict': 'the version state is inconsistent',
@@ -22109,7 +22111,9 @@ window.__ModuleLoader__.load({
         const from = String(upgrade.fromVersion || runtime.previousVersion || '')
         const progress = upgrade.progress
         const percent =
-          progress && progress.total > 0 ? Math.min(100, Math.round((progress.received / progress.total) * 100)) : null
+          progress && progress.phase === 'download' && progress.total > 0
+            ? Math.min(100, Math.round((progress.received / progress.total) * 100))
+            : null
         const button = (label, onClick) =>
           h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline hrag-rt-bannerbtn', onClick }, label)
         const close = (onClick) =>
@@ -22149,10 +22153,11 @@ window.__ModuleLoader__.load({
         }
         if (upgrade.state === 'blocked') {
           const reason = t(upgradeReasonKey(upgrade.error && upgrade.error.code))
+          const head = runtime.pack === null ? t('rt.upgradeBlockedNoTarget') : t('rt.upgradeBlocked', { 0: target })
           return h(
             'div',
             { className: 'hrag-rt-banner' },
-            h('span', null, t('rt.upgradeBlocked', { 0: target }) + ' ' + reason + '。'),
+            h('span', null, head + ' ' + reason + '。'),
             close(() => setUpgradeBlockedOff(true)),
           )
         }
