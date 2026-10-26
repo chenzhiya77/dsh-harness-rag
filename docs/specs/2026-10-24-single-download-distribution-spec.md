@@ -232,7 +232,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 - 退出：Node `exit`/`SIGINT`/`SIGTERM` 时**尽力**终止（`ctx.subprocess` 的 Job 句柄关闭会带走整棵树；裸 `taskkill /T` 是异步子进程，不能保证在 exit 前完成）；下次激活按 `service.json` 认领/清理。认领来的实例不视为自己所有，正常退出不杀；只有确认 pid 与可执行路径都在本 home 的 `runtime/` 下、且没有其他宿主持有租约时才清理。核对失败不杀，只记日志。
 - 跨进程：`state/lease.json` 单写者租约（pid/token/心跳）；第二个宿主发现租约有效则只认领、不启动、不杀别人的子进程；租约陈旧（pid 不存在/心跳超时）才接管。
 - 下载：插件 dispose 或 DSH 退出时 abort 下载并保留 `.part`，下次续传。
-- 日志：两服务 stdout/stderr 落 `state/logs/*.log`，单文件 5 MB、保留 2 份；`status` 只回路径与尾部 20 行。
+- 日志：两服务 stdout/stderr 落 `state/logs/*.log`，单文件上限 2 MB，超出即滚到 `.1`（替换上一代，只保留当前 + `.1` 两个文件）；`status` 只回路径与尾部 40 行。
 - 崩溃：子进程退出即置 `error` 并记录退出码；下一次激活重新走流水线（认领或重启）。
 - 不写注册表、不开机自启、不占系统服务。
 

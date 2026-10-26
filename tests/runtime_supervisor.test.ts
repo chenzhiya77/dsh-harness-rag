@@ -4,7 +4,7 @@ import { spawn as spawnProcess, type ChildProcess } from 'node:child_process'
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { createServer as createNetServer } from 'node:net'
 import type { AddressInfo } from 'node:net'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -49,6 +49,23 @@ createServer((req, res) => {
 
 const CRASH_STUB = `process.exit(3)`
 
+const SPAM_ENGINE_STUB = `
+import { createServer } from 'node:http'
+const port = Number(process.argv[process.argv.indexOf('--port') + 1])
+const token = process.env.DEER_FLOW_API_TOKEN
+const line = 'x'.repeat(1023) + '\\n'
+for (let i = 0; i < 2600; i++) process.stdout.write(line)
+createServer((req, res) => {
+  if (req.url === '/health') { res.writeHead(200); res.end('{"status":"healthy"}'); return }
+  if (req.url === '/api/knowledge-bases') {
+    if (req.headers.authorization === 'Bearer ' + token) { res.writeHead(200); res.end('[]') }
+    else { res.writeHead(401); res.end() }
+    return
+  }
+  res.writeHead(404); res.end()
+}).listen(port, '127.0.0.1')
+`
+
 interface Spawned {
   spawn: SpawnFn
   requests: SpawnRequest[]
@@ -92,16 +109,18 @@ function fakeSpawn(scripts: { qdrant: string; engine: string }): Spawned {
   }
 }
 
-function writeStubs(root: string): { qdrant: string; engine: string; crash: string } {
+function writeStubs(root: string): { qdrant: string; engine: string; crash: string; spam: string } {
   const dir = join(root, 'stubs')
   mkdirSync(dir, { recursive: true })
   const qdrant = join(dir, 'qdrant-stub.mjs')
   const engine = join(dir, 'engine-stub.mjs')
   const crash = join(dir, 'crash-stub.mjs')
+  const spam = join(dir, 'spam-engine-stub.mjs')
   writeFileSync(qdrant, QDRANT_STUB)
   writeFileSync(engine, ENGINE_STUB)
   writeFileSync(crash, CRASH_STUB)
-  return { qdrant, engine, crash }
+  writeFileSync(spam, SPAM_ENGINE_STUB)
+  return { qdrant, engine, crash, spam }
 }
 
 async function freePorts(count: number): Promise<number[]> {
@@ -118,7 +137,7 @@ async function freePorts(count: number): Promise<number[]> {
 interface Fixture {
   root: string
   runtime: string
-  stubs: { qdrant: string; engine: string; crash: string }
+  stubs: { qdrant: string; engine: string; crash: string; spam: string }
   preferredPorts: { qdrantHttp: number; qdrantGrpc: number; knowledge: number }
   spawned: Spawned
 }
@@ -829,6 +848,66 @@ test('crash: an engine that dies after ready flips the status to error', async (
   assert.equal(status.error?.code, 'engine_exited')
   assert.equal(existsSync(join(f.root, 'state', 'service.json')), false)
   assert.equal(existsSync(join(f.root, 'state', 'lease.json')), false)
+})
+
+test('crash: the log tail reads only the end of an oversized log', async (t) => {
+  const f = await fixture(t)
+  const sup = supervisor(f)
+  assert.equal((await sup.ensure()).phase, 'ready')
+  const engineLog = join(f.root, 'state', 'logs', 'engine.log')
+  appendFileSync(engineLog, `${'x'.repeat(1_024)}\n`.repeat(4_000))
+  appendFileSync(engineLog, 'TAIL-MARKER\n')
+
+  f.spawned.children[1].kill()
+  const deadline = Date.now() + 5_000
+  while (Date.now() < deadline && sup.status().phase === 'ready') {
+    await new Promise((resolve) => setTimeout(resolve, 25))
+  }
+
+  const status = sup.status()
+  assert.equal(status.phase, 'error')
+  assert.match(status.logTail ?? '', /TAIL-MARKER/)
+  assert.ok((status.logTail ?? '').length < 70 * 1_024)
+})
+
+test('start: an oversized log rotates even when the previous generation exists', async (t) => {
+  const f = await fixture(t)
+  const logs = join(f.root, 'state', 'logs')
+  mkdirSync(logs, { recursive: true })
+  const engineLog = join(logs, 'engine.log')
+  const previous = join(logs, 'engine.log.1')
+  const oversized = 'OLD\n'.repeat(1_100_000)
+  writeFileSync(previous, 'PREVIOUS\n')
+  writeFileSync(engineLog, oversized)
+
+  assert.equal((await supervisor(f).ensure()).phase, 'ready')
+
+  assert.equal(readFileSync(previous, 'utf8'), oversized)
+  assert.ok(!existsSync(engineLog) || !readFileSync(engineLog, 'utf8').startsWith('OLD'))
+})
+
+test('start: a chatty child keeps its log under the cap while it runs', async (t) => {
+  const f = await fixture(t)
+  const spawned = fakeSpawn({ qdrant: f.stubs.qdrant, engine: f.stubs.spam })
+  t.after(() => spawned.stop())
+  assert.equal((await supervisor(f, { spawn: spawned.spawn }).ensure()).phase, 'ready')
+
+  const logs = join(f.root, 'state', 'logs')
+  const currentPath = join(logs, 'engine.log')
+  const rotatedPath = `${currentPath}.1`
+  const total = 2_600 * 1_024
+  const written = () =>
+    (existsSync(currentPath) ? statSync(currentPath).size : 0) +
+    (existsSync(rotatedPath) ? statSync(rotatedPath).size : 0)
+  const deadline = Date.now() + 5_000
+  while (Date.now() < deadline && written() < total) {
+    await new Promise((resolve) => setTimeout(resolve, 25))
+  }
+
+  assert.equal(written(), total)
+  assert.ok(existsSync(rotatedPath))
+  assert.ok(statSync(rotatedPath).size > 1_500_000)
+  assert.ok(statSync(currentPath).size < 2 * 1024 * 1024)
 })
 
 // ── stop ────────────────────────────────────────────────────────────────────

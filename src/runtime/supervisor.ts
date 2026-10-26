@@ -1,5 +1,18 @@
 import { randomBytes } from 'node:crypto'
-import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import {
+  appendFileSync,
+  closeSync,
+  existsSync,
+  fstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
 import { createServer as createNetServer } from 'node:net'
 import { dirname, join } from 'node:path'
 import { configDir, downloadsDir, logsDir, runtimeDir, stateDir } from './paths.ts'
@@ -136,18 +149,39 @@ interface LogSink {
 }
 
 function createLogSink(path: string, maxBytes: number): LogSink {
-  if (existsSync(path)) {
-    try {
-      if (statSync(path).size > maxBytes) renameSync(path, `${path}.1`)
-    } catch {
-      // rotation is best effort
+  let size = 0
+  try {
+    if (existsSync(path)) {
+      size = statSync(path).size
+      if (size > maxBytes) {
+        // A previous generation may already own `.1`; Windows rename does not
+        // replace it, and the oversized log would otherwise survive forever.
+        rmSync(`${path}.1`, { force: true })
+        renameSync(path, `${path}.1`)
+        size = 0
+      }
     }
+  } catch {
+    // rotation is best effort
   }
   return {
     path,
     write(chunk: string) {
+      const bytes = Buffer.byteLength(chunk)
+      try {
+        if (size + bytes > maxBytes) {
+          // Rotate mid-run too: a long-lived stack writes access logs continuously,
+          // and the cap cannot wait for the next start.
+          rmSync(`${path}.1`, { force: true })
+          renameSync(path, `${path}.1`)
+          size = 0
+        }
+      } catch {
+        // rotation is best effort; keep writing to the current file
+      }
       try {
         appendFileSync(path, chunk, 'utf8')
+        size += bytes
       } catch {
         // logging must never take the runtime down
       }
@@ -155,12 +189,24 @@ function createLogSink(path: string, maxBytes: number): LogSink {
   }
 }
 
+const LOG_TAIL_BYTES = 64 * 1024
+
+/** Read only the end of the log: a long-running stack can leave gigabytes
+ * behind, and loading that whole file is what took the host down. */
 function tailOf(path: string, lines = LOG_TAIL_LINES): string {
+  let fd: number | undefined
   try {
-    const text = readFileSync(path, 'utf8')
-    return text.split('\n').filter(Boolean).slice(-lines).join('\n')
+    fd = openSync(path, 'r')
+    const size = fstatSync(fd).size
+    const start = Math.max(0, size - LOG_TAIL_BYTES)
+    const buffer = Buffer.allocUnsafe(size - start)
+    readSync(fd, buffer, 0, buffer.length, start)
+    const out = buffer.toString('utf8').split('\n').filter(Boolean).slice(-lines)
+    return out.join('\n')
   } catch {
     return ''
+  } finally {
+    if (fd !== undefined) closeSync(fd)
   }
 }
 
