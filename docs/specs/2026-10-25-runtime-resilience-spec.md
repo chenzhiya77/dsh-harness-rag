@@ -66,7 +66,7 @@
 ### 3.3 D3 锚点告警上屏
 
 - `RuntimeStatusPayload` 增加可选 `warning: string`：`resolveRoot` 返回的 `warning` 原样透出（仅托管模式、非 `needs_location` 时）。
-- 面板在库视图顶部用现有横幅样式（`.hrag-rt-banner`，与「本地服务已就绪，配置嵌入模型」同槽位）显示：文案含原因，右侧可关闭；不阻断任何操作，不自动改写 `location.json`。
+- 面板在库视图顶部用现有横幅样式（`.hrag-rt-banner`，与升级/告警横幅同槽位）显示：文案含原因，右侧可关闭；不阻断任何操作，不自动改写 `location.json`。
 - 同时保留 `needs_location` 的设置卡路径：两者互斥（文件坏了 ⇒ 回退默认根并提示；指向的位置没了 ⇒ 设置卡）。
 
 ### 3.4 D4 嵌入就绪判定
