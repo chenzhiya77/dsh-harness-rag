@@ -1,6 +1,6 @@
 # 运行时版本化升级、回滚与旧版清理 —— plan
 
-**Status:** 已实施（2026-10-26；Task 0–8 全落）
+**Status:** 已实施（2026-10-26；Task 0–8 全落；Task 9 真机覆盖进行中——横幅实点已完成，五项待做）
 **Date:** 2026-10-25
 **配套 spec:** [../specs/2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md)
 
@@ -226,13 +226,33 @@
 - [x] 反例：租约属于本宿主（插件重载）、租约被存活的其他宿主持有（仍走 `upgrade_blocked_by_instance`）、`service.json` 带 pid、端口已关闭 ⇒ 不按无主残留处理。
 - [x] 单测 5 例（健康残留阻塞、不健康残留阻塞、端口关闭放行、本宿主租约不阻塞、带 pid 不误判）；禁用判定后前两例转红。
 - [x] spec §3.2/§5/§6/§7/§8 与手册同步：删「实现偏差」与「本版没有自动判定」。
-- [x] 门禁：`tsc` 0；`node --test tests/*.test.ts` **304/304**；`node --check client.js` 通过；`engine/` 零 diff。
+- [x] 门禁：`tsc` 0；`node --test tests/*.test.ts` **304/304**；`node --check client.js` 通过；`engine/` 零 diff。（Task 9 探活修复后 **305/305**）
 
 **实测（实施期回填）**：2026-10-26 实施完成。
 - 判定链：健康旧实例 `adopt` 后升级仍 `blocked`，库继续可用；不健康且端口应答时只置 `blocked`，不启动任何栈。仅当 pid 为空、端口应答、租约无存活持有者三者同时成立才阻塞；本宿主租约、外来活租约、带 pid、端口关闭均放行。
 - 单测：`tests/runtime_upgrade.test.ts` 增 5 例；neuter（`if (false && staleAnswer)`）后 2 例阻塞用例转红、3 例反例保持绿；还原后升级+supervisor 66/66。
 - 门禁：`tsc` 0；全量 **304/304**、fail 0；`node --check client.js` 通过；`engine/` 零 diff。
-- 未覆盖：真机残留（需制造端口应答但 pid 为 null 的孤儿）仍走单测；面板实点「旧实例残留」横幅未做。
+- 真机：2026-10-26 在隔离宿主把 `service.json` 的 pid 置 null、保留真实监听后启动，API 返回 `upgrade_blocked_stale_instance`，面板显示「旧实例残留」并可关闭（Task 9；证据 `D:\hrag-t6\acceptance-2026-10-26-banner`）。真孤儿（宿主崩溃残留）仍未复现。
+- 实点修复：默认探活误用了「端口空闲探测」（bind），判定永远不触发；新增 `probePortAnswer`（connect）与单测，修复后同场景阻塞成立。
+
+## Task 9 — 真机覆盖（2026-10-26 进行中）
+
+> 动到的文件：`src/runtime/supervisor.ts`（探活修复）、`tests/runtime_supervisor.test.ts`、本对 spec/plan。
+
+- [x] 升级横幅实点：就绪关闭、配置确认、失败重试＋复制日志、租约被占关闭、旧实例残留关闭；刷新后就绪横幅重现。
+- [x] 实点发现并修复：默认端口探活用了 bind（判空闲）当「应答」，`probePortAnswer`（connect）替换；+1 单测。
+- [x] 门禁：`tsc` 0；全量 **305/305**；`node --check client.js` 通过；`engine/` 零 diff。
+- [ ] headless 实跑。
+- [ ] 90 秒整栈超时真机。
+- [ ] `platform_unsupported`、并发 provision、`no_space`、清理删除失败真机。
+- [ ] `pending` 横幅实点（准备中瞬时态）。
+
+**实测（实施期回填）**：2026-10-26 完成横幅实点。
+- 环境：隔离 `DSH_HOME=D:\hrag-t6\dsh-home-banner`（profile `bnr`，3090）；插件为 `git archive HEAD` 副本 link 安装；旧版/目标版硬链接克隆；旧服务手工常驻（8030/6340/6341）；Chrome headless＋CDP 9223 打开 `?token=` 驱动 DOM 与截图。
+- 结果：五类横幅（就绪/配置确认/失败/租约被占/旧实例残留）全部按 spec 显示；关闭、确认（写 `confirmedConfigVersion=45`）、重试（清失败文件）、复制日志（`writeText` 捕获 `state/logs`）均生效；就绪横幅关闭后刷新重现。
+- 缺陷：探活方向反了（bind 判空闲）；修复后 API 由 `needs_confirmation` 转为 `upgrade_blocked_stale_instance`。
+- 未覆盖：`pending` 瞬时态、剪贴板读取（headless 权限拒，改用 `writeText` 钩子）、真孤儿进程。
+- 证据：`D:\hrag-t6\acceptance-2026-10-26-banner`（README＋11 张截图＋日志＋探针脚本）。
 
 ## 验收对应
 
@@ -245,7 +265,7 @@
 | 5 手动重试 | Task 3 / Task 5 / Task 6 | 真机 `snap-04`、`snap-05` |
 | 6 配置版本确认 | Task 4 / Task 6 | 真机 `snap-06/07/08`；headless 未跑 |
 | 7 租约与旧实例 | Task 2 / Task 6 | 真机 `snap-13` |
-| 8 无主残留 | Task 8 | 单测 5 例（阻塞 2＋反例 3）；未真机 |
+| 8 无主残留 | Task 8 / Task 9 | 单测 5 例；隔离宿主实点横幅（Task 9） |
 | 9 清理 | Task 4 / Task 6 | 真机 `snap-05/08` |
 | 10 并发准备 | Task 4 / Task 6 | 单测 |
 | 11 空间不足与本地包 | Task 4 / Task 6 | 本地包真机；`no_space` 单测 |

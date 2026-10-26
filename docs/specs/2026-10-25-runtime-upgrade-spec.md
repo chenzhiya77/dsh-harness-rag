@@ -1,6 +1,6 @@
 # 运行时版本化升级、回滚与旧版清理 —— spec
 
-**Status:** 已实施（2026-10-26；Task 6 真机验收，证据 `D:\hrag-t6\acceptance-2026-10-25-upgrade`；Task 8 补齐 §5.8 无主残留判定，单测覆盖、未真机）
+**Status:** 已实施（2026-10-26；Task 6 真机验收，证据 `D:\hrag-t6\acceptance-2026-10-25-upgrade`；Task 8 补齐 §5.8 无主残留判定（单测＋隔离宿主实点）；Task 9 升级横幅实点完成，余五项真机分支待做）
 **Date:** 2026-10-25
 **来源:** 分发 spec §4.7 的后续对。现场已具备跨版本条件：`0.1.0-1` 已安装并在运行，`0.1.0-2` 包已构建且 `runtime.json` 已指向它；本对把 §4.7 从文字落成实现。
 **承接:** [2026-10-24-single-download-distribution-spec.md](2026-10-24-single-download-distribution-spec.md) §4.2 步 4、§4.3、§4.6、§4.7；[2026-10-24-single-download-distribution-plan.md](../plans/2026-10-24-single-download-distribution-plan.md) Task 6 未闭合②与 §7「不做版本化升级/回滚」；[2026-10-25-runtime-resilience-spec.md](2026-10-25-runtime-resilience-spec.md) 的认领看门狗与锚点横幅。
@@ -188,7 +188,7 @@ upgrade?: {
 13. **版本记录冲突**：手工把 `current.json` 改成旧版、`service.json` 保持新版且健康 → 启动后以 service 为准回写 current，不启动第二套栈；service 版本无对应 runtime ⇒ `blocked`（`state_version_conflict`），不启动。
 14. **门禁**：`tsc` 0 错；`node --test tests/*.test.ts` 全绿；`node --check client.js` 通过；`engine/` 与主树零 diff；token 不出现在日志、状态、面板与失败文件。
 
-**实测（2026-10-26）**：1–7、9、12、13 已真机覆盖（plan Task 6；证据根 `D:\hrag-t6\acceptance-2026-10-25-upgrade`）；4 走的是目标 `qdrant_exited` 立即失败，90 秒超时仅单测；10 的并发准备、11 的 `no_space` 为单测（本地 pack 分支已真机）；12 的 `platform_unsupported` 仅单测（非法 JSON 已真机）；8「端口仍应答但 pid 为 null ⇒ blocked」已由 Task 8 实现（2026-10-26），单测覆盖健康/不健康两条阻塞与三条反例，未真机；14 门禁在 Task 8 复跑 tsc 0、304/304、client check 通过、engine 零 diff。浏览器横幅/按钮未实点（DSH web 鉴权挡住 browser-use），headless 未实跑。
+**实测（2026-10-26）**：1–7、9、12、13 已真机覆盖（plan Task 6；证据根 `D:\hrag-t6\acceptance-2026-10-25-upgrade`）；4 走的是目标 `qdrant_exited` 立即失败，90 秒超时仅单测；10 的并发准备、11 的 `no_space` 为单测（本地 pack 分支已真机）；12 的 `platform_unsupported` 仅单测（非法 JSON 已真机）；8「端口仍应答但 pid 为 null ⇒ blocked」已由 Task 8 实现（2026-10-26），单测覆盖健康/不健康两条阻塞与三条反例；Task 9 在隔离宿主把 `service.json` 的 pid 置 null 后实点，API 与面板均出现 `upgrade_blocked_stale_instance`（真孤儿未复现）。14 门禁 Task 8 为 304/304，探活修复后 **305/305**、client check 通过、engine 零 diff。升级横幅就绪/配置确认/失败/租约被占/旧实例残留已在隔离宿主实点（headless Chrome＋CDP）；`pending` 瞬时态未截到；headless 实跑未做。
 
 ## 6. 影响面
 
@@ -211,7 +211,7 @@ upgrade?: {
 | 风险 | 现状/触发 | 处置 |
 | --- | --- | --- |
 | 新版迁移了 SQLite/向量，回滚后旧版读不了 | 配置版本变化或引擎自带迁移 | 确认文案与 README 要求先备份；失败文件记原文；不宣称回滚数据安全 |
-| 无主旧实例阻塞升级 | pid 为 null、端口仍应答、租约陈旧 | 已自动判定（Task 8，单测；未真机）：健康实例照常 adopt，升级 `blocked`（`upgrade_blocked_stale_instance`）；不猜 pid、不杀；文档保留手工停进程办法；端口→pid 发现仍不做 |
+| 无主旧实例阻塞升级 | pid 为 null、端口仍应答、租约陈旧 | 已自动判定（Task 8 单测＋Task 9 隔离宿主实点）：健康实例照常 adopt，升级 `blocked`（`upgrade_blocked_stale_instance`）；不猜 pid、不杀；文档保留手工停进程办法；端口→pid 发现仍不做 |
 | 90 秒误判慢机器 | Qdrant/引擎首次索引恢复慢 | 失败会回旧版，不丢服务；实测值可再调单个常量 |
 | 两个宿主同时准备 | 同一运行根、同一目标版本 | `provision.lock`；后台不等待、下次轮询/激活复用；首装前台最长 10 分钟；超时 `provision_held` |
 | 旧版目录删不掉 | 文件被占用/杀软扫描 | 只记日志，不挡 `ready`；下次成功切换再清 |
