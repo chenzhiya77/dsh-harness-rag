@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { createToolGating } from '../src/tool_gating.ts'
 import { buildToolDefinitions } from '../src/tools.ts'
@@ -212,9 +213,11 @@ test('section: a rejected section unwinds the tools and rethrows', () => {
   assert.deepEqual(first.sections, [])
 })
 
-test('discipline text: names the six tools, the citation field, the read bounds and the refusal', () => {
+test('discipline text: names the six tools, the read bounds and the refusal; no citation rules', () => {
   for (const name of TOOL_NAMES) assert.ok(RETRIEVAL_DISCIPLINE.includes(`\`${name}\``), name)
-  assert.ok(RETRIEVAL_DISCIPLINE.includes('citation_no'))
+  for (const word of ['citation_no', '引用编号', '参考清单', '片序', '标注', '[n]']) {
+    assert.ok(!RETRIEVAL_DISCIPLINE.includes(word), word)
+  }
   assert.ok(RETRIEVAL_DISCIPLINE.includes('最多 4 个窗口'))
   assert.ok(RETRIEVAL_DISCIPLINE.includes('最多 6 次'))
   assert.ok(RETRIEVAL_DISCIPLINE.includes('知识库中没有找到相关内容'))
@@ -326,7 +329,7 @@ test('run_id: omitted when the phase has no turn or the call has no agent', asyn
   }
 })
 
-test('hybrid: native results and message pass through with the kb echo', async () => {
+test('hybrid: native results pass through, the citation note is stripped, kb echoed', async () => {
   const payload = {
     results: [
       {
@@ -346,13 +349,13 @@ test('hybrid: native results and message pass through with the kb echo', async (
   const restore = mockFetch([], payload)
   try {
     const result = await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'q' }, execWithoutAgent())
-    assert.deepEqual(result, { ...payload, kb_id: 'kb-1' })
+    assert.deepEqual(result, { ...payload, message: '检索到 1 条相关切片。', kb_id: 'kb-1' })
   } finally {
     restore()
   }
 })
 
-test('graph: trace and score_source pass through', async () => {
+test('graph: trace and score_source pass through, the citation note is stripped', async () => {
   const payload = {
     entities: [{ name: 'Gateway', type: '组件', description: '入口' }],
     relations: [{ source: 'A', target: 'Gateway', relation: '包含', description: '' }],
@@ -375,13 +378,17 @@ test('graph: trace and score_source pass through', async () => {
   const restore = mockFetch([], payload)
   try {
     const result = await toolNamed('hrag_graph_search').execute({ kb_id: 'kb-1', entity: 'Gateway' }, execWithoutAgent())
-    assert.deepEqual(result, { ...payload, kb_id: 'kb-1' })
+    assert.deepEqual(result, {
+      ...payload,
+      message: '命中 1 个实体，扩展出 1 个节点、1 条关系、1 条切片证据。',
+      kb_id: 'kb-1',
+    })
   } finally {
     restore()
   }
 })
 
-test('wiki: full entry content passes through unchanged', async () => {
+test('wiki: full entry content passes through, the citation note is stripped', async () => {
   const payload = {
     entries: [
       {
@@ -400,9 +407,44 @@ test('wiki: full entry content passes through unchanged', async () => {
   const restore = mockFetch([], payload)
   try {
     const result = await toolNamed('hrag_wiki_search').execute({ kb_id: 'kb-1', title: 'DeerFlow' }, execWithoutAgent())
-    assert.deepEqual(result, { ...payload, kb_id: 'kb-1' })
+    assert.deepEqual(result, { ...payload, message: '命中 1 篇百科条目。', kb_id: 'kb-1' })
   } finally {
     restore()
+  }
+})
+
+test('message: only the citation note is stripped; degrade notes stay', async () => {
+  const payload = {
+    results: [{ chunk_id: 'c1', citation_no: 3 }],
+    message: '检索到 1 条相关切片（引用编号 [3]，标注时照抄 citation_no）。重排服务不可用，已降级为 RRF 序。',
+  }
+  const restore = mockFetch([], payload)
+  try {
+    const result = await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'q' }, execWithoutAgent())
+    assert.deepEqual(result, {
+      kb_id: 'kb-1',
+      results: payload.results,
+      message: '检索到 1 条相关切片。重排服务不可用，已降级为 RRF 序。',
+    })
+  } finally {
+    restore()
+  }
+})
+
+test('message: the engine still emits the exact note this host strips', () => {
+  for (const file of [
+    '../engine/backend/packages/harness/deerflow/tools/builtins/hybrid_search_tool.py',
+    '../engine/backend/packages/harness/deerflow/tools/builtins/graph_search_tool.py',
+    '../engine/backend/packages/harness/deerflow/tools/builtins/wiki_search_tool.py',
+  ]) {
+    const source = readFileSync(new URL(file, import.meta.url), 'utf8')
+    assert.ok(source.includes('，标注时照抄 citation_no）'), file)
+  }
+})
+
+test('descriptions: the three retrieval tools do not advertise citation fields', () => {
+  for (const name of ['hrag_hybrid_search', 'hrag_graph_search', 'hrag_wiki_search']) {
+    assert.ok(!toolNamed(name).description.includes('citation_no'), name)
   }
 })
 

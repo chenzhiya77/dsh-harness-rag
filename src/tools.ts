@@ -45,14 +45,21 @@ function citationRunId(exec: ToolExec): string | undefined {
   return `${agent.id}:${turn}`
 }
 
+/** The discipline gives the model no citation instruction (spec 2026-10-25
+ * D6), so the engine's note would be the only one and is removed here. The
+ * citation_no fields and the engine's per-run counter stay untouched. */
+const CITATION_NOTE = /（引用编号 \[[^）]+\]，标注时照抄 citation_no）/
+
 /** One model-facing call. The engine owns argument defaults, boundary
  * validation, refusals and citation numbering; the plugin maps the tool name
- * and forwards the model's arguments without re-shaping them. */
+ * and forwards the model's arguments unchanged apart from the citation note. */
 async function callTool(config: Config, kbId: string, name: ToolName, args: Record<string, unknown>, exec: ToolExec) {
   const body: Record<string, unknown> = { name, ...args }
   const runId = citationRunId(exec)
   if (runId !== undefined) body.run_id = runId
-  return api<Record<string, unknown>>(config, `/api/knowledge-bases/${kbId}/tools`, { body, signal: exec.signal })
+  const payload = await api<Record<string, unknown>>(config, `/api/knowledge-bases/${kbId}/tools`, { body, signal: exec.signal })
+  if (typeof payload.message === 'string') payload.message = payload.message.replace(CITATION_NOTE, '')
+  return payload
 }
 
 /** Where a call's kb came from, plus the display name when the binding knew it.
@@ -98,7 +105,7 @@ export function buildToolDefinitions(config: Config, bindings: BindingsStore) {
 
   definitions.push(defineTool({
     name: 'hrag_hybrid_search',
-    description: 'Hybrid retrieval over the bound knowledge base: dense + sparse vectors fused with RRF, then reranked. Results carry chunk text, doc_id/chunk_index, citation metadata, mentioned entities and citation_no; pass doc_id to search inside one document.',
+    description: 'Hybrid retrieval over the bound knowledge base: dense + sparse vectors fused with RRF, then reranked. Results carry chunk text, doc_id/chunk_index, mentioned entities and scores; pass doc_id to search inside one document.',
     parameters: {
       query: { type: 'string' as const, required: true as const, description: "The retrieval question, phrased in the user's language." },
       top_k: { type: 'number' as const, description: 'Number of chunks to return after precision ranking (default 5, max 20).' },
@@ -124,7 +131,7 @@ export function buildToolDefinitions(config: Config, bindings: BindingsStore) {
 
   definitions.push(defineTool({
     name: 'hrag_graph_search',
-    description: 'Graph retrieval over the bound knowledge base: entity-seeded, structure-driven evidence across 1-2 hops with semantic gating, a node budget and a hub guard. Pass entity for a direct entry or query for query understanding; evidence carries doc_id and citation_no.',
+    description: 'Graph retrieval over the bound knowledge base: entity-seeded, structure-driven evidence across 1-2 hops with semantic gating, a node budget and a hub guard. Pass entity for a direct entry or query for query understanding; evidence carries doc_id and chunk text.',
     parameters: {
       query: { type: 'string' as const, description: "The relationship/structure question, phrased in the user's language. Provide this or entity." },
       entity: { type: 'string' as const, description: 'Exact entity name to enter the graph directly — skips query understanding and vector matching.' },
@@ -158,7 +165,7 @@ export function buildToolDefinitions(config: Config, bindings: BindingsStore) {
 
   definitions.push(defineTool({
     name: 'hrag_wiki_search',
-    description: 'Wiki retrieval over the bound knowledge base: generated encyclopedia entries and manual knowledge cards merged in one pool (wiki wins score ties). Hits carry full entry content, source_type wiki|manual, updated_at and citation_no; pass title to fetch one entry directly.',
+    description: 'Wiki retrieval over the bound knowledge base: generated encyclopedia entries and manual knowledge cards merged in one pool (wiki wins score ties). Hits carry full entry content, source_type wiki|manual and updated_at; pass title to fetch one entry directly.',
     parameters: {
       query: { type: 'string' as const, description: "The concept/topic question, phrased in the user's language. Provide this or title." },
       title: { type: 'string' as const, description: 'Exact entry title (an entity name) — fetches that entry directly, skipping semantic search.' },
