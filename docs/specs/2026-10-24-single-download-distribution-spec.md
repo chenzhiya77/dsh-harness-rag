@@ -1,6 +1,6 @@
 # 单一下载分发（插件自带本地运行环境） —— spec
 
-**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 公开仓、`v0.1.0` Release 与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；§5.10 同时启动与 §5.17 `.env` 代理/引擎出网已于 2026-10-26 补测（证据 `D:\hrag-t6\acceptance-2026-10-26-lease-proxy`）；npm 发布与索引上线待外部条件）。**2026-10-26 RAG 面复审追加 §9：R1 已定甲并进入实施（Task 0–2 完成，0.1.0-3 包已建但未发布；runtime.json 与安装文档仍指 v0.1.0），R2–R5 待裁、K1 已知降级。**
+**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 公开仓、`v0.1.0` Release 与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；§5.10 同时启动与 §5.17 `.env` 代理/引擎出网已于 2026-10-26 补测（证据 `D:\hrag-t6\acceptance-2026-10-26-lease-proxy`）；npm 发布与索引上线待外部条件）。**2026-10-26 RAG 面复审追加 §9：R1 已按甲实施并随 `v0.1.1` 发布（运行时 `0.1.0-3`；`runtime.json` 与安装文档已指向该版本），R2–R5 待裁、K1 已知降级。**
 **Date:** 2026-10-24
 **来源:** 10-24 他问「当前的插件有两个文件夹……用户下载插件肯定是只下载一个插件，后端不能放在插件文件夹中吗」；随后明确目标是「用户只需要点击下载插件就能下载完全部的东西，可以直接使用」，并问 DSH 插件发布在哪、是否有官方市场；确认方向后令起 spec/plan。
 **承接:** 现行部署两件式（[README.md](../../README.md) §安装/§后端最小形态，`README.md:40-69`）；配置默认值 `src/settings.ts:15-19`；后端地址的唯一消费面 `src/http.ts:29-48` 与 `src/kb_proxy.ts:395/450/543`；引擎路径环境变量 `engine/backend/packages/harness/deerflow/config/runtime_paths.py`（并入单仓后的位置）。
@@ -358,11 +358,11 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 后续（非本对）：本地嵌入 spec（让新装用户不填 key 也能摄入）；mac/Linux 运行时包与 CI 矩阵；精简运行时 profile；运行时包增量更新；官方/社区索引收录。
 
-§9 的 R1 已定甲并已立 plan；R2–R5 待裁，裁决后另立 plan；未裁前不排期。
+§9 的 R1 已按甲实施并随 `v0.1.1` 发布；R2–R5 待裁，裁决后另立 plan；未裁前不排期。
 
 ## 9. 2026-10-26 RAG 面复审登记
 
-> 本节记录复审发现与 R1 实施状态。R1 已定甲并进入实施（Task 0–2 完成，0.1.0-3 包已建但未发布），R2–R5 待裁，K1 为已知降级。R2–R5 裁决前不改 README/面板文案、不动 `runtime.json`，也不改变 §7/§8 的已拍结论。
+> 本节记录复审发现与 R1 实施状态。R1 已按甲实施并随 `v0.1.1` 发布（运行时 `0.1.0-3`），R2–R5 待裁，K1 为已知降级。R2–R5 裁决前不改 README/面板文案，也不改变 §7/§8 的已拍结论。
 
 ### 9.1 基线与结论
 
@@ -379,16 +379,18 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 ### 9.2 登记与裁决
 
-> **R1 已定（2026-10-26）：甲（打进运行时 pack）。** R2–R5 仍待裁；R1 的实施计划见 [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
+> **R1 已按甲实施并随 `v0.1.1` 发布（2026-10-26）。** R2–R5 仍待裁；执行记录见 [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
 
 | 编号 | 事实 | 触发与影响 | 选项 | 验收 |
 |---|---|---|---|---|
-| R1（已定甲） | **Excel 可选件未随包**：`README.md:45` 承诺 `.xlsx/.xls`；解析器惰性导入 `python_calamine`（`parser.py:391`），缺包直接抛错（`parser.py:393`）；`python-calamine` 不在 `engine/backend/uv.lock` / `engine/backend/packages/harness/pyproject.toml`，0.1.0-2 的 `site-packages` 也没有（解包约 1.6 MB）。表格门控 `rag.table.enabled` 默认 false（`config.example.yaml:2739-2741`）；CSV 不受影响，TSV 走 csv 解析、不依赖 calamine。 | 用户开启表格门控后上传 `.xlsx/.xls` 必失败；默认关闭时这些后缀在 allowlist 外，用户看不到。 | 甲（已定）：把 wheel 纳入托管运行时 pack（体积代价约 1.6 MB）；外部模式仍需自行安装，另行记录。乙：只登记“需另装”。丙：不做。 | 甲：干净托管运行时开表门控，`.xlsx` 能解析到 ready。乙：拒绝时文案指向安装步骤，不出现裸 ImportError。 |
-| R2 | **视频前置未写全**：探针硬依赖外部 `ffprobe`（`probe.py:31`，缺失即抛）；抽帧调用 `ffmpeg`（`frames.py:57`）；0.1.0-2 解包树中没有这两个二进制（根层与 `site-packages` 已查）。`rag.video.asr_model` 无默认值（`app_config.py:157`；未声明时 `worker.py:824-828` 直接报配置错）；默认 ASR 是 funasr（`app_config.py:156`），运行时未带（§7 已登记）；服务档只吃 ≤5 分钟（`asr.py:162`），更长回落 `funasr`（`asr.py:177-178`），在托管包同样不可用。README 只写了 funasr/torch（`README.md:46`、`plugin-manual.md:130`）。视频门控默认 false（`config.example.yaml:2715-2716`）。 | 开视频门控后：无 ffmpeg/ffprobe 时探测腿硬失败；有 ffmpeg 但未设 `asr_model` 时配置错误；服务档 >5 分钟仍回落到缺失的 funasr，ASR 腿失败（文档可按其他腿 ready，见 `worker.py:817`）。 | 甲：只补文档（推荐，不改 pack 体积）：写明 ffmpeg/ffprobe、`asr_model`、本地 ASR、服务档 5 分钟与回落后果。乙：把 ffmpeg/ffprobe 打进 pack（体积/许可面明显增大）。丙：不做（不建议，README 已承诺视频）。 | 甲：干净机器按文档装 ffmpeg、设 `asr_model` 后，≤5 分钟服务档 ASR 成功；>5 分钟得到明确的 ASR 失败而不是误以为服务档可用。乙：无外部 ffmpeg 也能 probe/抽帧。 |
+| R1（已定甲·已实施） | **Excel 可选件未随包**：`README.md:45` 承诺 `.xlsx/.xls`；解析器惰性导入 `python_calamine`（`parser.py:391`），缺包直接抛错（`parser.py:393`）；`python-calamine` 不在 `engine/backend/uv.lock` / `engine/backend/packages/harness/pyproject.toml`，0.1.0-2 的 `site-packages` 也没有（解包约 1.6 MB）。表格门控 `rag.table.enabled` 默认 false（`config.example.yaml:2739-2741`）；CSV 不受影响，TSV 走 csv 解析、不依赖 calamine。 | 用户开启表格门控后上传 `.xlsx/.xls` 必失败；默认关闭时这些后缀在 allowlist 外，用户看不到。 | 甲（已定）：把 wheel 纳入托管运行时 pack（体积代价约 1.6 MB）；外部模式仍需自行安装，另行记录。乙：只登记“需另装”。丙：不做。 | 甲：干净托管运行时开表门控，`.xlsx` 能解析到 ready。乙：拒绝时文案指向安装步骤，不出现裸 ImportError。 |
+| R2 | **视频前置未写全**：探针硬依赖外部 `ffprobe`（`probe.py:31`，缺失即抛）；抽帧调用 `ffmpeg`（`frames.py:57`）；0.1.0-2 解包树中没有这两个二进制（根层与 `site-packages` 已查）。`rag.video.asr_model` 无默认值（`app_config.py:157`；未声明时 `worker.py:824-828` 直接报配置错）；默认 ASR 是 funasr（`app_config.py:156`），运行时未带（§7 已登记）；服务档只吃 ≤5 分钟（`asr.py:162`），更长回落 `funasr`（`asr.py:177-178`），在托管包同样不可用。README 只写了 funasr/torch（`README.md:46`、`plugin-manual.md:131`）。视频门控默认 false（`config.example.yaml:2715-2716`）。 | 开视频门控后：无 ffmpeg/ffprobe 时探测腿硬失败；有 ffmpeg 但未设 `asr_model` 时配置错误；服务档 >5 分钟仍回落到缺失的 funasr，ASR 腿失败（文档可按其他腿 ready，见 `worker.py:817`）。 | 甲：只补文档（推荐，不改 pack 体积）：写明 ffmpeg/ffprobe、`asr_model`、本地 ASR、服务档 5 分钟与回落后果。乙：把 ffmpeg/ffprobe 打进 pack（体积/许可面明显增大）。丙：不做（不建议，README 已承诺视频）。 | 甲：干净机器按文档装 ffmpeg、设 `asr_model` 后，≤5 分钟服务档 ASR 成功；>5 分钟得到明确的 ASR 失败而不是误以为服务档可用。乙：无外部 ffmpeg 也能 probe/抽帧。 |
 | R3 | **tiktoken 成传递依赖 + BPE 未随包**：`chunker.py:28` 顶层 `import tiktoken`，`count_tokens` 用 `cl100k_base`（`chunker.py:45`）；`tiktoken` 已不在 `engine/backend/packages/harness/pyproject.toml` 的直接依赖，当前由 ragas/langchain-openai 传递带入（`engine/backend/uv.lock`）；0.1.0-2 的 `site-packages` 有 tiktoken 0.12.0，但没有 BPE 缓存。首次 `get_encoding` 会从 tiktoken 的固定地址取约 1.6 MB，默认缓存在 `%TEMP%/data-gym-cache` 或 `TIKTOKEN_CACHE_DIR`。 | 当前可用；锁变化可能断。干净 VM / 离线首次摄入多一个网络点，失败时不像模型端点那样有面板引导。 | 甲：`tiktoken` 加回直接依赖，构建时把 BPE 缓存放入 pack 并设 `TIKTOKEN_CACHE_DIR`（推荐）。乙：只加直接依赖，文档写明首次需联网。丙：维持现状（不建议，属于隐性依赖）。 | 甲：断网/干净 VM 首次切分成功。乙：首次联网按文档可预期完成。 |
 | R4 | **MinerU 未配置的落点不对**：默认 `parse_provider=mineru-cloud`（`app_config.py:233`）；无 token 时 `parser.py:600-603` 抛 `MineruAuthError`；面板把含 `mineru_api_token` 的错误归为 `serviceUnconfigured`（`client.js:3403`），文案是“文档解析服务未配置，请联系管理员”（`client.js:301`）；面板设置里其实有 MinerU token 字段（`client.js:19236`）；手册首启只引导嵌入模型（`plugin-manual.md:26`），没提 MinerU token。 | 单用户桌面第一次上传 PDF/Office/图片即失败；“请联系管理员”没有可操作路径（实际应在「功能模型设置」填 token）。 | 甲：首启加一步“MinerU token（可选但常用）”，并把错误文案改成“去功能模型设置填写 MinerU Token”（推荐）。乙：只改文案。丙：不动。 | 未配置时上传 PDF 得到可操作的指向；配置后解析成功。 |
 | R5 | **Langfuse 裁剪后的残留**：`langfuse` 已从 `harness/pyproject.toml` 直接依赖移除；评测引擎缺包时 `push_scores_to_langfuse` 明确跳过（`ragas_eval.py:656-691`）；面板仍保留“查看 Trace”按钮逻辑，只在 `layer2.langfuse_trace_url` 存在时显示（`client.js:12413`），实际不会出现；README/手册没有提 trace。 | 当前无死链、无报错；但这是一项相对 deer-flow 的真实能力损失（有 Langfuse 环境时也无法推送/跳转）。 | 甲：确认不支持，保留惰性代码并在评测文档写一句“无 trace”（最小改动）。乙：补 `langfuse` 依赖与配置入口。丙：删掉残留按钮代码（如果确定永不支持）。 | 甲：文档与界面一致，不出现“应该有但没有”的预期。乙：配置后 trace URL 可出现。丙：代码无死入口。 |
 | K1 | **scenedetect 未随包**：视频分镜惰性导入 `scenedetect`（`worker.py:145`），缺失时回落 `fallback_window_seconds` 等距窗口（`app_config.py:154`）。 | 只降分镜精度，不阻塞；不影响 ffmpeg/ASR 的硬前置。 | 不处理（已知降级）。 | 视频仍能出分镜卡；日志可见降级。 |
+
+> **R1 实施结果（2026-10-26）**：按甲落地——`scripts/runtime-extra-requirements.txt` 固定 `python-calamine==0.8.2`，构建脚本并入 `uv pip sync` 并在构建期冒烟；运行时 `0.1.0-3`（331,053,658 B，sha256 `90421f0f…aca745`）随 `v0.1.1` 发布，`runtime.json` 已指向该资产。干净托管运行时开表门控后 `.xlsx`/`.tsv`/`.csv` 均到 ready，关闸时 `.xlsx`/`.tsv` 仍被拒绝；`engine/` 零 diff。证据：`D:\hrag-r1\evidence\zip`（验收）、`D:\hrag-r1\evidence\release`（发布/安装复验）；plan [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
 
 ### 9.3 已排除的假缺口
 
@@ -400,14 +402,14 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 ### 9.4 发布影响
 
-- **R1（已定甲）**：重建托管运行时 pack，bump `runtimeVersion`（`0.1.0-3`），新增 Release 资产并更新 `runtime.json`；GitHub 安装需要新插件 tag/release（如 `v0.1.1`），已装用户也需先升级插件，既有运行时升级链才会看到新 pack。不覆盖 `v0.1.0` 的既有资产；执行细节见 [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
+- **R1（已定甲·已实施）**：托管运行时 pack 已重建为 `0.1.0-3`，随 `v0.1.1` Release 发布并回填 `runtime.json`；GitHub 安装钉 `v0.1.1`，已装用户先升级插件后由既有升级链看到新 pack。`v0.1.0` 既有资产未覆盖；执行细节与证据见 [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
 - **R2–R5（未裁）**：发布影响按选项定，不预先混写。R4 的 UI 文案与 R5 的删入口属于插件 patch；R3 甲或 R2 乙才重建 pack。R2/R3 若裁 pack 方案，另立 plan。
-- R1 发布前 `runtime.json` 保持 `0.1.0-2`；当前 `v0.1.0` 仍为有效发布，`0.1.0-3` 已建包、未上传。
-- 外部模式不在 R1 的 pack 修复范围内：`make gateway` 环境仍需自行安装 `python-calamine`，README/手册必须把托管与外部两种模式分开写。
+- `runtime.json` 现为 `0.1.0-3`，指向 `v0.1.1` 资产；`v0.1.0` Release 与其 `0.1.0-2` 资产保留未动。
+- 外部模式不在 R1 的 pack 修复范围内：`make gateway` 环境仍需自行安装 `python-calamine`，README/手册已把托管与外部两种模式分开写。
 
 ### 9.5 验收补充（裁决后并入 §5）
 
-- **5.20 表格门控（R1，已验 2026-10-26）**：干净托管运行时 `0.1.0-3` 开启 `rag.table.enabled`，`.xlsx`/`.tsv`/`.csv` 均到 `ready` 且切片为同一 GFM 表；门控关闭时 `.xlsx`/`.tsv` 被 400 拒绝、`.csv` 保留。`.xls` 无夹具，记录“同一 calamine 路径、未独立覆盖”。证据 `D:\hrag-r1\evidence\zip`。
+- **5.20 表格门控（R1，已验 2026-10-26）**：干净托管运行时 `0.1.0-3` 开启 `rag.table.enabled`，`.xlsx`/`.tsv`/`.csv` 均到 `ready` 且切片为同一 GFM 表；门控关闭时 `.xlsx`/`.tsv` 被 400 拒绝、`.csv` 保留。`.xls` 无夹具，记录“同一 calamine 路径、未独立覆盖”。证据 `D:\hrag-r1\evidence\zip`；发布与 `git+https#v0.1.1` 安装复验 `D:\hrag-r1\evidence\release`。
 - **5.21 视频前置（R2）**：无 ffmpeg/ffprobe 时得到明确错误；装 ffmpeg、设 `asr_model` 后，≤5 分钟服务档 ASR 成功；>5 分钟验证回落失败被标为 `asr=failed`、文档仍可 ready。
 - **5.22 干净 VM 首次切分（R3）**：断网或空 tiktoken 缓存下首次摄入；按裁决结果验证「包内 BPE 成功」或「联网后成功且文档有说明」。
 - **5.23 MinerU 未配置（R4）**：新装后先传 PDF，验证提示指向「功能模型设置」且配置后解析成功。
@@ -415,6 +417,8 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 ### 9.6 本轮状态
 
-- R1 已定甲，plan Task 0–2 已完成（只读核实、构建脚本注入/冒烟、`0.1.0-3` 真包构建与 Excel/门控验收）；仓库内插件运行时代码、README/手册、面板、`runtime.json` 均未改；`0.1.0-3` 包在仓外 `D:\hrag-r1`、未上传，当前发布仍为 `v0.1.0`。
+- R1 已按甲完成并发布：plan Task 0–4 完成（只读核实、构建脚本注入/冒烟、`0.1.0-3` 真包构建与 Excel/门控验收、`v0.1.1` 发布与 `git+https#v0.1.1` 安装复验、收口门禁）；`runtime.json`、`package.json`、README/手册已更新，manifest 与资产摘要一致。
+- 门禁：`node --check client.js`、`node --check scripts/build-runtime-pack.mjs`、`tsc -p tsconfig.json` 均 exit 0，`node --test tests/*.test.ts` 306/306；`tests/runtime_manifest.test.ts` 的发布清单断言随版本改为 `0.1.0-3`；`engine/` 零 diff。证据 `D:\hrag-r1\evidence\gates`。
+- 发布面：`v0.1.1` tag `dde3d49`，资产 331,053,658 B / sha256 `90421f0f…aca745`；`v0.1.0` 未动；`market/index.json` 仍为 npm 源 `0.1.0`（索引未上线，未同步）。
 - R2–R5 待裁；K1 已知降级。
-- R1 按 plan 实施；R2–R5 裁决后另立 plan，未裁前不排期。
+- R2–R5 裁决后另立 plan，未裁前不排期。

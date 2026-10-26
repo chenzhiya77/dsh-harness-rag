@@ -1,6 +1,6 @@
 # R1 Excel 可选件随运行时包 —— plan
 
-**Status:** 已拍·实施中（2026-10-26 Task 0–2 完成；Task 3–4 待做；只覆盖 spec §9 R1，R2–R5 仍待裁）
+**Status:** 已拍·实施完成（2026-10-26 Task 0–4 完成；`v0.1.1` / 运行时 `0.1.0-3` 已发布并复验安装；只覆盖 spec §9 R1，R2–R5 仍待裁）
 **Date:** 2026-10-26
 **配套 spec:** [2026-10-24-single-download-distribution-spec.md §9 R1](../specs/2026-10-24-single-download-distribution-spec.md)
 
@@ -75,26 +75,40 @@
 
 > 动到的文件：`runtime.json`、`package.json`、`README.md`、`docs/plugin-manual.md`、`market/index.json`（若启用索引）、本对 spec/plan（回填）。
 
-- [ ] 版本策略（默认）：新插件/runtime release `v0.1.1`，运行时 `0.1.0-3`；`package.json` 升 `0.1.1`，README/手册安装示例改钉 `v0.1.1`；`runtime.json.engineCommit` 保持 `a4942966b`（引擎未改）；`market/index.json` 若上线则同步。若改走“现有 `v0.1.0` 追加资产＋新插件 tag”，先停下确认——两条路的 URL/清单不同，不混用。
-- [ ] 发布顺序（默认 `v0.1.1`）：构建包 → 改 `runtime.json`（`runtimeVersion=0.1.0-3`、`engineCommit=a4942966b`、`urls` 指 `v0.1.1` 资产、`size/unpackedSize/sha256`）、`package.json`、README/手册 → 提交 → 建 **draft** `v0.1.1` Release 并上传资产 → 发布（tag 随发布可见）→ 用 `git+https#v0.1.1` 复验安装。**不要先推 tag 再补资产**；**不要用 `--update-manifest` 代替手改 `urls`**（它保留旧 `urls`）。不覆盖 `v0.1.0` 既有资产。
-- [ ] 文档：README 表格条/手册写“托管运行时已带 `python-calamine`；`rag.table.enabled` 仍默认关，只能改 `config.yaml` 开启”；**外部模式不在本 plan**，`make gateway` 环境仍需自行安装，文档分开写，不能把托管结论套到外部模式。
-- [ ] 已装用户：新 pack 只在新插件版本的 `runtime.json` 里可见；用户先升级插件到 `v0.1.1`，再由既有运行时升级链下载 `0.1.0-3`。不承诺仅换 pack 就自动升级。
-- [ ] 若本轮不发布：停在 Task 2；`runtime.json`、`package.json`、README 保持 `0.1.0`/`v0.1.0`，在 plan 记录“已建包、未发布”，不把文档写成完成态。
-- [ ] spec 回填：§9 R1 标“已实施/完成”，补证据路径；Status 行同步；R2–R5 仍待裁。
-- [ ] 提交：按用户令分笔；建议一笔构建/脚本 + 一笔文档；提交前确认 `engine/` 零 diff、无 zip/解压物入库。
+- [x] 版本策略（默认）：新插件/runtime release `v0.1.1`，运行时 `0.1.0-3`；`package.json` 升 `0.1.1`，README/手册安装示例改钉 `v0.1.1`；`runtime.json.engineCommit` 保持 `a4942966b`（引擎未改）；`market/index.json` 若上线则同步。若改走“现有 `v0.1.0` 追加资产＋新插件 tag”，先停下确认——两条路的 URL/清单不同，不混用。
+- [x] 发布顺序（默认 `v0.1.1`）：构建包 → 改 `runtime.json`（`runtimeVersion=0.1.0-3`、`engineCommit=a4942966b`、`urls` 指 `v0.1.1` 资产、`size/unpackedSize/sha256`）、`package.json`、README/手册 → 提交 → 建 **draft** `v0.1.1` Release 并上传资产 → 发布（tag 随发布可见）→ 用 `git+https#v0.1.1` 复验安装。**不要先推 tag 再补资产**；**不要用 `--update-manifest` 代替手改 `urls`**（它保留旧 `urls`）。不覆盖 `v0.1.0` 既有资产。
+- [x] 文档：README 表格条/手册写“托管运行时已带 `python-calamine`；`rag.table.enabled` 仍默认关，只能改 `config.yaml` 开启”；**外部模式不在本 plan**，`make gateway` 环境仍需自行安装，文档分开写，不能把托管结论套到外部模式。
+- [x] 已装用户：新 pack 只在新插件版本的 `runtime.json` 里可见；用户先升级插件到 `v0.1.1`，再由既有运行时升级链下载 `0.1.0-3`。不承诺仅换 pack 就自动升级。
+- [x] 若本轮不发布：停在 Task 2；`runtime.json`、`package.json`、README 保持 `0.1.0`/`v0.1.0`，在 plan 记录“已建包、未发布”，不把文档写成完成态。（未触发：本轮已发布）
+- [x] spec 回填：§9 R1 标“已实施/完成”，补证据路径；Status 行同步；R2–R5 仍待裁。
+- [x] 提交：按用户令分笔；建议一笔构建/脚本 + 一笔文档；提交前确认 `engine/` 零 diff、无 zip/解压物入库。
 
-**实测（实施期回填）**：
+**实测（2026-10-26）**：
+
+- **版本/清单**：`package.json` 为 `0.1.1`；`runtime.json` 为 `0.1.0-3` / `a4942966b`，URL 指向 `v0.1.1` 资产，`size 331,053,658`、`unpackedSize 882,903,724`、sha256 `90421f0f…aca745`。
+- **发布顺序**：先推 `master`（`dde3d49`），再建 draft `v0.1.1`（target `master`）→ 上传 zip → 发布（2026-10-26T23:32:17Z）；tag `v0.1.1` 落在 `dde3d49f4c872419c0833268f8a2fb5f37758fc8`，未先推 tag。`v0.1.0` 资产未动（仍为 0.1.0-2，330,283,067 B，`05cc423b…`）。
+- **资产核验**：GitHub API `digest` 为 `sha256:90421f0f…aca745`，与本地 zip 一致；Release 资产 URL range 探针 HTTP 206。
+- **安装复验**：隔离 `DSH_HOME=D:\hrag-r1\install-check-home`、profile `install-check`，`dsh plugin --profile install-check add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.1` 成功；pnpm 解析 tag 到 `dde3d49…`，装出 `dsh-harness-rag 0.1.1`，profile `dsh.profile.bundles` 含 `dsh-harness-rag`，`--dump-config` 有 `harness-rag` 条目，安装后的 `runtime.json` 与发布清单一致。
+- **文档**：README 安装示例改钉 `v0.1.1`、状态行改 `已发布（v0.1.1）`，体积改约 316 MB / 842 MB；表格条写明托管自带 `python-calamine`、门控默认关且只能改 `config.yaml`、外部模式需自行安装；顶部升级说明与手册「升级与回滚」写明已装用户先升级插件。手册另补表格解析条目与外部模式 `python-calamine==0.8.2` 安装说明。
+- **market 索引**：`market/index.json` 仍为 npm 源 `0.1.0`；索引未上线、npm 未发布，本轮不同步（已登记）。
+- **提交**：构建/脚本 `8c7fc1b`；计划与 spec 登记 `59c2bf8`、Task 2 回填 `a3ec559`；版本/文档 `dde3d49`。发布证据目录 `D:\hrag-r1\evidence\release\`（Release API、tag、install-check、README）。提交前 `engine/` 零 diff，仓库无 zip/解压物。
 
 ## Task 4 — 收口
 
 > 动到的文件：无（门禁与证据）。
 
-- [ ] 门禁：`node --check client.js`、`node --check scripts/build-runtime-pack.mjs`、`tsc -p tsconfig.json`、`node --test tests/*.test.ts`；`engine/` 相对基线零 diff；主树 `deer-flow` 零 diff。
-- [ ] 证据目录 `D:\hrag-r1`：构建日志、包清单、dist-info、`.xlsx` 解析结果、`.tsv/.csv` 回归、门控关闭对照。
-- [ ] 未发布时在 spec/plan 明确“pack 已建、runtime.json 未动、发布候令”，避免把未上传资产写成完成态。
-- [ ] 收口后向用户报告：包版本、体积/哈希、Excel 实测结果、是否已发布、剩余 R2–R5。
+- [x] 门禁：`node --check client.js`、`node --check scripts/build-runtime-pack.mjs`、`tsc -p tsconfig.json`、`node --test tests/*.test.ts`；`engine/` 相对基线零 diff；主树 `deer-flow` 零 diff。
+- [x] 证据目录 `D:\hrag-r1`：构建日志、包清单、dist-info、`.xlsx` 解析结果、`.tsv/.csv` 回归、门控关闭对照。
+- [x] 未发布时在 spec/plan 明确“pack 已建、runtime.json 未动、发布候令”，避免把未上传资产写成完成态。（未触发：本轮已发布）
+- [x] 收口后向用户报告：包版本、体积/哈希、Excel 实测结果、是否已发布、剩余 R2–R5。
 
-**实测（实施期回填）**：
+**实测（2026-10-26）**：
+
+- **门禁**：`node --check client.js`、`node --check scripts/build-runtime-pack.mjs`、`npm run typecheck`（`tsc -p tsconfig.json`）均 exit 0；`node --test tests/*.test.ts` 306/306 通过。门禁日志 `D:\hrag-r1\evidence\gates\{node-check,typecheck,tests}.log`。
+- **测试随发布更新**：`tests/runtime_manifest.test.ts:211` 的发布清单断言由 `0.1.0-2` 改为 `0.1.0-3`；仅此一处代码/测试改动，其余门禁全绿。
+- **零 diff**：`git diff -- engine` 与 `git status --short -- engine` 均为空（`D:\hrag-r1\evidence\gates\engine-diff.log` 0 行）。主树 `E:\app\python\agent\deer-flow` 本 plan 未写入；其工作区有既有的 `README.md` 修改与 10 个未跟踪文档（`D:\hrag-r1\evidence\gates\deer-flow-status.log`），不属于本 plan。
+- **证据目录**：`D:\hrag-r1\evidence\zip`（构建/包内核对/Excel 与门控）、`D:\hrag-r1\evidence\release`（Release、资产摘要、`git+https#v0.1.1` 安装复验）、`D:\hrag-r1\evidence\gates`（门禁日志）。
+- **收口结论**：`v0.1.1` 已发布，运行时 `0.1.0-3`（331,053,658 B / sha256 `90421f0f…aca745`）；Excel 在开启 `rag.table.enabled` 后 `.xlsx`/`.tsv`/`.csv` 到 ready，关闸时 `.xlsx`/`.tsv` 仍被拒；`engine/` 零 diff；R2–R5 待裁。
 
 ## 验收对应
 
