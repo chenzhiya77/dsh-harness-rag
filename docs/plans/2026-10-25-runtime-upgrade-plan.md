@@ -121,17 +121,23 @@
 
 > 动到的文件：`src/runtime/provision.ts`、`src/runtime/upgrade.ts`、`src/runtime/manifest.ts`、`tests/runtime_provision.test.ts`、`tests/runtime_upgrade.test.ts`。
 
-- [ ] `state/provision.lock`：拿锁前先 `mkdir state/`；独占创建；owner pid 存活时，后台（旧服务可用、为下一版准备）不等待、直接 `provision_held`（状态保持 `pending`，下一次轮询/激活复用）；前台（首装或没有旧服务可用的恢复启动）最多等 10 分钟（常量可调），出现目标 manifest 即复用，超时 `provision_held`；pid 不存在或已不存活 ⇒ 陈旧；pid 无法判定时 `startedAt` 超过 15 分钟 ⇒ 陈旧，删锁重试一次。
-- [ ] `ensureRuntime` 在检查已安装之前拿锁，`finally` 释放；锁只包下载/解压，不影响服务启动的 `lease.json`；`.part` 续传与 `.tmp` 原子改名保持。
-- [ ] 本地 `DSH_HARNESS_RAG_PACK` 分支：解压前用 `statfsSync` 做与下载相同的空间检查。目标版本的下载/本地、解压/复用两条路径都校验 manifest 的 `runtimeVersion` 等于目标、`configVersion` 等于 `runtime.json` 目标条目（若后者有值），不符报 `manifest_mismatch`，不写成功状态；旧版回滚只校验 `runtimeVersion` 等于旧版，不拿目标的 `configVersion` 比旧版。
-- [ ] 清理函数：成功后保留 current 与 previous；删 `runtime/` 下名字通过 `isRuntimeVersion`、含 `runtime-manifest.json`、不在保留集合的目录，并删对应 `failed-<version>.json`；`.tmp`、未知目录、无 manifest 目录不动；删除失败只记日志，不挡 `ready`；下一次成功切换再试。目标版本变化时删旧目标的失败文件。
-- [ ] 配置版本：只在存在当前版本（升级）时比较；从 `runtime/<current>/runtime-manifest.json` 与目标包读取 `configVersion`；两者为正整数且相等 ⇒ 自动；缺失/0/不同 ⇒ `needs_confirmation`；首次安装不比较，直接按目标建种子。
-- [ ] 确认：`runtime/upgrade {action:'confirm'}` 仅在 `needs_confirmation` 时写 `upgrade.json.confirmedConfigVersion`；目标版本或目标 `configVersion` 变化后确认失效；headless 不自动跨配置版本切换。
-- [ ] 空间：下载路径沿用 `downloadPack` 的空闲空间检查；本地 pack 分支也先查；不足保持旧版、`no_space`，不删旧包。
-- [ ] 单测：两个并发 `ensureRuntime` 只下载/解压一次；后台锁占用直接 `provision_held`、首装等待复用；陈旧锁接管；清理保留集合与跳过规则；`configVersion` 首次安装不比较、升级相同/不同、当前缺失 ⇒ `needs_confirmation`、目标缺失 ⇒ `manifest_mismatch`；确认失效；空间不足不删旧版；目标复用的 manifest 版本/configVersion 不符 `manifest_mismatch`；旧版回滚只校验版本；目标变化删旧失败文件。
-- [ ] 门禁：`tsc` 0 错；provision/upgrade 测试全绿；现有 provision 测试无回归。
+- [x] `state/provision.lock`：拿锁前先 `mkdir state/`；独占创建；owner pid 存活时，后台（旧服务可用、为下一版准备）不等待、直接 `provision_held`（状态保持 `pending`，下一次轮询/激活复用）；前台（首装或没有旧服务可用的恢复启动）最多等 10 分钟（常量可调），出现目标 manifest 即复用，超时 `provision_held`；pid 不存在或已不存活 ⇒ 陈旧；pid 无法判定时 `startedAt` 超过 15 分钟 ⇒ 陈旧，删锁重试一次。
+- [x] `ensureRuntime` 在检查已安装之前拿锁，`finally` 释放；锁只包下载/解压，不影响服务启动的 `lease.json`；`.part` 续传与 `.tmp` 原子改名保持。
+- [x] 本地 `DSH_HARNESS_RAG_PACK` 分支：解压前用 `statfsSync` 做与下载相同的空间检查。目标版本的下载/本地、解压/复用两条路径都校验 manifest 的 `runtimeVersion` 等于目标、`configVersion` 等于 `runtime.json` 目标条目（若后者有值），不符报 `manifest_mismatch`，不写成功状态；旧版回滚只校验 `runtimeVersion` 等于旧版，不拿目标的 `configVersion` 比旧版。
+- [x] 清理函数：成功后保留 current 与 previous；删 `runtime/` 下名字通过 `isRuntimeVersion`、含 `runtime-manifest.json`、不在保留集合的目录，并删对应 `failed-<version>.json`；`.tmp`、未知目录、无 manifest 目录不动；删除失败只记日志，不挡 `ready`；下一次成功切换再试。目标版本变化时删旧目标的失败文件。
+- [x] 配置版本：只在存在当前版本（升级）时比较；从 `runtime/<current>/runtime-manifest.json` 与目标包读取 `configVersion`；两者为正整数且相等 ⇒ 自动；缺失/0/不同 ⇒ `needs_confirmation`；首次安装不比较，直接按目标建种子。
+- [x] 确认：`runtime/upgrade {action:'confirm'}` 仅在 `needs_confirmation` 时写 `upgrade.json.confirmedConfigVersion`；目标版本或目标 `configVersion` 变化后确认失效；headless 不自动跨配置版本切换。
+- [x] 空间：下载路径沿用 `downloadPack` 的空闲空间检查；本地 pack 分支也先查；不足保持旧版、`no_space`，不删旧包。
+- [x] 单测：两个并发 `ensureRuntime` 只下载/解压一次；后台锁占用直接 `provision_held`、首装等待复用；陈旧锁接管；清理保留集合与跳过规则；`configVersion` 首次安装不比较、升级相同/不同、当前缺失 ⇒ `needs_confirmation`、目标缺失 ⇒ `manifest_mismatch`；确认失效；空间不足不删旧版；目标复用的 manifest 版本/configVersion 不符 `manifest_mismatch`；旧版回滚只校验版本；目标变化删旧失败文件。
+- [x] 门禁：`tsc` 0 错；provision/upgrade 测试全绿；现有 provision 测试无回归。
 
-**实测（实施期回填）**：
+**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+- 锁：`state/provision.lock` 用 `wx` 独占创建（owner/pid/startedAt）；pid 不存活、时间戳不可解析或超过 15 分钟视为陈旧，删锁重试一次；后台持有者存活时直接 `provision_held`，前台最多等 10 分钟（每 500 ms 查一次目标 manifest），出现即复用；`ensureRuntime` 全路径 `finally` 释放，不影响 `lease.json`。协调者把后台 `provision_held` 保持为 `pending` 且不落 `prepError`，下一次轮询会再试。
+- 校验/空间：复用与解压后都校验 `runtimeVersion`+`configVersion`，不符 `manifest_mismatch`（解压出的坏目录会删掉）；本地 pack 解压前用 `statfsSync`（`freeBytesAt` 已导出）做与下载相同的空间检查，`no_space` 不动旧目录。
+- 清理：`cleanOldVersions(root, keep)` 保留 current+previous，删更老的已装版本及其 `failed-<v>.json`；`.tmp`、未知目录、无 manifest 目录跳过；删除失败只回日志。成功切换后调用；目标变化时另删其他版本的失败文件。
+- 配置确认：沿用 Task 2 的比较与确认；补测首次安装不比较、当前 manifest 缺 `configVersion` ⇒ `needs_confirmation`、确认后目标 `configVersion` 变化 ⇒ 重新确认。
+- 门禁：`tsc` 0 错；provision+upgrade 35/35；全量 286/286。
+- 与 plan 的差异：①锁等待按 spec §3.3 落为「后台不等/前台 10 分钟」，plan 原句的 30 秒不再使用；②目标 manifest 的 `configVersion` 为 0 会在 `runtime.json` 校验阶段判 `manifest_invalid`（不是 `manifest_mismatch`），属于既有 schema；③旧版回滚不经 provision，直接从已装目录启动，因此只以目录可用性兜底、不比对 `configVersion`；④顺带导出 `download.freeBytesAt`、bridge 透传 `background`，`tests/runtime_config.test.ts` 的已装夹具改为合法 manifest。
 
 ## Task 5 — 状态载荷、op 与面板
 

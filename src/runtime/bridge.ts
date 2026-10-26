@@ -146,6 +146,7 @@ export function createRuntimeBridge(
               platform,
               pack,
               sourceZip,
+              background: hooks.background,
               signal: hooks.signal,
               onProgress: hooks.onProgress,
             })

@@ -119,7 +119,10 @@ test('provision: an installed runtime skips download and extraction', async () =
   const root = mkdtempSync(join(tmpdir(), 'hrag-provision-'))
   const installed = join(root, 'runtime', '2.1.0-1')
   mkdirSync(installed, { recursive: true })
-  writeFileSync(join(installed, 'runtime-manifest.json'), '{}')
+  writeFileSync(
+    join(installed, 'runtime-manifest.json'),
+    JSON.stringify({ format: 1, runtimeVersion: '2.1.0-1', configVersion: published.configVersion }),
+  )
 
   const result = await ensureRuntime({ root, version: '2.1.0-1', platform: 'win32-x64', pack: published })
 

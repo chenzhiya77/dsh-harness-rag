@@ -1,7 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import type { DownloadProgress } from './download.ts'
 import {
+  isRuntimeVersion,
   readCurrent,
   sanitizeFailed,
   sanitizeUpgrade,
@@ -11,7 +12,7 @@ import {
   type UpgradeRecord,
   type UpgradeState,
 } from './manifest.ts'
-import { runtimeDir, stateDir } from './paths.ts'
+import { runtimeDir, runtimeRoot, stateDir } from './paths.ts'
 import { sanitizeService, type ServiceRecord } from './process.ts'
 import {
   forgetSupervisor,
@@ -32,6 +33,7 @@ export interface UpgradeTarget {
 export interface UpgradeProvisionHooks {
   signal: AbortSignal
   onProgress: (progress: DownloadProgress) => void
+  background: boolean
 }
 
 export interface UpgradeCoordinatorOptions {
@@ -108,6 +110,42 @@ function configVersionOf(root: string, version: string): number | null {
   return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null
 }
 
+/** Keep the current and previous versions; delete older installed runtimes.
+ * Unknown names, `.tmp` leftovers and directories without a manifest stay. */
+export function cleanOldVersions(
+  root: string,
+  keepVersions: string[],
+  log?: (message: string) => void,
+): string[] {
+  let entries: string[]
+  try {
+    entries = readdirSync(runtimeRoot(root))
+  } catch {
+    return []
+  }
+  const keep = new Set(keepVersions.filter(Boolean))
+  const removed: string[] = []
+  for (const name of entries) {
+    if (!isRuntimeVersion(name) || name.endsWith('.tmp')) continue
+    if (keep.has(name)) continue
+    const dir = join(runtimeRoot(root), name)
+    try {
+      if (!statSync(dir).isDirectory()) continue
+    } catch {
+      continue
+    }
+    if (!existsSync(join(dir, RUNTIME_MANIFEST))) continue
+    try {
+      rmSync(dir, { recursive: true, force: true })
+      rmSync(failedPath(root, name), { force: true })
+      removed.push(name)
+    } catch (error) {
+      log?.(`could not remove runtime ${name}: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+  return removed
+}
+
 export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): UpgradeCoordinator {
   const root = options.root
   const target = options.target
@@ -166,6 +204,23 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
     rmSync(upgradePath(root), { force: true })
   }
 
+  /** A failure file only suppresses the target it names; when `runtime.json`
+   * moves on, the old target's file is noise. */
+  const removeStaleFailures = (): void => {
+    if (!target) return
+    let entries: string[]
+    try {
+      entries = readdirSync(stateDir(root))
+    } catch {
+      return
+    }
+    for (const name of entries) {
+      if (!name.startsWith('failed-') || !name.endsWith('.json')) continue
+      const version = name.slice('failed-'.length, -'.json'.length)
+      if (version !== target.version) rmSync(join(stateDir(root), name), { force: true })
+    }
+  }
+
   const baseUpgrade = (fromVersion: string, configChanged: boolean, confirm: boolean): RuntimeUpgradeView => ({
     state: 'pending',
     fromVersion,
@@ -203,11 +258,19 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
     preparing = (async () => {
       const outcome = await options.provision(target.version, {
         signal: controller.signal,
+        background: true,
         onProgress: (progress) => {
           upgrade = { ...(upgrade ?? base), progress }
         },
       })
       if (outcome.kind !== 'ok') {
+        if (outcome.kind === 'failed' && outcome.code === 'provision_held') {
+          // Another host is preparing: keep the old stack and retry later
+          // instead of latching a failure for this activation.
+          upgrade = { ...base, state: 'pending' }
+          persist(fromVersion, 'pending')
+          return
+        }
         prepError = {
           phase: 'prepare',
           code: outcome.kind === 'aborted' ? 'aborted' : outcome.code,
@@ -251,6 +314,7 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
       }
       rmSync(failedPath(root, target.version), { force: true })
       removeUpgrade()
+      cleanOldVersions(root, [target.version, fromVersion], options.log)
       return { ...targetView, previousVersion: fromVersion || targetView.previousVersion }
     }
 
@@ -380,6 +444,7 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
     }
 
     const failed = readFailedRecord(root, target.version)
+    removeStaleFailures()
     if (target.version === currentVersion || (!currentVersion && !failed)) {
       removeUpgrade()
       if (target.version === currentVersion) rmSync(failedPath(root, target.version), { force: true })
@@ -497,6 +562,7 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
       abortController = controller
       const outcome = await options.provision(target.version, {
         signal: controller.signal,
+        background: false,
         onProgress: (progress) => {
           upgrade = { ...(upgrade ?? base), progress }
         },

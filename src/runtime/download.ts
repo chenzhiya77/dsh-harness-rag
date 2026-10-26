@@ -66,7 +66,7 @@ export function isFetchableUrl(value: string): boolean {
   }
 }
 
-function freeBytesAt(path: string): number | null {
+export function freeBytesAt(path: string): number | null {
   try {
     const stats = statfsSync(path)
     return stats.bavail * stats.bsize

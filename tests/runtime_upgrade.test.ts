@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import type { RuntimePack } from '../src/runtime/manifest.ts'
 import type { EnsureStep, RuntimeStatusView, Supervisor } from '../src/runtime/supervisor.ts'
 import {
+  cleanOldVersions,
   createUpgradeCoordinator,
   UpgradeOpError,
   type UpgradeCoordinatorOptions,
@@ -434,6 +435,59 @@ test('upgrade: a failed rollback reports rollback_failed and keeps rolledBack fa
   assert.equal(failed.rolledBack, false)
 })
 
+test('upgrade: a provision lock held by another host stays pending and retries later', async () => {
+  const f = fixture({
+    oldHealthy: true,
+    provisionResult: { kind: 'failed', code: 'provision_held' },
+  })
+
+  const first = await f.coordinator.ensure()
+  await settle()
+  const second = await f.coordinator.ensure()
+
+  assert.equal(first.upgrade?.state, 'pending')
+  assert.equal(second.upgrade?.state, 'pending')
+  assert.equal(f.calls.provision, 2)
+})
+
+test('upgrade: a target change drops failure files for older targets', async () => {
+  const f = fixture({ oldHealthy: true, targetInstalled: true })
+  writeState(f.root, `failed-${OLD}.json`, {
+    version: 1,
+    runtimeVersion: OLD,
+    fromVersion: '',
+    failedAt: STAMP,
+    error: { phase: 'engine', code: 'engine_not_ready' },
+    rolledBack: false,
+  })
+  writeState(f.root, `failed-${NEW}.json`, {
+    version: 1,
+    runtimeVersion: NEW,
+    fromVersion: OLD,
+    failedAt: STAMP,
+    error: { phase: 'engine', code: 'engine_not_ready' },
+    rolledBack: true,
+  })
+
+  const status = await f.coordinator.ensure()
+
+  assert.equal(existsSync(join(f.root, 'state', `failed-${OLD}.json`)), false)
+  assert.equal(existsSync(join(f.root, 'state', `failed-${NEW}.json`)), true)
+  assert.equal(status.upgrade?.state, 'failed')
+})
+
+test('upgrade: a first install does not compare config versions', async () => {
+  const f = fixture({ targetInstalled: true })
+  const { rmSync } = await import('node:fs')
+  rmSync(join(f.root, 'state', 'current.json'))
+
+  const status = await f.coordinator.ensure()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.upgrade, undefined)
+  assert.equal(f.supervisors.get(NEW)?.calls.ensure, 1)
+})
+
 test('upgrade: retry clears the failure record and re-runs the decision', async () => {
   const f = fixture({ oldHealthy: true, targetInstalled: true })
   writeState(f.root, `failed-${NEW}.json`, {
@@ -463,6 +517,65 @@ test('upgrade: concurrent ensure calls share one switch', async () => {
   assert.equal(f.supervisors.get(NEW)?.calls.ensure, 1)
   assert.equal(first.runtimeVersion, NEW)
   assert.equal(second.runtimeVersion, NEW)
+})
+
+test('upgrade: a current runtime without a configVersion asks for confirmation', async () => {
+  const f = fixture({ oldHealthy: true, targetInstalled: true })
+  writeFileSync(
+    join(f.root, 'runtime', OLD, 'runtime-manifest.json'),
+    JSON.stringify({ version: 1, runtimeVersion: OLD }),
+  )
+
+  const status = await f.coordinator.ensure()
+
+  assert.equal(status.upgrade?.state, 'needs_confirmation')
+})
+
+test('upgrade: a confirmation does not survive a target config change', async () => {
+  const f = fixture({ oldHealthy: true, targetInstalled: true, targetConfig: 45 })
+  await f.coordinator.ensure()
+  f.coordinator.confirm()
+
+  const next = fixture({ oldHealthy: true, targetInstalled: true, targetConfig: 46 })
+  writeFileSync(join(next.root, 'state', 'upgrade.json'), readFileSync(join(f.root, 'state', 'upgrade.json')))
+  const status = await next.coordinator.ensure()
+
+  assert.equal(status.upgrade?.state, 'needs_confirmation')
+})
+
+test('cleanup: keeps current and previous, skips tmp/unknown/manifestless dirs', () => {
+  const root = mkdtempSync(join(tmpdir(), 'hrag-cleanup-'))
+  const make = (version: string, withManifest = true): void => {
+    const dir = join(root, 'runtime', version)
+    mkdirSync(dir, { recursive: true })
+    if (withManifest) {
+      writeFileSync(
+        join(dir, 'runtime-manifest.json'),
+        JSON.stringify({ version: 1, runtimeVersion: version, configVersion: 44 }),
+      )
+    }
+  }
+  make(OLD)
+  make(NEW)
+  make('2.1.0-3')
+  make('2.1.0-4.tmp')
+  make('2.1.0-5', false)
+  mkdirSync(join(root, 'runtime', 'notes'), { recursive: true })
+  mkdirSync(join(root, 'state'), { recursive: true })
+  writeFileSync(join(root, 'state', `failed-${OLD}.json`), '{}')
+  writeFileSync(join(root, 'state', 'failed-2.1.0-3.json'), '{}')
+
+  const removed = cleanOldVersions(root, [OLD, NEW])
+
+  assert.deepEqual(removed, ['2.1.0-3'])
+  assert.equal(existsSync(join(root, 'runtime', OLD)), true)
+  assert.equal(existsSync(join(root, 'runtime', NEW)), true)
+  assert.equal(existsSync(join(root, 'runtime', '2.1.0-3')), false)
+  assert.equal(existsSync(join(root, 'state', `failed-${OLD}.json`)), true)
+  assert.equal(existsSync(join(root, 'state', 'failed-2.1.0-3.json')), false)
+  assert.equal(existsSync(join(root, 'runtime', '2.1.0-4.tmp')), true)
+  assert.equal(existsSync(join(root, 'runtime', '2.1.0-5')), true)
+  assert.equal(existsSync(join(root, 'runtime', 'notes')), true)
 })
 
 test('upgrade: confirm records the config version and a later activation may proceed', async () => {
