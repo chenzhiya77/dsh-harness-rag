@@ -1,6 +1,6 @@
 # 运行时版本化升级、回滚与旧版清理 —— plan
 
-**Status:** 已实施（2026-10-26；Task 0–6 已提交，Task 7 文档已回写、提交链待令）
+**Status:** 已实施（2026-10-26；Task 0–7 全落）
 **Date:** 2026-10-25
 **配套 spec:** [../specs/2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md)
 
@@ -186,7 +186,7 @@
 - **验收中发现并修复**：`selectPack` 在 `urls=[]` 时先判 `pack_missing`，本地 `DSH_HARNESS_RAG_PACK` 覆盖无法生效，正常升级路径起不来；`selectPack`/`loadPack` 增 `allowUnpublished`（仅本地覆盖时接受已构建未发布条目，仍拒 `0.0.0-0` 与 0 size），bridge 在覆盖非空时传入；`tests/runtime_manifest.test.ts` 增 3 例。另记一条环境边角：陈旧 `lease.json` 的 pid 被无关 `bash.exe` 复用，曾误报 `upgrade_blocked_by_instance`，删陈旧租约后 `retry` 恢复；未改代码。
 - **门禁**：`tsc` 0 错；`node --check client.js` 过；`node --test tests/*.test.ts` **296/296**、fail 0；`engine/` `git status` 0 行；主树 `deer-flow` 脏面 mtime 为 10-06/10-10，属既有未提交面、本轮零新增；证据启动 token/auth cookie 已删除或脱敏，快照 token 为 `<redacted>`。
 - **未覆盖**：浏览器实点横幅/按钮（browser-use 被 DSH web 鉴权挡）；headless 实跑；无主残留（端口仍应答 + pid null，代码未实现）；90 秒超时真机（本轮走的是 `qdrant_exited` 立即失败）；`platform_unsupported`、并发 provision、`no_space`、清理删除失败的真机分支（均有单测，不宣称真机通过）。plan 原写的“复制 0.1.0-2 zip 改坏”以合成坏包替代；0.1.0-3/4/5 的“好版本”用已装目录复制/硬链接，正常 0.1.0-2 升级仍用真实 zip 与解压。
-- 代码修复与 plan 回填按“修复/回填”两次提交收口；Task 7 的文档与提交链待令。
+- 代码修复与 plan 回填按“修复/回填”两次提交收口；Task 7 的文档与提交链见下。
 
 ## Task 7 — 文档、回写与提交链
 
@@ -197,7 +197,7 @@
 - [x] 回写本 spec Status（已实施 + 实测值）、plan 各 Task 实测与验收表。
 - [x] 工作区已有未提交文件不纳入本对：`THIRD_PARTY_NOTICES.md`、`client.js`、`package.json`、`scripts/build-runtime-pack.mjs`，以及并行会话的 G11 文件（`src/index.ts`、`src/tool_gating.ts`、`tests/tool_gating.test.ts`、`src/retrieval_discipline.ts`、`docs/{specs,plans}/2026-10-25-rag-soul-section-*`）。`client.js` 的升级 UI 改动与其中的既有产品面清理同文件，提交面板笔时必须按 hunk 筛出，不能把 `emptyHint`/legacy 注释裹进升级笔；G11 文件一律不碰。如需先给这些文件一个提交位，另议。
 - [x] Task 0 的手册现状修正如果单独提交，先落 `docs(manual): correct the upgrade description to current behavior`，不混进代码笔；以下为实现笔。
-- [ ] 提交链（候令；英文 Conventional ASCII；逐文件核 hunk；排除并行会话文件、`node_modules/`、`dist/`、zip、运行时产物）：
+- [x] 提交链（英文 Conventional ASCII；逐文件核 hunk；排除并行会话文件、`node_modules/`、`dist/`、zip、运行时产物）：
   1. `36865c9` `feat(runtime): add versioned upgrade state and current ownership`
   2. `946d192` `feat(runtime): add the upgrade coordinator and activation decisions`（Task 2，计划外拆分）
   3. `37b6095` `feat(runtime): switch runtime versions with rollback`
@@ -205,16 +205,16 @@
   5. `8135daa` `feat(panel): surface runtime upgrade state`
   6. `98523c1` `fix(runtime): accept a local pack before the manifest is published`（Task 6 修复）
   7. `233071e` `docs(plan): record the runtime upgrade acceptance`（Task 6 验收）
-  8. 待提交：`docs(runtime): document versioned upgrades`（README/手册）
-  9. 待提交：`docs(plan): close out the runtime upgrade pair`（本 spec/plan 与分发回写）
-- [ ] 提交后回填提交链；仓无 remote，不推送。
+  8. `ea3fef9` `docs(runtime): document versioned upgrades`（README/手册）
+  9. `8e19766` `docs(plan): close out the runtime upgrade pair`（本 spec/plan 与分发回写）
+- [x] 提交后回填提交链；仓无 remote，不推送。
 
-**实测（实施期回填）**：2026-10-26 完成文档回写（未提交，候令）。
+**实测（实施期回填）**：2026-10-26 完成文档回写，已提交 `ea3fef9`（README/手册）+ `8e19766`（本对 spec/plan 与分发回写）。
 - README/手册：README 增「版本化升级/回滚」段落与状态行；手册把「升级」改成完成态并新增「升级与回滚」节，覆盖准备/切换/回滚、配置确认、保留与清理、备份口径、五类横幅、租约/残留/provision 锁的手工处理、本地 pack 仅开发态。
 - 分发回写：spec §4.7 改为最终行为（不再写「先停旧版」），§7 的「不做版本化升级」改为已交付；plan Task 6 未闭合②标已闭合，归位行与历史回写行同步。
 - 本对回写：spec Status → 已实施；§5 增实测段；§8 的「无主残留」「手册超前」两行按实际更新；§3.2 的无主残留自动 blocked 标为实现偏差。
 - **偏差/未覆盖**：§5.8「端口仍应答但 pid 为 null ⇒ `upgrade_blocked_stale_instance`」代码未实现（当前健康应答走 adopt、端口被非本服务占用时目标换口）；Task 6 的浏览器实点、headless、90 秒超时真机、`platform_unsupported`/并发/`no_space`/清理删除失败真机仍未覆盖。手册已按实际写成手工清理，不宣称自动 blocked。
-- **提交链实际**：Task 1 `36865c9`、Task 2 `946d192`、Task 3 `37b6095`、Task 4 `8a1732c`、Task 5 `8135daa`、Task 6 修复 `98523c1`、Task 6 验收 `233071e`；待提交两笔文档。原计划的 6 笔不含 Task 2 协调者与 Task 6 修复/验收，按实际拆分为 9 笔。
+- **提交链实际**：Task 1 `36865c9`、Task 2 `946d192`、Task 3 `37b6095`、Task 4 `8a1732c`、Task 5 `8135daa`、Task 6 修复 `98523c1`、Task 6 验收 `233071e`、Task 7 文档 `ea3fef9`/`8e19766`。原计划的 6 笔不含 Task 2 协调者与 Task 6 修复/验收，按实际拆分为 9 笔。
 - **门禁**：文档改动后复跑 `tsc` 0、`node --test tests/*.test.ts` 296/296、`node --check client.js`；`engine/` 零 diff。Task 0 手册笔已单独提交 `ce6b327`。
 
 ## 验收对应
