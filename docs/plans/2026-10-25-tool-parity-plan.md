@@ -1,7 +1,7 @@
 # 工具面对齐修复 Plan
 
 **Spec:** [2026-10-25-tool-parity-spec.md](../specs/2026-10-25-tool-parity-spec.md)
-**Status:** 实施完成（2026-10-25；源码与运行时包 `0.1.0-2`；托管冒烟已用本地 fake 模型覆盖六件真实调用；G11 已另案实施并提交）
+**Status:** 实施完成（2026-10-25；源码与运行时包 `0.1.0-2`；托管冒烟已用本地 fake 模型覆盖六件真实调用（真实模型出网另案）；G11 已另案实施并提交）
 **Date:** 2026-10-25
 **Architecture:** 引擎新增 `POST /api/knowledge-bases/{kb_id}/tools`，按 `name` 分派六件工具，直接复用主树同名 `_*_impl`；引用编号由引擎按 `(user_id, run_id)` 的有界缓存持有，三路共用。插件 `src/tools.ts` 从 `recall-test` 适配改为工具端点：逐工具参数、原生载荷 + `kb_id` / `kb_name` 回显、`run_id` 取宿主 agent 的实时回合相位（`exec.agent.phase.turn`）。面板 `recall-test` 一字不动。`engine/UPSTREAM.md` 改为分叉记录，三份对外文档同批对齐；引擎改完重建运行时包。
 
@@ -167,7 +167,7 @@
   - 同一 `run_id` 两次检索编号连续；换 `run_id` 从 1 起；面板 `recall-test` 仍无编号注记。
   - 只传 `chunk_id` 读中心窗；不存在 / 跨库 / 未就绪拒绝可读；清单 `doc_id` + 计数。
 - [x] 面板回归：`recall-test` 三路响应的 key 集合与改前对照一致；上传 / 列表 / 切片抽屉 / Wiki 抽屉零变化。
-- [ ] DSH 托管（Task 7 后）：绑定会话真实调用六件工具，确认 tool body 带 `run_id`、输出字段齐全、引用编号跨调用连续。
+- [x] DSH 托管（Task 7 后）：绑定会话真实调用六件工具，确认 tool body 带 `run_id`、输出字段齐全、引用编号跨调用连续（2026-10-25 由 G11 Task 4 的 fake 模型托管冒烟覆盖：回合 A 六件依次执行，三路编号 [1]-[9] 连续，回合 B 从 1 起；真实模型出网另案）。
 - [x] 工作区审计：引擎 diff 只含预期文件；主树零 diff；并行会话文件未动。
 
 **验收对照**：
@@ -236,7 +236,7 @@
 
 - [x] 在引擎 / 插件提交后（`engineCommit` 指向真实提交），按**当时**的构建脚本 CLI 执行；并行会话已把它改成 `pnpm run build:runtime`（默认 `dist/`，`--update-manifest` 回填），实施时先读 `--help`，不覆盖其改动。**必须显式传 `--engine-commit "$(git rev-parse --short=9 HEAD)"`**：`engine/` 没有自己的 `.git`，builder 不向上找仓根。要求 `uv` 0.11.2、`gh` 可用。
 - [x] 验证 zip 含新模块（`app/gateway/services/citation_runs.py`、新路由 / 模型）与 `runtime-manifest.json`；`runtime.json` 的 size / sha / engineCommit 回填正确；`runtimeVersion` / `engineVersion` 按发布规则递增。
-- [ ] 托管冒烟：`DSH_HARNESS_RAG_PACK=<zip>` 起本地服务 → 绑定会话 → 模型真实调用六件工具 → 引用编号连续、字段齐全。
+- [x] 托管冒烟：`DSH_HARNESS_RAG_PACK=<zip>` 起本地服务 → 绑定会话 → 模型（fake）调用六件工具 → 引用编号连续、字段齐全（G11 Task 4；真实模型出网另案）。
 - [x] 若环境缺 `uv` / `gh` / 网络：记录阻塞，托管验收不宣称通过；源码模式验收不受影响。
 - [x] zip、`dist/`、运行时缓存不纳入提交。
 
@@ -246,7 +246,7 @@
 - **提交前停手（历史）**：本笔改动尚未提交时，`d7787c316` 不包含它们；此时构建会把旧提交写进 `runtime-manifest.json` / `runtime.json`，与包内容不符。按 plan 的「提交后构建」停在此处。
 - **解除**：提交链第 1 笔 `c78e80b` 已包含全部引擎代码；提交完成后按计划构建。
 - **构建**（exit 0）：`node scripts/build-runtime-pack.mjs --engine ./engine --engine-commit a4942966b --runtime-version 0.1.0-2 --update-manifest`；产物 `dist/harness-rag-runtime-win32-x64-0.1.0-2.zip`，20,075 entries、315.0 MB zipped / 840.4 MB unpacked；`sha256=05cc423b…b0bd015`；包内确认 `engine/backend/app/gateway/services/citation_runs.py`、新 `knowledge_bases.py`、`runtime-manifest.json`。`runtime.json` 回填 size 330,283,067 / unpacked 881,202,485 / sha / `engineCommit=a4942966b`，与 zip 实测一致；`runtimeVersion=0.1.0-2`。`engineVersion` 无独立规则与 CLI，保持 `0.1.0`，由 `engineCommit` 区分内容。
-- **托管冒烟（部分）**：隔离 `DSH_HOME=E:/app/python/agent/dsh-harness-rag-sbx`，`dsh --profile sbx --from-default-profile web` + `plugin add link:` + `DSH_HARNESS_RAG_PACK=<zip>` 起 web 宿主；40 s 后 `service.json` 就绪（knowledge `8022`、Qdrant `6336/6337`），`/health` 健康，`/api/knowledge-bases` 可建库。用插件 `buildToolDefinitions`（假 session 绑定 + 真 HTTP）实调：`hrag_list_documents` 返回原生 `doc_id` / `chunk_count`；`hrag_read_document(chunk_id=…)` 返回 `doc` / 中心窗 / `total`；`hrag_list_wiki_entries` 返回原生计数；`graph` / `wiki` 缺参返回 200 引导语。**未覆盖**：沙箱没有模型与 embedding 配置，未做「模型自主选择六件工具」、语义检索命中与跨调用编号的真宿主验收；这部分不宣称通过，源码真栈（Task 5）已覆盖语义与编号。宿主进程树已停，端口已关；沙箱文件保留在仓外。
+- **托管冒烟（部分）**：隔离 `DSH_HOME=E:/app/python/agent/dsh-harness-rag-sbx`，`dsh --profile sbx --from-default-profile web` + `plugin add link:` + `DSH_HARNESS_RAG_PACK=<zip>` 起 web 宿主；40 s 后 `service.json` 就绪（knowledge `8022`、Qdrant `6336/6337`），`/health` 健康，`/api/knowledge-bases` 可建库。用插件 `buildToolDefinitions`（假 session 绑定 + 真 HTTP）实调：`hrag_list_documents` 返回原生 `doc_id` / `chunk_count`；`hrag_read_document(chunk_id=…)` 返回 `doc` / 中心窗 / `total`；`hrag_list_wiki_entries` 返回原生计数；`graph` / `wiki` 缺参返回 200 引导语。**当时未覆盖**：沙箱没有模型与 embedding 配置，未做「模型自主选择六件工具」、语义检索命中与跨调用编号的真宿主验收。**后续已补（2026-10-25，G11 Task 4）**：同一沙箱补 fake 模型与 embedding 配置后，回合 A 由模型驱动依次调用六件工具、`run_id` 随回合、三路编号 [1]-[9] 连续，回合 B 从 1 起；真实模型出网冒烟仍未做，另案。宿主进程树已停，端口已关；沙箱与 fake 提供方已于 2026-10-26 空间清理时删除。
 - **未纳入提交**：zip、`dist/`、沙箱与运行时缓存；只提交 `runtime.json`。
 
 ---
@@ -277,7 +277,7 @@
   - `node_modules/`（补装的 `@deepseek-ai/cordis/lib/types`、`typescript`、`@types`、`yauzl`、`yazl`）与 `dist/` / zip 均不提交。
 - **提交链调整**：原计划把引擎端点与引用缓存拆成两笔；但两处改动在 `knowledge_service.py` 内交织，拆笔需要重构中间版本，回滚价值低于出错风险，故合并为第 1 笔（端点 + 引用缓存 + 文档分派 + 三份测试）；其余按引擎文档 / 产品文档 / plan / 运行时包 / 收口分笔，共 7 笔。仓无 remote，不推送。
 - **提交**：`c78e80b` → `36c76fc` → `26cdab7` → `84f037d` → `a494296` → `486973c` → 本文件所在提交；工作树只剩并行会话的 `THIRD_PARTY_NOTICES.md` / `client.js` / `package.json` / `scripts/build-runtime-pack.mjs`。
-- **Task 7**：运行时包 `0.1.0-2` 已构建并回填 `runtime.json`；托管冒烟完成「包可启动 + 插件工具真 HTTP 往返」，模型自主调用与语义检索未在沙箱覆盖，如实记在 Task 7。
+- **Task 7**：运行时包 `0.1.0-2` 已构建并回填 `runtime.json`；托管冒烟先完成「包可启动 + 插件工具真 HTTP 往返」，模型自主调用与语义检索随后由 G11 Task 4 的 fake 模型冒烟补上（真实模型出网另案），见 Task 7 实测。
 - **收尾状态（2026-10-25 晚）**：G11 SOUL 回答纪律已实施并提交（`3eb0414` / `623a79a` / `4fd7653`，见 [G11 plan](2026-10-25-rag-soul-section-plan.md)）；沙箱模型冒烟已由本地 fake 提供方补齐（六件真实调用、同回合引用连续、未绑定无注入），真实模型冒烟仍另案。
 
 ---
