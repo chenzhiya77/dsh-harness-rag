@@ -1,6 +1,6 @@
 # 运行时版本化升级、回滚与旧版清理 —— spec
 
-**Status:** 已定稿（2026-10-25；待实施）
+**Status:** 已实施（2026-10-26；Task 6 真机验收，证据 `D:\hrag-t6\acceptance-2026-10-25-upgrade`；§5.8 无主残留自动 blocked 未实现，见 §5 实测）
 **Date:** 2026-10-25
 **来源:** 分发 spec §4.7 的后续对。现场已具备跨版本条件：`0.1.0-1` 已安装并在运行，`0.1.0-2` 包已构建且 `runtime.json` 已指向它；本对把 §4.7 从文字落成实现。
 **承接:** [2026-10-24-single-download-distribution-spec.md](2026-10-24-single-download-distribution-spec.md) §4.2 步 4、§4.3、§4.6、§4.7；[2026-10-24-single-download-distribution-plan.md](../plans/2026-10-24-single-download-distribution-plan.md) Task 6 未闭合②与 §7「不做版本化升级/回滚」；[2026-10-25-runtime-resilience-spec.md](2026-10-25-runtime-resilience-spec.md) 的认领看门狗与锚点横幅。
@@ -87,7 +87,7 @@
 - **不主动停止健康的旧服务；正常升级只在一个新的 DSH 进程里发生**。同一宿主内的插件重载不切换：旧服务仍健康就只准备包，横幅提示「重启 DSH 后启用」。旧服务已经不在（崩溃/退出）且租约空闲时，本进程可以启动目标作为恢复；这不属于热切换，因为已经没有健康旧服务可停。
 - 决策阶段对旧版只做**只读探测**（`adopt()`/`probe()`），不调用会「探测失败就启动」的 `ensure()`；只有回滚或明确要运行旧版时才启动旧版。认领必须校验 `record.runtimeVersion` 等于要运行的版本，避免第三个版本的残留实例被误认。
 - 每个版本的 supervisor 必须持有**该版本**的 `ensureRuntime` 闭包；旧版只复用已装 `runtime/<old>/runtime-manifest.json`，缺失时回滚失败，不能拿目标版本的 pack 回调去准备旧版。
-- 旧服务不健康、租约空闲时，先用 `service.json` 的端口做一次只读探活（不依赖 `adopt`），再清理陈旧记录（现有 `cleanStale` 只删记录，不杀进程）；如果端口仍在应答但 pid 为 null，说明是无主残留，状态置 `blocked`（`upgrade_blocked_stale_instance`），不猜测 pid、不杀；文档给手工清理办法。
+- 旧服务不健康、租约空闲时，先用 `service.json` 的端口做一次只读探活（不依赖 `adopt`），再清理陈旧记录（现有 `cleanStale` 只删记录，不杀进程）；如果端口仍在应答但 pid 为 null，说明是无主残留，状态置 `blocked`（`upgrade_blocked_stale_instance`），不猜测 pid、不杀；文档给手工清理办法。**实现偏差（2026-10-26）**：该自动 blocked 未落地；健康应答的旧实例按 adopt 处理，端口被非本服务占用时目标换口启动；见 §5 实测与 §8 风险。
 - headless 没有确认通道：配置版本不同且未确认时保持旧版并把 `needs_confirmation` 写进状态与日志；相同则按上表自动切换。运维可先在面板确认一次，或在 `state/upgrade.json` 写入 `confirmedConfigVersion`。
 
 ### 3.3 包准备与跨进程 provision 锁
@@ -188,6 +188,8 @@ upgrade?: {
 13. **版本记录冲突**：手工把 `current.json` 改成旧版、`service.json` 保持新版且健康 → 启动后以 service 为准回写 current，不启动第二套栈；service 版本无对应 runtime ⇒ `blocked`（`state_version_conflict`），不启动。
 14. **门禁**：`tsc` 0 错；`node --test tests/*.test.ts` 全绿；`node --check client.js` 通过；`engine/` 与主树零 diff；token 不出现在日志、状态、面板与失败文件。
 
+**实测（2026-10-26）**：1–7、9、12、13 已真机覆盖（plan Task 6；证据根 `D:\hrag-t6\acceptance-2026-10-25-upgrade`）；4 走的是目标 `qdrant_exited` 立即失败，90 秒超时仅单测；10 的并发准备、11 的 `no_space` 为单测（本地 pack 分支已真机）；12 的 `platform_unsupported` 仅单测（非法 JSON 已真机）；8「端口仍应答但 pid 为 null ⇒ blocked」未实现、未真机，当前按 §3.2 的实现偏差处理，不宣称通过；14 门禁 tsc 0、296/296、client check 通过、engine 零 diff。浏览器横幅/按钮未实点（DSH web 鉴权挡住 browser-use），headless 未实跑。
+
 ## 6. 影响面
 
 **改的**：`src/runtime/manifest.ts`（current/upgrade/failed 记录的类型与校验）；`src/runtime/supervisor.ts`（`adopt` 期望版本、current 写入移交、90 秒共享预算、失败结果可回写）；`src/runtime/provision.ts`（provision 锁）；新增 `src/runtime/upgrade.ts`（根级协调者与决策表）；`src/runtime/bridge.ts`（current/target 与协调者接线）；`src/runtime/ops.ts`（状态字段与 `runtime/upgrade`）；`src/kb_proxy.ts`（注册新 op）；`client.js`（横幅、确认/重试、`switching` 文案、轮询条件，zh/en 词条）；`tests/runtime_upgrade.test.ts` 与相关 supervisor/provision/ops 测试；`README.md`、`docs/plugin-manual.md` 的升级与备份段；本对 spec/plan。
@@ -209,7 +211,7 @@ upgrade?: {
 | 风险 | 现状/触发 | 处置 |
 | --- | --- | --- |
 | 新版迁移了 SQLite/向量，回滚后旧版读不了 | 配置版本变化或引擎自带迁移 | 确认文案与 README 要求先备份；失败文件记原文；不宣称回滚数据安全 |
-| 无主旧实例阻塞升级 | pid 为 null、端口仍应答 | 状态 `blocked` + 原因/日志；文档给手工停进程办法；后续做端口→pid 发现 |
+| 无主旧实例阻塞升级 | pid 为 null、端口仍应答 | 当前不自动判定（`upgrade_blocked_stale_instance` 未实现，见 §5 实测）；文档给手工停进程办法；后续做端口→pid 发现 |
 | 90 秒误判慢机器 | Qdrant/引擎首次索引恢复慢 | 失败会回旧版，不丢服务；实测值可再调单个常量 |
 | 两个宿主同时准备 | 同一运行根、同一目标版本 | `provision.lock`；后台不等待、下次轮询/激活复用；首装前台最长 10 分钟；超时 `provision_held` |
 | 旧版目录删不掉 | 文件被占用/杀软扫描 | 只记日志，不挡 `ready`；下次成功切换再清 |
@@ -218,4 +220,4 @@ upgrade?: {
 | current/service 版本记录冲突 | 崩溃窗口/手工改文件 | 以健康 service 为准回写；无对应 runtime 则 `blocked`；测试覆盖 |
 | 目标清单不可用 | `runtime.json` 缺失/平台不支持 | 保持当前，`blocked` `pack_missing`/`platform_unsupported`；不写 `0.0.0-0` |
 | 本地 pack 绕过下载校验 | 开发/验收路径 | 解压前空间检查、解压后 manifest 版本/configVersion 校验 |
-| 手册超前描述升级 | `plugin-manual.md:36/46` | 已于 2026-10-25 改回现状；实施完成后再升级为完成态 |
+| 手册超前描述升级 | `plugin-manual.md:36/46` | 已于 2026-10-25 改回现状；2026-10-26 已升级为完成态（升级/回滚/清理/确认/残留手工清理） |

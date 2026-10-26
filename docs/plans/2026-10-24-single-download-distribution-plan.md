@@ -167,7 +167,7 @@
 - 校验拒绝码（`path_not_absolute`/`network_path`/`plugin_dir`/`nested_in_anchor`/`system_dir`/`path_too_long`/`target_not_plugin_data`/`not_writable`/`space_insufficient`/`runtime_installed`）逐一译成中文红字；`sync_confirm` 不进红字，改出「继续/取消」二段确认（继续时带 `confirmSync:true`）。`needs_location.reason` 只译两种已知原句（不存在/不可写），未知原句不展示。
 - 进度块：`progress.phase` 细化 `preparing`（download/verify/extract），`starting` 单独一档；下载有总长时出百分比（`aria-valuenow`＋条宽），其余走不定态动画条。
 - 错误卡：`error.phase`/`code`/`detail`＋日志尾（`<pre>`，`logTail`）＋日志目录复制；`installed` 为假才给「更改位置」（本地强制设置卡，配置成功复位）；「重试」调 `runtime/retry`，回到进度块。
-- 引导横幅挂在 `.hrag-root` 层（`HragBoundary` 之前，`margin: 12px 12px 0`）：`managed && ready && needsEmbeddingConfig && !dismissed`；库列表为空时的空态也能看到（首次运行最需要它的正是这一刻）。**偏离**：初版放在六 tab 壳里，探针发现空库态根本看不到，改挂根层。
+- 引导横幅挂在 `.hrag-root` 层（`HragBoundary` 之前，`margin: 12px 12px 0`）：`managed && ready && needsEmbeddingConfig && !dismissed`；库列表为空时的空态也能看到（首次运行最需要它的正是这一刻）。**偏离**：初版放在六 tab 壳里，探针发现空库态根本看不到，改挂根层。（2026-10-25 改判：常驻横幅占栏宽，改为上传时拦截提示＋「去配置」，见 spec §4.6。）
 - 托管设置页：`ModelSettingsPanel` 增 `managed` prop；「Qdrant 地址」换成只读盒（值＋「由内置服务管理」），不再可编辑，label 的 title 也给同一句。
 - **host 半补件**：`runtime/status` 改为 `panelStatus(deps)` —— 只有 `managed && phase==='ready'` 才 `await deps.needsEmbeddingConfig()`（该探针会真请求本地服务，准备中不能跑）；`runtime_ops.test.ts` 钉「ready 探一次 / starting 不探」。
 - **缺陷（Task 1 规则）**：`validateRootCandidate` 的 `nested_in_anchor` 把**锚点根本身**也拒了（`containsPath(anchorRoot, parent)` 含等值），导致「设置卡默认位置直接开始」永远红字；改为「等于锚点根放行、其子目录仍拒」，`runtime_paths.test.ts` 加等值用例、`runtime_ops.test.ts` 加 `configure(parent=anchorRoot)` 落锚点用例。
@@ -209,7 +209,7 @@
 - **真机（10-24 深夜，真 DSH／真 `ctx.subprocess`，根 `D:\hrag-t6\dsh-root\harness-rag`）**：装好的运行时在未发布清单下首启 **约 10 s 到 `ready`**（页面缓存热；托管引擎监听 8021、Qdrant 6334/6335，`/health` 200）；面板显示就绪横幅与空库态；经服务建库（`smoke-host`）后点「刷新」即列出该库。本轮实际看到 setup/错误/准备/就绪/空库，external 未现。
   - 环境限制（非插件问题）：本机屏幕 1707×1067、DSH 窗口 1280 CSS（dpr 1.5），右栏 575 宽会被窗口右缘裁掉；取证时临时把 `.hrag-root` 夹到 220 px 拍照，随后已移除。
 - 门禁：`tsc` 0 错；全量 **198/198**；`client.js` 仅调试件改动，已还原。
-- **未闭合**：①（已闭合 10-25）真机走「应用→退出」后 DSH 与 qdrant/python 全消失，遗留的 `service.json`/`lease.json` 不挡下一次启动；打包版无 HMR 模块，重载路径以面板开合＋单测覆盖（见 Task 8 §5.11）；②升级/回滚（spec §4.7 的版本化目录切换、90 s 失败回旧版、清理旧版本）不在 Task 0–8 任何清单里——当前只有同版本重启与重试；已另立 [2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md)（已定稿、待实施）；③被认领的实例没有健康看门狗（它崩了状态不会自己翻 error，直到下次重启/重试）；④`runtime.json` 的 size/sha 是本机构建值，发布前需用发布件重算并回填 `urls`；⑤spec §4.6 写的「约 400 MB / 1.1 GB」与实测 315.0/840.4 MiB 不符（面板按清单取值，文字在 Task 8 回写；**Task 8 已改 315 MB／840 MB**）。
+- **未闭合**：①（已闭合 10-25）真机走「应用→退出」后 DSH 与 qdrant/python 全消失，遗留的 `service.json`/`lease.json` 不挡下一次启动；打包版无 HMR 模块，重载路径以面板开合＋单测覆盖（见 Task 8 §5.11）；②（已闭合 10-26）升级/回滚（spec §4.7 的版本化目录切换、90 s 失败回旧版、清理旧版本）已由 [2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md) 交付，真机验收见其 plan Task 6；③被认领的实例没有健康看门狗（它崩了状态不会自己翻 error，直到下次重启/重试）；④`runtime.json` 的 size/sha 是本机构建值，发布前需用发布件重算并回填 `urls`；⑤spec §4.6 写的「约 400 MB / 1.1 GB」与实测 315.0/840.4 MiB 不符（面板按清单取值，文字在 Task 8 回写；**Task 8 已改 315 MB／840 MB**）。
 
 ## Task 7 — 发布件、文档与门禁（spec §4.7、§4.8）
 
@@ -245,7 +245,7 @@
 
 **实测（实施期回填）**：
 
-- **spec 回写**：Status → 实施完成（发布待外部条件）；§4.6 面板体积文案 400 MB／1.1 GB → **315 MB／840 MB**（实测 zip 330,280,025 B、解压 881,198,854 B；面板本就按 `runtime.json` 取值）；§4.7 加「本期未实现」状态块、§7 增「不做版本化升级/回滚」；§4.8 更正占位语义（`urls: []`＝无下载源，已装运行时照用；size/sha 已随本地构建回填）与 npm 包体（37 文件 / 341.4 kB tarball / 1.4 MB 解包）。
+- **spec 回写**：Status → 实施完成（发布待外部条件）；§4.6 面板体积文案 400 MB／1.1 GB → **315 MB／840 MB**（实测 zip 330,280,025 B、解压 881,198,854 B；面板本就按 `runtime.json` 取值）；§4.7 加「本期未实现」状态块、§7 增「不做版本化升级/回滚」（2026-10-26 由升级对替换为已实现）；§4.8 更正占位语义（`urls: []`＝无下载源，已装运行时照用；size/sha 已随本地构建回填）与 npm 包体（37 文件 / 341.4 kB tarball / 1.4 MB 解包）。
 - **plan 销项**：Task 0 三处「实测缺口」、Task 3 两处未勾按实测结果收口（GitHub 安装转入外部条件；租约仅单测；换口重试登记后续）；Task 7 仅余 GitHub 安装一勾，带「待外部条件」。
 - **验收矩阵（spec §5，证据目录 `D:\hrag-t6`：构建、`cold-start.mjs` 驱动、真机根 `dsh-root`）**：
 
@@ -277,7 +277,7 @@
 - **10-25 本地下载源补测（§5.10/5.15/5.17/5.19，证据 `D:\hrag-t6\acceptance-2026-10-25`）**：`D:\hrag-sbx\fixture` 的 `origin.mjs`（normal / tamper / slow，自签 TLS）与 `proxy.mjs` 把 315 MB 运行时件变成可控源。§5.15：tamper 在 zip 中点翻 1 字节 ⇒ `sha256_mismatch`，源站见 4 次完整 GET 后停在 error、未安装。§5.17：宿主代理指向本地 CONNECT 代理 ⇒ 代理记录 330,726,793 B，`runtime/status` `ready`、`installed=true`。§5.10：profile b 指向 home6 根后触发 retry ⇒ `ready` 且无新增子进程（认领，非重起）；同时从零启动的租约争抢仍未验。§5.19：`slow` 在 29,753,344 B abort，重启后从同偏移续传完成并落 manifest；但该轮 Qdrant 初始化遇盘满（`os error 112`），只作为安装链路证据。
 - **本轮收口门禁**：`node --check client.js` 过；`tsc` 0 错；`node --test tests/*.test.ts` **204/204**（含新增 3 个 reload/dispose 测试与 3 个 pick 测试）；`npm pack --dry-run` **37 文件 / 341.4 kB / 1.4 MB**，不含 `engine/`、`scripts/`、`market/`、`tests/`、`docs/specs|plans`；`engine/` 1082 个文件按 blob 与源仓 `b34b2d572` **逐字节一致**（仅多 `UPSTREAM.md`）；引擎源仓 `git status` 空；主树 `deer-flow` 零新增改动（仅有 Task 0 基线的既存未提交面）；提交面密钥形扫描 0 命中；运行时日志无 `Bearer`/token。
 - **外部动作（待外部条件，未执行）**：①创建 GitHub 单仓并首推（仓库根＝插件包，`engine/` 随之）；②`package.json` 的 `OWNER` 占位替换为实际地址；③归档旧引擎仓；④npm 发布 `dsh-harness-rag@0.1.0`；⑤同仓 GitHub Release 上传运行时 zip → **用发布件重算并回填** `runtime.json.urls`/`size`/`unpackedSize`/`sha256` → 重发 npm（顺序：pack 先于引用它的 tag）；⑥`market/index.json` 上线并在 README 填索引 URL；⑦用 `git+https://<repo>.git` 在真 DSH 装一次（Task 0/7 的 GitHub 安装缺口）。
-- **归位（不做／后续）**：§4.7 版本化升级/回滚已另立 [2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md)（待实施）；后续真机验＝干净 VM(§5.1)、UNC 选择(§5.4)、双 profile 同时从零启动的租约争抢(§5.10 余项)、代理的 `.env` 来源与引擎模型出网(§5.17 余项)（headless 首启 §5.5 已于 10-25 沙箱验过；§5.15 篡改、§5.17 下载段、§5.19 中止续传已于 10-25 用本地下载源补测，证据 `D:\hrag-t6\acceptance-2026-10-25`；§5.15 的 `../` 条目拒绝仍只有单测）；登记缺口＝被认领实例无健康看门狗(Task 6 未闭合③)→[韧性对](../specs/2026-10-25-runtime-resilience-spec.md) D1、spawn 后端口被抢不换口重试(Task 3 未闭合③)→D2、坏 `location.json` 的 `warning` 未上屏(Task 5 未闭合④)→D3、`needsEmbeddingConfig` 的环境变量钥匙仍是近似(Task 4 未闭合③，真机已核「种子未配模型⇒NULL」)→D4（D1–D4 已于 10-25 由该对交付）、`openBundle` 形状与真点击均已验(Task 5 未闭合②，10-25 web 宿主实点，悬空项清零)。
+- **归位（不做／后续）**：§4.7 版本化升级/回滚已由 [2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md) 交付（2026-10-26，真机验收见其 plan Task 6）；后续真机验＝干净 VM(§5.1)、UNC 选择(§5.4)、双 profile 同时从零启动的租约争抢(§5.10 余项)、代理的 `.env` 来源与引擎模型出网(§5.17 余项)（headless 首启 §5.5 已于 10-25 沙箱验过；§5.15 篡改、§5.17 下载段、§5.19 中止续传已于 10-25 用本地下载源补测，证据 `D:\hrag-t6\acceptance-2026-10-25`；§5.15 的 `../` 条目拒绝仍只有单测）；登记缺口＝被认领实例无健康看门狗(Task 6 未闭合③)→[韧性对](../specs/2026-10-25-runtime-resilience-spec.md) D1、spawn 后端口被抢不换口重试(Task 3 未闭合③)→D2、坏 `location.json` 的 `warning` 未上屏(Task 5 未闭合④)→D3、`needsEmbeddingConfig` 的环境变量钥匙仍是近似(Task 4 未闭合③，真机已核「种子未配模型⇒NULL」)→D4（D1–D4 已于 10-25 由该对交付）、`openBundle` 形状与真点击均已验(Task 5 未闭合②，10-25 web 宿主实点，悬空项清零)。
 - **提交链**：见末节（Task 8 两笔待提交后回填）。
 
 ---

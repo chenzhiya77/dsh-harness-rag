@@ -251,7 +251,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 - `models_config.json`：首次写 `{"models":[],"hidden_in_chat":[]}`（三个环境变量都要求文件存在）。
 - 环境变量（子进程）：`DEER_FLOW_PROJECT_ROOT=<root>`（自定义根或默认根）、`DEER_FLOW_HOME=<root>/state`、三个 `*_CONFIG_PATH` 指到 `<root>/config/{config.yaml,models_config.json,rag_config.json}`、`DEER_FLOW_API_TOKEN=<token>`（必须作为**显式** `env` 传给 `ctx.subprocess`；凭据形环境名会被 `scrubbedParentEnv` 从环境继承里剥掉）、`PYTHONPATH=<pack>/site-packages;<pack>/engine/backend;<pack>/engine/backend/packages/harness;<pack>/engine/backend/packages/extension-api`、`PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`，再加 `proxyEnvironmentForChild()` 的解析结果；cwd 用该根。
 - token 优先级：托管 = `state/service.json`；外部 = 用户配置。托管模式忽略 profile 里遗留的 `apiToken`，否则会 401。
-- 嵌入模型未配置不是启动失败：服务照起，摄入/检索按引擎错误原文返回。`needsEmbeddingConfig` 的口径 = `/api/rag/config` 的生效 `embedding_model` 为空且没有环境变量钥匙；面板据此给一条「配置嵌入模型后即可上传」的引导。
+- 嵌入模型未配置不是启动失败：服务照起，摄入/检索按引擎错误原文返回。`needsEmbeddingConfig` 的口径 = `/api/rag/config` 的生效 `embedding_model` 为空且没有环境变量钥匙；面板据此在用户尝试上传时拦截并提示「先配置嵌入模型，再上传文档」＋「去配置」。
 - DSH 聊天模型由既有 `modelSync` 同步；就绪后主动同步一次，之后按既有机制。
 
 ### 4.6 面板首次运行面
@@ -261,7 +261,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
   - 「更改…」调 `runtime/pickDirectory`：宿主 `directoryPicker` 原生选择器返回**父目录**，插件追加 `harness-rag` 并回填；若 basename 已是 `harness-rag`，确认后直接用该目录。选择器不可用（远程 Web 只有 browse 能力）⇒ 同一行原地变为可编辑绝对路径。`runtime/status` 带 `picker: 'native'|'browse'|'none'`，客户端据此决定「更改…」还是直接可编辑。选完只回填不落盘；点「开始准备」才 `runtime/configure` 并开始下载；校验失败在位置行下给红字，不进入下载态。
   - `phase ∈ downloading|verifying|extracting|starting` ⇒ 整块居中状态：标题「正在准备本地知识服务」、副文案阶段、进度条（下载有百分比，其余为不确定态）、「首次使用需下载约 315 MB」。
   - `error` ⇒ 标题「本地知识服务未能启动」、阶段与错误、`重试`（`runtime/retry`）、日志路径可复制；若尚未生成 `state/current.json`，多给一个「更改位置」（回到设置卡并改写锚点）。
-  - `ready` ⇒ 正常六 tab；若 `needsEmbeddingConfig` 为真，在内容上方加一条可关闭横幅「本地服务已就绪；配置嵌入模型后即可上传文档」。
+  - `ready` ⇒ 正常六 tab；若 `needsEmbeddingConfig` 为真，上传入口（菜单 / 拖拽）被拦截，并在内容上方给一条可关闭提示「先配置嵌入模型，再上传文档」＋「去配置」。（2026-10-25 改判：原「就绪后常驻可关横幅」占栏宽，改为动作点拦截提示。）
 - 轮询 1 秒，`needs_location`/`ready`/`error` 停（设置卡不轮询）；不新增 tab、不改顶栏。
 - headless 判据：激活后 `ctx.get('webServer')` 缺失（web/desktop 组合都有 `webserver`；`dsh-headless` 明写不挂 Host/HTTP/Web 运行时）。服务晚到给 1.5–2 s 宽限，仍无才按 headless 处理（直接用默认根准备）。
 - 特权 op（`runtime/configure`/`pickDirectory`/`retry`）只接受 `application/json` 并校验同源（`Origin`/`Sec-Fetch-Site`），跨站触发的下载/换位一律拒绝。
@@ -269,13 +269,11 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 ### 4.7 升级、回滚、卸载
 
-> **本期状态（2026-10-25）**：下面的版本化切换、失败回退与旧版清理**未实现**（不在 Task 0–8 清单，见 plan Task 6 未闭合②）。当前换版本的行为：`runtime.json` 版本变了 ⇒ 在 `runtime/<新版本>` 重新准备并启动；旧版本目录保留不自动删；旧版本服务若仍在运行，认领不校验 `record.runtimeVersion`，会继续用旧实例，直到它退出或清掉 `state/service.json`。升级前请先停服务并备份 `state/`、`config/`。卸载行为（只删 npm 包、数据保留、清理顺序）已落地在 README。
->
-> **后续对（2026-10-25）**：版本化升级/回滚已另立 [2026-10-25-runtime-upgrade-spec.md](2026-10-25-runtime-upgrade-spec.md)（已定稿、待实施）。上面这段「未实现」是当前行为；该对实施后由它替换并回写本块。
+> **状态（2026-10-26）**：版本化切换、90 秒健康门/失败回旧版、`failed-<version>.json`、保留 current+previous 与旧版清理已由 [2026-10-25-runtime-upgrade-spec.md](2026-10-25-runtime-upgrade-spec.md) 交付；真机验收见其 [plan Task 6](../plans/2026-10-25-runtime-upgrade-plan.md)（证据 `D:\hrag-t6\acceptance-2026-10-25-upgrade`）。下列按最终行为重写。
 
-- 插件升级若 `runtime.json` 版本不变 ⇒ 不动运行时；变了 ⇒ 后台下载新包，完成后**本次继续用旧版**，下次激活切换（避免运行中换数据面）。
-- 切换：起新版 Qdrant/服务前先停旧版（核对 pid）；新版健康成功才把 `current.json` 指向它；90 秒内起不来 ⇒ 回旧版并报错，同时写 `state/failed-<version>.json`，后续启动停在旧版，直到 `runtime.json` 换版本或用户手动重试。升级前备份 `state/` 与 `config/`；回滚不保证数据兼容（新引擎可能已迁移 sqlite/向量），README 明写「先备份再升级」。
-- 保留上一版；下一次成功切换后删更老的版本目录（`runtime/` 下不在 current/previous 的）。
+- 插件升级若 `runtime.json` 版本不变 ⇒ 不动运行时；变了 ⇒ 旧服务仍健康时只后台下载/校验/解压新包，**本次继续用旧版**，下一次 DSH 启动（旧服务已退出、租约空闲）才启动新版。
+- 切换：不主动停健康旧服务；新版 Qdrant/服务共享 90 秒整栈预算，成功后才把 `current.json` 指向它并记 `previousVersion`；失败 ⇒ 回旧版并写 `state/failed-<version>.json`（`rolledBack=true`），后续启动停在旧版，直到手动重试或 `runtime.json` 换版本。配置版本不同需面板确认；升级前备份 `state/` 与 `config/`；回滚不保证数据兼容（新引擎可能已迁移 sqlite/向量）。
+- 保留当前与上一版；成功切换后删更老的版本目录及其失败文件；`.tmp`、未知目录、无 manifest 目录不动。
 - 卸载：DSH 卸载只删 npm 包；默认根（锚点与 `bindings.json`）与自定义根都原样保留（知识库数据不丢）。文档给出手动清理路径与「先删 state 再删 runtime」的顺序。
 
 ### 4.8 发布件
@@ -328,7 +326,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 - 不做官方市场收录与社区索引提交（外部动作，另行处理）。
 - 不做现有 `backend/.deer-flow` 数据自动迁移；用户要沿用数据就保持外部模式或手工拷贝。
 - 不做运行时包的增量更新/差分下载；整包替换。
-- 不做 §4.7 的版本化升级/回滚（本次继续用旧版、90 秒失败回旧版、`failed-<version>.json`、旧版本目录清理）；换版本＝新目录重新准备。已另立 [2026-10-25-runtime-upgrade-spec.md](2026-10-25-runtime-upgrade-spec.md)（待实施），不在本对范围。
+- **已交付**：原 §4.7 的版本化升级/回滚由 [2026-10-25-runtime-upgrade-spec.md](2026-10-25-runtime-upgrade-spec.md) 承接（2026-10-25 立项、2026-10-26 实施并真机验收），不再列在本节「不做」。
 - 不把 Qdrant 换成嵌入式向量库；不复活 Docker 路线。
 - 不做已装后换位置的自动迁移（整体拷贝 + 改锚点由用户手工做）；不做自绘目录浏览器。
 - 不把本地视频 ASR 依赖（funasr/torch）打进运行时包；托管包与 `make gateway` 同依赖，视频默认档需另装或改用服务档（登记，见 §8）。

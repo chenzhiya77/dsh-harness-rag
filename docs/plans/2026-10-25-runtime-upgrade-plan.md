@@ -1,6 +1,6 @@
 # 运行时版本化升级、回滚与旧版清理 —— plan
 
-**Status:** 待实施（2026-10-25）
+**Status:** 已实施（2026-10-26；Task 0–6 已提交，Task 7 文档已回写、提交链待令）
 **Date:** 2026-10-25
 **配套 spec:** [../specs/2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md)
 
@@ -51,7 +51,7 @@
 - [x] 单测：坏 current/upgrade/failed 记录降级；首次写 current 不带 previous；普通重启不覆盖 previous；切换写 previous；版本不匹配的 service 不被认领；首次 status 版本是 current；current/service 冲突按上述规则回写或 blocked。
 - [x] 门禁：`tsc` 0 错；相关测试全绿；现有 231 条无回归。
 
-**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+**实测（实施期回填）**：2026-10-25 实施完成，已提交 `36865c9`。
 - 模型：`manifest.ts` 增 `UpgradeState`/`UpgradeRecord`/`FailedRecord` 与 `sanitizeUpgrade`/`sanitizeFailed`；版本字段走 `isRuntimeVersion`，时间戳非空，坏记录降级 null。失败记录的 `fromVersion` 允许空串——只用于首次安装没有旧版可回滚的情形。
 - current：新增 `readCurrent`/`writeCurrent`（tmp+rename 原子写）与纯函数 `planCurrent`（`first|keep|rewrite|conflict`）。supervisor 去掉无条件 `markCurrent`：current 缺失/损坏时首次写 `{runtimeVersion}`；同版本 keep；健康 service 与 current 不一致且该版本已装 ⇒ 回写并记 `previousVersion`（崩溃窗口）；该版本无 `runtime-manifest.json` ⇒ 不回写、adopt 照常可用，`status.upgrade` 标 `blocked`/`state_version_conflict`，不启动第二套栈。
 - `adopt(expectedVersion)` 版本不匹配直接返回 null，探测前拒绝（不杀、不删、不释放租约）。
@@ -86,7 +86,7 @@
 - [x] 单测：决策表八行各一例（含旧实例健康 + 配置版本不同 ⇒ `needs_confirmation`）；旧实例健康时不启动目标、不改 current；租约占用不杀；headless/外部分支；插件重载不切换；pack 缺失/平台不支持；current/service 冲突；旧版已死 + 租约空闲时本进程恢复启动目标；旧版健康时绝不主动停。
 - [x] 门禁：`tsc` 0 错；`runtime_upgrade` 全绿；现有 supervisor/bridge 测试无回归。
 
-**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+**实测（实施期回填）**：2026-10-25 实施完成，已提交 `946d192`。
 - 新增 `src/runtime/upgrade.ts`：`createUpgradeCoordinator` 持有按版本 supervisor 表、current/target、`upgrade.json` 读写、后台准备与 `AbortController`；`ensure()` 单飞，`dispose(forget?)` 中止准备并按需注销单例。
 - 决策表八行全部落地：同版本/首次走原 supervisor；失败文件优先；旧版健康时只 `probe()`+`adopt()`（新增公开只认领接口），按租约/配置给 `blocked|pending→ready|needs_confirmation`，绝不 `ensure()` 起第二套；旧版不健康时按租约→配置→包就绪顺序，最后交给 `activate`（Task 3 注入，bridge 暂不传）。current 缺失回退 service 版本；current 落后于健康 service 时回写并记 `previousVersion`。
 - 准备：目标包缺失时后台 `ensureRuntime`，进度写 `upgrade.progress`；失败写 `upgrade.error` + `blocked`，不写失败文件；`dispose` 中止下载。`UpgradeRecord` 按 spec §3.1 补了 `error` 字段与校验。
@@ -109,7 +109,7 @@
 - [x] 单测：Qdrant 50 s + engine 30 s 成功；总 91 s 超时失败；目标 Qdrant 起不来；目标 engine 起不来；旧版回滚成功/失败（含旧版目录缺失 ⇒ `rollback_failed`）；失败记录抑制自动重试；retry 清记录。
 - [x] 门禁：`tsc` 0 错；supervisor/upgrade 测试全绿；现有崩溃、端口重试、看门狗测试无回归。
 
-**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+**实测（实施期回填）**：2026-10-25 实施完成，已提交 `37b6095`。
 - 共享预算：`SupervisorOptions.nowMs` 可注入；`start(budgetMs)` 在租约/端口准备后算一次 deadline，`runRound(ports, deadline)` 把同一截止时间传给 Qdrant 与 knowledge 两次 `waitFor`，绑定重试也共用。`ensure({readyTimeoutMs})` 只影响本次启动；默认仍 120000。
 - 切换：协调者新增 `switchTo`——`target.ensure({readyTimeoutMs:90_000})`；成功时写 `current.json`（目标 + `previousVersion`）、删 `upgrade.json` 与 `failed-<target>.json`、`phase=ready`。失败时先写 `failed-<target>.json`（`rolledBack:false`）、删 `upgrade.json`、`dispose` 目标，再以 120 秒/角色启动旧版；旧版健康则把失败记录改 `rolledBack:true` 并回 `phase=ready`，否则 `phase=error` + `rollback_failed`。无旧版时不回滚、直接 `phase=error`。
 - 重试：`retry()` 删目标失败文件、清 `upgrade.json`/`prepError` 后重跑决策；旧版健康则只认领并回 `pending/ready`，旧版不在则本次走 `switchTo`。
@@ -131,7 +131,7 @@
 - [x] 单测：两个并发 `ensureRuntime` 只下载/解压一次；后台锁占用直接 `provision_held`、首装等待复用；陈旧锁接管；清理保留集合与跳过规则；`configVersion` 首次安装不比较、升级相同/不同、当前缺失 ⇒ `needs_confirmation`、目标缺失 ⇒ `manifest_mismatch`；确认失效；空间不足不删旧版；目标复用的 manifest 版本/configVersion 不符 `manifest_mismatch`；旧版回滚只校验版本；目标变化删旧失败文件。
 - [x] 门禁：`tsc` 0 错；provision/upgrade 测试全绿；现有 provision 测试无回归。
 
-**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+**实测（实施期回填）**：2026-10-25 实施完成，已提交 `8a1732c`。
 - 锁：`state/provision.lock` 用 `wx` 独占创建（owner/pid/startedAt）；pid 不存活、时间戳不可解析或超过 15 分钟视为陈旧，删锁重试一次；后台持有者存活时直接 `provision_held`，前台最多等 10 分钟（每 500 ms 查一次目标 manifest），出现即复用；`ensureRuntime` 全路径 `finally` 释放，不影响 `lease.json`。协调者把后台 `provision_held` 保持为 `pending` 且不落 `prepError`，下一次轮询会再试。
 - 校验/空间：复用与解压后都校验 `runtimeVersion`+`configVersion`，不符 `manifest_mismatch`（解压出的坏目录会删掉）；本地 pack 解压前用 `statfsSync`（`freeBytesAt` 已导出）做与下载相同的空间检查，`no_space` 不动旧目录。
 - 清理：`cleanOldVersions(root, keep)` 保留 current+previous，删更老的已装版本及其 `failed-<v>.json`；`.tmp`、未知目录、无 manifest 目录跳过；删除失败只回日志。成功切换后调用；目标变化时另删其他版本的失败文件。
@@ -152,7 +152,7 @@
 - [x] 单测/检查：op 前置状态、400/409 映射与文件副作用；payload 字段；首次 status 版本是 current；`node --check client.js`；浏览器/沙箱能起时实点横幅与按钮，不能起时如实记录「仅静态/单测覆盖」。
 - [x] 门禁：`tsc` 0 错；`node --test` 全绿；`node --check client.js` 通过。
 
-**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+**实测（实施期回填）**：2026-10-25 实施完成，已提交 `8135daa`。
 - 载荷：`RuntimeStatusPayload` 增 `upgrade`/`targetVersion`/`previousVersion`；`statusPayload` 把协调者 view 的 `upgrade` 原样带出（ready 下的 failed/ready/needs_confirmation/blocked 都会显示），`version` 仍先读 current、ready view 为准；`switching` 相位在 Task 2 已入 `RuntimePhase`。
 - op：`runtime/upgrade` 加入 `PRIVILEGED_OPS` 与 runtime op 表；只接受 `confirm|retry`，非法 action 抛 `bad_request`；协调者的 `upgrade_state` 被转成 `RuntimeOpError`，`kb_proxy` 的 `RuntimeOpError` 分支按 `upgrade_state→409`、其余 `→400` 返回。`confirm` 只写 `confirmedConfigVersion`；`retry` 清失败记录并重跑决策（旧服务在则不切，旧服务不在可本次启动目标）。
 - 面板：zh/en 增 `rt.phase.switching` 与 8 条升级词条＋原因映射；`runtimeStageKey` 认 `switching`；轮询在 `ready` 且升级状态非 `pending/blocked` 时停；横幅置于锚点告警之前，ready/blocked 可关，needs_confirmation/failed 不可关，failed 带「下次启动重试」与复制日志，pending 带百分比。
@@ -185,47 +185,58 @@
 - **清单/冲突/租约/同版本**：非法 JSON → `blocked`/`manifest_invalid`，当前 0.1.0-4 照用；current 手改 0.1.0-3 + 健康 service 0.1.0-4 → 回写 current/previous，无第二套栈；service 改 0.1.0-9（无 runtime）→ `blocked`/`state_version_conflict`，进程不变；A(upg) 持 lease、B(upg2) target 0.1.0-5 → `blocked`/`upgrade_blocked_by_instance`，A 与 current 不变；target==current==0.1.0-4 → 无 `upgrade.json`、不清理、current 不变。
 - **验收中发现并修复**：`selectPack` 在 `urls=[]` 时先判 `pack_missing`，本地 `DSH_HARNESS_RAG_PACK` 覆盖无法生效，正常升级路径起不来；`selectPack`/`loadPack` 增 `allowUnpublished`（仅本地覆盖时接受已构建未发布条目，仍拒 `0.0.0-0` 与 0 size），bridge 在覆盖非空时传入；`tests/runtime_manifest.test.ts` 增 3 例。另记一条环境边角：陈旧 `lease.json` 的 pid 被无关 `bash.exe` 复用，曾误报 `upgrade_blocked_by_instance`，删陈旧租约后 `retry` 恢复；未改代码。
 - **门禁**：`tsc` 0 错；`node --check client.js` 过；`node --test tests/*.test.ts` **296/296**、fail 0；`engine/` `git status` 0 行；主树 `deer-flow` 脏面 mtime 为 10-06/10-10，属既有未提交面、本轮零新增；证据启动 token/auth cookie 已删除或脱敏，快照 token 为 `<redacted>`。
-- **未覆盖**：浏览器实点横幅/按钮（browser-use 被 DSH web 鉴权挡）；headless 实跑；90 秒超时真机（本轮走的是 `qdrant_exited` 立即失败）；`platform_unsupported`、并发 provision、`no_space`、清理删除失败的真机分支（均有单测，不宣称真机通过）。plan 原写的“复制 0.1.0-2 zip 改坏”以合成坏包替代；0.1.0-3/4/5 的“好版本”用已装目录复制/硬链接，正常 0.1.0-2 升级仍用真实 zip 与解压。
+- **未覆盖**：浏览器实点横幅/按钮（browser-use 被 DSH web 鉴权挡）；headless 实跑；无主残留（端口仍应答 + pid null，代码未实现）；90 秒超时真机（本轮走的是 `qdrant_exited` 立即失败）；`platform_unsupported`、并发 provision、`no_space`、清理删除失败的真机分支（均有单测，不宣称真机通过）。plan 原写的“复制 0.1.0-2 zip 改坏”以合成坏包替代；0.1.0-3/4/5 的“好版本”用已装目录复制/硬链接，正常 0.1.0-2 升级仍用真实 zip 与解压。
 - 代码修复与 plan 回填按“修复/回填”两次提交收口；Task 7 的文档与提交链待令。
 
 ## Task 7 — 文档、回写与提交链
 
 > 动到的文件：`README.md`、`docs/plugin-manual.md`、分发 spec/plan、本对 spec/plan。
 
-- [ ] README/手册：Task 0 已先把 `plugin-manual.md:36/46` 的超前描述改回现状；这里只把现状升级为完成态，写升级步骤（先备份 `state/` 与 `config/`，重启 DSH，失败会回旧版）、面板横幅含义、配置版本确认、`blocked` 与无主残留的手工清理、保留/清理规则、本地 `DSH_HARNESS_RAG_PACK` 仅开发态。
-- [ ] 分发 spec §4.7 与 plan Task 6 未闭合②/归位行已加「另立本对」承接线（2026-10-25 已做，见两文件的链接）；本对实施完成后把「未实现」改为已实现/闭合。
-- [ ] 回写本 spec Status（已实施 + 实测值）、plan 各 Task 实测与验收表。
-- [ ] 工作区已有未提交文件不纳入本对：`THIRD_PARTY_NOTICES.md`、`client.js`、`package.json`、`scripts/build-runtime-pack.mjs`，以及并行会话的 G11 文件（`src/index.ts`、`src/tool_gating.ts`、`tests/tool_gating.test.ts`、`src/retrieval_discipline.ts`、`docs/{specs,plans}/2026-10-25-rag-soul-section-*`）。`client.js` 的升级 UI 改动与其中的既有产品面清理同文件，提交面板笔时必须按 hunk 筛出，不能把 `emptyHint`/legacy 注释裹进升级笔；G11 文件一律不碰。如需先给这些文件一个提交位，另议。
-- [ ] Task 0 的手册现状修正如果单独提交，先落 `docs(manual): correct the upgrade description to current behavior`，不混进代码笔；以下为实现笔。
+- [x] README/手册：Task 0 已先把 `plugin-manual.md:36/46` 的超前描述改回现状；这里只把现状升级为完成态，写升级步骤（先备份 `state/` 与 `config/`，重启 DSH，失败会回旧版）、面板横幅含义、配置版本确认、`blocked` 与无主残留的手工清理、保留/清理规则、本地 `DSH_HARNESS_RAG_PACK` 仅开发态。
+- [x] 分发 spec §4.7 与 plan Task 6 未闭合②/归位行已加「另立本对」承接线（2026-10-25 已做，见两文件的链接）；本对实施完成后把「未实现」改为已实现/闭合。
+- [x] 回写本 spec Status（已实施 + 实测值）、plan 各 Task 实测与验收表。
+- [x] 工作区已有未提交文件不纳入本对：`THIRD_PARTY_NOTICES.md`、`client.js`、`package.json`、`scripts/build-runtime-pack.mjs`，以及并行会话的 G11 文件（`src/index.ts`、`src/tool_gating.ts`、`tests/tool_gating.test.ts`、`src/retrieval_discipline.ts`、`docs/{specs,plans}/2026-10-25-rag-soul-section-*`）。`client.js` 的升级 UI 改动与其中的既有产品面清理同文件，提交面板笔时必须按 hunk 筛出，不能把 `emptyHint`/legacy 注释裹进升级笔；G11 文件一律不碰。如需先给这些文件一个提交位，另议。
+- [x] Task 0 的手册现状修正如果单独提交，先落 `docs(manual): correct the upgrade description to current behavior`，不混进代码笔；以下为实现笔。
 - [ ] 提交链（候令；英文 Conventional ASCII；逐文件核 hunk；排除并行会话文件、`node_modules/`、`dist/`、zip、运行时产物）：
-  1. `feat(runtime): add versioned upgrade state and current ownership`
-  2. `feat(runtime): switch runtime versions with rollback`
-  3. `feat(runtime): lock pack provisioning and clean old versions`
-  4. `feat(panel): surface runtime upgrade state`
-  5. `docs(runtime): document versioned upgrades`
-  6. `docs(plan): close out the runtime upgrade pair`
+  1. `36865c9` `feat(runtime): add versioned upgrade state and current ownership`
+  2. `946d192` `feat(runtime): add the upgrade coordinator and activation decisions`（Task 2，计划外拆分）
+  3. `37b6095` `feat(runtime): switch runtime versions with rollback`
+  4. `8a1732c` `feat(runtime): lock pack provisioning and clean old versions`
+  5. `8135daa` `feat(panel): surface runtime upgrade state`
+  6. `98523c1` `fix(runtime): accept a local pack before the manifest is published`（Task 6 修复）
+  7. `233071e` `docs(plan): record the runtime upgrade acceptance`（Task 6 验收）
+  8. 待提交：`docs(runtime): document versioned upgrades`（README/手册）
+  9. 待提交：`docs(plan): close out the runtime upgrade pair`（本 spec/plan 与分发回写）
 - [ ] 提交后回填提交链；仓无 remote，不推送。
 
-**实测（实施期回填）**：
+**实测（实施期回填）**：2026-10-26 完成文档回写（未提交，候令）。
+- README/手册：README 增「版本化升级/回滚」段落与状态行；手册把「升级」改成完成态并新增「升级与回滚」节，覆盖准备/切换/回滚、配置确认、保留与清理、备份口径、五类横幅、租约/残留/provision 锁的手工处理、本地 pack 仅开发态。
+- 分发回写：spec §4.7 改为最终行为（不再写「先停旧版」），§7 的「不做版本化升级」改为已交付；plan Task 6 未闭合②标已闭合，归位行与历史回写行同步。
+- 本对回写：spec Status → 已实施；§5 增实测段；§8 的「无主残留」「手册超前」两行按实际更新；§3.2 的无主残留自动 blocked 标为实现偏差。
+- **偏差/未覆盖**：§5.8「端口仍应答但 pid 为 null ⇒ `upgrade_blocked_stale_instance`」代码未实现（当前健康应答走 adopt、端口被非本服务占用时目标换口）；Task 6 的浏览器实点、headless、90 秒超时真机、`platform_unsupported`/并发/`no_space`/清理删除失败真机仍未覆盖。手册已按实际写成手工清理，不宣称自动 blocked。
+- **提交链实际**：Task 1 `36865c9`、Task 2 `946d192`、Task 3 `37b6095`、Task 4 `8a1732c`、Task 5 `8135daa`、Task 6 修复 `98523c1`、Task 6 验收 `233071e`；待提交两笔文档。原计划的 6 笔不含 Task 2 协调者与 Task 6 修复/验收，按实际拆分为 9 笔。
+- **门禁**：文档改动后复跑 `tsc` 0、`node --test tests/*.test.ts` 296/296、`node --check client.js`；`engine/` 零 diff。Task 0 手册笔已单独提交 `ce6b327`。
 
 ## 验收对应
 
-| spec §5 | 覆盖 Task |
-| --- | --- |
-| 1 正常升级 | Task 6 |
-| 2 本次不切换 | Task 2 / Task 6 |
-| 3 同版本零动作 | Task 2 / Task 6 |
-| 4 失败回滚 | Task 3 / Task 6 |
-| 5 手动重试 | Task 3 / Task 5 / Task 6 |
-| 6 配置版本确认 | Task 4 / Task 6 |
-| 7 租约与旧实例 | Task 2 / Task 6 |
-| 8 无主残留 | Task 2 / Task 6 |
-| 9 清理 | Task 4 / Task 6 |
-| 10 并发准备 | Task 4 / Task 6 |
-| 11 空间不足与本地包 | Task 4 / Task 6 |
-| 12 目标清单不可用 | Task 2 / Task 6 |
-| 13 版本记录冲突 | Task 1 / Task 2 / Task 6 |
-| 14 门禁 | 每个 Task / Task 6 |
+| spec §5 | 覆盖 Task | 实测/证据 |
+| --- | --- | --- |
+| 1 正常升级 | Task 6 | 真机 `snap-01` |
+| 2 本次不切换 | Task 2 / Task 6 | 真机 `snap-02`、`snap-06` |
+| 3 同版本零动作 | Task 2 / Task 6 | 真机 `snap-09` |
+| 4 失败回滚 | Task 3 / Task 6 | 真机 `snap-03`；90 秒超时单测 |
+| 5 手动重试 | Task 3 / Task 5 / Task 6 | 真机 `snap-04`、`snap-05` |
+| 6 配置版本确认 | Task 4 / Task 6 | 真机 `snap-06/07/08`；headless 未跑 |
+| 7 租约与旧实例 | Task 2 / Task 6 | 真机 `snap-13` |
+| 8 无主残留 | Task 2 / Task 6 | 未实现/未真机（spec §5 实测） |
+| 9 清理 | Task 4 / Task 6 | 真机 `snap-05/08` |
+| 10 并发准备 | Task 4 / Task 6 | 单测 |
+| 11 空间不足与本地包 | Task 4 / Task 6 | 本地包真机；`no_space` 单测 |
+| 12 目标清单不可用 | Task 2 / Task 6 | 非法 JSON 真机；`platform_unsupported` 单测 |
+| 13 版本记录冲突 | Task 1 / Task 2 / Task 6 | 真机 `snap-11/12` |
+| 14 门禁 | 每个 Task / Task 6 | `tsc` 0、296/296、`node --check` 过、`engine/` 0 |
+
+证据根：`D:\hrag-t6\acceptance-2026-10-25-upgrade`（`README.md` + `snap-00…13` + `full-tests.log`）。
 
 ## 风险与回退
 
