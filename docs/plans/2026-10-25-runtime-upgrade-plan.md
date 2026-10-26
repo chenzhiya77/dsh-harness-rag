@@ -163,21 +163,30 @@
 
 > 证据落 `D:\hrag-t6\acceptance-2026-10-25-upgrade`（仓外）；不把运行时目录、zip、日志全文带进提交。
 
-- [ ] 每段测试前重置：恢复 `runtime.json`，删 `state/upgrade.json`/`state/failed-*.json`/坏包/坏版本目录，停掉测试 DSH，确认 `current.json`/`service.json`/`lease.json` 与本段前置一致；token 脱敏。
-- [ ] 基线：确认 `D:\hrag-t6\dsh-root\harness-rag` 当前 `0.1.0-1`、8021 健康、lease owner 是当前 DSH；记录 `current.json`/`service.json`（token 脱敏）。
-- [ ] 正常升级：设 `DSH_HARNESS_RAG_PACK=E:\app\python\agent\dsh-harness-rag\dist\harness-rag-runtime-win32-x64-0.1.0-2.zip`（绝对路径），启动 DSH；两边 `configVersion` 都是 44，应自动切换、不要求确认；旧服务仍健康时只准备包、状态 `pending`→`ready`，`current.json` 不变；重启 DSH（候令）后确认旧服务退出、`0.1.0-2` 启动、`current.json={0.1.0-2, previousVersion:0.1.0-1}`、库列表与检索可用。
-- [ ] 失败回滚：做一个坏的目标包（复制 `0.1.0-2` zip，删/坏一个 engine 运行必需文件，改 manifest 版本为 `0.1.0-3`），临时把 `runtime.json` 指到它并设本地 pack；启动 → 90 秒内失败 → 旧版回来、`failed-0.1.0-3.json` 存在、`rolledBack=true`、面板失败横幅；再次启动不自动重试。测试后恢复 `runtime.json`，清理坏包、`runtime/0.1.0-3` 与失败文件，不提交测试值。
-- [ ] 手动重试：点「下次启动重试」→ 失败文件消失、状态回 `pending`；换回好包后重启 → 成功、失败/升级记录清理、current 更新。
-- [ ] 配置版本确认：把目标包 manifest 与 `runtime.json` 目标条目的 `configVersion` **同时**改成 45（只改一处会先报 `manifest_mismatch`）→ `needs_confirmation`、不自动切；有旧服务时点确认后重启才切；headless 分支记录。
-- [ ] 目标清单不可用：临时把 `runtime.json` 改成缺当前平台条目/非法 JSON → 有当前版本时 `blocked` + `pack_missing`/`platform_unsupported`，当前版本照用；不写 `0.0.0-0`，不起新栈；恢复清单后再验。
-- [ ] 版本记录冲突：正常升级到 `0.1.0-2` 后停 DSH，把 `current.json` 手改回 `0.1.0-1`，保留健康的 `service.json=0.1.0-2`；启动 → 以 service 为准回写 current，不启动第二套栈；若把 service 版本改成无对应 runtime 的值 → `blocked`（`state_version_conflict`）。
-- [ ] 租约/旧实例：先停当前 DSH（候令）；用第二个 DSH profile 指向同一运行根（确认 `backendUrl` 为空、托管模式）并启动、持有 lease；再启动原 profile → `blocked`、不杀、不换；停掉持有者后下一次启动或旧服务已死时的轮询恢复再切换。
-- [ ] 清理：在升级到新版本前，在 `runtime/` 放一个带 manifest 的假 `0.0.9` 目录；成功切换后确认被删、对应失败文件被删；`<version>.tmp` 与无 manifest 目录保留。
-- [ ] 同版本零动作：`runtime.json` 目标等于当前 → 不下载、不写升级记录、不清理。
-- [ ] 门禁：`tsc` 0；`node --test tests/*.test.ts` 全绿；`node --check client.js`；`engine/` 与主树零 diff；全仓扫 token/api_key 不出现在新状态文件与日志样例。
-- [ ] 记录每条验收的证据文件、命令、时间；未跑到的项如实写「未覆盖」，不宣称通过。
+- [x] 每段测试前重置：恢复 `runtime.json`，删 `state/upgrade.json`/`state/failed-*.json`/坏包/坏版本目录，停掉测试 DSH，确认 `current.json`/`service.json`/`lease.json` 与本段前置一致；token 脱敏。
+- [x] 基线：确认 `D:\hrag-t6\dsh-root\harness-rag` 当前 `0.1.0-1`、8021 健康、lease owner 是当前 DSH；记录 `current.json`/`service.json`（token 脱敏）。
+- [x] 正常升级：设 `DSH_HARNESS_RAG_PACK=E:\app\python\agent\dsh-harness-rag\dist\harness-rag-runtime-win32-x64-0.1.0-2.zip`（绝对路径），启动 DSH；两边 `configVersion` 都是 44，应自动切换、不要求确认；旧服务仍健康时只准备包、状态 `pending`→`ready`，`current.json` 不变；重启 DSH（候令）后确认旧服务退出、`0.1.0-2` 启动、`current.json={0.1.0-2, previousVersion:0.1.0-1}`、库列表与检索可用。
+- [x] 失败回滚：做一个坏的目标包（复制 `0.1.0-2` zip，删/坏一个 engine 运行必需文件，改 manifest 版本为 `0.1.0-3`），临时把 `runtime.json` 指到它并设本地 pack；启动 → 90 秒内失败 → 旧版回来、`failed-0.1.0-3.json` 存在、`rolledBack=true`、面板失败横幅；再次启动不自动重试。测试后恢复 `runtime.json`，清理坏包、`runtime/0.1.0-3` 与失败文件，不提交测试值。
+- [x] 手动重试：点「下次启动重试」→ 失败文件消失、状态回 `pending`；换回好包后重启 → 成功、失败/升级记录清理、current 更新。
+- [x] 配置版本确认：把目标包 manifest 与 `runtime.json` 目标条目的 `configVersion` **同时**改成 45（只改一处会先报 `manifest_mismatch`）→ `needs_confirmation`、不自动切；有旧服务时点确认后重启才切；headless 分支记录。
+- [x] 目标清单不可用：临时把 `runtime.json` 改成缺当前平台条目/非法 JSON → 有当前版本时 `blocked` + `pack_missing`/`platform_unsupported`，当前版本照用；不写 `0.0.0-0`，不起新栈；恢复清单后再验。
+- [x] 版本记录冲突：正常升级到 `0.1.0-2` 后停 DSH，把 `current.json` 手改回 `0.1.0-1`，保留健康的 `service.json=0.1.0-2`；启动 → 以 service 为准回写 current，不启动第二套栈；若把 service 版本改成无对应 runtime 的值 → `blocked`（`state_version_conflict`）。
+- [x] 租约/旧实例：先停当前 DSH（候令）；用第二个 DSH profile 指向同一运行根（确认 `backendUrl` 为空、托管模式）并启动、持有 lease；再启动原 profile → `blocked`、不杀、不换；停掉持有者后下一次启动或旧服务已死时的轮询恢复再切换。
+- [x] 清理：在升级到新版本前，在 `runtime/` 放一个带 manifest 的假 `0.0.9` 目录；成功切换后确认被删、对应失败文件被删；`<version>.tmp` 与无 manifest 目录保留。
+- [x] 同版本零动作：`runtime.json` 目标等于当前 → 不下载、不写升级记录、不清理。
+- [x] 门禁：`tsc` 0；`node --test tests/*.test.ts` 全绿；`node --check client.js`；`engine/` 与主树零 diff；全仓扫 token/api_key 不出现在新状态文件与日志样例。
+- [x] 记录每条验收的证据文件、命令、时间；未跑到的项如实写「未覆盖」，不宣称通过。
 
-**实测（实施期回填）**：
+**实测（实施期回填）**：2026-10-26 01:13–01:43 UTC 实施。证据全部落 `D:\hrag-t6\acceptance-2026-10-25-upgrade`（含 `README.md`、`snap-00…13`、`full-tests.log`）；浏览器未实点，UI 结论只到 payload/单测层。
+- 环境差异：为不重启桌面 DSH（8021），改用隔离 `DSH_HOME=D:\hrag-t6\dsh-home-upgrade` + 同根 root + CLI profile `upg`/`upg2`（3081/3082）；桌面根仅做基线读取（`0.1.0-1`、8021 健康、lease pid 75512），未改其状态。
+- **正常升级**：真实 0.1.0-2 zip（330,283,067 B / `05cc423b…`）经本地覆盖解压；`pending(17→100%)→switching→ready 0.1.0-2`，`current={0.1.0-2, previousVersion:0.1.0-1}`；建库上传 6 片，recall 的 vector/graph/wiki 三路均命中。旧服务健康时用同环境手工常驻 0.1.0-2 栈模拟 adopted 旧实例：target 0.1.0-3 只准备、`upgrade=ready`、current 与服务 startedAt 不变；停宿主后该 adopted 服务仍存活。
+- **失败/重试**：合成 0.1.0-3 坏包（仅 manifest，无 qdrant/python）→ `qdrant_exited`，旧版回滚 ready，`failed-0.1.0-3.json rolledBack=true`，current 不变；再次启动 `failedAt` 不变、无 switching；`runtime/upgrade {retry}` 200，失败文件删除并回 ready；换好已装 0.1.0-3 后重启切换成功。清理删 0.1.0-1、假 0.0.9 及其失败文件，保留 `0.0.9.tmp`、无 manifest 目录与非法名 `@keep`。
+- **配置确认**：target 0.1.0-4/config 45 vs 当前 0.1.0-3/config 44 → `needs_confirmation`（phase ready、不切）；`confirm` 写 `confirmedConfigVersion:45` 并转 ready；重启后切到 0.1.0-4。headless 未实跑。
+- **清单/冲突/租约/同版本**：非法 JSON → `blocked`/`manifest_invalid`，当前 0.1.0-4 照用；current 手改 0.1.0-3 + 健康 service 0.1.0-4 → 回写 current/previous，无第二套栈；service 改 0.1.0-9（无 runtime）→ `blocked`/`state_version_conflict`，进程不变；A(upg) 持 lease、B(upg2) target 0.1.0-5 → `blocked`/`upgrade_blocked_by_instance`，A 与 current 不变；target==current==0.1.0-4 → 无 `upgrade.json`、不清理、current 不变。
+- **验收中发现并修复**：`selectPack` 在 `urls=[]` 时先判 `pack_missing`，本地 `DSH_HARNESS_RAG_PACK` 覆盖无法生效，正常升级路径起不来；`selectPack`/`loadPack` 增 `allowUnpublished`（仅本地覆盖时接受已构建未发布条目，仍拒 `0.0.0-0` 与 0 size），bridge 在覆盖非空时传入；`tests/runtime_manifest.test.ts` 增 3 例。另记一条环境边角：陈旧 `lease.json` 的 pid 被无关 `bash.exe` 复用，曾误报 `upgrade_blocked_by_instance`，删陈旧租约后 `retry` 恢复；未改代码。
+- **门禁**：`tsc` 0 错；`node --check client.js` 过；`node --test tests/*.test.ts` **296/296**、fail 0；`engine/` `git status` 0 行；主树 `deer-flow` 脏面 mtime 为 10-06/10-10，属既有未提交面、本轮零新增；证据启动 token/auth cookie 已删除或脱敏，快照 token 为 `<redacted>`。
+- **未覆盖**：浏览器实点横幅/按钮（browser-use 被 DSH web 鉴权挡）；headless 实跑；90 秒超时真机（本轮走的是 `qdrant_exited` 立即失败）；`platform_unsupported`、并发 provision、`no_space`、清理删除失败的真机分支（均有单测，不宣称真机通过）。plan 原写的“复制 0.1.0-2 zip 改坏”以合成坏包替代；0.1.0-3/4/5 的“好版本”用已装目录复制/硬链接，正常 0.1.0-2 升级仍用真实 zip 与解压。
+- 代码修复与 plan 回填按“修复/回填”两次提交收口；Task 7 的文档与提交链待令。
 
 ## Task 7 — 文档、回写与提交链
 
