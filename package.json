@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "icon": "./icon.svg",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./lib/index.js",
   "exports": {
-    ".": "./src/index.ts",
+    ".": "./lib/index.js",
     "./client": "./client.js",
     "./locale/*.json": "./locale/*.json",
     "./package.json": "./package.json"
@@ -25,6 +25,7 @@
   "homepage": "https://github.com/chenzhiya77/dsh-harness-rag#readme",
   "files": [
     "icon.svg",
+    "lib",
     "src",
     "client.js",
     "cordis.patch.yml",
@@ -39,6 +40,8 @@
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --pretty false",
+    "build:plugin": "tsc -p tsconfig.build.json --pretty false",
+    "prepack": "npm run build:plugin",
     "build:runtime": "node scripts/build-runtime-pack.mjs --engine ./engine"
   },
   "license": "MIT",
