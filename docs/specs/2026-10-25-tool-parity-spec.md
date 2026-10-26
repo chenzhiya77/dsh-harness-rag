@@ -15,7 +15,7 @@
 
 **不包含**：新增第七件工具（主树只有六件）、改工具名、面板召回测试的展示形态、检索算法 / 图谱 / 百科生成逻辑、Qdrant 与模型配置。
 
-**等价边界（重要）**：本 spec 只对齐六件工具的**可观察契约**，不等于整个 RAG agent 与主树等价。主树的 RAG agent 另有 `agents/assets/rag/SOUL.md` 承载回答纪律（强制向量保底、分路路由、补检上限、读取限次、引用与拒答规范）；该纪律已由 G11 以 agent 级 `systemPrompt.section` 单独移植（[rag-soul-section spec](2026-10-25-rag-soul-section-spec.md)），不在本 spec 的 D2–D8 内。人格、深度检索模式与附图处理仍不移植——「等价」仍只覆盖工具契约与检索纪律。
+**等价边界（重要）**：本 spec 只对齐六件工具的**可观察契约**，不等于整个 RAG agent 与主树等价。主树的 RAG agent 另有 `agents/assets/rag/SOUL.md` 承载回答纪律（强制向量保底、分路路由、补检上限、读取限次、引用与拒答规范）；该纪律中的检索部分已由 G11 以 agent 级 `systemPrompt.section` 单独移植（[rag-soul-section spec](2026-10-25-rag-soul-section-spec.md)；D6 起不移植引用要求），不在本 spec 的 D2–D8 内。人格、深度检索模式与附图处理仍不移植——「等价」仍只覆盖工具契约与检索纪律。
 
 ## 2. 现状与根因
 
@@ -91,6 +91,7 @@
 - **丙**：不共享编号，改文档。不推荐——README 首屏已把它当作产品能力。
 - **现状可复用**：引擎已有 `citation_counter.py` 与 `tests/knowledge/tools/test_citation_numbering.py`；甲复用这条实现，只把计数器的生命周期从「一次进程内 runtime」提升为「一个有界 run 缓存」。
 - **面板不受影响**：`recall-test` 继续剥掉编号注记、继续用面板自己的投影。
+- **2026-10-25 D6 修订**：纪律与工具描述不再提出引用要求，message 注记由插件在 `callTool` 剥离；引擎计数与 `citation_no` 字段不变。见 [G11 spec](2026-10-25-rag-soul-section-spec.md) §3.6。
 
 ### 4.4 D4 参数面：按主树逐工具给参数（已拍甲，2026-10-25）
 
@@ -132,7 +133,7 @@
 | `hrag_list_wiki_entries` | `entries[]`：`title` / `status` / `updated_at`；`message`（零项不列） |
 
 - 面板专用字段（`chunk_position`、视频时间码与 `frame_url`）只留在 `recall-test`，不进模型工具载荷。
-- `message` 保留「引用编号…照抄 `citation_no`」的模型注记；面板继续自行剥离。
+- `message` 保留「引用编号…照抄 `citation_no`」的模型注记；面板继续自行剥离。（2026-10-25 D6 修订：插件在 `callTool` 剥离该注记，不向模型提出引用要求；见 [G11 spec](2026-10-25-rag-soul-section-spec.md) §3.6。）
 - **乙**：继续用面板投影 + 插件侧补丁。字段补齐依赖面板行，且每条都要在 TS 里维护一份映射，最容易再次漂移。
 
 ### 4.7 D7 默认值与消息口径（已拍甲，2026-10-25）

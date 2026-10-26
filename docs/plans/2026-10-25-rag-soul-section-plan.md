@@ -1,7 +1,7 @@
 # RAG 回答纪律注入（G11）Plan
 
 **Spec:** [2026-10-25-rag-soul-section-spec.md](../specs/2026-10-25-rag-soul-section-spec.md)
-**Status:** 实施完成并提交（2026-10-25；Task 0–5；`3eb0414` / `623a79a` / `4fd7653`）
+**Status:** 实施完成并提交（2026-10-25；Task 0–5；`3eb0414` / `623a79a` / `4fd7653`）；Task 6（D6）已实施、未提交
 **Date:** 2026-10-25
 
 **硬约束**：只改本仓插件面；不碰引擎、运行时包、面板；不碰并行会话文件；提交候令；英文 Conventional ASCII。
@@ -106,7 +106,24 @@
 
 ---
 
+## Task 6 — 呈现面：不向模型提出引用要求（D6）
+
+> 动到的文件：`src/retrieval_discipline.ts`、`src/tools.ts`、`tests/tool_gating.test.ts`。
+
+- [x] 测试先行：纪律文本断言改为不含任何引用措辞（`citation_no` / 引用编号 / 标注 / `[n]` / 片序 / 参考清单）；三处透传期望改为剥离后的 message；新增剥离用例（降级说明保留）、引擎注记原文锁、三路描述不含 `citation_no`。
+- [x] 删除纪律里的引用/呈现整条（原先的第 5 条），后续条款顺延；三路检索描述删去 `citation_no`——不要求标注，也不写反向禁令。
+- [x] `callTool` 用 `CITATION_NOTE` 剥掉引擎 message 末尾的「（引用编号 …，标注时照抄 citation_no）」，其余文字原样返回。
+- [x] 不改引擎、计数器、`citation_no` 字段、运行时包与面板。
+
+**实测**：
+- RED：定向 30 pass / 1 fail（文本）；GREEN 后 31/31。
+- neuter：去掉 `callTool` 的剥句 ⇒ 4 例转红（hybrid / graph / wiki / 降级说明），还原后全绿。
+- 门禁：定向 31/31；全量 296/296；`tsc` exit 0。引擎三处注记未改，测试锁其原文。
+
+---
+
 ## 收口
 
 - [x] spec Status / plan 实测回填。
 - [x] 提交链：`3eb0414` `feat(soul)` 纪律注入 → `623a79a` `fix(tools)` run_id 取实时回合相位 → `4fd7653` `docs(soul)` spec/plan；对外文档与 status 口径另起一笔 `docs(soul)` 跟进。
+- [x] D6 文档同步：spec §3.6、README、plugin-manual、equivalence、tool-parity 交叉修订（未提交）。

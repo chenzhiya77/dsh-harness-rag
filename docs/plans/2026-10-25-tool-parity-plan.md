@@ -63,7 +63,7 @@
   - 路由存在；未知 KB 404、无权限 403、无鉴权 401。
   - 判别联合：六个 `name` 可进；未知 `name` 422；多余字段 422；`top_k` 0/21、`hops` 3、`limit` 0/51 均 422。
   - 分派参数：monkeypatch `ks_module._hybrid_search_impl` / `_graph_search_impl` / `_wiki_search_impl`，断言 `doc_id` / `entity` / `hops` / `title` / `top_k` 原样传入；graph 的 `evidence_limit` 取配置（默认 8），不再取 `top_k`。
-  - 透传：impl 返回的 `results` / `entries` / `trace` / `message` 不被裁剪；message 保留「引用编号…照抄 `citation_no`」注记。
+  - 透传：impl 返回的 `results` / `entries` / `trace` / `message` 不被裁剪；message 保留「引用编号…照抄 `citation_no`」注记。（2026-10-25 D6 修订：宿主 `callTool` 剥离该注记，见 [G11 spec](2026-10-25-rag-soul-section-spec.md) §3.6。）
 - [x] 请求模型：六个扁平模型 + `name` Literal 判别；`run_id: str | None`（长度/字符集有界）；`extra="forbid"`；hybrid `query` 必填非空；graph `query` / `entity`、wiki `query` / `title`、read `doc_id` / `chunk_id` 均可缺——缺时由 impl 返回 200 引导语（与主树工具一致，不强行 422）。
 - [x] 路由：`POST /{kb_id}/tools`，复用 `_require_kb_access` / `_user_id`；工具级拒绝（无参数、未就绪、找不到）返回 200 + message；鉴权/库级错误保持 404/403。
 - [x] 服务 `run_tool(...)`：三路检索分派到现有 `_*_impl`，传 `self.store` / `self.vector_store` / `self.graph_store`；图谱配置参数抽 `_graph_search_kwargs(rag, evidence_limit)`，`recall-test` 与新方法共用；`recall-test` 的响应形状与测试不变。
