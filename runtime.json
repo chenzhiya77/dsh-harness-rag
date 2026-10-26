@@ -2,18 +2,18 @@
   "format": 1,
   "packs": {
     "win32-x64": {
-      "runtimeVersion": "0.1.0-2",
+      "runtimeVersion": "0.1.0-3",
       "engineVersion": "0.1.0",
       "engineCommit": "a4942966b",
       "pythonVersion": "3.12.13",
       "qdrantVersion": "1.20.0",
       "configVersion": 44,
       "urls": [
-        "https://github.com/chenzhiya77/dsh-harness-rag/releases/download/v0.1.0/harness-rag-runtime-win32-x64-0.1.0-2.zip"
+        "https://github.com/chenzhiya77/dsh-harness-rag/releases/download/v0.1.1/harness-rag-runtime-win32-x64-0.1.0-3.zip"
       ],
-      "size": 330283067,
-      "unpackedSize": 881202485,
-      "sha256": "05cc423b955e81a5591f9d6bb0ab0253e31f6c7aa4dd6276bae4160c5b0bd015"
+      "size": 331053658,
+      "unpackedSize": 882903724,
+      "sha256": "90421f0f071bc2772cfe645af9eb48ecf1b33c5c61cba3139c360f6d93aca745"
     }
   }
 }

@@ -27,7 +27,7 @@ Host 半在宿主世界注册 `hrag_*` 工具、面板数据桥与摄取后台�
 
 解析、切片、嵌入、索引、图谱、wiki、评测与存储全部在 knowledge 服务侧。默认由插件托管：运行时落在 `<root>/runtime/<version>/`（便携 Python、site-packages、engine 源码、Qdrant），数据落在 `<root>/state/`；`backendUrl` 非空时完全走外部服务，不下载、不起进程。
 
-运行时支持版本化升级：旧服务仍在运行时只后台准备新包，重启 DSH 才切换；新版本起不来会自动回到旧版，并在面板留下失败横幅与 `state/failed-<version>.json`。升级前先备份 `state/` 与 `config/`，详见操作手册的「升级与回滚」。
+运行时支持版本化升级：旧服务仍在运行时只后台准备新包，重启 DSH 才切换；新版本起不来会自动回到旧版，并在面板留下失败横幅与 `state/failed-<version>.json`。升级前先备份 `state/` 与 `config/`，详见操作手册的「升级与回滚」。新运行时只随对应插件版本的 `runtime.json` 发布：已装用户先把插件升级到 `v0.1.1`，既有升级链才会看到 `0.1.0-3`。
 
 **访问与安全边界**
 
@@ -42,7 +42,7 @@ Host 半在宿主世界注册 `hrag_*` 工具、面板数据桥与摄取后台�
 
 - **经 MinerU 解析**：`.pdf`、`.doc` / `.docx`、`.ppt` / `.pptx`、`.png` / `.jpg` / `.jpeg`。文档内的表格会归一为 GFM 表格；正文中抽出的图片由 VLM 生成说明，并保留在原文档位置就地渲染
 - **本地直读**（不走网络）：`.md` / `.markdown` / `.txt`
-- **表格**：`.csv` 始终可用；`.xlsx` / `.xls` / `.tsv` 由 `rag.table.enabled` 门控。统一归一为 GFM 表格——Excel 逐 sheet 一张表，`.csv` / `.tsv` 按分隔符解析；`.xlsx` 内嵌图片一并抽出（挂到锚点单元格、越界回退该 sheet 段尾），经 VLM 配文后随切片渲染
+- **表格**：`.csv` 始终可用；`.xlsx` / `.xls` / `.tsv` 由 `rag.table.enabled` 门控。统一归一为 GFM 表格——Excel 逐 sheet 一张表，`.csv` / `.tsv` 按分隔符解析；`.xlsx` 内嵌图片一并抽出（挂到锚点单元格、越界回退该 sheet 段尾），经 VLM 配文后随切片渲染。托管运行时已带解析 `.xlsx/.xls` 所需的 `python-calamine`；门控默认关闭，只能在 `<root>/config/config.yaml` 里设 `rag.table.enabled: true` 开启，面板不提供开关。外部模式（`make gateway`）需自行安装该包
 - **视频**：`.mp4` / `.mov` / `.mkv` / `.webm`，由 `rag.video.enabled` 门控。**ASR 默认在本地运行**（funasr / Paraformer，可切 whisper，均为进程内引擎、不依赖外部推理服务），也可改用转录服务档（`openai-audio` / `dashscope`）——服务档只处理 ≤5 分钟音频、更长自动回落本地引擎；镜头画面说明、关键帧屏幕文字与向量化走所配置的模型端点。ASR + 关键帧 + 分镜卡，产物以切片形式进入同一套检索。托管运行时**不含本地视频 ASR 依赖**（funasr / torch）：视频默认档需另装，或在功能模型设置里改用 ASR 服务档
 - **解析可接自建服务**：`rag.parse_provider` 默认 `mineru-cloud`（MinerU 官方 API）；改成 `mineru-local` 并填 `rag.parse_base_url` 即接**自建的 MinerU 服务**（对接上游 4.x 的 HTTP 契约，本仓按 4.0.7 验证：上传 → 建解析任务 → 轮询 → 取结果 zip；轻客户端形态，本机不跑模型推理；该服务本身不带鉴权，只应部署在内网）。**该地址云腿同样生效**：留空＝官方地址，填了就打到它。`rag.parse_tier` 可选 `flash` / `basic` / `standard` / `advanced` 指定解析档位，留空则由服务端决定（服务端自身默认 `standard`；`standard` / `advanced` 需要服务端装 torch）；云腿另有 `rag.parse_language`（文档语言包，缺省 `ch`，覆盖中英文）与 `rag.parse_model_version`（模型版本 `pipeline` / `vlm`，缺省 `vlm`）两个旋钮。换解析来源不影响表格归一化、图片落盘与就地渲染
 
@@ -160,14 +160,14 @@ AI 按实体资格自动沉淀「生成条目」；用户自建的「我的条�
 
 ## 🚀 快速开始
 
-GitHub 安装可用（钉 tag `v0.1.0`，不要跟 main）；npm 包尚未发布：
+GitHub 安装可用（钉 tag `v0.1.1`，不要跟 main）；npm 包尚未发布：
 
 ```sh
 # 本地目录（开发安装，改码即被读取）
 dsh plugin --profile <name> add link:<本仓绝对路径>
 
 # GitHub（钉 tag；运行时包从同仓 Release 下载）
-dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.0
+dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.1
 
 # npm（发布后可用）
 dsh plugin --profile <name> add dsh-harness-rag
@@ -176,7 +176,7 @@ dsh plugin --profile <name> add dsh-harness-rag
 三种方式装的是同一份插件代码，首次运行面完全一致。装完重启该 profile 的 DSH，打开右栏「知识库」tab：
 
 1. **确认位置** — 默认 `<DSH_HOME>/harness-rag`（`DSH_HOME` 缺省 `~/.dsh`），可点「更改…」选父目录，实际根为 `<父目录>/harness-rag`。
-2. **开始准备** — 下载运行时包（约 315 MB）并解压（约 840 MB），随后启动内置 Qdrant 与知识服务；首次约 1–2 分钟，之后启动为秒级。
+2. **开始准备** — 下载运行时包（约 316 MB）并解压（约 842 MB），随后启动内置 Qdrant 与知识服务；首次约 1–2 分钟，之后启动为秒级。
 3. **配置嵌入模型** — 未配置时点上传或拖入文件会被拦下并提示「去配置」；在「功能模型设置」里选嵌入模型后即可上传文档。
 
 平台：首期只提供 **Windows x64** 运行时包；其他平台安装后会在面板明确报「没有可用的运行时包」，此时改用外部服务（见操作手册）。
@@ -201,7 +201,7 @@ dsh plugin --profile <name> add dsh-harness-rag
 | 右栏「知识库」管理面板 | 已实装 |
 | 摄取后台任务 | 已实装 |
 | 运行时准备 / 就绪 / 重试 / 版本化升级 / 回滚 / 嵌入模型引导 | 已实装 |
-| GitHub 安装入口 | 已发布（v0.1.0） |
+| GitHub 安装入口 | 已发布（v0.1.1） |
 | npm 安装入口 | 待发布 |
 
 ## ⚖️ 归属与许可
