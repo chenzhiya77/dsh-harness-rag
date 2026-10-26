@@ -1,6 +1,6 @@
 # 运行时版本化升级、回滚与旧版清理 —— plan
 
-**Status:** 已实施（2026-10-26；Task 0–7 全落）
+**Status:** 已实施（2026-10-26；Task 0–8 全落）
 **Date:** 2026-10-25
 **配套 spec:** [../specs/2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md)
 
@@ -185,7 +185,7 @@
 - **清单/冲突/租约/同版本**：非法 JSON → `blocked`/`manifest_invalid`，当前 0.1.0-4 照用；current 手改 0.1.0-3 + 健康 service 0.1.0-4 → 回写 current/previous，无第二套栈；service 改 0.1.0-9（无 runtime）→ `blocked`/`state_version_conflict`，进程不变；A(upg) 持 lease、B(upg2) target 0.1.0-5 → `blocked`/`upgrade_blocked_by_instance`，A 与 current 不变；target==current==0.1.0-4 → 无 `upgrade.json`、不清理、current 不变。
 - **验收中发现并修复**：`selectPack` 在 `urls=[]` 时先判 `pack_missing`，本地 `DSH_HARNESS_RAG_PACK` 覆盖无法生效，正常升级路径起不来；`selectPack`/`loadPack` 增 `allowUnpublished`（仅本地覆盖时接受已构建未发布条目，仍拒 `0.0.0-0` 与 0 size），bridge 在覆盖非空时传入；`tests/runtime_manifest.test.ts` 增 3 例。另记一条环境边角：陈旧 `lease.json` 的 pid 被无关 `bash.exe` 复用，曾误报 `upgrade_blocked_by_instance`，删陈旧租约后 `retry` 恢复；未改代码。
 - **门禁**：`tsc` 0 错；`node --check client.js` 过；`node --test tests/*.test.ts` **296/296**、fail 0；`engine/` `git status` 0 行；主树 `deer-flow` 脏面 mtime 为 10-06/10-10，属既有未提交面、本轮零新增；证据启动 token/auth cookie 已删除或脱敏，快照 token 为 `<redacted>`。
-- **未覆盖**：浏览器实点横幅/按钮（browser-use 被 DSH web 鉴权挡）；headless 实跑；无主残留（端口仍应答 + pid null，代码未实现）；90 秒超时真机（本轮走的是 `qdrant_exited` 立即失败）；`platform_unsupported`、并发 provision、`no_space`、清理删除失败的真机分支（均有单测，不宣称真机通过）。plan 原写的“复制 0.1.0-2 zip 改坏”以合成坏包替代；0.1.0-3/4/5 的“好版本”用已装目录复制/硬链接，正常 0.1.0-2 升级仍用真实 zip 与解压。
+- **未覆盖**：浏览器实点横幅/按钮（browser-use 被 DSH web 鉴权挡）；headless 实跑；无主残留（端口仍应答 + pid null；Task 8 已实现）；90 秒超时真机（本轮走的是 `qdrant_exited` 立即失败）；`platform_unsupported`、并发 provision、`no_space`、清理删除失败的真机分支（均有单测，不宣称真机通过）。plan 原写的“复制 0.1.0-2 zip 改坏”以合成坏包替代；0.1.0-3/4/5 的“好版本”用已装目录复制/硬链接，正常 0.1.0-2 升级仍用真实 zip 与解压。
 - 代码修复与 plan 回填按“修复/回填”两次提交收口；Task 7 的文档与提交链见下。
 
 ## Task 7 — 文档、回写与提交链
@@ -213,9 +213,26 @@
 - README/手册：README 增「版本化升级/回滚」段落与状态行；手册把「升级」改成完成态并新增「升级与回滚」节，覆盖准备/切换/回滚、配置确认、保留与清理、备份口径、五类横幅、租约/残留/provision 锁的手工处理、本地 pack 仅开发态。
 - 分发回写：spec §4.7 改为最终行为（不再写「先停旧版」），§7 的「不做版本化升级」改为已交付；plan Task 6 未闭合②标已闭合，归位行与历史回写行同步。
 - 本对回写：spec Status → 已实施；§5 增实测段；§8 的「无主残留」「手册超前」两行按实际更新；§3.2 的无主残留自动 blocked 标为实现偏差。
-- **偏差/未覆盖**：§5.8「端口仍应答但 pid 为 null ⇒ `upgrade_blocked_stale_instance`」代码未实现（当前健康应答走 adopt、端口被非本服务占用时目标换口）；Task 6 的浏览器实点、headless、90 秒超时真机、`platform_unsupported`/并发/`no_space`/清理删除失败真机仍未覆盖。手册已按实际写成手工清理，不宣称自动 blocked。
+- **偏差/未覆盖**：§5.8「端口仍应答但 pid 为 null ⇒ `upgrade_blocked_stale_instance`」当时未实现（2026-10-26 Task 8 已实现：健康实例照常 adopt、升级 blocked；单测覆盖、未真机）；Task 6 的浏览器实点、headless、90 秒超时真机、`platform_unsupported`/并发/`no_space`/清理删除失败真机仍未覆盖。手册已改为自动判定 + 手工清理。
 - **提交链实际**：Task 1 `36865c9`、Task 2 `946d192`、Task 3 `37b6095`、Task 4 `8a1732c`、Task 5 `8135daa`、Task 6 修复 `98523c1`、Task 6 验收 `233071e`、Task 7 文档 `ea3fef9`/`8e19766`。原计划的 6 笔不含 Task 2 协调者与 Task 6 修复/验收，按实际拆分为 9 笔。
 - **门禁**：文档改动后复跑 `tsc` 0、`node --test tests/*.test.ts` 296/296、`node --check client.js`；`engine/` 零 diff。Task 0 手册笔已单独提交 `ce6b327`。
+
+## Task 8 — 无主残留判定（2026-10-26 增量）
+
+> 动到的文件：`src/runtime/supervisor.ts`、`src/runtime/upgrade.ts`、`tests/runtime_upgrade.test.ts`、本对 spec/plan、`docs/plugin-manual.md`。
+
+- [x] `supervisor.ts` 导出 `probeTcpPort` 与 `leaseOwner`（`none|ours|foreign|stale`）；`leaseHeldByOther` 复用后者，语义不变。
+- [x] 协调者在准备/启动目标前判定：`service.json` 属于当前版本、`pid` 为 null、租约不存在或陈旧、知识服务端口仍应答 ⇒ 状态 `blocked`（`upgrade_blocked_stale_instance`），不准备、不切换；健康旧实例照常 `adopt` 保用，不猜 pid、不杀。
+- [x] 反例：租约属于本宿主（插件重载）、租约被存活的其他宿主持有（仍走 `upgrade_blocked_by_instance`）、`service.json` 带 pid、端口已关闭 ⇒ 不按无主残留处理。
+- [x] 单测 5 例（健康残留阻塞、不健康残留阻塞、端口关闭放行、本宿主租约不阻塞、带 pid 不误判）；禁用判定后前两例转红。
+- [x] spec §3.2/§5/§6/§7/§8 与手册同步：删「实现偏差」与「本版没有自动判定」。
+- [x] 门禁：`tsc` 0；`node --test tests/*.test.ts` **304/304**；`node --check client.js` 通过；`engine/` 零 diff。
+
+**实测（实施期回填）**：2026-10-26 实施完成。
+- 判定链：健康旧实例 `adopt` 后升级仍 `blocked`，库继续可用；不健康且端口应答时只置 `blocked`，不启动任何栈。仅当 pid 为空、端口应答、租约无存活持有者三者同时成立才阻塞；本宿主租约、外来活租约、带 pid、端口关闭均放行。
+- 单测：`tests/runtime_upgrade.test.ts` 增 5 例；neuter（`if (false && staleAnswer)`）后 2 例阻塞用例转红、3 例反例保持绿；还原后升级+supervisor 66/66。
+- 门禁：`tsc` 0；全量 **304/304**、fail 0；`node --check client.js` 通过；`engine/` 零 diff。
+- 未覆盖：真机残留（需制造端口应答但 pid 为 null 的孤儿）仍走单测；面板实点「旧实例残留」横幅未做。
 
 ## 验收对应
 
@@ -228,7 +245,7 @@
 | 5 手动重试 | Task 3 / Task 5 / Task 6 | 真机 `snap-04`、`snap-05` |
 | 6 配置版本确认 | Task 4 / Task 6 | 真机 `snap-06/07/08`；headless 未跑 |
 | 7 租约与旧实例 | Task 2 / Task 6 | 真机 `snap-13` |
-| 8 无主残留 | Task 2 / Task 6 | 未实现/未真机（spec §5 实测） |
+| 8 无主残留 | Task 8 | 单测 5 例（阻塞 2＋反例 3）；未真机 |
 | 9 清理 | Task 4 / Task 6 | 真机 `snap-05/08` |
 | 10 并发准备 | Task 4 / Task 6 | 单测 |
 | 11 空间不足与本地包 | Task 4 / Task 6 | 本地包真机；`no_space` 单测 |
