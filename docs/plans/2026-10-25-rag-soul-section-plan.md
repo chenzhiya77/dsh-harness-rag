@@ -1,7 +1,7 @@
 # RAG 回答纪律注入（G11）Plan
 
 **Spec:** [2026-10-25-rag-soul-section-spec.md](../specs/2026-10-25-rag-soul-section-spec.md)
-**Status:** 实施完成（2026-10-25；Task 0–5；未提交）
+**Status:** 实施完成并提交（2026-10-25；Task 0–5；`3eb0414` / `623a79a` / `4fd7653`）
 **Date:** 2026-10-25
 
 **硬约束**：只改本仓插件面；不碰引擎、运行时包、面板；不碰并行会话文件；提交候令；英文 Conventional ASCII。
@@ -63,7 +63,7 @@
 - [x] `node --check client.js`（未改，仅回归）。
 - [x] 不重建运行时包（G11 只改 Host TS，随插件分发；托管冒烟用工作树链接）。
 
-**实测**：定向 29/29；全量 241/241（此前 231，+10）；`tsc` exit 0；`node --check client.js` 通过。`pnpm run typecheck` 仍因私有包 `@deepseek-ai/dsh-type-meta` 404 不可用，沿用直调 `tsc`。运行时包未重建（`runtime.json` 未动）。
+**实测**：定向 29/29；全量 241/241（此前 231，+10）；`tsc` exit 0；`node --check client.js` 通过。`pnpm run typecheck` 仍因私有包 `@deepseek-ai/dsh-type-meta` 404 不可用，沿用直调 `tsc`。运行时包未重建（`runtime.json` 未动）。Task 5 取源改动后复跑：定向 **28/28**、全量 **269/269**（并行会话的运行时测试同批增长）。
 
 
 ---
@@ -109,4 +109,4 @@
 ## 收口
 
 - [x] spec Status / plan 实测回填。
-- [ ] 提交链候令（预计 3 笔：`feat(soul)` 纪律注入、`fix(tools)` run_id 改取实时回合相位、`docs(soul)` spec/plan）。
+- [x] 提交链：`3eb0414` `feat(soul)` 纪律注入 → `623a79a` `fix(tools)` run_id 取实时回合相位 → `4fd7653` `docs(soul)` spec/plan；对外文档与 status 口径另起一笔 `docs(soul)` 跟进。

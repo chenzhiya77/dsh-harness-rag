@@ -1,6 +1,6 @@
 # RAG 回答纪律注入（G11）Spec
 
-**Status:** 已实施（2026-10-25；验收 1–7 已证；未提交）
+**Status:** 已实施并提交（2026-10-25；验收 1–7 已证；代码 `3eb0414` + `623a79a`，文档 `4fd7653`）
 **Date:** 2026-10-25
 **来源:** 2026-10-25 工具面对齐（[tool-parity-spec](2026-10-25-tool-parity-spec.md) §1 等价边界）登记的 G11：主树 RAG agent 有 `agents/assets/rag/SOUL.md` 承载回答纪律，插件只挂工具、未注入等价纪律。
 **配套 plan:** [../plans/2026-10-25-rag-soul-section-plan.md](../plans/2026-10-25-rag-soul-section-plan.md)

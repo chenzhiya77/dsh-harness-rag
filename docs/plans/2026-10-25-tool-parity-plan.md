@@ -1,7 +1,7 @@
 # 工具面对齐修复 Plan
 
 **Spec:** [2026-10-25-tool-parity-spec.md](../specs/2026-10-25-tool-parity-spec.md)
-**Status:** 实施完成（2026-10-25；源码与运行时包 `0.1.0-2`；托管冒烟的模型自主调用未覆盖；G11 另案）
+**Status:** 实施完成（2026-10-25；源码与运行时包 `0.1.0-2`；托管冒烟已用本地 fake 模型覆盖六件真实调用；G11 已另案实施并提交）
 **Date:** 2026-10-25
 **Architecture:** 引擎新增 `POST /api/knowledge-bases/{kb_id}/tools`，按 `name` 分派六件工具，直接复用主树同名 `_*_impl`；引用编号由引擎按 `(user_id, run_id)` 的有界缓存持有，三路共用。插件 `src/tools.ts` 从 `recall-test` 适配改为工具端点：逐工具参数、原生载荷 + `kb_id` / `kb_name` 回显、`run_id` 取宿主 agent 的实时回合相位（`exec.agent.phase.turn`）。面板 `recall-test` 一字不动。`engine/UPSTREAM.md` 改为分叉记录，三份对外文档同批对齐；引擎改完重建运行时包。
 
@@ -213,9 +213,9 @@
   - 增「本地分叉记录」表（本笔：工具端点 + 引用 run 缓存 + 文档工具语义）；
   - 更新节改为「人工 diff / cherry-pick，不再 `git archive` 覆盖」；保留测试与运行时包重建步骤。
 - [x] `engine/README.md`：「源码快照」改「后端目录」；API 表增 `/api/knowledge-bases/{kb_id}/tools`；归属节保持「知识库能力本项目自行实现，DeerFlow harness 框架部分按 MIT」。
-- [x] 根 `README.md`：§检索 / §文档感知逐句核——连续编号、每篇 `doc_id`、单文档检索、`chunk_id` 中心窗、`truncated`、清单计数；README 已写「回答策略与引用呈现由 DSH 模型/宿主决定」，G11 落地前保持这句，不升级为强制纪律。
+- [x] 根 `README.md`：§检索 / §文档感知逐句核——连续编号、每篇 `doc_id`、单文档检索、`chunk_id` 中心窗、`truncated`、清单计数；README 已写「回答策略与引用呈现由 DSH 模型/宿主决定」，G11 落地前保持这句，不升级为强制纪律。（2026-10-25 晚 G11 落地后已改为写明检索纪律。）
 - [x] `docs/plugin-manual.md` 工具表：六件逐条改（graph `entity` / `hops`；wiki `title`；list docs `doc_id` + 计数；read `chunk_id` 单参 + `truncated`；list entries 计数）。
-- [x] `docs/equivalence.md`：§151「等价（同一端点）」改为「工具端点复用同一实现，面板召回测试独立」；§152/153 同步 read / list 描述；增一行「回答纪律（SOUL）｜主树 SOUL.md｜插件未注入｜G11 另案」。
+- [x] `docs/equivalence.md`：§151「等价（同一端点）」改为「工具端点复用同一实现，面板召回测试独立」；§152/153 同步 read / list 描述；增一行「回答纪律（SOUL）｜主树 SOUL.md｜插件未注入｜G11 另案」。（该行与注已于 G11 落地后更新为「已移植检索纪律」。）
 - [x] 扫描：工具 description 无 `recall-test`；`UPSTREAM.md` 无 `byte-identical / 不得编辑 / re-vendor`；README 无未实现承诺。
 - [x] 门禁：`grep` 三条扫描 + 逐文件 diff 复核；`node --check client.js`（未改）。
 
@@ -225,7 +225,7 @@
 - **engine README**：开头改「后端源码目录，2026-10-25 起在本仓分叉维护」；API 表 `knowledge-bases` 行加入 `tools`；懒加载说明改为检索 / 文档工具按需导入。
 - **根 README**：三路检索补 `doc_id` / `chunk_index` / 实体 / `citation_no` 与 wiki 全文 / `title` 直取；文档感知改原生 `doc_id`、`chunk_id` 单参中心窗、`truncated`、聚合计数、200 + message 拒绝；状态表标「六件契约与主树工具组对齐」。静态计数更新为 25 TS / 5,830 行、104 个引擎测试文件 / 1,571 个 `def test_`。
 - **插件手册**：六件逐条改参数与返回；补 `/tools` 端点与回合编号说明；构建命令改为显式 `--engine-commit`。
-- **等价表**：§11 三行升级为「等价」（工具端点直通主树实现 / 原生字段 / 单参 `chunk_id` / 拒绝语义）；新增 SOUL 行标 G11 另案；注改为「工具面已对齐，整体 RAG agent 不记等价」。
+- **等价表**：§11 三行升级为「等价」（工具端点直通主树实现 / 原生字段 / 单参 `chunk_id` / 拒绝语义）；新增 SOUL 行标 G11 另案；注改为「工具面已对齐，整体 RAG agent 不记等价」。（G11 落地后该行改标「已移植检索纪律」，注同步。）
 - **扫描**：`byte-identical / 不得编辑 / 重新 vendor / 源码快照 / 仍需 doc_id / 面板原样 / 仅 120 / 不空返 / 快照布局 / 主键 id` 全部零命中；`node --check client.js` 通过。
 
 ---
@@ -278,7 +278,7 @@
 - **提交链调整**：原计划把引擎端点与引用缓存拆成两笔；但两处改动在 `knowledge_service.py` 内交织，拆笔需要重构中间版本，回滚价值低于出错风险，故合并为第 1 笔（端点 + 引用缓存 + 文档分派 + 三份测试）；其余按引擎文档 / 产品文档 / plan / 运行时包 / 收口分笔，共 7 笔。仓无 remote，不推送。
 - **提交**：`c78e80b` → `36c76fc` → `26cdab7` → `84f037d` → `a494296` → `486973c` → 本文件所在提交；工作树只剩并行会话的 `THIRD_PARTY_NOTICES.md` / `client.js` / `package.json` / `scripts/build-runtime-pack.mjs`。
 - **Task 7**：运行时包 `0.1.0-2` 已构建并回填 `runtime.json`；托管冒烟完成「包可启动 + 插件工具真 HTTP 往返」，模型自主调用与语义检索未在沙箱覆盖，如实记在 Task 7。
-- **未完成/另案**：G11 SOUL 回答纪律；沙箱模型冒烟。
+- **收尾状态（2026-10-25 晚）**：G11 SOUL 回答纪律已实施并提交（`3eb0414` / `623a79a` / `4fd7653`，见 [G11 plan](2026-10-25-rag-soul-section-plan.md)）；沙箱模型冒烟已由本地 fake 提供方补齐（六件真实调用、同回合引用连续、未绑定无注入），真实模型冒烟仍另案。
 
 ---
 

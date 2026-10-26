@@ -1,6 +1,6 @@
 # 工具面对齐（六件 `hrag_*` 与主树 RAG 工具组逐项对齐） —— spec
 
-**Status:** 已实施（2026-10-25；D1 B；D2–D8 甲已落地；运行时包 `0.1.0-2` 已重建；G11 另案；托管模型冒烟部分覆盖）
+**Status:** 已实施（2026-10-25；D1 B；D2–D8 甲已落地；运行时包 `0.1.0-2` 已重建；G11 已另案实施；托管冒烟已用本地 fake 模型覆盖六件真实调用）
 **Date:** 2026-10-25
 **来源:** 10-25 工具盘点。用户记得有 7 件工具、当前插件只有 5 件；补上 `hrag_list_wiki_entries` 后确认主树 RAG 工具组实为 6 件（三检索 + 文档两件 + 百科条目清单），数量已对齐。随后按主树逐项核对参数、字段、默认值与拒绝语义，发现工具面仍有一批缺口。
 **承接:** [2026-10-23-binding-tool-gating-spec.md](2026-10-23-binding-tool-gating-spec.md)（六件工具的挂载与 `kb_id` 解析）、根 README 产品页「检索 / 文档感知」两节、`docs/equivalence.md` §工具面。
@@ -15,7 +15,7 @@
 
 **不包含**：新增第七件工具（主树只有六件）、改工具名、面板召回测试的展示形态、检索算法 / 图谱 / 百科生成逻辑、Qdrant 与模型配置。
 
-**等价边界（重要）**：本 spec 只对齐六件工具的**可观察契约**，不等于整个 RAG agent 与主树等价。主树的 RAG agent 另有 `agents/assets/rag/SOUL.md` 承载回答纪律（强制向量保底、分路路由、补检上限、读取限次、引用与拒答规范）；插件当前没有等价注入（`src/index.ts:16` 只 `inject = ['tools']`）。README 现在明确写「回答策略与引用呈现由 DSH 模型/宿主决定」，所以 G11 是**能力差距**，不是文档超前；另案决定是否移植，不在本 spec 的 D2–D8 内。
+**等价边界（重要）**：本 spec 只对齐六件工具的**可观察契约**，不等于整个 RAG agent 与主树等价。主树的 RAG agent 另有 `agents/assets/rag/SOUL.md` 承载回答纪律（强制向量保底、分路路由、补检上限、读取限次、引用与拒答规范）；该纪律已由 G11 以 agent 级 `systemPrompt.section` 单独移植（[rag-soul-section spec](2026-10-25-rag-soul-section-spec.md)），不在本 spec 的 D2–D8 内。人格、深度检索模式与附图处理仍不移植——「等价」仍只覆盖工具契约与检索纪律。
 
 ## 2. 现状与根因
 
@@ -63,7 +63,7 @@
 | G8 | P2 | `hrag_list_documents` 返回面板原始行（`id` 而非 `doc_id`），无状态计数 / message | `knowledge_bases.py:235-239`、`knowledge_service.py:289-306`、`models.py:49-63`；主树 `knowledge_documents_tool.py:28-56` | README 的 `doc_id` / 诚实计数承诺不成立 |
 | G9 | P2 | 默认值与参数边界不齐：wiki 默认 5（主树 3）；graph 暴露 `top_k`（主树无此参数，证据上限取配置 8，当前 recall-test 把 `top_k` 当证据上限、默认 5）；read 描述 20/50 但省略 `limit` 时实际走面板默认 50/上限 200；`doc_id` 描述挂在三路而只有向量真支持；条目清单消息恒列零计数 | `src/tools.ts:99-104`、`:209-216`；`engine/config.example.yaml:2684`；主树 `wiki_search_tool.py:142`、`wiki_entries_tool.py:50-52` | 模型按描述调用会得到与预期不同的条数 / 上限；参数表继续误导 |
 | G10 | P2 | 文档现状已按旧行为保守描述（并列明差距）；修复后需同批回写为完成态，避免旧差距句残留 | `README.md` §检索 / §文档感知、`docs/plugin-manual.md` 工具表、`docs/equivalence.md` §工具面（当前版本已按现状写） | 代码修好而文档仍写「需 doc_id / 面板行」，用户按文档使用会低估能力 |
-| G11 | P1 | **回答纪律没有载体**：主树 RAG agent 用 `agents/assets/rag/SOUL.md` 强制向量保底、分路路由、补检上限、读取限次（同篇 ≤4 窗口 / 单轮 ≤6 次）、引用与拒答规范；插件只挂了工具，没有等价 prompt 注入 | 主树 `backend/packages/harness/deerflow/agents/assets/rag/SOUL.md`；`src/index.ts:16`；`README.md` §检索「回答侧：插件只提供检索工具与证据」 | 工具齐了但模型不会按主树纪律使用；「等价」只能停在工具契约层（另案，见 §7） |
+| G11 | P1 | **回答纪律没有载体**：主树 RAG agent 用 `agents/assets/rag/SOUL.md` 强制向量保底、分路路由、补检上限、读取限次（同篇 ≤4 窗口 / 单轮 ≤6 次）、引用与拒答规范；插件只挂了工具，没有等价 prompt 注入 | 主树 `backend/packages/harness/deerflow/agents/assets/rag/SOUL.md`；`src/index.ts:16`；审计时 `README.md` §检索的回答侧说明 | 工具齐了但模型不会按主树纪律使用（审计时）；G11 已实施——绑定会话注入检索纪律段，见 [rag-soul-section spec](2026-10-25-rag-soul-section-spec.md) |
 
 ## 4. 设计
 
@@ -193,7 +193,7 @@
 - 不为旧工具输出保留兼容层（尚未发布，没有外部消费者）。
 - 不把主树的 agent 运行时、IM、调度器、工作台前端带进来。
 - 不再从 `harness-rag` 整树 re-vendor；上游同步只做人工比对的补丁。
-- 不移植 `SOUL.md` 回答纪律（G11 另案；若拍移植，另立 spec，DSH 有 agent 级 `systemPrompt.section` 注册面）。
+- 不移植 `SOUL.md` 的完整人格 / 深度检索 / 附图段；检索纪律已由 G11 单独移植（见 [rag-soul-section spec](2026-10-25-rag-soul-section-spec.md)），不进本 spec 的 D2–D8。
 
 ## 8. 风险与待核
 
@@ -204,10 +204,10 @@
 - **面板与工具共用 `_impl`**：引擎改 impl 的 message / 默认值时，`recall-test` 也会跟着变；面板已有 `_user_facing` 剥离编号注记、显式传 `top_k`，验收第 11 条守住面板形状。
 - **运行时包重建**：引擎改动必须重建包才能在托管模式生效；包体约 330 MB，构建与上传成本高。发布前把重建与版本递增列入 plan 的收尾任务。
 - **上游分叉漂移**：`harness-rag` 后续若继续演进，不能再用 `git archive` 覆盖；`engine/UPSTREAM.md` 必须记录基准 commit 与分叉状态，避免下一次误覆盖。
-- **G11 是最大的剩余差异**：即使 D2–D8 全取甲，模型仍只在工具描述层面得到路由提示，没有主树的强制回答纪律。若把「等价」对外说成整个 RAG agent，会让文档重新超前；G11 另案拍板前，文档只能承诺工具契约。
+- **回答侧的剩余差异**：G11 已注入检索纪律（2026-10-25），模型是否真按纪律行事只能在真实模型会话里观察（托管冒烟用的是本地 fake 模型，只验机制）；人格 / 深度检索 / 附图仍不移植，文档仍不能把整个 RAG agent 记为等价。
 
 ## 9. 排期
 
 D2–D8 拍板后立配套 plan。预计顺序：Task 0 宿主回合面核实 → 引擎工具端点与请求模型 → 引用计数器缓存 → 读取面 / 清单面 → 插件六件适配 → 契约与回归测试 → 文档同步 → 运行时包重建与验收。具体 Task 划分、门禁命令与提交链以 plan 为准。
 
-G11（回答纪律注入）另案：若拍移植，建议单独一份 spec，复用宿主 agent 级 `systemPrompt.section`，在绑定会话挂 `hrag_*` 工具的同时挂纪律段、解绑即卸；不要塞进本 spec，否则工具面验收与回答行为验收会混在一起。
+G11（回答纪律注入）已按此建议落地：单独 spec/plan，复用宿主 agent 级 `systemPrompt.section`，绑定挂工具时同挂纪律段、解绑即卸（[spec](2026-10-25-rag-soul-section-spec.md)、[plan](../plans/2026-10-25-rag-soul-section-plan.md)）。

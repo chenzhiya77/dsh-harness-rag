@@ -113,7 +113,7 @@ Host 半在宿主世界注册模型可见工具，并负责运行时的准备、
 | `hrag_read_document` | 按 `doc_id` 分页读切片，或只给 `chunk_id` 读中心窗；超长片 `truncated`、拒绝走 200 + message |
 | `hrag_list_wiki_entries` | 百科条目清单（标题 / 状态 / 更新时间 + 诚实计数） |
 
-六件工具提交到 `POST /api/knowledge-bases/{kb_id}/tools`，由引擎按 `name` 分派到与主树同名的实现；`citation_no` 按会话回合连续分配，三路检索共用一套编号。回答策略与引用呈现仍由宿主决定（SOUL 纪律另案）。
+六件工具提交到 `POST /api/knowledge-bases/{kb_id}/tools`，由引擎按 `name` 分派到与主树同名的实现；`citation_no` 按会话回合连续分配，三路检索共用一套编号。绑定会话同时挂一段检索纪律（`harness-rag:retrieval-discipline`：向量保底 / 图谱路 / 语料边界 / 读取上限 / 引用照抄 / 拒答 / 不解释过程）；人格与呈现仍由宿主决定，SOUL 的其余段落不移植。
 
 完整的功能面等价对照（工作台原型 ↔ 本插件，含差异理由）见 [equivalence.md](equivalence.md)。
 
