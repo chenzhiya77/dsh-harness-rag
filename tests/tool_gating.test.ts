@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createToolGating } from '../src/tool_gating.ts'
 import { buildToolDefinitions } from '../src/tools.ts'
+import { DISCIPLINE_SECTION, RETRIEVAL_DISCIPLINE } from '../src/retrieval_discipline.ts'
 import type { Binding, BindingsStore } from '../src/bindings.ts'
 import type { Config } from '../src/settings.ts'
 
@@ -29,9 +30,18 @@ function fakeStore(table: Record<string, Binding>): BindingsStore {
   }
 }
 
-function fakeAgent(id: string) {
+interface FakeSection {
+  name: string
+  order: number
+  text: string
+  complete?: boolean
+}
+
+function fakeAgent(id: string, options: { failSection?: boolean } = {}) {
   const registered: string[] = []
   const disposed: string[] = []
+  const sections: FakeSection[] = []
+  const disposedSections: string[] = []
   const agent = {
     id,
     ctx: {
@@ -43,9 +53,18 @@ function fakeAgent(id: string) {
           }
         },
       },
+      systemPrompt: {
+        section(section: FakeSection) {
+          if (options.failSection) throw new Error('section rejected')
+          sections.push(section)
+          return () => {
+            disposedSections.push(section.name)
+          }
+        },
+      },
     },
   }
-  return { agent, registered, disposed }
+  return { agent, registered, disposed, sections, disposedSections }
 }
 
 test('definitions: the six knowledge tools, by name', () => {
@@ -112,6 +131,101 @@ test('forget: agent disposal drops the record without running disposers', () => 
   const again = fakeAgent('s1')
   assert.equal(gating.mountAgent(again.agent), true)
   assert.equal(again.registered.length, TOOL_NAMES.length)
+})
+
+test('section: a bound agent gets the discipline section appended, not replacing the prompt', () => {
+  const gating = createToolGating({ config: CONFIG, bindings: fakeStore({ s1: { kbId: 'kb', updatedAt: NOW } }) })
+  const first = fakeAgent('s1')
+  assert.equal(gating.mountAgent(first.agent), true)
+  assert.equal(first.sections.length, 1)
+  const [section] = first.sections
+  assert.equal(section.name, DISCIPLINE_SECTION.name)
+  assert.equal(section.order, DISCIPLINE_SECTION.order)
+  assert.equal(section.text, RETRIEVAL_DISCIPLINE)
+  assert.ok(!('complete' in section))
+})
+
+test('section: an unbound agent gets no section', () => {
+  const gating = createToolGating({ config: CONFIG, bindings: fakeStore({}) })
+  const first = fakeAgent('s2')
+  assert.equal(gating.mountAgent(first.agent), false)
+  assert.equal(first.sections.length, 0)
+})
+
+test('section: repeats add no second section', () => {
+  const gating = createToolGating({ config: CONFIG, bindings: fakeStore({ s1: { kbId: 'kb', updatedAt: NOW } }) })
+  const first = fakeAgent('s1')
+  gating.mountAgent(first.agent)
+  gating.mountAgent(first.agent)
+  assert.equal(first.sections.length, 1)
+})
+
+test('section: unbinding disposes the section with the tools', () => {
+  const gating = createToolGating({ config: CONFIG, bindings: fakeStore({ s1: { kbId: 'kb', updatedAt: NOW } }) })
+  const first = fakeAgent('s1')
+  gating.mountAgent(first.agent)
+  assert.equal(gating.unmountSession('s1'), true)
+  assert.deepEqual(first.disposedSections, [DISCIPLINE_SECTION.name])
+  assert.deepEqual(first.disposed.slice().sort(), TOOL_NAMES)
+})
+
+test('section: one agent unbinding leaves the other section in place', () => {
+  const gating = createToolGating({
+    config: CONFIG,
+    bindings: fakeStore({ s1: { kbId: 'kb', updatedAt: NOW }, s2: { kbId: 'kb2', updatedAt: NOW } }),
+  })
+  const one = fakeAgent('s1')
+  const two = fakeAgent('s2')
+  gating.mountAgent(one.agent)
+  gating.mountAgent(two.agent)
+  gating.unmountSession('s1')
+  assert.deepEqual(one.disposedSections, [DISCIPLINE_SECTION.name])
+  assert.deepEqual(two.disposedSections, [])
+  assert.equal(two.sections.length, 1)
+})
+
+test('section: agent disposal runs no disposer (the scope already unwound)', () => {
+  const gating = createToolGating({ config: CONFIG, bindings: fakeStore({ s1: { kbId: 'kb', updatedAt: NOW } }) })
+  const first = fakeAgent('s1')
+  gating.mountAgent(first.agent)
+  gating.forgetAgent('s1')
+  assert.deepEqual(first.disposedSections, [])
+})
+
+test('section: rebinding after unbind re-registers the section', () => {
+  const gating = createToolGating({ config: CONFIG, bindings: fakeStore({ s1: { kbId: 'kb', updatedAt: NOW } }) })
+  const first = fakeAgent('s1')
+  gating.mountAgent(first.agent)
+  gating.unmountSession('s1')
+  const again = fakeAgent('s1')
+  assert.equal(gating.mountAgent(again.agent), true)
+  assert.equal(again.sections.length, 1)
+  assert.deepEqual(first.disposedSections, [DISCIPLINE_SECTION.name])
+})
+
+test('section: a rejected section unwinds the tools and rethrows', () => {
+  const gating = createToolGating({ config: CONFIG, bindings: fakeStore({ s1: { kbId: 'kb', updatedAt: NOW } }) })
+  const first = fakeAgent('s1', { failSection: true })
+  assert.throws(() => gating.mountAgent(first.agent), /section rejected/)
+  assert.deepEqual(first.disposed.slice().sort(), TOOL_NAMES)
+  assert.deepEqual(gating.mounted(), [])
+  assert.deepEqual(first.sections, [])
+})
+
+test('discipline text: names the six tools, the citation field, the read bounds and the refusal', () => {
+  for (const name of TOOL_NAMES) assert.ok(RETRIEVAL_DISCIPLINE.includes(`\`${name}\``), name)
+  assert.ok(RETRIEVAL_DISCIPLINE.includes('citation_no'))
+  assert.ok(RETRIEVAL_DISCIPLINE.includes('最多 4 个窗口'))
+  assert.ok(RETRIEVAL_DISCIPLINE.includes('最多 6 次'))
+  assert.ok(RETRIEVAL_DISCIPLINE.includes('知识库中没有找到相关内容'))
+})
+
+test('discipline text: no bare main-tree tool names, no persona', () => {
+  const bare = /(?<![_A-Za-z])(hybrid_search|graph_search|wiki_search|list_knowledge_documents|read_knowledge_document|list_wiki_entries)/
+  assert.equal(bare.test(RETRIEVAL_DISCIPLINE), false)
+  for (const word of ['知识库问答专家', '深度检索模式', 'SOUL']) {
+    assert.ok(!RETRIEVAL_DISCIPLINE.includes(word), word)
+  }
 })
 
 interface RecordedRequest {

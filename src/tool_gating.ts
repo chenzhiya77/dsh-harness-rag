@@ -1,20 +1,24 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { BindingsStore } from './bindings.ts'
 import type { Config } from './settings.ts'
+import { DISCIPLINE_SECTION, RETRIEVAL_DISCIPLINE } from './retrieval_discipline.ts'
 import { buildToolDefinitions } from './tools.ts'
 
 /** The slice of a live agent this module touches: its identity and the scoped
- * tool registry. Structural on purpose so tests and hosts can fake it. */
+ * tool and prompt registries. Structural on purpose so tests and hosts can
+ * fake it. */
 export interface GatingAgent {
   readonly id: string
   readonly ctx: {
     tools: { register(definition: unknown): () => void }
+    systemPrompt: { section(section: { name: string; order: number; text: string }): () => void }
   }
 }
 
 export interface ToolGating {
-  /** Register the six knowledge tools into one agent's scope; true when this
-   * call mounted them (bound agents only, once per agent). */
+  /** Mount one bound agent: the six knowledge tools plus the retrieval
+   * discipline section, both in that agent's scope. True when this call
+   * mounted them (bound agents only, once per agent). */
   mountAgent(agent: GatingAgent): boolean
   /** Run the disposers and drop the record; true when the session was mounted. */
   unmountSession(sessionId: string): boolean
@@ -25,7 +29,10 @@ export interface ToolGating {
 
 /** Bound sessions own the knowledge tools; unbound ones see none. The layer is
  * the calling agent scope, so a session's tools are visible to that session
- * alone and unwind with it (spec 2026-10-23 binding-tool-gating D1/D2). */
+ * alone and unwind with it (spec 2026-10-23 binding-tool-gating D1/D2). The
+ * discipline section rides the same scope and the same transaction: tools and
+ * prompt either both mount or neither does (spec 2026-10-25 rag-soul-section
+ * D1/D2). */
 export function createToolGating(options: { config: Config; bindings: BindingsStore }): ToolGating {
   const definitions = buildToolDefinitions(options.config, options.bindings)
   const live = new Map<string, Array<() => void>>()
@@ -36,6 +43,7 @@ export function createToolGating(options: { config: Config; bindings: BindingsSt
       const disposers: Array<() => void> = []
       try {
         for (const definition of definitions) disposers.push(agent.ctx.tools.register(definition))
+        disposers.push(agent.ctx.systemPrompt.section({ ...DISCIPLINE_SECTION, text: RETRIEVAL_DISCIPLINE }))
       } catch (error) {
         for (const off of disposers.reverse()) {
           try {

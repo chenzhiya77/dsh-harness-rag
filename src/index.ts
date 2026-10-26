@@ -25,8 +25,9 @@ export function apply(ctx: Context, config: Config = defaultConfig): void {
   // service; external mode keeps the settings as they are. Every consumer
   // below reads the effective config, never the raw one.
   const runtime = createRuntimeBridge(ctx as unknown as BridgeHost, merged)
-  // Knowledge tools mount per bound session (agent scope), never globally
-  // (spec 2026-10-23 binding-tool-gating D1/D2).
+  // Knowledge tools and the retrieval-discipline prompt section mount per
+  // bound session (agent scope), never globally (spec 2026-10-23
+  // binding-tool-gating D1/D2, spec 2026-10-25 rag-soul-section D1/D2).
   const gating = registerToolGating(ctx, runtime.effective, bindings)
   // The panel's data seam (T3 Task 1): a named route on the browser-facing
   // web server, skipped where that service does not exist (headless).
