@@ -3,7 +3,7 @@
 **Spec:** [2026-10-25-tool-parity-spec.md](../specs/2026-10-25-tool-parity-spec.md)
 **Status:** 实施完成（2026-10-25；源码与运行时包 `0.1.0-2`；托管冒烟的模型自主调用未覆盖；G11 另案）
 **Date:** 2026-10-25
-**Architecture:** 引擎新增 `POST /api/knowledge-bases/{kb_id}/tools`，按 `name` 分派六件工具，直接复用主树同名 `_*_impl`；引用编号由引擎按 `(user_id, run_id)` 的有界缓存持有，三路共用。插件 `src/tools.ts` 从 `recall-test` 适配改为工具端点：逐工具参数、原生载荷 + `kb_id` / `kb_name` 回显、`run_id` 从会话最后一个 `turn/start` 取。面板 `recall-test` 一字不动。`engine/UPSTREAM.md` 改为分叉记录，三份对外文档同批对齐；引擎改完重建运行时包。
+**Architecture:** 引擎新增 `POST /api/knowledge-bases/{kb_id}/tools`，按 `name` 分派六件工具，直接复用主树同名 `_*_impl`；引用编号由引擎按 `(user_id, run_id)` 的有界缓存持有，三路共用。插件 `src/tools.ts` 从 `recall-test` 适配改为工具端点：逐工具参数、原生载荷 + `kb_id` / `kb_name` 回显、`run_id` 取宿主 agent 的实时回合相位（`exec.agent.phase.turn`）。面板 `recall-test` 一字不动。`engine/UPSTREAM.md` 改为分叉记录，三份对外文档同批对齐；引擎改完重建运行时包。
 
 **硬约束**：只改 `E:\app\python\agent\dsh-harness-rag`；`engine/` 按 D1 B 可直接改，主树 `deer-flow` 只读零改动；不碰 `src/runtime/supervisor.ts` 与 `tests/runtime_supervisor.test.ts`（并行会话改动），不碰既有未提交的 `docs/plans/*`；`node_modules/`、`dist/`、运行时 zip 不纳入提交；token 与任何 `api_key` 不落日志、不进面板、不进提交面；DSH 整重启候令；提交候令；提交信息英文 Conventional ASCII；仓无 remote 不推送。
 
@@ -30,8 +30,8 @@
 
 > 动到的文件：无（探针在仓外，验后删除）。
 
-- [x] **宿主回合面**：真栈日志取证（`~/.dsh/sessions/.../session-a59b4afa…`）：`turn/start` 在 `seq=24` 带 `data.turn=2`，随后 `tool/call` 在 `seq=32` 带 `data.turn=2/step=1`；`Agent.session` 是公开的 `Session`，`Session.events` 是追加式快照；`dsh-tools` 的 Code Mode 分支直接用 `exec.agent.session.append(...)`，证明工具执行期 `exec.agent` 与 `session` 可读。取回合用从后往前找最后一个 `turn/start`。
-- [x] **回合缓存方案**：用 `WeakMap` 以 `agent.session` 对象为键缓存 `{ seq, turn }`；`Session.seq` 即日志长度，`events.length` 与之一致；每次从上次 `seq` 扫到末尾，取不到（维护任务 / 无事件）时 `run_id` 省略，引擎每次从 1 起。
+- [x] **宿主回合面**：真栈日志取证（`~/.dsh/sessions/.../session-a59b4afa…`）：`turn/start` 在 `seq=24` 带 `data.turn=2`，随后 `tool/call` 在 `seq=32` 带 `data.turn=2/step=1`；`dsh-tools` 的 Code Mode 分支直接用 `exec.agent.session.append(...)`，证明工具执行期 `exec.agent` 可读。（当时据本仓类型认定 `Session.events` 可读；随包运行时无此成员，最终取源见下方 2026-10-25 晚修订。）
+- [x] **回合缓存方案**：用 `WeakMap` 以 `agent.session` 对象为键缓存 `{ seq, turn }`；`Session.seq` 即日志长度，`events.length` 与之一致；每次从上次 `seq` 扫到末尾，取不到（维护任务 / 无事件）时 `run_id` 省略，引擎每次从 1 起。（**未采用**：运行时 `Session` 无 `events`；最终实现见下方取源修订。）
 - [x] **引擎 impl 面**：`_hybrid_search_impl`（`hybrid_search_tool.py:31`）、`_graph_search_impl`（`graph_search_tool.py:175`）、`_wiki_search_impl`（`wiki_search_tool.py:33`）、`_list_documents_impl` / `_read_document_impl`（`knowledge_documents_tool.py:28/97`）、`_list_wiki_entries_impl`（`wiki_entries_tool.py:25`）签名与默认值已核；均接受 `store` / `wiki_store` 注入，可直接复用，不复制算法。
 - [x] **runtime 依赖**：`resolve_kb_scope` 读 `runtime.context['kb_id']`，`resolve_runtime_user_id` 依次取 `server_info` / configurable / `context['user_id']` / ContextVar / 默认用户；`can_access` 只读；`SimpleNamespace(context={...})` 足够。
 - [x] **图谱配置**：`recall_test` 的 `_graph_call` 传 11 个配置项（`knowledge_service.py:1187-1211`）；`rag.graph_evidence_limit` 默认 8（`config.example.yaml:2684`）；抽 `_graph_search_kwargs(rag, evidence_limit)` 供 `recall-test` 与新方法共用。
@@ -46,7 +46,8 @@
 
 **实测（2026-10-25）**：
 
-- **宿主回合面**：从真实会话 `session-a59b4afa-a90c-47fe-b955-0c6ceefc2466` 解出的日志里，`{"type":"turn/start","seq":24,"data":{"turn":2}}` 先于同回合的 `{"type":"tool/call","seq":32,"data":{"turn":2,"step":1,…}}`；`Agent.session` / `Session.events` 为公开面，`dsh-tools/lib/index.js:1216-1264` 在工具执行里直接读 `exec.agent.session`。⇒ `run_id = <agent.id>:<turn>` 可在工具 body 内同步取到；无需新事件订阅。
+- **宿主回合面**：从真实会话 `session-a59b4afa-a90c-47fe-b955-0c6ceefc2466` 解出的日志里，`{"type":"turn/start","seq":24,"data":{"turn":2}}` 先于同回合的 `{"type":"tool/call","seq":32,"data":{"turn":2,"step":1,…}}`；`dsh-tools/lib/index.js:1216-1264` 在工具执行里直接读 `exec.agent.session`。⇒ `run_id = <agent.id>:<turn>` 可在工具 body 内同步取到；无需新事件订阅。
+  - **2026-10-25 晚修订**：本行原写「`Session.events` 为公开面」——那是按本仓 `node_modules` 类型（dsh-session 0.0.1-rc.5）读出的；随包运行时是 0.2.1-rc.2，`Session` 已无 `events`，同步事件读取整体标弃用。最终取源改为 `exec.agent.phase.turn`（证据见 [G11 plan](2026-10-25-rag-soul-section-plan.md) Task 5）。
 - **引擎测试环境**：`engine/backend` 没有 `.venv`；用兄弟仓 `E:\app\python\agent\harness-rag\backend\.venv\Scripts\python.exe`（3.12.13）＋ `PYTHONPATH=engine/backend/packages/harness;engine/backend` ＋ `DEER_FLOW_CONFIG_PATH=E:/app/python/agent/harness-rag/config.yaml` 跑通 `test_recall_test_api.py` 22/22；不新建 venv（C/E 盘均紧张）。
 - **插件环境**：并行会话的安装/裁剪一度把 `@deepseek-ai/cordis` 移入 `node_modules/.ignored`，导致 `node --test` 报模块缺失；从 `.ignored` 恢复后全量 220/220。`pnpm run typecheck` 会触发 `pnpm install` 并因私有 `@deepseek-ai/dsh-type-meta` 404 失败；`.ignored` 里有 `typescript` 与 `@types`，但 `@deepseek-ai/cordis` 缺 `lib/types`（编译包剥离了 `.d.ts`）。Task 4 前从 DSH `app.asar` 的根级 `@deepseek-ai/cordis` 补 `.d.ts` 或用临时 tsconfig `paths` 映射；门禁记录实际命令。
 - **图谱配置**：`recall_test` 的 `_graph_call` 逐项传 `reranker/per_entity_cap/per_edge_cap/hop0_guarantee/evidence_limit/graph_rerank/rerank_threshold/hop_penalty/neighbor_min_score/max_expanded_nodes/hub_degree_threshold`；工具端点抽同一助手，`evidence_limit=rag.graph_evidence_limit`。
@@ -132,22 +133,22 @@
 - [x] 先改测试：
   - 六件工具都请求 `/api/knowledge-bases/{kb}/tools`；body 的 `name` 映射为 `hybrid_search` / `graph_search` / `wiki_search` / `list_knowledge_documents` / `read_knowledge_document` / `list_wiki_entries`。
   - hybrid 带 `query` / `top_k` / `doc_id`；graph 带 `query` / `entity` / `hops` 且无 `top_k` / `doc_id`；wiki 带 `query` / `title` / `top_k`；read 允许只传 `chunk_id`；list 两件无参数。
-  - `run_id`：假 exec 的 `agent.session.events` 含 `turn/start` ⇒ `run_id='<session>:<turn>'`；下一回合变号；无事件 / 无 agent / 回合已 `turn/end` ⇒ 省略。
+  - `run_id`：假 exec 的 `agent.phase.turn` 是当前回合 ⇒ `run_id='<session>:<turn>'`；下一回合变号；无 turn / 无 agent ⇒ 省略。
   - 输出：`results` / `entries` / `trace` / `score_source` / `doc` / `truncated` 原样透传；`kb_id` / `kb_name` 仍回显；不再产出 `query` / `score_type` / `elapsed_ms`。
   - 参数 schema：hybrid `query` 必填；graph `query` / `entity` / `hops` 均非必填；wiki `query` / `title` / `top_k` 均非必填；read `doc_id` / `chunk_id` 非必填；list 两件无参数。缺寻址参数时由引擎返回 200 引导语，不由 schema 拒绝。
 - [x] `src/tools.ts`：
   - 用 `callTool(config, kbId, name, args, signal, runId)` 替换 `recallTest`；删 `segmentOf` / `envelopeMeta` / 旧 `clampTopK`。
   - 逐工具 `parameters` 与 description（主树语义；去掉 `recall-test` 字样；graph/wiki 不再宣称 `doc_id`）。
   - 输出 schema 按 spec §4.6；保留 `kb_id` / `kb_name`。
-  - `citationRunId(exec)`：`WeakMap` 以 `exec.agent.session` 为键，从上次 `seq` 扫到 `events.length`，维护最后一个 `turn/start` 的 `turn`；取不到返回 `undefined`。
+  - `citationRunId(exec)`：读 `exec.agent.phase.turn`，`run_id = <agent.id>:<turn>`；取不到返回 `undefined`（2026-10-25 晚据托管冒烟改定，见 [G11 plan](2026-10-25-rag-soul-section-plan.md) Task 5）。
 - [x] 门禁：`node --test tests/tool_gating.test.ts`；`node --test tests/*.test.ts`；`pnpm run typecheck`。
 
 **实测（实施期回填）**：
 - **RED**：新测试先对 HEAD 版 `src/tools.ts` 跑（临时 `git show` 覆盖，trap 原样还原，前后 sha1 一致）⇒ **9 failed / 9 passed**：端点、`run_id`、五条透传、绑定回显、参数 schema 全部转红；旧版无 `run_id` 的两条用例按预期仍绿。
 - **GREEN**：`tests/tool_gating.test.ts` **19/19**；插件全量 `node --test tests/*.test.ts` **231/231**。
-- **实现**：新增 `callTool`（`/tools` + `name` + 原生参数；`run_id` 有则附）与 `citationRunId`（`WeakMap<session, {seq,turn}>`，从上次 `seq` 扫到 `events.length`，只认 `turn/start` 的数值 `turn`；`run_id = <agent.id>:<turn>`）；六件工具改为原生载荷原地构造（不再有 `segmentOf` / `envelopeMeta` / `clampTopK` / 面板字段），输出 schema 按 spec §4.6，`kb_id` / `kb_name` 仍回显。
+- **实现**：新增 `callTool`（`/tools` + `name` + 原生参数；`run_id` 有则附）与 `citationRunId`（`run_id = <agent.id>:<turn>`，取宿主实时回合相位）；六件工具改为原生载荷原地构造（不再有 `segmentOf` / `envelopeMeta` / `clampTopK` / 面板字段），输出 schema 按 spec §4.6，`kb_id` / `kb_name` 仍回显。
 - **neuter**（`citationRunId` 恒返回 `undefined`）⇒ 回合复用用例转红（1 failed / 18 passed），还原后 19/19。
-- **回合关闭边界**：扫描同时处理 `turn/end`（同号则清空当前回合）——已完成回合后的维护调用不复用旧编号；新增「omitted after the turn closes」用例。
+- **回合关闭边界**：扫描同时处理 `turn/end`（同号则清空当前回合）——已完成回合后的维护调用不复用旧编号；新增「omitted after the turn closes」用例。（该用例随后续取源改动合并进「无 turn ⇒ 省略」，见 G11 plan Task 5。）
 - **typecheck**：`pnpm run typecheck` 仍被 pnpm 预跑 `install` 挡住（私有 `@deepseek-ai/dsh-type-meta` 404）；绕过方式为 `node_modules/.bin/tsc -p tsconfig.json --pretty false`。初次运行只报四处 `@deepseek-ai/cordis` 缺声明；从 npmmirror 取同版本 4.0.5 tarball，把包内 `lib/types` 补回本地 `node_modules/@deepseek-ai/cordis/lib/types`（gitignored 环境修复）后，完整 tsc **exit 0**。`src/tools.ts` 单文件 tsc 亦 exit 0。
 - **并行改动**：并行会话曾在 `src/tools.ts` 删去一句提到 DeerFlow 的注释；本次重写保持「不出现 DeerFlow」的口径。
 - **未做**：`node --check client.js` 与真栈调用留给 Task 5。
