@@ -1,7 +1,7 @@
 # RAG 回答纪律注入（G11）Plan
 
 **Spec:** [2026-10-25-rag-soul-section-spec.md](../specs/2026-10-25-rag-soul-section-spec.md)
-**Status:** 实施完成并提交（2026-10-25；Task 0–5；`3eb0414` / `623a79a` / `4fd7653`）；Task 6（D6）已实施、未提交
+**Status:** 实施完成并提交（2026-10-25；Task 0–5；`3eb0414` / `623a79a` / `4fd7653`）；Task 6（D6）已实施并提交（`3cd27f6` / `5482a2f`）
 **Date:** 2026-10-25
 
 **硬约束**：只改本仓插件面；不碰引擎、运行时包、面板；不碰并行会话文件；提交候令；英文 Conventional ASCII。
@@ -126,4 +126,4 @@
 
 - [x] spec Status / plan 实测回填。
 - [x] 提交链：`3eb0414` `feat(soul)` 纪律注入 → `623a79a` `fix(tools)` run_id 取实时回合相位 → `4fd7653` `docs(soul)` spec/plan；对外文档与 status 口径另起一笔 `docs(soul)` 跟进。
-- [x] D6 文档同步：spec §3.6、README、plugin-manual、equivalence、tool-parity 交叉修订（未提交）。
+- [x] D6 文档同步：spec §3.6、README、plugin-manual、equivalence、tool-parity 交叉修订（已提交 `5482a2f`）。
