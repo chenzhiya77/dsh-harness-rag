@@ -202,12 +202,19 @@ test('load: missing or malformed runtime.json is manifest_invalid', () => {
   if (!malformed.ok) assert.equal(malformed.code, 'manifest_invalid')
 })
 
-test('load: the shipped runtime.json is valid and its win32-x64 pack is unpublished', () => {
+test('load: the shipped runtime.json is valid and its win32-x64 pack is published', () => {
   const read = readManifest({ packageRoot: PACKAGE_ROOT })
   assert.equal(read.ok, true)
   const loaded = loadPack({ packageRoot: PACKAGE_ROOT, platform: 'win32-x64' })
-  assert.equal(loaded.ok, false)
-  if (!loaded.ok) assert.equal(loaded.code, 'pack_missing')
+  assert.equal(loaded.ok, true)
+  if (loaded.ok) {
+    assert.equal(loaded.pack.runtimeVersion, '0.1.0-2')
+    assert.equal(loaded.pack.configVersion, 44)
+    assert.ok(loaded.pack.urls.length > 0)
+    assert.ok(loaded.pack.urls.every((url) => url.startsWith('https://')))
+    assert.ok(loaded.pack.size > 0 && loaded.pack.unpackedSize > 0)
+    assert.match(loaded.pack.sha256, /^[0-9a-f]{64}$/)
+  }
 })
 
 // ── current.json ────────────────────────────────────────────────────────────

@@ -160,17 +160,17 @@ AI 按实体资格自动沉淀「生成条目」；用户自建的「我的条�
 
 ## 🚀 快速开始
 
-本仓尚未发布（npm 包与 GitHub 仓库地址在发布前不可用）；当前从本地目录安装：
+GitHub 安装可用（钉 tag `v0.1.0`，不要跟 main）；npm 包尚未发布：
 
 ```sh
 # 本地目录（开发安装，改码即被读取）
 dsh plugin --profile <name> add link:<本仓绝对路径>
 
-# 发布后：npm 包名
-dsh plugin --profile <name> add dsh-harness-rag
+# GitHub（钉 tag；运行时包从同仓 Release 下载）
+dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.0
 
-# 发布后：GitHub 仓库地址（建议钉 tag 或 commit，不要跟 main）
-dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.git#<tag-or-commit>
+# npm（发布后可用）
+dsh plugin --profile <name> add dsh-harness-rag
 ```
 
 三种方式装的是同一份插件代码，首次运行面完全一致。装完重启该 profile 的 DSH，打开右栏「知识库」tab：
@@ -201,7 +201,8 @@ dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.g
 | 右栏「知识库」管理面板 | 已实装 |
 | 摄取后台任务 | 已实装 |
 | 运行时准备 / 就绪 / 重试 / 版本化升级 / 回滚 / 嵌入模型引导 | 已实装 |
-| npm 与 GitHub 安装入口 | 待首次发布 |
+| GitHub 安装入口 | 已发布（v0.1.0） |
+| npm 安装入口 | 待发布 |
 
 ## ⚖️ 归属与许可
 
