@@ -143,16 +143,21 @@
 
 > 动到的文件：`src/runtime/ops.ts`、`src/kb_proxy.ts`、`client.js`、`tests/runtime_ops.test.ts`、`tests/runtime_upgrade.test.ts`；必要时 `src/runtime/bridge.ts`。
 
-- [ ] `RuntimeStatusPayload` 增加 `upgrade`、`targetVersion?`、`previousVersion?`；`phase` 接受 `switching`；`statusPayload` 在 `ready` 时也带 `upgrade`（失败/待启用/待确认/阻塞）；首次 `runtime/status`（`ensure()` 之前）的 `version` 先读 current，不能先填目标版本。
-- [ ] 注册 `runtime/upgrade`，只接受 `confirm|retry`，加入 `PRIVILEGED_OPS`（与 `runtime/configure`/`pickDirectory`/`retry` 同等待遇）；非法 action 返回 `bad_request`（HTTP 400），`confirm`/`retry` 的前置状态不满足时返回 `upgrade_state`（HTTP 409），不改文件；在 `kb_proxy` 的 `errorStatus` 落映射，或用带 `status` 的 `HarnessRagError`。有旧服务时动作只改状态等下次启动，没有旧服务时可让本次激活直接启动目标。
-- [ ] 面板：升级横幅只在 `phase==='ready'` 时显示，放在锚点告警与嵌入引导之前；文案按 spec §3.6；`ready`/`blocked` 可关闭，`needs_confirmation`/`failed` 不可关闭；`failed` 提供「下次启动重试」与日志路径复制；`pending` 有进度时显示百分比。
-- [ ] 轮询：`phase==='ready'` 且 `upgrade.state` 不在 `pending|blocked` 才停；否则继续每秒拉。
-- [ ] `runtimeStageKey` 增加 `switching`；zh/en 词条：`rt.phase.switching`、`rt.upgradePending`、`rt.upgradeReady`、`rt.upgradeConfirm`、`rt.upgradeConfirmAction`、`rt.upgradeFailed`、`rt.upgradeRetry`、`rt.upgradeBlocked`；不新增 tab。
-- [ ] `ready` + 升级失败仍显示六 tab，只用横幅；只有 `phase='error'`（含回滚失败）走现有错误卡。
-- [ ] 单测/检查：op 前置状态、400/409 映射与文件副作用；payload 字段；首次 status 版本是 current；`node --check client.js`；浏览器/沙箱能起时实点横幅与按钮，不能起时如实记录「仅静态/单测覆盖」。
-- [ ] 门禁：`tsc` 0 错；`node --test` 全绿；`node --check client.js` 通过。
+- [x] `RuntimeStatusPayload` 增加 `upgrade`、`targetVersion?`、`previousVersion?`；`phase` 接受 `switching`；`statusPayload` 在 `ready` 时也带 `upgrade`（失败/待启用/待确认/阻塞）；首次 `runtime/status`（`ensure()` 之前）的 `version` 先读 current，不能先填目标版本。
+- [x] 注册 `runtime/upgrade`，只接受 `confirm|retry`，加入 `PRIVILEGED_OPS`（与 `runtime/configure`/`pickDirectory`/`retry` 同等待遇）；非法 action 返回 `bad_request`（HTTP 400），`confirm`/`retry` 的前置状态不满足时返回 `upgrade_state`（HTTP 409），不改文件；在 `kb_proxy` 的 `errorStatus` 落映射，或用带 `status` 的 `HarnessRagError`。有旧服务时动作只改状态等下次启动，没有旧服务时可让本次激活直接启动目标。
+- [x] 面板：升级横幅只在 `phase==='ready'` 时显示，放在锚点告警与嵌入引导之前；文案按 spec §3.6；`ready`/`blocked` 可关闭，`needs_confirmation`/`failed` 不可关闭；`failed` 提供「下次启动重试」与日志路径复制；`pending` 有进度时显示百分比。
+- [x] 轮询：`phase==='ready'` 且 `upgrade.state` 不在 `pending|blocked` 才停；否则继续每秒拉。
+- [x] `runtimeStageKey` 增加 `switching`；zh/en 词条：`rt.phase.switching`、`rt.upgradePending`、`rt.upgradeReady`、`rt.upgradeConfirm`、`rt.upgradeConfirmAction`、`rt.upgradeFailed`、`rt.upgradeRetry`、`rt.upgradeBlocked`；不新增 tab。
+- [x] `ready` + 升级失败仍显示六 tab，只用横幅；只有 `phase='error'`（含回滚失败）走现有错误卡。
+- [x] 单测/检查：op 前置状态、400/409 映射与文件副作用；payload 字段；首次 status 版本是 current；`node --check client.js`；浏览器/沙箱能起时实点横幅与按钮，不能起时如实记录「仅静态/单测覆盖」。
+- [x] 门禁：`tsc` 0 错；`node --test` 全绿；`node --check client.js` 通过。
 
-**实测（实施期回填）**：
+**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+- 载荷：`RuntimeStatusPayload` 增 `upgrade`/`targetVersion`/`previousVersion`；`statusPayload` 把协调者 view 的 `upgrade` 原样带出（ready 下的 failed/ready/needs_confirmation/blocked 都会显示），`version` 仍先读 current、ready view 为准；`switching` 相位在 Task 2 已入 `RuntimePhase`。
+- op：`runtime/upgrade` 加入 `PRIVILEGED_OPS` 与 runtime op 表；只接受 `confirm|retry`，非法 action 抛 `bad_request`；协调者的 `upgrade_state` 被转成 `RuntimeOpError`，`kb_proxy` 的 `RuntimeOpError` 分支按 `upgrade_state→409`、其余 `→400` 返回。`confirm` 只写 `confirmedConfigVersion`；`retry` 清失败记录并重跑决策（旧服务在则不切，旧服务不在可本次启动目标）。
+- 面板：zh/en 增 `rt.phase.switching` 与 8 条升级词条＋原因映射；`runtimeStageKey` 认 `switching`；轮询在 `ready` 且升级状态非 `pending/blocked` 时停；横幅置于锚点告警之前，ready/blocked 可关，needs_confirmation/failed 不可关，failed 带「下次启动重试」与复制日志，pending 带百分比。
+- 检查：`tsc` 0 错；`runtime_ops` 26/26；全量 290/290；`node --check client.js` 通过。
+- 未做：没有起浏览器实点横幅/按钮（需要重启 DSH 加载新 `client.js`，候令），本轮只到静态检查与单测；`runtime/upgrade` 返回 `statusPayload`，不触发嵌入探针。
 
 ## Task 6 — 真机验收
 

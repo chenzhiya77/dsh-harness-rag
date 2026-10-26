@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { defaultConfig } from '../src/settings.ts'
 import { HarnessRagError } from '../src/http.ts'
-import { checkPrivilegedRequest } from '../src/kb_proxy.ts'
+import { checkPrivilegedRequest, PRIVILEGED_OPS } from '../src/kb_proxy.ts'
 import {
   configureRuntime,
   ensureRuntimeFromPanel,
@@ -14,6 +14,7 @@ import {
   retryRuntime,
   RuntimeOpError,
   statusPayload,
+  upgradeRuntime,
   type PickerKind,
   type RuntimeOpsDeps,
 } from '../src/runtime/ops.ts'
@@ -23,7 +24,7 @@ import type { RuntimePhase } from '../src/runtime/supervisor.ts'
 const VERSION = '2.1.0-1'
 
 function fakeSupervisor(phase: RuntimePhase = 'idle') {
-  const calls = { ensure: 0, retry: 0 }
+  const calls = { ensure: 0, retry: 0, confirm: 0 }
   const view: RuntimeStatusView = {
     phase,
     adopted: false,
@@ -33,6 +34,7 @@ function fakeSupervisor(phase: RuntimePhase = 'idle') {
   }
   return {
     calls,
+    view,
     status: () => view,
     ensure: async () => {
       calls.ensure += 1
@@ -40,6 +42,10 @@ function fakeSupervisor(phase: RuntimePhase = 'idle') {
     },
     retry: async () => {
       calls.retry += 1
+      return view
+    },
+    confirm: () => {
+      calls.confirm += 1
       return view
     },
   }
@@ -140,6 +146,25 @@ test('status: a ready supervisor reports its running version over current.json',
   const payload = statusPayload(f.deps)
 
   assert.equal(payload.version, VERSION)
+})
+
+test('status: the upgrade view and target version flow through', () => {
+  const f = fixture()
+  f.supervisor.view.targetVersion = VERSION
+  f.supervisor.view.previousVersion = '2.0.0-1'
+  f.supervisor.view.upgrade = {
+    state: 'ready',
+    fromVersion: '2.0.0-1',
+    targetVersion: VERSION,
+    configVersionChanged: false,
+    requiresConfirmation: false,
+  }
+
+  const payload = statusPayload(f.deps)
+
+  assert.equal(payload.targetVersion, VERSION)
+  assert.equal(payload.previousVersion, '2.0.0-1')
+  assert.equal(payload.upgrade?.state, 'ready')
 })
 
 test('status: a recorded root that vanished asks for a location', () => {
@@ -286,6 +311,37 @@ test('retry: triggers one retry and reports the current status', () => {
   assert.equal(payload.phase, 'error')
 })
 
+test('upgrade op: an unknown action is bad_request', async () => {
+  const f = fixture()
+
+  await assert.rejects(
+    () => upgradeRuntime(f.deps, { action: 'nope' }),
+    (error: unknown) => error instanceof RuntimeOpError && error.kind === 'bad_request',
+  )
+})
+
+test('upgrade op: confirm and retry reach the coordinator', async () => {
+  const confirmFixture = fixture()
+  await upgradeRuntime(confirmFixture.deps, { action: 'confirm' })
+  assert.equal(confirmFixture.supervisor.calls.confirm, 1)
+
+  const retryFixture = fixture()
+  await upgradeRuntime(retryFixture.deps, { action: 'retry' })
+  assert.equal(retryFixture.supervisor.calls.retry, 1)
+})
+
+test('upgrade op: a coordinator state error stays upgrade_state', async () => {
+  const f = fixture()
+  f.supervisor.confirm = () => {
+    throw Object.assign(new Error('no confirmation is pending'), { kind: 'upgrade_state' })
+  }
+
+  await assert.rejects(
+    () => upgradeRuntime(f.deps, { action: 'confirm' }),
+    (error: unknown) => error instanceof RuntimeOpError && error.kind === 'upgrade_state',
+  )
+})
+
 test('ensure: the panel starts provisioning unless it needs a location', () => {
   const f = fixture()
   ensureRuntimeFromPanel(f.deps)
@@ -324,6 +380,7 @@ test('panel status: the embedding probe only runs once the service is ready', as
 const kindOf = (kind: string) => (error: unknown) => error instanceof HarnessRagError && error.info.kind === kind
 
 test('guard: privileged ops require a JSON body', () => {
+  assert.equal(PRIVILEGED_OPS.has('runtime/upgrade'), true)
   assert.throws(() => checkPrivilegedRequest({ host: '127.0.0.1:2026' }), kindOf('unsupported_media_type'))
   assert.throws(
     () => checkPrivilegedRequest({ 'content-type': 'text/plain', host: '127.0.0.1:2026' }),

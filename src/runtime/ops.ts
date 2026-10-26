@@ -11,7 +11,7 @@ import {
 } from './location.ts'
 import { configDir, defaultRoot, downloadsDir, logsDir, runtimeRoot, stateDir } from './paths.ts'
 import type { PortPlan } from './ports.ts'
-import { readLogTail, type RuntimeStatusView } from './supervisor.ts'
+import { readLogTail, type RuntimeStatusView, type RuntimeUpgradeView } from './supervisor.ts'
 import type { DownloadProgress } from './download.ts'
 
 export type PickerKind = 'native' | 'browse' | 'none'
@@ -32,6 +32,7 @@ export interface RuntimeStatusPayload {
   targetVersion?: string
   /** The version the current one replaced, when a switch has happened. */
   previousVersion?: string
+  upgrade?: RuntimeUpgradeView
   ports?: PortPlan
   progress?: DownloadProgress
   logTail?: string
@@ -50,7 +51,12 @@ export interface RuntimeOpsDeps {
   headless: () => boolean
   picker: () => PickerKind
   pick: () => Promise<string | null>
-  supervisor: () => { status(): RuntimeStatusView; ensure(): Promise<RuntimeStatusView>; retry(): Promise<RuntimeStatusView> } | null
+  supervisor: () => {
+    status(): RuntimeStatusView
+    ensure(): Promise<RuntimeStatusView>
+    retry(): Promise<RuntimeStatusView>
+    confirm?(): unknown
+  } | null
   version: string
   pack: () => Pick<RuntimePack, 'size' | 'unpackedSize'> | null
   needsEmbeddingConfig: () => Promise<boolean>
@@ -121,6 +127,7 @@ export function statusPayload(deps: RuntimeOpsDeps): RuntimeStatusPayload {
     if (view.phase === 'ready') payload.version = view.runtimeVersion
     if (view.previousVersion) payload.previousVersion = view.previousVersion
     if (view.targetVersion) payload.targetVersion = view.targetVersion
+    if (view.upgrade) payload.upgrade = view.upgrade
     payload.ports = view.ports
     payload.progress = view.progress
     payload.logTail = view.logTail || readLogTail(root) || undefined
@@ -197,6 +204,32 @@ export function pickDirectory(
 export function retryRuntime(deps: RuntimeOpsDeps): RuntimeStatusPayload {
   const managed = deps.supervisor()
   if (managed) void managed.retry()
+  return statusPayload(deps)
+}
+
+/** `runtime/upgrade`: confirm a changed-config upgrade or clear a failed one. */
+export async function upgradeRuntime(
+  deps: RuntimeOpsDeps,
+  body: { action?: unknown },
+): Promise<RuntimeStatusPayload> {
+  const action = body.action
+  if (action !== 'confirm' && action !== 'retry') {
+    throw new RuntimeOpError('bad_request', 'action must be "confirm" or "retry"')
+  }
+  const managed = deps.supervisor()
+  if (!managed) throw new RuntimeOpError('upgrade_state', 'the runtime is not managed')
+  if (action === 'confirm') {
+    if (!managed.confirm) throw new RuntimeOpError('upgrade_state', 'confirmation is not available')
+    try {
+      managed.confirm()
+    } catch (error) {
+      const kind = typeof error === 'object' && error !== null && 'kind' in error ? String(error.kind) : ''
+      if (kind) throw new RuntimeOpError(kind, error instanceof Error ? error.message : String(error))
+      throw error
+    }
+  } else {
+    await managed.retry()
+  }
   return statusPayload(deps)
 }
 

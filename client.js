@@ -85,6 +85,22 @@ window.__ModuleLoader__.load({
       'rt.phase.extracting': '正在解压运行时…',
       'rt.phase.preparing': '正在检查运行时…',
       'rt.phase.starting': '正在启动本地服务…',
+      'rt.phase.switching': '正在切换运行时版本…',
+      'rt.upgradePending': '正在准备新版本 {0}…',
+      'rt.upgradeReady': '新版本 {0} 已就绪，重启 DSH 后启用。',
+      'rt.upgradeConfirm': '新版本 {0} 会改变配置格式；升级前请备份 state/ 与 config/。',
+      'rt.upgradeConfirmAction': '确认升级（重启后生效）',
+      'rt.upgradeFailed': '升级到 {0} 失败，已回到 {1}。',
+      'rt.upgradeRetry': '下次启动重试',
+      'rt.upgradeBlocked': '新版本 {0} 暂时无法启用。',
+      'rt.upgradeReason.lease': '旧实例仍被占用',
+      'rt.upgradeReason.stale': '旧实例残留',
+      'rt.upgradeReason.conflict': '版本状态不一致',
+      'rt.upgradeReason.pack': '运行时包不可用',
+      'rt.upgradeReason.space': '磁盘空间不足',
+      'rt.upgradeReason.provision': '另一进程正在准备',
+      'rt.upgradeReason.manifest': '运行时包校验失败',
+      'rt.upgradeReason.other': '准备失败',
       'rt.errorTitle': '本地知识服务未能启动',
       'rt.errorStage': '未通过阶段：{0}',
       'rt.retry': '重试',
@@ -990,6 +1006,22 @@ window.__ModuleLoader__.load({
       'rt.phase.extracting': 'Unpacking the runtime…',
       'rt.phase.preparing': 'Checking the runtime…',
       'rt.phase.starting': 'Starting the local service…',
+      'rt.phase.switching': 'Switching the runtime version…',
+      'rt.upgradePending': 'Preparing version {0}…',
+      'rt.upgradeReady': 'Version {0} is ready; restart DSH to enable it.',
+      'rt.upgradeConfirm': 'Version {0} changes the config format; back up state/ and config/ first.',
+      'rt.upgradeConfirmAction': 'Confirm upgrade (applies after restart)',
+      'rt.upgradeFailed': 'Upgrade to {0} failed; rolled back to {1}.',
+      'rt.upgradeRetry': 'Retry on next start',
+      'rt.upgradeBlocked': 'Version {0} cannot start yet.',
+      'rt.upgradeReason.lease': 'the old instance still holds the lease',
+      'rt.upgradeReason.stale': 'a stale old instance is still answering',
+      'rt.upgradeReason.conflict': 'the version state is inconsistent',
+      'rt.upgradeReason.pack': 'the runtime pack is unavailable',
+      'rt.upgradeReason.space': 'there is not enough disk space',
+      'rt.upgradeReason.provision': 'another process is preparing it',
+      'rt.upgradeReason.manifest': 'the runtime pack failed validation',
+      'rt.upgradeReason.other': 'preparation failed',
       'rt.errorTitle': 'The local knowledge service could not start',
       'rt.errorStage': 'Failed at: {0}',
       'rt.retry': 'Retry',
@@ -3261,6 +3293,7 @@ window.__ModuleLoader__.load({
      * 下载器细阶段（download/verify/extract）细化 preparing。 */
     function runtimeStageKey(runtime) {
       if (!runtime) return 'rt.phase.preparing'
+      if (runtime.phase === 'switching') return 'rt.phase.switching'
       if (runtime.phase === 'starting') return 'rt.phase.starting'
       const progress = runtime.progress
       if (progress && progress.phase === 'download') return 'rt.phase.downloading'
@@ -20967,6 +21000,8 @@ window.__ModuleLoader__.load({
       const [runtimeCopied, setRuntimeCopied] = React.useState(false)
       const [embedBannerOff, setEmbedBannerOff] = React.useState(false)
       const [anchorWarnOff, setAnchorWarnOff] = React.useState(false)
+      const [upgradeReadyOff, setUpgradeReadyOff] = React.useState(false)
+      const [upgradeBlockedOff, setUpgradeBlockedOff] = React.useState(false)
       const [connectHint, setConnectHint] = React.useState(false)
       const runtimeLoadedRef = React.useRef(false)
 
@@ -21014,7 +21049,11 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         if (!runtime || runtime.mode === 'external') return undefined
         const phase = runtime.phase
-        if (phase === 'ready' || phase === 'error' || phase === 'needs_location') return undefined
+        if (phase === 'error' || phase === 'needs_location') return undefined
+        if (phase === 'ready') {
+          const upgradeState = runtime.upgrade && runtime.upgrade.state
+          if (upgradeState !== 'pending' && upgradeState !== 'blocked') return undefined
+        }
         const timer = window.setTimeout(refreshRuntime, RUNTIME_POLL_MS)
         return () => window.clearTimeout(timer)
       }, [runtime, refreshRuntime])
@@ -21443,6 +21482,15 @@ window.__ModuleLoader__.load({
         if (runtimeBusy) return
         setRuntimeBusy(true)
         callOp('runtime/retry', {})
+          .then((payload) => setRuntime(payload))
+          .catch((error) => showToast(errorDetail(error), { error: true }))
+          .finally(() => setRuntimeBusy(false))
+      }
+
+      const runUpgradeAction = (action) => {
+        if (runtimeBusy) return
+        setRuntimeBusy(true)
+        callOp('runtime/upgrade', { action })
           .then((payload) => setRuntime(payload))
           .catch((error) => showToast(errorDetail(error), { error: true }))
           .finally(() => setRuntimeBusy(false))
@@ -21954,6 +22002,76 @@ window.__ModuleLoader__.load({
       // 拖拽反馈只在可落时亮（有库且面板就绪；无库落下＝先建库 toast，不亮）。
       const dragFeedbackOn = dragActive && phase === 'ready' && Boolean(kbId)
 
+      const upgradeReasonKey = (code) => {
+        if (code === 'upgrade_blocked_by_instance') return 'rt.upgradeReason.lease'
+        if (code === 'upgrade_blocked_stale_instance') return 'rt.upgradeReason.stale'
+        if (code === 'state_version_conflict') return 'rt.upgradeReason.conflict'
+        if (code === 'pack_missing' || code === 'platform_unsupported' || code === 'manifest_invalid') return 'rt.upgradeReason.pack'
+        if (code === 'no_space') return 'rt.upgradeReason.space'
+        if (code === 'provision_held') return 'rt.upgradeReason.provision'
+        if (code === 'manifest_mismatch') return 'rt.upgradeReason.manifest'
+        return 'rt.upgradeReason.other'
+      }
+
+      const upgradeBanner = (() => {
+        if (!runtime || runtime.mode !== 'managed' || runtime.phase !== 'ready' || !runtime.upgrade) return null
+        const upgrade = runtime.upgrade
+        if (upgrade.state === 'ready' && upgradeReadyOff) return null
+        if (upgrade.state === 'blocked' && upgradeBlockedOff) return null
+        const target = String(upgrade.targetVersion || runtime.targetVersion || '')
+        const from = String(upgrade.fromVersion || runtime.previousVersion || '')
+        const progress = upgrade.progress
+        const percent =
+          progress && progress.total > 0 ? Math.min(100, Math.round((progress.received / progress.total) * 100)) : null
+        const button = (label, onClick) =>
+          h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline hrag-rt-bannerbtn', onClick }, label)
+        const close = (onClick) =>
+          h(
+            'button',
+            { type: 'button', className: 'hrag-rt-bannerclose', 'aria-label': t('rt.dismiss'), title: t('rt.dismiss'), onClick },
+            dshCloseIcon(),
+          )
+        if (upgrade.state === 'pending') {
+          const text = t('rt.upgradePending', { 0: target }) + (percent === null ? '' : ' · ' + percent + '%')
+          return h('div', { className: 'hrag-rt-banner' }, h('span', null, text))
+        }
+        if (upgrade.state === 'ready') {
+          return h(
+            'div',
+            { className: 'hrag-rt-banner' },
+            h('span', null, t('rt.upgradeReady', { 0: target })),
+            close(() => setUpgradeReadyOff(true)),
+          )
+        }
+        if (upgrade.state === 'needs_confirmation') {
+          return h(
+            'div',
+            { className: 'hrag-rt-banner' },
+            h('span', null, t('rt.upgradeConfirm', { 0: target })),
+            button(t('rt.upgradeConfirmAction'), () => runUpgradeAction('confirm')),
+          )
+        }
+        if (upgrade.state === 'failed') {
+          return h(
+            'div',
+            { className: 'hrag-rt-banner' },
+            h('span', null, t('rt.upgradeFailed', { 0: target, 1: from || runtime.version || '—' })),
+            button(t('rt.upgradeRetry'), () => runUpgradeAction('retry')),
+            button(t(runtimeCopied ? 'rt.copied' : 'rt.copyLog'), copyRuntimeLogPath),
+          )
+        }
+        if (upgrade.state === 'blocked') {
+          const reason = t(upgradeReasonKey(upgrade.error && upgrade.error.code))
+          return h(
+            'div',
+            { className: 'hrag-rt-banner' },
+            h('span', null, t('rt.upgradeBlocked', { 0: target }) + ' ' + reason + '。'),
+            close(() => setUpgradeBlockedOff(true)),
+          )
+        }
+        return null
+      })()
+
       return h(
         React.Fragment,
         null,
@@ -21968,6 +22086,7 @@ window.__ModuleLoader__.load({
             onDragLeave: panelDragLeave,
             onDrop: panelDrop,
           },
+          upgradeBanner,
           // 锚点告警（Task 3）：location.json 读不出来，服务已回退默认位置；只提示，不阻断。
           runtime && runtime.mode === 'managed' && runtime.warning && !anchorWarnOff
             ? h(

@@ -24,6 +24,7 @@ import {
   pickDirectory,
   retryRuntime,
   RuntimeOpError,
+  upgradeRuntime,
   type RuntimeOpsDeps,
 } from './runtime/ops.ts'
 
@@ -388,7 +389,12 @@ const errorStatus = (info: ApiError): number => {
 
 /** Ops that can start a download or move the runtime root. They only accept a
  * JSON POST from this origin, so a cross-site page cannot trigger them. */
-export const PRIVILEGED_OPS = new Set(['runtime/configure', 'runtime/pickDirectory', 'runtime/retry'])
+export const PRIVILEGED_OPS = new Set([
+  'runtime/configure',
+  'runtime/pickDirectory',
+  'runtime/retry',
+  'runtime/upgrade',
+])
 
 export interface PrivilegedHeaders {
   'content-type'?: string
@@ -431,6 +437,7 @@ function runtimePanelOps(deps: RuntimeOpsDeps): Record<string, (args: unknown) =
   return {
     'runtime/status': async () => panelStatus(deps),
     'runtime/retry': async () => retryRuntime(deps),
+    'runtime/upgrade': async (args) => upgradeRuntime(deps, (args ?? {}) as { action?: unknown }),
     'runtime/pickDirectory': async () => pickDirectory(deps),
     'runtime/configure': async (args) =>
       configureRuntime(deps, (args ?? {}) as { parent?: unknown; confirmSync?: unknown }),
@@ -695,7 +702,9 @@ export function registerKbProxy(
       sendJson(res, 200, data ?? null)
     } catch (error) {
       if (error instanceof RuntimeOpError) {
-        sendJson(res, 400, { error: { kind: error.kind, detail: error.message } })
+        sendJson(res, error.kind === 'upgrade_state' ? 409 : 400, {
+          error: { kind: error.kind, detail: error.message },
+        })
         return
       }
       if (error instanceof HarnessRagError) {
