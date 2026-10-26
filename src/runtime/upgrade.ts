@@ -18,7 +18,7 @@ import {
   forgetSupervisor,
   leaseHeldByOther,
   leaseOwner,
-  probeTcpPort,
+  probePortAnswer,
   type EnsureStep,
   type RuntimeStatusView,
   type RuntimeUpgradeView,
@@ -153,7 +153,7 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
   const root = options.root
   const target = options.target
   const now = options.now ?? (() => new Date().toISOString())
-  const probePort = options.probePort ?? probeTcpPort
+  const probePort = options.probePort ?? probePortAnswer
   const created = new Map<string, Supervisor>()
 
   const initialCurrent = readCurrent(root)

@@ -13,7 +13,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs'
-import { createServer as createNetServer } from 'node:net'
+import { connect as connectNet, createServer as createNetServer } from 'node:net'
 import { dirname, join } from 'node:path'
 import { configDir, downloadsDir, logsDir, runtimeDir, stateDir } from './paths.ts'
 import { planPorts, type PortPlan } from './ports.ts'
@@ -140,6 +140,26 @@ export function probeTcpPort(port: number): Promise<boolean> {
     server.listen(port, '127.0.0.1', () => {
       server.close(() => resolve(true))
     })
+  })
+}
+
+/** True when something accepts a TCP connection on the loopback port. This is
+ * the opposite question from `probeTcpPort`, which asks whether the port is
+ * free: an orphan check must not mistake "occupied" for "available". */
+export function probePortAnswer(port: number, timeoutMs = 1_000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = connectNet({ host: '127.0.0.1', port })
+    let settled = false
+    const finish = (value: boolean): void => {
+      if (settled) return
+      settled = true
+      socket.destroy()
+      resolve(value)
+    }
+    socket.setTimeout(timeoutMs)
+    socket.once('connect', () => finish(true))
+    socket.once('timeout', () => finish(false))
+    socket.once('error', () => finish(false))
   })
 }
 

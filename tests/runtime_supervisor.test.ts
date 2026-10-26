@@ -16,6 +16,7 @@ import {
   createSupervisor,
   forgetSupervisor,
   getSupervisor,
+  probePortAnswer,
   pythonNoProxy,
   type Supervisor,
 } from '../src/runtime/supervisor.ts'
@@ -1127,4 +1128,13 @@ test('stop: the bridge disposes the running singleton instead of forgetting it',
   await reloaded.ensure()
   assert.equal(pending.size, 0, 'the reload cancels the pending kill')
   assert.equal(existsSync(join(f.root, 'state', 'service.json')), true)
+})
+
+test('probePortAnswer: a listener answers and a closed port does not', async () => {
+  const server = createNetServer()
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const port = (server.address() as AddressInfo).port
+  assert.equal(await probePortAnswer(port), true)
+  await new Promise<void>((resolve) => server.close(() => resolve()))
+  assert.equal(await probePortAnswer(port), false)
 })
