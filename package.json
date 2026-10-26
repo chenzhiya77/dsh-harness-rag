@@ -38,7 +38,8 @@
     "runtime.json"
   ],
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json --pretty false"
+    "typecheck": "tsc -p tsconfig.json --pretty false",
+    "build:runtime": "node scripts/build-runtime-pack.mjs --engine ./engine"
   },
   "license": "MIT",
   "peerDependencies": {

@@ -4,11 +4,15 @@
 // all zipped with the size/hash the plugin manifest needs.
 //
 //   node scripts/build-runtime-pack.mjs --engine <repo> [--out dist]
-//        [--runtime-version 0.1.0-1] [--update-manifest] [--clean]
+//        [--runtime-version 0.1.0-1] [--engine-commit <sha>]
+//        [--update-manifest] [--clean] [--print-inputs]
 //
-// The engine defaults to ./engine (single-repo layout); until the engine is
-// merged, point --engine at the source checkout. Everything except the final
-// zip stays in --out (dist/ is ignored by git).
+// The engine defaults to ./engine (snapshot layout). The engine commit comes
+// from --engine-commit, the checkout's own HEAD when <repo>/.git exists, or
+// the Commit row of <repo>/UPSTREAM.md for the snapshot; git never walks up
+// past <repo>. Cold builds need uv 0.11.2, gh >= 2.40 and network access for
+// CPython/Qdrant. Everything except the final zip stays in --out (dist/ is
+// ignored by git).
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import {
@@ -33,6 +37,9 @@ const PACKAGE_ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const QDRANT_VERSION = '1.20.0'
 const QDRANT_ASSET = 'qdrant-x86_64-pc-windows-msvc.zip'
 const QDRANT_SIZE = 30_801_664
+const PYTHON_VERSION = '3.12.13'
+const UV_VERSION = '0.11.2'
+const GH_MIN_VERSION = '2.40.0'
 const PLATFORM = 'win32-x64'
 const FIXED_MTIME = new Date('1980-01-01T00:00:00Z')
 const ROOT_BUDGET = 120
@@ -58,16 +65,18 @@ const EXCLUDED_FILES = new Set(['.env'])
 
 // ── args ─────────────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const args = { engine: 'engine', out: 'dist', updateManifest: false, clean: false }
+  const args = { engine: 'engine', out: 'dist', updateManifest: false, clean: false, printInputs: false }
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]
     if (arg === '--engine') args.engine = argv[++i]
     else if (arg === '--out') args.out = argv[++i]
     else if (arg === '--runtime-version') args.runtimeVersion = argv[++i]
+    else if (arg === '--engine-commit') args.engineCommit = argv[++i]
     else if (arg === '--update-manifest') args.updateManifest = true
     else if (arg === '--clean') args.clean = true
+    else if (arg === '--print-inputs') args.printInputs = true
     else if (arg === '--help' || arg === '-h') {
-      console.log('node scripts/build-runtime-pack.mjs [--engine <repo>] [--out <dir>] [--runtime-version <v>] [--update-manifest] [--clean]')
+      console.log('node scripts/build-runtime-pack.mjs [--engine <repo>] [--out <dir>] [--runtime-version <v>] [--engine-commit <sha>] [--update-manifest] [--clean] [--print-inputs]')
       process.exit(0)
     } else {
       throw new Error(`unknown argument: ${arg}`)
@@ -132,6 +141,70 @@ const walk = (root, visit) => {
 }
 const posix = (path) => path.split(sep).join('/')
 const human = (bytes) => `${(bytes / 1048576).toFixed(1)} MB`
+const toolVersion = (command, commandArgs, pattern) => {
+  const result = spawnSync(command, commandArgs, { encoding: 'utf8' })
+  if (result.error || result.status !== 0) return undefined
+  return pattern.exec(result.stdout ?? '')?.[1]
+}
+const compareVersions = (left, right) => {
+  const parts = (value) => value.replace(/^v/, '').split('-')[0].split('.').map((part) => Number.parseInt(part, 10))
+  const a = parts(left)
+  const b = parts(right)
+  for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
+    const delta = (a[i] ?? 0) - (b[i] ?? 0)
+    if (delta !== 0) return Math.sign(delta)
+  }
+  return 0
+}
+const resolveEngineCommit = (root, override) => {
+  if (override !== undefined) {
+    const normalized = override.toLowerCase()
+    if (!/^[0-9a-f]{7,40}$/.test(normalized)) {
+      fail(`--engine-commit must be a 7-40 character hex sha, got "${override}"`)
+    }
+    return { commit: normalized, source: '--engine-commit' }
+  }
+  if (existsSync(join(root, '.git'))) {
+    const result = spawnSync('git', ['rev-parse', '--short=9', 'HEAD'], { cwd: root, encoding: 'utf8' })
+    const head = (result.stdout ?? '').trim()
+    if (result.status !== 0 || !/^[0-9a-f]{7,40}$/.test(head)) {
+      fail(`git rev-parse --short=9 HEAD failed in ${root}: ${(result.stderr ?? '').trim() || `exit ${result.status}`}`)
+    }
+    return { commit: head, source: 'git HEAD' }
+  }
+  const upstream = join(root, 'UPSTREAM.md')
+  if (existsSync(upstream)) {
+    const row = /^\|\s*Commit\s*\|\s*`([0-9a-f]{7,40})`(?:\s*\(\s*`([0-9a-f]{7,40})`\s*\))?\s*\|/m.exec(
+      readFileSync(upstream, 'utf8'),
+    )
+    if (!row) fail(`${upstream} has no readable "Commit" row; pass --engine-commit <sha>`)
+    const [, full, short] = row
+    return { commit: short && full.startsWith(short) ? short : full.slice(0, 9), source: 'UPSTREAM.md' }
+  }
+  fail(`cannot resolve the engine commit for ${root}: not a git checkout and no UPSTREAM.md; pass --engine-commit <sha>`)
+}
+
+// ── build inputs ─────────────────────────────────────────────────────────────
+step('resolve the engine commit and build toolchain')
+const engineCommitInfo = resolveEngineCommit(engineRoot, args.engineCommit)
+const uvVersion = toolVersion('uv', ['--version'], /^uv\s+(\S+)/m)
+if (uvVersion !== UV_VERSION) {
+  fail(`uv ${UV_VERSION} is required (found ${uvVersion ?? 'none'}); see https://docs.astral.sh/uv/`)
+}
+const ghVersion = toolVersion('gh', ['--version'], /^gh version\s+(\S+)/m)
+if (!ghVersion) fail(`gh >= ${GH_MIN_VERSION} is required for the Qdrant asset download`)
+if (compareVersions(ghVersion, GH_MIN_VERSION) < 0) {
+  fail(`gh >= ${GH_MIN_VERSION} is required (found ${ghVersion})`)
+}
+console.log(`[build]   engine commit ${engineCommitInfo.commit} (${engineCommitInfo.source})`)
+console.log(`[build]   uv ${uvVersion}, gh ${ghVersion}, Python ${PYTHON_VERSION}, Qdrant ${QDRANT_VERSION}`)
+done()
+
+if (args.printInputs) {
+  console.log(`[build] engine: ${engineRoot}`)
+  console.log(`[build] out:    ${outDir}`)
+  process.exit(0)
+}
 
 // ── clean ────────────────────────────────────────────────────────────────────
 rmSync(packDir, { recursive: true, force: true })
@@ -142,23 +215,31 @@ mkdirSync(workDir, { recursive: true })
 mkdirSync(dirname(zipPath), { recursive: true })
 
 // ── 1. portable Python ───────────────────────────────────────────────────────
-step('python 3.12 (uv python install)')
+step(`python ${PYTHON_VERSION} (uv python install)`)
 const pythonInstallDir = join(workDir, 'python')
 const installedPython = () =>
   existsSync(pythonInstallDir)
-    ? readdirSync(pythonInstallDir, { withFileTypes: true }).find(
-        (entry) => entry.isDirectory() && /^cpython-3\.12\.\d+/.test(entry.name),
-      )
+    ? readdirSync(pythonInstallDir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && entry.name.startsWith(`cpython-${PYTHON_VERSION}-`))
+        .sort((a, b) => a.name.localeCompare(b.name))[0]
     : undefined
 if (!installedPython()) {
   rmSync(pythonInstallDir, { recursive: true, force: true })
-  run('uv', ['python', 'install', '--install-dir', pythonInstallDir, '3.12'])
+  run('uv', ['python', 'install', '--install-dir', pythonInstallDir, '--no-bin', PYTHON_VERSION])
 }
 const cpythonDir = installedPython()
-if (!cpythonDir) fail(`no cpython-3.12 directory under ${pythonInstallDir}`)
+if (!cpythonDir) fail(`no cpython-${PYTHON_VERSION} directory under ${pythonInstallDir}`)
 const pythonExe = join(packDir, 'python', 'python.exe')
 cpSync(join(pythonInstallDir, cpythonDir.name), join(packDir, 'python'), { recursive: true })
 if (!existsSync(pythonExe)) fail('python.exe missing after flattening the uv install')
+const pythonVersionResult = spawnSync(
+  pythonExe,
+  ['-c', 'import sys;print(".".join(map(str,sys.version_info[:3])))'],
+  { encoding: 'utf8' },
+)
+const pythonVersion = (pythonVersionResult.stdout ?? '').trim()
+if (pythonVersionResult.status !== 0) fail(`packed python failed to report its version: ${(pythonVersionResult.stderr ?? '').trim()}`)
+if (pythonVersion !== PYTHON_VERSION) fail(`packed Python is ${pythonVersion}, expected ${PYTHON_VERSION}`)
 done()
 
 // ── 2. site-packages ─────────────────────────────────────────────────────────
@@ -228,17 +309,13 @@ done()
 
 // ── 5. manifest + notices ────────────────────────────────────────────────────
 step('write runtime-manifest.json and THIRD_PARTY_NOTICES.md')
-const pythonVersion = spawnSync(pythonExe, ['-c', 'import sys;print(".".join(map(str,sys.version_info[:3])))'], {
-  encoding: 'utf8',
-})
-const engineCommit = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: engineRoot, encoding: 'utf8' })
 const configVersion = Number(/^config_version:\s*(\d+)/m.exec(readFileSync(join(engineOut, 'config.example.yaml'), 'utf8'))?.[1] ?? 0)
 const runtimeManifest = {
   format: 1,
   runtimeVersion,
   engineVersion: currentPack.engineVersion ?? '0.0.0',
-  engineCommit: (engineCommit.stdout ?? '').trim() || 'unknown',
-  pythonVersion: (pythonVersion.stdout ?? '').trim(),
+  engineCommit: engineCommitInfo.commit,
+  pythonVersion,
   qdrantVersion: QDRANT_VERSION,
   configVersion,
   builtAt: new Date().toISOString(),
@@ -311,10 +388,36 @@ if (args.clean) {
 
 // ── implementations ──────────────────────────────────────────────────────────
 function notices({ pythonVersion, configVersion }) {
-  return `# Runtime pack third-party notices
+  const projectLicense = readFileSync(join(PACKAGE_ROOT, 'LICENSE'), 'utf8').trim()
+  return `# Runtime pack notices
 
 This archive is unpacked by the Harness RAG plugin under
-\`<DSH_HOME>/harness-rag/runtime/<runtimeVersion>/\`. It bundles:
+\`<DSH_HOME>/harness-rag/runtime/${runtimeVersion}/\`. It bundles:
+
+## Harness RAG engine (original work, MIT)
+
+The RAG capabilities bundled in \`engine/\` (document parsing and chunking,
+embedding and indexing, three-path retrieval, graph and wiki generation, and
+evaluation) are original Harness RAG work. The engine also bundles a
+third-party harness framework; the MIT notice below applies to those framework
+portions, not to the RAG code. The seeded configuration uses
+\`config_version: ${configVersion}\`.
+
+License: MIT. The plugin's license text is reproduced in full:
+
+\`\`\`text
+${projectLicense}
+\`\`\`
+
+## Bundled harness framework (MIT)
+
+Applies only to the third-party harness framework portions bundled under
+\`engine/backend/packages/\` (\`harness\` and \`extension-api\`), not to the RAG
+capabilities.
+
+License: MIT. The notice is reproduced in \`engine/LICENSE\`:
+Copyright (c) 2025 Bytedance Ltd. and/or its affiliates;
+Copyright (c) 2025-2026 DeerFlow Authors.
 
 ## CPython ${pythonVersion} (PSF-2.0)
 
@@ -325,12 +428,6 @@ License: Python Software Foundation License 2.0 (\`python/LICENSE.txt\`).
 
 Source: https://github.com/qdrant/qdrant
 License: Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
-
-## DeerFlow engine (MIT)
-
-Source: https://github.com/bytedance/deer-flow
-License: MIT (\`engine/LICENSE\`). The seeded configuration uses
-\`config_version: ${configVersion}\`.
 
 ## Python wheels (site-packages)
 
