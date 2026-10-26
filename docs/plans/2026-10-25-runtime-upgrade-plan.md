@@ -1,6 +1,6 @@
 # 运行时版本化升级、回滚与旧版清理 —— plan
 
-**Status:** 已实施（2026-10-26；Task 0–9 全落；Task 9 真机覆盖完成：五类横幅、pending、platform_unsupported、no_space、provision_held、headless、90 秒超时、并发 provision、清理删除失败；真孤儿与桌面宿主内置验证未做）
+**Status:** 已实施（2026-10-26；Task 0–9 全落；Task 9 真机覆盖完成：五类横幅、pending、platform_unsupported、no_space、provision_held、headless、90 秒超时、并发 provision、清理删除失败与桌面宿主内置验证；真孤儿未复现）
 **Date:** 2026-10-25
 **配套 spec:** [../specs/2026-10-25-runtime-upgrade-spec.md](../specs/2026-10-25-runtime-upgrade-spec.md)
 
@@ -248,6 +248,7 @@
 - [x] headless 实跑：同配置目标自动 `ready`；配置 45 落 `needs_confirmation` 并在宿主输出记日志。
 - [x] 90 秒整栈超时真机：engine 桩不监听 → +91 s `engine_not_ready`，+102 s 回滚就绪 `rolledBack=true`。
 - [x] 并发 provision、清理删除失败真机：共享根只下载一次；独占锁目录保留并只记日志。
+- [x] 桌面宿主内置验证：真实面板五类横幅、确认写入、失败复制到系统剪贴板、pending 真实下载百分比。
 
 **实测（实施期回填）**：2026-10-26 完成横幅实点。
 - 环境：隔离 `DSH_HOME=D:\hrag-t6\dsh-home-banner`（profile `bnr`，3090）；插件为 `git archive HEAD` 副本 link 安装；旧版/目标版硬链接克隆；旧服务手工常驻（8030/6340/6341）；Chrome headless＋CDP 9223 打开 `?token=` 驱动 DOM 与截图。
@@ -261,7 +262,8 @@
 - headless（profile `hlr`，假 OpenAI 提供方 9100）：目标 0.1.0-23（config 44）无面板、无确认通道，激活 2 s 后自动 ensure，`upgrade.json=ready`、命令输出 `OK`；目标 0.1.0-24（config 45）落 `needs_confirmation`，宿主输出 `runtime upgrade to 0.1.0-24 needs confirmation (config 44 -> 45)`，随后 `OK`。`.credentials.yaml` 的 `refs` 只做文件引用，进程仍需 `FAKE_API_KEY` 环境变量，否则 `MISSING_CREDENTIAL`。
 - 90 秒超时：目标 0.1.0-21 的 engine 换成 `time.sleep(300)` 桩；+3 s `switching`、Qdrant 监听、engine 不监听；+91 s 写 `failed-0.1.0-21.json`（`engine_not_ready`、`rolledBack=false`）；回滚旧版 0.1.0-2（端口被占，升到 6335/6336/8020）后 +102 s `ready`、`upgrade=failed`、`rolledBack=true`，旧 engine HTTP 200，`current` 不变；失败文件保留、不自动重试。
 - 清理删除失败：`runtime/` 预置 `0.1.0-0`（`0-locked.bin` 由 PowerShell `FileShare.None` 独占，`unlink` 探测 EBUSY）、`0.1.0-1/20/23/24/25` 可删，另有当前 0.1.0-2 与目标 0.1.0-22（21 换回真 engine 后改名）。停旧栈后 +2 s `switching`、+9 s `ready`；`current=0.1.0-22`/`previous=0.1.0-2`，失败文件清空；`0.1.0-1/20/23/24/25` 删除，`0.1.0-0` 保留，宿主日志 `[harness-rag] could not remove runtime 0.1.0-0: EPERM, Permission denied`，不挡 `ready`；目标栈 engine/Qdrant HTTP 200。
-- 未覆盖：剪贴板读取（headless 权限拒，改用 `writeText` 钩子）、真孤儿进程（宿主崩溃后残留）、桌面宿主内置验证（全部在隔离宿主）。
+- 桌面宿主内置（真实 DSH，`DSH_HOME=C:\Users\h7242\.dsh` 锚点 `D:\hrag-t6\dsh-root\harness-rag`，CDP 9222）：目标 0.1.0-3（克隆、已装）显示就绪横幅并可关闭；0.1.0-4（config 45）显示配置确认、无关闭钮，点击后 `upgrade.json` 写 `confirmedConfigVersion=45` 并转就绪；预置 `failed-0.1.0-5.json` 显示失败横幅，「复制日志路径」在窗口聚焦后把 `…\state\logs` 写入系统剪贴板（未聚焦时 `NotAllowedError: Document is not focused`）；清单 `urls: []` 且无本地包时显示「暂时无法启用新版本。 运行时包不可用。」；0.1.0-6（4.2 MB 自签 https 限速包）真实下载 27 s，横幅 69% 无关闭钮后转就绪。验证后还原 `runtime.json`/`config/`/`state` 元数据并删 0.1.0-3…6、失败/升级记录与下载件；桌面 managed 栈 6333/6334/8020 健康，`current` 仍 0.1.0-2。
+- 未覆盖：真孤儿进程（宿主崩溃后残留）；headless 的剪贴板读权限仍被拒（桌面路径已实点，前提是窗口有焦点）；桌面数据面（上传/检索）本轮未重验。
 - 证据：`D:\hrag-t6\acceptance-2026-10-26-banner`（README＋截图＋日志＋探针脚本；pending 在 `pending/`，三分支与四分支分别在 `branches/`、`branches/{concurrent,headless,timeout90,cleanup}`）。
 
 ## 验收对应
