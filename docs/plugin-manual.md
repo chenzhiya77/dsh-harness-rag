@@ -2,7 +2,7 @@
 
 > 原根 README，现作为安装、运行与契约的操作手册保留；产品介绍见根 [README](../README.md)。
 
-现状：工具面（三检索＋文档两件＋百科清单）、右栏管理面板、摄取后台任务、子槽声明契约、单一下载分发（运行时准备/就绪/重试/嵌入模型引导）均已实装；`backendUrl` 为空即内置本地服务，非空仍走外部服务。npm 与 GitHub 安装入口待首次发布（见「安装」）。
+现状：工具面（三检索＋文档两件＋百科清单）、右栏管理面板、摄取后台任务、子槽声明契约、单一下载分发（运行时准备/就绪/重试/嵌入模型引导）与版本化升级/回滚/旧版清理均已实装；`backendUrl` 为空即内置本地服务，非空仍走外部服务。npm 与 GitHub 安装入口待首次发布（见「安装」）。
 
 ## 安装
 
@@ -23,7 +23,7 @@ dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.g
 
 1. **确认位置** — 默认 `<DSH_HOME>/harness-rag`（`DSH_HOME` 缺省 `~/.dsh`），可点「更改…」选父目录，实际根为 `<父目录>/harness-rag`。
 2. **开始准备** — 下载运行时包（约 315 MB）并解压（约 840 MB），随后启动内置 Qdrant 与知识服务；首次约 1–2 分钟，之后启动为秒级。
-3. **配置嵌入模型** — 就绪后顶部横幅提示；在「功能模型设置」里选嵌入模型即可上传文档。
+3. **配置嵌入模型** — 未配置时点上传或拖入文件会被拦下并提示「去配置」；在「功能模型设置」里选嵌入模型后即可上传文档。
 
 平台：首期只提供 **Windows x64** 运行时包；其他平台安装后会在面板明确报「没有可用的运行时包」，此时改用外部服务（见下）。
 
@@ -33,7 +33,7 @@ dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.g
 
 ```text
 <root>/
-├─ runtime/<version>/     # 便携 Python、site-packages、engine 源码、qdrant（按版本存放；当前不自动清理旧版）
+├─ runtime/<version>/     # 便携 Python、site-packages、engine 源码、qdrant（按版本存放；成功切换后保留当前与上一版，更老版本自动清理）
 ├─ state/                 # data（sqlite 等）、logs、qdrant 存储、service.json、current.json、lease.json
 ├─ config/                # config.yaml、models_config.json、rag_config.json
 └─ downloads/             # 运行时包下载缓存（.part 可续传）
@@ -41,12 +41,39 @@ dsh plugin --profile <name> add git+https://github.com/<owner>/dsh-harness-rag.g
 
 - **端口**：默认 8020（知识服务）/ 6333、6334（Qdrant），被占用时自动换口，不会杀占用进程。开发机已有 Qdrant 时，托管仍会另起一个实例，不影响既有服务。
 - **位置**：只在尚未安装运行时之前可以改。已有运行时想换位置，需要手工迁移：退出 DSH，把整个运行根拷到新位置，改好 `<DSH_HOME>/harness-rag/location.json` 里的 `root`（或删掉该锚点让它回到默认根）。
-- **清理**：先删 `state/`，再删 `runtime/`。
+- **清理**：先删 `state/`，再删 `runtime/`（所有版本与知识库数据都会丢失）。
 - **卸载**：DSH 卸载只删插件包；运行根（含知识库数据）原样保留，需要时手工删除。
-- **升级**：插件升级不改 `runtime.json` 版本时不动运行时；换版本时，旧服务如果仍在运行，插件会继续认领旧版（不下载、不切换）；旧服务退出或清掉 `state/service.json` 后，重启/重试才准备并启动新版本。旧版本目录当前保留、不自动清理。升级前**先备份 `state/` 与 `config/`**；当前没有自动回滚，手工换回旧版也不保证数据兼容（新引擎可能已迁移存储）。
+- **升级**：插件升级不改 `runtime.json` 版本时不动运行时；换版本时，旧服务仍健康则只后台准备，下一次 DSH 启动才切换；失败自动回旧版并留横幅/失败记录；配置版本变化需确认。升级前**先备份 `state/` 与 `config/`**；回滚不保证数据兼容（新引擎可能已迁移存储）。详见下节「升级与回滚」。
 - **旧数据**：旧部署的 `backend/.deer-flow` 不会自动迁入托管实例；要沿用它，请继续走外部模式，或手工拷贝。
 - **杀软**：运行时里的 `python.exe`/`qdrant.exe` 未签名，可能被 SmartScreen 或杀软拦截；把运行根加入信任即可。
 - **代理**：下载与引擎出网都跟随宿主/系统代理（`HTTPS_PROXY` 等），插件不覆盖宿主的 dispatcher。
+
+## 升级与回滚
+
+运行时的目标版本来自插件包的 `runtime.json`，当前运行版本记在 `<root>/state/current.json`。两者不同时：
+
+1. **准备**：旧服务仍健康时，插件只在后台下载、校验、解压新版本，面板提示「新版本已就绪，重启 DSH 后启用」；本次不切换，也不改数据。
+2. **切换**：下一次 DSH 启动（旧服务已退出、租约空闲）时启动新版。新版 Qdrant 与 knowledge 共享 90 秒健康门，成功后才把 `current.json` 指向新版并记下 `previousVersion`。
+3. **失败回滚**：新版 90 秒内起不来或提前退出 ⇒ 停掉新版，有旧版时重新启动旧版；写 `state/failed-<version>.json`（`rolledBack=true`），面板显示失败横幅。后续启动不自动重试，直到点「下次启动重试」或 `runtime.json` 换目标。
+4. **配置版本**：目标包与当前版本的 `configVersion` 不同（或当前版本缺失/为 0）⇒ 不自动切，面板要求确认；点「确认升级（重启后生效）」后才在下一次启动切换。确认只对当前目标版本与当前 `configVersion` 有效。
+5. **保留与清理**：成功切换后保留当前与上一版；更老的、带 `runtime-manifest.json` 的版本目录及其 `failed-<version>.json` 会被删除。`.tmp`、未知名字、没有 manifest 的目录不动；`downloads/` 里的旧 zip 不自动删。
+6. **备份**：升级前先退出 DSH，备份 `<root>/state/` 与 `<root>/config/`。回滚只保证服务回到旧版，不保证数据可回退（新引擎可能已迁移 SQLite/向量）。
+
+面板横幅只读状态、不新增 tab：
+
+- `正在准备新版本 …`：后台准备中，有进度时带百分比。
+- `新版本 x 已就绪，重启 DSH 后启用。`：可关闭。
+- `新版本 x 会改变配置格式；升级前请备份 state/ 与 config/。`：不可关闭；主按钮「确认升级（重启后生效）」。
+- `升级到 x 失败，已回到 y。`：不可关闭；主按钮「下次启动重试」，可复制日志路径。
+- `新版本 x 暂时无法启用。`：附原因（租约被占用、下载/校验/空间不足等）；可关闭。
+
+**被占用、残留与锁**：
+
+- 租约被另一个存活 DSH 宿主/profile 持有时状态为 `blocked`；停掉对方或等它退出后重启本宿主或点重试，不要手工杀不属于本运行根的进程。
+- `service.json` 的 `pid` 为 null 或无法核验时，插件不会猜 pid、也不强杀。先确认端口（默认 8020/6333/6334）上的进程属于本运行根，再手工停止；然后重启 DSH 或点重试。本版没有对「端口仍应答但 pid 为 null」的自动 blocked 判定，遇到这种残留按手工流程处理。
+- `state/provision.lock` 的持有者已退出但锁仍在（例如 pid 无法判定）：确认没有其他宿主正在准备后删除该文件，再重试。
+
+**开发态本地包**：仅开发/验收用 `DSH_HARNESS_RAG_PACK=<本地 zip 绝对路径>` 覆盖下载，发布版不启用；本地包同样做空间检查与 manifest 的 `runtimeVersion`/`configVersion` 校验。`runtime.json` 的 `urls` 为空表示“未发布”，正式发布前必须回填下载地址、`size` 与 `sha256`。
 
 ## 外部模式（自带 Harness RAG 服务）
 
