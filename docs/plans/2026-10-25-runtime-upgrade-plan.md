@@ -43,15 +43,21 @@
 
 > 动到的文件：`src/runtime/manifest.ts`、`src/runtime/supervisor.ts`、`src/runtime/ops.ts`、`tests/runtime_manifest.test.ts`、`tests/runtime_supervisor.test.ts`、`tests/runtime_ops.test.ts`。
 
-- [ ] `manifest.ts` 增加 `UpgradeRecord` 与 `FailedRecord` 的类型/校验：版本字段走 `isRuntimeVersion`，时间戳非空，`state` 只接受 `pending|ready|needs_confirmation|blocked`，失败记录 `rolledBack` 布尔；坏记录降级为 null，不抛。
-- [ ] `current.json` 所有权移交：新增 `readCurrent`（`sanitizeCurrent`）与 `writeCurrent({runtimeVersion, previousVersion?})`；supervisor 不再在 `adopt`/`start` 里直接 `markCurrent`，改由协调者写。首次成功启动或首次认领且文件缺失时写 `{runtimeVersion}`；普通重启/认领不改；切换成功写 `{runtimeVersion: 目标, previousVersion: 原当前}`。
-- [ ] current/service 一致性：健康 `service.json` 的版本优先于 current；不一致时回写 current；service 版本没有对应已装 runtime 时 `blocked`（`state_version_conflict`），不启动第二套栈。补崩溃窗口（先写 service、后写 current 之间失败）测试。
-- [ ] `adopt()` 增加期望版本参数：`record.runtimeVersion !== expectedVersion` 时拒绝认领（返回 null，不杀、不删、不释放租约），由协调者决定是 `blocked` 还是另起目标。
-- [ ] `RuntimeStatusView` 增加 `targetVersion?`、`previousVersion?` 与 `upgrade?`（字段形状按 spec §3.6）；`ops.ts` 从 `current.json` 读 `previousVersion`，`version` 仍表示正在运行的版本；首次 `runtime/status`（`ensure()` 之前）有 current 时必须先填 current，不能填目标版本。
-- [ ] 单测：坏 current/upgrade/failed 记录降级；首次写 current 不带 previous；普通重启不覆盖 previous；切换写 previous；版本不匹配的 service 不被认领；首次 status 版本是 current；current/service 冲突按上述规则回写或 blocked。
-- [ ] 门禁：`tsc` 0 错；相关测试全绿；现有 231 条无回归。
+- [x] `manifest.ts` 增加 `UpgradeRecord` 与 `FailedRecord` 的类型/校验：版本字段走 `isRuntimeVersion`，时间戳非空，`state` 只接受 `pending|ready|needs_confirmation|blocked`，失败记录 `rolledBack` 布尔；坏记录降级为 null，不抛。
+- [x] `current.json` 所有权移交：新增 `readCurrent`（`sanitizeCurrent`）与 `writeCurrent({runtimeVersion, previousVersion?})`；supervisor 不再在 `adopt`/`start` 里直接 `markCurrent`，改由协调者写。首次成功启动或首次认领且文件缺失时写 `{runtimeVersion}`；普通重启/认领不改；切换成功写 `{runtimeVersion: 目标, previousVersion: 原当前}`。
+- [x] current/service 一致性：健康 `service.json` 的版本优先于 current；不一致时回写 current；service 版本没有对应已装 runtime 时 `blocked`（`state_version_conflict`），不启动第二套栈。补崩溃窗口（先写 service、后写 current 之间失败）测试。
+- [x] `adopt()` 增加期望版本参数：`record.runtimeVersion !== expectedVersion` 时拒绝认领（返回 null，不杀、不删、不释放租约），由协调者决定是 `blocked` 还是另起目标。
+- [x] `RuntimeStatusView` 增加 `targetVersion?`、`previousVersion?` 与 `upgrade?`（字段形状按 spec §3.6）；`ops.ts` 从 `current.json` 读 `previousVersion`，`version` 仍表示正在运行的版本；首次 `runtime/status`（`ensure()` 之前）有 current 时必须先填 current，不能填目标版本。
+- [x] 单测：坏 current/upgrade/failed 记录降级；首次写 current 不带 previous；普通重启不覆盖 previous；切换写 previous；版本不匹配的 service 不被认领；首次 status 版本是 current；current/service 冲突按上述规则回写或 blocked。
+- [x] 门禁：`tsc` 0 错；相关测试全绿；现有 231 条无回归。
 
-**实测（实施期回填）**：
+**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+- 模型：`manifest.ts` 增 `UpgradeState`/`UpgradeRecord`/`FailedRecord` 与 `sanitizeUpgrade`/`sanitizeFailed`；版本字段走 `isRuntimeVersion`，时间戳非空，坏记录降级 null。失败记录的 `fromVersion` 允许空串——只用于首次安装没有旧版可回滚的情形。
+- current：新增 `readCurrent`/`writeCurrent`（tmp+rename 原子写）与纯函数 `planCurrent`（`first|keep|rewrite|conflict`）。supervisor 去掉无条件 `markCurrent`：current 缺失/损坏时首次写 `{runtimeVersion}`；同版本 keep；健康 service 与 current 不一致且该版本已装 ⇒ 回写并记 `previousVersion`（崩溃窗口）；该版本无 `runtime-manifest.json` ⇒ 不回写、adopt 照常可用，`status.upgrade` 标 `blocked`/`state_version_conflict`，不启动第二套栈。
+- `adopt(expectedVersion)` 版本不匹配直接返回 null，探测前拒绝（不杀、不删、不释放租约）。
+- 视图/载荷：`RuntimeStatusView` 增 `targetVersion?`/`previousVersion?`/`upgrade?`；`RuntimeStatusPayload` 增 `previousVersion?` 与 `targetVersion?`（后者待 Task 2/5 填值）；`statusPayload` 在有 current 且无 ready view 时用 current 的版本，ready view 以实际运行版本为准。
+- 门禁：`tsc` 0 错；三组相关测试 78/78；全量 256/256（含 G11 新增 tool_gating 用例），无回归。
+- 与 plan 的差异：首次写与崩溃窗口回写仍由 supervisor 在确认 service 健康后执行；协调者（Task 2）接管决策与完整 `blocked` 状态，Task 2 接线时再决定是否把 `applyCurrent` 收回协调者。`blocked` 的 `configVersionChanged`/`requiresConfirmation` 暂为 false，由协调者覆盖。
 
 ## Task 2 — 升级协调者与激活决策
 

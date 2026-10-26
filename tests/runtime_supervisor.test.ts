@@ -174,7 +174,9 @@ test('start: qdrant comes up first, the engine second, and service.json records 
   assert.deepEqual(record.ports, status.ports)
   assert.ok(record.pid > 0)
   assert.ok(record.qdrantPid && record.qdrantPid > 0)
-  assert.deepEqual(JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8')).runtimeVersion, VERSION)
+  const current = JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8'))
+  assert.equal(current.runtimeVersion, VERSION)
+  assert.equal(current.previousVersion, undefined)
 })
 
 test('start: qdrant receives the six storage and service variables', async (t) => {
@@ -283,6 +285,187 @@ test('adopt: a live instance is reused and nothing is spawned', async (t) => {
   assert.equal(status.adopted, true)
   assert.equal(f.spawned.requests.length, 0)
   assert.equal(JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8')).runtimeVersion, VERSION)
+})
+
+test('adopt: a service record for another version is not adopted', async (t) => {
+  const f = await fixture(t)
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'service.json'),
+    JSON.stringify({
+      version: 1,
+      pid: null,
+      qdrantPid: null,
+      runtimeVersion: '9.9.9-1',
+      token: 'stale-token',
+      ports: f.preferredPorts,
+      startedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.adopted, false)
+  assert.equal(f.spawned.requests.length, 2)
+  const record = sanitizeService(JSON.parse(readFileSync(join(f.root, 'state', 'service.json'), 'utf8')))
+  assert.equal(record?.runtimeVersion, VERSION)
+  assert.equal(JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8')).runtimeVersion, VERSION)
+})
+
+test('current: a restart keeps an existing previousVersion', async (t) => {
+  const f = await fixture(t)
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'current.json'),
+    JSON.stringify({
+      version: 1,
+      runtimeVersion: VERSION,
+      previousVersion: '2.0.0-1',
+      updatedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+
+  await supervisor(f).ensure()
+
+  const current = JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8'))
+  assert.equal(current.runtimeVersion, VERSION)
+  assert.equal(current.previousVersion, '2.0.0-1')
+  assert.equal(current.updatedAt, '2026-10-25T00:00:00.000Z')
+})
+
+test('current: a claim leaves an existing pointer untouched', async (t) => {
+  const f = await fixture(t)
+  const ports = f.preferredPorts
+  const server = createHttpServer((req, res) => {
+    if (req.url === '/api/knowledge-bases' && req.headers.authorization === 'Bearer live-token') {
+      res.writeHead(200)
+      res.end('[]')
+      return
+    }
+    res.writeHead(401)
+    res.end()
+  })
+  await new Promise<void>((resolve) => server.listen(ports.knowledge, '127.0.0.1', resolve))
+  t.after(() => server.close())
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'service.json'),
+    JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      qdrantPid: null,
+      runtimeVersion: VERSION,
+      token: 'live-token',
+      ports,
+      startedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+  writeFileSync(
+    join(f.root, 'state', 'current.json'),
+    JSON.stringify({
+      version: 1,
+      runtimeVersion: VERSION,
+      previousVersion: '2.0.0-1',
+      updatedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.adopted, true)
+  const current = JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8'))
+  assert.equal(current.runtimeVersion, VERSION)
+  assert.equal(current.previousVersion, '2.0.0-1')
+  assert.equal(current.updatedAt, '2026-10-25T00:00:00.000Z')
+})
+
+test('current: a healthy service wins a stale pointer and rewrites it', async (t) => {
+  const f = await fixture(t)
+  writeFileSync(join(f.runtime, 'runtime-manifest.json'), '{}')
+  const ports = f.preferredPorts
+  const server = createHttpServer((req, res) => {
+    if (req.url === '/api/knowledge-bases' && req.headers.authorization === 'Bearer live-token') {
+      res.writeHead(200)
+      res.end('[]')
+      return
+    }
+    res.writeHead(401)
+    res.end()
+  })
+  await new Promise<void>((resolve) => server.listen(ports.knowledge, '127.0.0.1', resolve))
+  t.after(() => server.close())
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'service.json'),
+    JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      qdrantPid: null,
+      runtimeVersion: VERSION,
+      token: 'live-token',
+      ports,
+      startedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+  writeFileSync(
+    join(f.root, 'state', 'current.json'),
+    JSON.stringify({ version: 1, runtimeVersion: '2.0.0-1', updatedAt: '2026-10-25T00:00:00.000Z' }),
+  )
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.adopted, true)
+  assert.equal(f.spawned.requests.length, 0)
+  const current = JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8'))
+  assert.equal(current.runtimeVersion, VERSION)
+  assert.equal(current.previousVersion, '2.0.0-1')
+})
+
+test('current: a running version without an installed runtime blocks the pointer', async (t) => {
+  const f = await fixture(t)
+  const ports = f.preferredPorts
+  const server = createHttpServer((req, res) => {
+    if (req.url === '/api/knowledge-bases' && req.headers.authorization === 'Bearer live-token') {
+      res.writeHead(200)
+      res.end('[]')
+      return
+    }
+    res.writeHead(401)
+    res.end()
+  })
+  await new Promise<void>((resolve) => server.listen(ports.knowledge, '127.0.0.1', resolve))
+  t.after(() => server.close())
+  mkdirSync(join(f.root, 'state'), { recursive: true })
+  writeFileSync(
+    join(f.root, 'state', 'service.json'),
+    JSON.stringify({
+      version: 1,
+      pid: process.pid,
+      qdrantPid: null,
+      runtimeVersion: VERSION,
+      token: 'live-token',
+      ports,
+      startedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+  writeFileSync(
+    join(f.root, 'state', 'current.json'),
+    JSON.stringify({ version: 1, runtimeVersion: '2.0.0-1', updatedAt: '2026-10-25T00:00:00.000Z' }),
+  )
+
+  const status = await supervisor(f).ensure()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.adopted, true)
+  assert.equal(f.spawned.requests.length, 0)
+  assert.equal(status.upgrade?.state, 'blocked')
+  assert.equal(status.upgrade?.error?.code, 'state_version_conflict')
+  assert.equal(status.upgrade?.fromVersion, '2.0.0-1')
+  const current = JSON.parse(readFileSync(join(f.root, 'state', 'current.json'), 'utf8'))
+  assert.equal(current.runtimeVersion, '2.0.0-1')
+  assert.equal(current.previousVersion, undefined)
 })
 
 test('lease: a live foreign owner blocks startup without spawning', async (t) => {

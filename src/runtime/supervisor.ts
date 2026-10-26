@@ -16,6 +16,8 @@ import {
   type SpawnRequest,
 } from './process.ts'
 import { seedRuntimeConfig } from './seed.ts'
+import { planCurrent, readCurrent, writeCurrent, type CurrentPlan } from './manifest.ts'
+import { RUNTIME_MANIFEST } from './zip.ts'
 import type { DownloadProgress } from './download.ts'
 
 export type RuntimePhase = 'idle' | 'preparing' | 'starting' | 'ready' | 'error'
@@ -26,11 +28,24 @@ export interface RuntimeError {
   detail?: string
 }
 
+export interface RuntimeUpgradeView {
+  state: 'pending' | 'ready' | 'needs_confirmation' | 'failed' | 'blocked'
+  fromVersion: string
+  targetVersion: string
+  configVersionChanged: boolean
+  requiresConfirmation: boolean
+  progress?: DownloadProgress
+  error?: RuntimeError
+}
+
 export interface RuntimeStatusView {
   phase: RuntimePhase
   adopted: boolean
   progress?: DownloadProgress
   runtimeVersion: string
+  targetVersion?: string
+  previousVersion?: string
+  upgrade?: RuntimeUpgradeView
   root: string
   ports?: PortPlan
   error?: RuntimeError
@@ -205,7 +220,6 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
 
   const runtime = runtimeDir(root, runtimeVersion)
   const statePath = join(stateDir(root), 'service.json')
-  const currentPath = join(stateDir(root), 'current.json')
   const leasePath = join(stateDir(root), 'lease.json')
   const logs = logsDir(root)
 
@@ -242,10 +256,19 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     }
   }
 
-  /** `state/current.json` marks the version this root is on; `runtime/status`
-   * reports it as `installed` and `runtime/configure` refuses to move it. */
-  const markCurrent = (runningVersion: string): void => {
-    writeJson(currentPath, { version: 1, runtimeVersion: runningVersion, updatedAt: now() })
+  /** What the pointer should do given the version that actually answers. */
+  const currentPlan = (runningVersion: string): CurrentPlan =>
+    planCurrent(
+      readCurrent(root),
+      runningVersion,
+      existsSync(join(runtimeDir(root, runningVersion), RUNTIME_MANIFEST)),
+    )
+
+  const applyCurrent = (runningVersion: string, plan: CurrentPlan): void => {
+    if (plan.kind === 'first') writeCurrent(root, { runtimeVersion: runningVersion }, now)
+    if (plan.kind === 'rewrite') {
+      writeCurrent(root, { runtimeVersion: runningVersion, previousVersion: plan.previousVersion }, now)
+    }
   }
 
   const readLease = (): LeaseRecord | null => {
@@ -470,14 +493,18 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     },
   })
 
-  const adopt = async (): Promise<RuntimeStatusView | null> => {
+  /** Only a record for the version this supervisor owns can be adopted; a
+   * leftover from another version is left for the coordinator to classify. */
+  const adopt = async (expectedVersion: string): Promise<RuntimeStatusView | null> => {
     const record = readService()
     if (!record) return null
+    if (record.runtimeVersion !== expectedVersion) return null
     const base = `http://127.0.0.1:${record.ports.knowledge}`
     const healthy = await probe(`${base}/api/knowledge-bases`, { authorization: `Bearer ${record.token}` })
     if (!healthy) return null
+    const plan = currentPlan(record.runtimeVersion)
+    applyCurrent(record.runtimeVersion, plan)
     onReady?.()
-    markCurrent(record.runtimeVersion)
     setPhase({
       phase: 'ready',
       adopted: true,
@@ -486,6 +513,17 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       progress: undefined,
       error: undefined,
       logTail: currentLogTail(),
+      upgrade:
+        plan.kind === 'conflict'
+          ? {
+              state: 'blocked',
+              fromVersion: plan.previousVersion,
+              targetVersion: expectedVersion,
+              configVersionChanged: false,
+              requiresConfirmation: false,
+              error: { phase: 'current', code: 'state_version_conflict', detail: record.runtimeVersion },
+            }
+          : undefined,
     })
     stopWatchdog()
     scheduleWatchdog()
@@ -606,7 +644,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
           ports,
           startedAt: now(),
         })
-        markCurrent(runtimeVersion)
+        applyCurrent(runtimeVersion, currentPlan(runtimeVersion))
         onReady?.()
         setPhase({ phase: 'ready', adopted: false, error: undefined, logTail: currentLogTail() })
         return status
@@ -641,7 +679,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     }
     if (status.phase === 'ready') return status
     if (startPromise) return startPromise
-    const adopted = await adopt()
+    const adopted = await adopt(runtimeVersion)
     if (adopted) return adopted
     startPromise = start().finally(() => {
       startPromise = null

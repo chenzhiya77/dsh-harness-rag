@@ -1,5 +1,6 @@
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { stateDir } from './paths.ts'
 
 export const MANIFEST_FILE = 'runtime.json'
 
@@ -31,6 +32,32 @@ export interface RuntimeCurrent {
   runtimeVersion: string
   updatedAt: string
   previousVersion?: string
+}
+
+export type UpgradeState = 'pending' | 'ready' | 'needs_confirmation' | 'blocked'
+
+/** `state/upgrade.json`: the version being prepared while another one runs. */
+export interface UpgradeRecord {
+  version: 1
+  targetVersion: string
+  fromVersion: string
+  /** The target pack's config version; 0 means it could not be read. */
+  configVersion: number
+  state: UpgradeState
+  confirmedConfigVersion?: number
+  requestedAt: string
+  updatedAt: string
+}
+
+/** `state/failed-<targetVersion>.json`: the target passed provisioning but not
+ * the health gate. `fromVersion` is empty when there was no current version. */
+export interface FailedRecord {
+  version: 1
+  runtimeVersion: string
+  fromVersion: string
+  failedAt: string
+  error: { phase: string; code: string; detail?: string }
+  rolledBack: boolean
 }
 
 export type ManifestFailure = 'manifest_invalid' | 'platform_unsupported' | 'pack_missing'
@@ -157,4 +184,119 @@ export function sanitizeCurrent(raw: unknown): RuntimeCurrent | null {
     current.previousVersion = previous
   }
   return current
+}
+
+const isUpgradeState = (value: unknown): value is UpgradeState =>
+  value === 'pending' || value === 'ready' || value === 'needs_confirmation' || value === 'blocked'
+
+export function sanitizeUpgrade(raw: unknown): UpgradeRecord | null {
+  if (!isRecord(raw) || raw.version !== 1) return null
+  const targetVersion = typeof raw.targetVersion === 'string' ? raw.targetVersion.trim() : ''
+  if (!isRuntimeVersion(targetVersion)) return null
+  const fromVersion = typeof raw.fromVersion === 'string' ? raw.fromVersion.trim() : ''
+  if (!isRuntimeVersion(fromVersion)) return null
+  if (!isCount(raw.configVersion)) return null
+  if (!isUpgradeState(raw.state)) return null
+  const requestedAt = typeof raw.requestedAt === 'string' ? raw.requestedAt.trim() : ''
+  const updatedAt = typeof raw.updatedAt === 'string' ? raw.updatedAt.trim() : ''
+  if (!requestedAt || !updatedAt) return null
+  const record: UpgradeRecord = {
+    version: 1,
+    targetVersion,
+    fromVersion,
+    configVersion: raw.configVersion,
+    state: raw.state,
+    requestedAt,
+    updatedAt,
+  }
+  if (raw.confirmedConfigVersion !== undefined) {
+    if (!isCount(raw.confirmedConfigVersion) || raw.confirmedConfigVersion === 0) return null
+    record.confirmedConfigVersion = raw.confirmedConfigVersion
+  }
+  return record
+}
+
+function sanitizeFailedError(raw: unknown): FailedRecord['error'] | null {
+  if (!isRecord(raw)) return null
+  const phase = typeof raw.phase === 'string' ? raw.phase.trim() : ''
+  const code = typeof raw.code === 'string' ? raw.code.trim() : ''
+  if (!phase || !code) return null
+  const error: FailedRecord['error'] = { phase, code }
+  if (raw.detail !== undefined) {
+    if (typeof raw.detail !== 'string') return null
+    error.detail = raw.detail
+  }
+  return error
+}
+
+/** A failed record's `fromVersion` is empty only for a first install, which
+ * has no current version to roll back to. */
+export function sanitizeFailed(raw: unknown): FailedRecord | null {
+  if (!isRecord(raw) || raw.version !== 1) return null
+  const runtimeVersion = typeof raw.runtimeVersion === 'string' ? raw.runtimeVersion.trim() : ''
+  if (!isRuntimeVersion(runtimeVersion)) return null
+  const fromVersion = typeof raw.fromVersion === 'string' ? raw.fromVersion.trim() : ''
+  if (fromVersion !== '' && !isRuntimeVersion(fromVersion)) return null
+  const failedAt = typeof raw.failedAt === 'string' ? raw.failedAt.trim() : ''
+  if (!failedAt) return null
+  const error = sanitizeFailedError(raw.error)
+  if (!error) return null
+  if (typeof raw.rolledBack !== 'boolean') return null
+  return { version: 1, runtimeVersion, fromVersion, failedAt, error, rolledBack: raw.rolledBack }
+}
+
+/** A healthy service is the authority on what runs. `conflict` means the
+ * pointer lags behind a service version whose runtime is not installed: do not
+ * move the pointer and do not start a second stack. */
+export type CurrentPlan =
+  | { kind: 'first' }
+  | { kind: 'keep' }
+  | { kind: 'rewrite'; previousVersion: string }
+  | { kind: 'conflict'; previousVersion: string }
+
+export function planCurrent(
+  current: RuntimeCurrent | null,
+  runningVersion: string,
+  installed: boolean,
+): CurrentPlan {
+  if (!current) return { kind: 'first' }
+  if (current.runtimeVersion === runningVersion) return { kind: 'keep' }
+  if (!installed) return { kind: 'conflict', previousVersion: current.runtimeVersion }
+  return { kind: 'rewrite', previousVersion: current.runtimeVersion }
+}
+
+/** Read `state/current.json`; a missing or damaged file reads as null. */
+export function readCurrent(root: string): RuntimeCurrent | null {
+  try {
+    return sanitizeCurrent(JSON.parse(readFileSync(join(stateDir(root), 'current.json'), 'utf8')))
+  } catch {
+    return null
+  }
+}
+
+export interface CurrentInput {
+  runtimeVersion: string
+  previousVersion?: string
+}
+
+/** Write `state/current.json` atomically. A plain restart must not move the
+ * pointer: only the first-install write and a successful switch call this. */
+export function writeCurrent(
+  root: string,
+  next: CurrentInput,
+  now: () => string = () => new Date().toISOString(),
+): RuntimeCurrent {
+  if (!isRuntimeVersion(next.runtimeVersion)) throw new Error(`invalid runtime version: ${next.runtimeVersion}`)
+  if (next.previousVersion !== undefined && !isRuntimeVersion(next.previousVersion)) {
+    throw new Error(`invalid previous version: ${next.previousVersion}`)
+  }
+  const record: RuntimeCurrent = { version: 1, runtimeVersion: next.runtimeVersion, updatedAt: now() }
+  if (next.previousVersion !== undefined) record.previousVersion = next.previousVersion
+  const dir = stateDir(root)
+  mkdirSync(dir, { recursive: true })
+  const path = join(dir, 'current.json')
+  const temp = `${path}.tmp-${process.pid}`
+  writeFileSync(temp, `${JSON.stringify(record, null, 2)}\n`, 'utf8')
+  renameSync(temp, path)
+  return record
 }

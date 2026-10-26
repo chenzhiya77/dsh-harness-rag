@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Config } from '../settings.ts'
-import type { RuntimePack } from './manifest.ts'
+import { readCurrent, type RuntimePack } from './manifest.ts'
 import {
   resolveRoot,
   targetRoot,
@@ -29,6 +29,9 @@ export interface RuntimeStatusPayload {
   /** The anchor file was unreadable; this root is the default fallback. */
   warning?: string
   version: string
+  targetVersion?: string
+  /** The version the current one replaced, when a switch has happened. */
+  previousVersion?: string
   ports?: PortPlan
   progress?: DownloadProgress
   logTail?: string
@@ -108,8 +111,16 @@ export function statusPayload(deps: RuntimeOpsDeps): RuntimeStatusPayload {
     payload.previousRoot = resolved.previousRoot
     payload.reason = resolved.reason
   }
+  // `version` is the version that is actually running, not the pack target.
+  const current = readCurrent(root)
+  if (current) {
+    payload.version = current.runtimeVersion
+    if (current.previousVersion) payload.previousVersion = current.previousVersion
+  }
   if (view) {
-    payload.version = view.runtimeVersion
+    if (view.phase === 'ready') payload.version = view.runtimeVersion
+    if (view.previousVersion) payload.previousVersion = view.previousVersion
+    if (view.targetVersion) payload.targetVersion = view.targetVersion
     payload.ports = view.ports
     payload.progress = view.progress
     payload.logTail = view.logTail || readLogTail(root) || undefined

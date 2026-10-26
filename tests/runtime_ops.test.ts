@@ -110,6 +110,38 @@ test('status: an installed runtime is reported as installed', () => {
   assert.equal(payload.installed, true)
 })
 
+test('status: the version before ensure is the current one, not the pack target', () => {
+  const f = fixture({ supervisor: () => null })
+  mkdirSync(join(f.home, 'harness-rag', 'state'), { recursive: true })
+  writeFileSync(
+    join(f.home, 'harness-rag', 'state', 'current.json'),
+    JSON.stringify({
+      version: 1,
+      runtimeVersion: '2.0.0-1',
+      previousVersion: '1.9.0-1',
+      updatedAt: '2026-10-25T00:00:00.000Z',
+    }),
+  )
+
+  const payload = statusPayload(f.deps)
+
+  assert.equal(payload.version, '2.0.0-1')
+  assert.equal(payload.previousVersion, '1.9.0-1')
+})
+
+test('status: a ready supervisor reports its running version over current.json', () => {
+  const f = fixture({}, 'ready')
+  mkdirSync(join(f.home, 'harness-rag', 'state'), { recursive: true })
+  writeFileSync(
+    join(f.home, 'harness-rag', 'state', 'current.json'),
+    JSON.stringify({ version: 1, runtimeVersion: '1.9.0-1', updatedAt: '2026-10-25T00:00:00.000Z' }),
+  )
+
+  const payload = statusPayload(f.deps)
+
+  assert.equal(payload.version, VERSION)
+})
+
 test('status: a recorded root that vanished asks for a location', () => {
   const f = fixture()
   mkdirSync(f.anchorRoot, { recursive: true })

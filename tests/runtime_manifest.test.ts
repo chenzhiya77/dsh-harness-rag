@@ -1,15 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   loadPack,
+  planCurrent,
+  readCurrent,
   readManifest,
   sanitizeCurrent,
+  sanitizeFailed,
+  sanitizeUpgrade,
   selectPack,
   validateManifest,
+  writeCurrent,
 } from '../src/runtime/manifest.ts'
 
 const HASH = 'a'.repeat(64)
@@ -190,5 +195,144 @@ test('current: wrong version, bad runtimeVersion, or blank updatedAt degrades to
     { ...base, previousVersion: 'bad/version' },
   ]) {
     assert.equal(sanitizeCurrent(raw), null, JSON.stringify(raw))
+  }
+})
+
+// ── current.json I/O ────────────────────────────────────────────────────────
+
+const STAMP = '2026-10-25T00:00:00.000Z'
+
+test('current: writeCurrent records previousVersion only when it is given', () => {
+  const root = tempDir()
+
+  const first = writeCurrent(root, { runtimeVersion: '2.1.0-1' }, () => STAMP)
+  assert.deepEqual(first, { version: 1, runtimeVersion: '2.1.0-1', updatedAt: STAMP })
+  assert.deepEqual(readCurrent(root), first)
+  assert.equal('previousVersion' in JSON.parse(readFileSync(join(root, 'state', 'current.json'), 'utf8')), false)
+
+  const switched = writeCurrent(root, { runtimeVersion: '2.1.0-2', previousVersion: '2.1.0-1' }, () => STAMP)
+  assert.deepEqual(switched, {
+    version: 1,
+    runtimeVersion: '2.1.0-2',
+    updatedAt: STAMP,
+    previousVersion: '2.1.0-1',
+  })
+  assert.deepEqual(readCurrent(root), switched)
+})
+
+test('current: a missing or damaged file reads as null', () => {
+  const root = tempDir()
+  assert.equal(readCurrent(root), null)
+
+  mkdirSync(join(root, 'state'), { recursive: true })
+  writeFileSync(join(root, 'state', 'current.json'), '{not json')
+  assert.equal(readCurrent(root), null)
+
+  writeFileSync(join(root, 'state', 'current.json'), JSON.stringify({ version: 1 }))
+  assert.equal(readCurrent(root), null)
+})
+
+test('current: writeCurrent refuses versions that cannot be directory names', () => {
+  const root = tempDir()
+  assert.throws(() => writeCurrent(root, { runtimeVersion: '' }), /invalid runtime version/)
+  assert.throws(
+    () => writeCurrent(root, { runtimeVersion: '2.1.0-1', previousVersion: 'bad/version' }),
+    /invalid previous version/,
+  )
+})
+
+test('current: the pointer follows a healthy service, or blocks when its runtime is gone', () => {
+  const current = { version: 1 as const, runtimeVersion: '2.1.0-1', updatedAt: STAMP }
+  assert.deepEqual(planCurrent(null, '2.1.0-1', false), { kind: 'first' })
+  assert.deepEqual(planCurrent(current, '2.1.0-1', false), { kind: 'keep' })
+  assert.deepEqual(planCurrent(current, '2.1.0-2', true), { kind: 'rewrite', previousVersion: '2.1.0-1' })
+  assert.deepEqual(planCurrent(current, '2.1.0-2', false), { kind: 'conflict', previousVersion: '2.1.0-1' })
+})
+
+// ── upgrade.json ────────────────────────────────────────────────────────────
+
+function upgradeRecord(overrides: Record<string, unknown> = {}) {
+  return {
+    version: 1,
+    targetVersion: '2.1.0-2',
+    fromVersion: '2.1.0-1',
+    configVersion: 44,
+    state: 'pending',
+    requestedAt: STAMP,
+    updatedAt: STAMP,
+    ...overrides,
+  }
+}
+
+test('upgrade: every preparable state survives, with an optional confirmation', () => {
+  for (const state of ['pending', 'ready', 'needs_confirmation', 'blocked']) {
+    assert.deepEqual(sanitizeUpgrade(upgradeRecord({ state })), upgradeRecord({ state }), state)
+  }
+  const confirmed = upgradeRecord({ state: 'needs_confirmation', confirmedConfigVersion: 44 })
+  assert.deepEqual(sanitizeUpgrade(confirmed), confirmed)
+})
+
+test('upgrade: bad records degrade to null', () => {
+  for (const raw of [
+    null,
+    [],
+    upgradeRecord({ version: 2 }),
+    upgradeRecord({ targetVersion: '' }),
+    upgradeRecord({ targetVersion: '../2.1.0' }),
+    upgradeRecord({ fromVersion: '' }),
+    upgradeRecord({ fromVersion: 'bad/version' }),
+    upgradeRecord({ configVersion: -1 }),
+    upgradeRecord({ configVersion: 1.5 }),
+    upgradeRecord({ state: 'failed' }),
+    upgradeRecord({ state: 'Pending' }),
+    upgradeRecord({ requestedAt: '' }),
+    upgradeRecord({ updatedAt: '' }),
+    upgradeRecord({ confirmedConfigVersion: 0 }),
+    upgradeRecord({ confirmedConfigVersion: '44' }),
+  ]) {
+    assert.equal(sanitizeUpgrade(raw), null, JSON.stringify(raw))
+  }
+})
+
+// ── failed-<version>.json ───────────────────────────────────────────────────
+
+function failedRecord(overrides: Record<string, unknown> = {}) {
+  return {
+    version: 1,
+    runtimeVersion: '2.1.0-2',
+    fromVersion: '2.1.0-1',
+    failedAt: STAMP,
+    error: { phase: 'engine', code: 'engine_not_ready' },
+    rolledBack: true,
+    ...overrides,
+  }
+}
+
+test('failed: a health-gate failure survives, including the first-install form', () => {
+  assert.deepEqual(sanitizeFailed(failedRecord()), failedRecord())
+  assert.deepEqual(
+    sanitizeFailed(failedRecord({ fromVersion: '', rolledBack: false })),
+    failedRecord({ fromVersion: '', rolledBack: false }),
+  )
+  const detailed = failedRecord({ error: { phase: 'engine', code: 'engine_not_ready', detail: 'exit 1' } })
+  assert.deepEqual(sanitizeFailed(detailed), detailed)
+})
+
+test('failed: bad records degrade to null', () => {
+  for (const raw of [
+    null,
+    [],
+    failedRecord({ version: 2 }),
+    failedRecord({ runtimeVersion: '' }),
+    failedRecord({ runtimeVersion: 'bad/version' }),
+    failedRecord({ fromVersion: 'bad/version' }),
+    failedRecord({ failedAt: '' }),
+    failedRecord({ error: undefined }),
+    failedRecord({ error: { phase: 'engine' } }),
+    failedRecord({ error: { phase: '', code: 'engine_not_ready' } }),
+    failedRecord({ error: { phase: 'engine', code: 'engine_not_ready', detail: 1 } }),
+    failedRecord({ rolledBack: 'yes' }),
+  ]) {
+    assert.equal(sanitizeFailed(raw), null, JSON.stringify(raw))
   }
 })
