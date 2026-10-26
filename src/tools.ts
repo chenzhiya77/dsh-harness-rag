@@ -29,37 +29,20 @@ interface ToolExec {
   signal?: AbortSignal
   agent?: {
     id?: string
-    session?: { events?: readonly unknown[] }
+    /** Live phase of the agent loop: `turn` is the turn this call runs in. */
+    phase?: { turn?: number }
   }
 }
 
-interface SessionCursor {
-  seq: number
-  turn?: number
-}
-
-/** Current-turn identity for the engine's per-run citation counter. DSH keeps
- * one append-only event log per session; the last `turn/start` before this call
- * is the turn the model is in — parallel calls in one turn share it, and a
- * resumed session's seeded log resolves the same way. Cursors are keyed by the
- * live session object so each call only scans events appended since the last.
- * No session or no turn ⇒ omit `run_id` (the engine then starts numbering at 1). */
-const turnCursors = new WeakMap<object, SessionCursor>()
-
+/** Current-turn identity for the engine's per-run citation counter. The agent
+ * loop stamps `phase.turn` while a turn runs, so parallel calls in one turn
+ * share it and the next turn gets a fresh value; a call outside any turn (no
+ * phase turn) omits `run_id`, which makes the engine number from 1. */
 function citationRunId(exec: ToolExec): string | undefined {
   const agent = exec.agent
-  const session = agent?.session
-  const events = session?.events
-  if (!agent?.id || !session || !events) return undefined
-  const cursor = turnCursors.get(session)
-  let turn = cursor?.turn
-  for (let index = cursor?.seq ?? 0; index < events.length; index += 1) {
-    const event = events[index] as { type?: unknown; data?: { turn?: unknown } } | undefined
-    if (event?.type === 'turn/start' && typeof event.data?.turn === 'number') turn = event.data.turn
-    else if (event?.type === 'turn/end' && event.data?.turn === turn) turn = undefined
-  }
-  turnCursors.set(session, { seq: events.length, turn })
-  return turn === undefined ? undefined : `${agent.id}:${turn}`
+  const turn = agent?.phase?.turn
+  if (!agent?.id || typeof turn !== 'number') return undefined
+  return `${agent.id}:${turn}`
 }
 
 /** One model-facing call. The engine owns argument defaults, boundary

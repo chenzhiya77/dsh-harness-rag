@@ -259,8 +259,8 @@ function execWithoutAgent() {
   return { signal: undefined } as never
 }
 
-function execWithTurn(events: unknown[], id = 's1') {
-  return { signal: undefined, agent: { id, session: { events } } } as never
+function execInTurn(turn: number | undefined, id = 's1') {
+  return { signal: undefined, agent: { id, phase: turn === undefined ? {} : { turn } } } as never
 }
 
 type ParameterSchema = {
@@ -295,19 +295,13 @@ test('tools: every call posts its native name and arguments to /tools', async ()
   }
 })
 
-test('run_id: the last turn is reused within a turn and refreshed on the next', async () => {
+test('run_id: calls in one turn share it and the next turn gets a fresh one', async () => {
   const requests: RecordedRequest[] = []
   const restore = mockFetch(requests, { results: [], message: 'm' })
   try {
-    const events: unknown[] = [
-      { type: 'turn/start', seq: 0, data: { turn: 2 } },
-      { type: 'tool/call', seq: 1, data: { turn: 2 } },
-    ]
-    const exec = execWithTurn(events)
-    await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'one' }, exec)
-    await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'two' }, exec)
-    events.push({ type: 'turn/start', seq: 2, data: { turn: 3 } })
-    await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'three' }, exec)
+    await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'one' }, execInTurn(2))
+    await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'two' }, execInTurn(2))
+    await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'three' }, execInTurn(3))
 
     assert.deepEqual(
       requests.map((request) => (request.body as { run_id?: string }).run_id),
@@ -318,30 +312,15 @@ test('run_id: the last turn is reused within a turn and refreshed on the next', 
   }
 })
 
-test('run_id: omitted when the session has no turn or the call has no agent', async () => {
+test('run_id: omitted when the phase has no turn or the call has no agent', async () => {
   const requests: RecordedRequest[] = []
   const restore = mockFetch(requests, { results: [], message: 'm' })
   try {
-    await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'q' }, execWithTurn([]))
+    await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'q' }, execInTurn(undefined))
     await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'q' }, execWithoutAgent())
     for (const request of requests) {
       assert.ok(!('run_id' in (request.body as Record<string, unknown>)))
     }
-  } finally {
-    restore()
-  }
-})
-
-test('run_id: omitted after the turn closes', async () => {
-  const requests: RecordedRequest[] = []
-  const restore = mockFetch(requests, { results: [], message: 'm' })
-  try {
-    const events = [
-      { type: 'turn/start', seq: 0, data: { turn: 2 } },
-      { type: 'turn/end', seq: 1, data: { turn: 2, reason: { kind: 'success' } } },
-    ]
-    await toolNamed('hrag_hybrid_search').execute({ kb_id: 'kb-1', query: 'q' }, execWithTurn(events))
-    assert.ok(!('run_id' in (requests[0].body as Record<string, unknown>)))
   } finally {
     restore()
   }
@@ -489,7 +468,7 @@ test('kb: a session binding supplies the id and display name', async () => {
   const restore = mockFetch(requests, payload)
   try {
     const store = fakeStore({ s1: { kbId: 'kb-bound', kbName: '产品资料', updatedAt: NOW } })
-    const result = await toolNamed('hrag_list_documents', store).execute({}, execWithTurn([]))
+    const result = await toolNamed('hrag_list_documents', store).execute({}, execInTurn(undefined))
     assert.deepEqual(requests.map((request) => request.url), ['http://127.0.0.1:8020/api/knowledge-bases/kb-bound/tools'])
     assert.deepEqual(requests.map((request) => request.body), [{ name: 'list_knowledge_documents' }])
     assert.deepEqual(result, { ...payload, kb_id: 'kb-bound', kb_name: '产品资料' })
