@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { RuntimePack } from '../src/runtime/manifest.ts'
@@ -33,11 +33,11 @@ function pack(version: string, configVersion: number): RuntimePack {
 }
 
 interface FakeSupervisor extends Supervisor {
-  calls: { ensure: number; retry: number; probe: number; adopt: number }
+  calls: { ensure: number; retry: number; probe: number; adopt: number; lastBudget?: number }
 }
 
 function fakeSupervisor(version: string, healthy: boolean): FakeSupervisor {
-  const calls = { ensure: 0, retry: 0, probe: 0, adopt: 0 }
+  const calls = { ensure: 0, retry: 0, probe: 0, adopt: 0, lastBudget: undefined as number | undefined }
   const ready: RuntimeStatusView = {
     phase: 'ready',
     adopted: true,
@@ -48,8 +48,9 @@ function fakeSupervisor(version: string, healthy: boolean): FakeSupervisor {
   return {
     root: '',
     calls,
-    ensure: async () => {
+    ensure: async (request?: { readyTimeoutMs?: number }) => {
       calls.ensure += 1
+      calls.lastBudget = request?.readyTimeoutMs
       return ready
     },
     probe: async () => {
@@ -100,6 +101,7 @@ interface FixtureOptions {
   targetError?: { code: string; detail?: string }
   log?: (message: string) => void
   holdProvision?: boolean
+  oldEnsureError?: { phase: string; code: string; detail?: string }
 }
 
 function install(root: string, version: string, configVersion: number): void {
@@ -134,6 +136,17 @@ function fixture(options: FixtureOptions = {}): Fixture {
     if (!supervisor) {
       const healthy = version === OLD ? options.oldHealthy === true : true
       supervisor = fakeSupervisor(version, healthy)
+      if (version === OLD && options.oldEnsureError) {
+        const error = options.oldEnsureError
+        supervisor.ensure = async () => ({
+          phase: 'error',
+          adopted: false,
+          runtimeVersion: OLD,
+          root,
+          logTail: '',
+          error,
+        })
+      }
       supervisors.set(version, supervisor)
     }
     return supervisor
@@ -351,6 +364,105 @@ test('upgrade: dispose aborts a background preparation', async () => {
   f.coordinator.dispose()
 
   assert.equal(f.signals[0].aborted, true)
+})
+
+test('upgrade: a prepared target switches with the 90 s budget and records the previous version', async () => {
+  const f = fixture({ oldHealthy: false, targetInstalled: true })
+
+  const status = await f.coordinator.ensure()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.runtimeVersion, NEW)
+  assert.deepEqual(current(f.root), {
+    version: 1,
+    runtimeVersion: NEW,
+    previousVersion: OLD,
+    updatedAt: STAMP,
+  })
+  assert.equal(existsSync(join(f.root, 'state', `failed-${NEW}.json`)), false)
+  assert.equal(existsSync(join(f.root, 'state', 'upgrade.json')), false)
+  assert.equal(f.supervisors.get(NEW)?.calls.lastBudget, 90_000)
+})
+
+test('upgrade: a failed switch writes the failure record and rolls back', async () => {
+  const f = fixture({ oldHealthy: false, targetInstalled: true })
+  f.supervisors.get(NEW)!.ensure = async () => ({
+    phase: 'error',
+    adopted: false,
+    runtimeVersion: NEW,
+    root: f.root,
+    logTail: '',
+    error: { phase: 'engine', code: 'engine_not_ready', detail: 'exit 1' },
+  })
+
+  const status = await f.coordinator.ensure()
+
+  assert.equal(status.phase, 'ready')
+  assert.equal(status.runtimeVersion, OLD)
+  assert.equal(status.upgrade?.state, 'failed')
+  const failed = JSON.parse(readFileSync(join(f.root, 'state', `failed-${NEW}.json`), 'utf8'))
+  assert.equal(failed.runtimeVersion, NEW)
+  assert.equal(failed.fromVersion, OLD)
+  assert.equal(failed.error.code, 'engine_not_ready')
+  assert.equal(failed.rolledBack, true)
+  assert.equal(existsSync(join(f.root, 'state', 'upgrade.json')), false)
+  assert.equal(current(f.root).runtimeVersion, OLD)
+})
+
+test('upgrade: a failed rollback reports rollback_failed and keeps rolledBack false', async () => {
+  const f = fixture({
+    oldHealthy: false,
+    targetInstalled: true,
+    oldEnsureError: { phase: 'engine', code: 'engine_exited' },
+  })
+  f.supervisors.get(NEW)!.ensure = async () => ({
+    phase: 'error',
+    adopted: false,
+    runtimeVersion: NEW,
+    root: f.root,
+    logTail: '',
+    error: { phase: 'qdrant', code: 'qdrant_not_ready' },
+  })
+
+  const status = await f.coordinator.ensure()
+
+  assert.equal(status.phase, 'error')
+  assert.equal(status.error?.code, 'rollback_failed')
+  assert.equal(status.upgrade?.state, 'failed')
+  const failed = JSON.parse(readFileSync(join(f.root, 'state', `failed-${NEW}.json`), 'utf8'))
+  assert.equal(failed.error.code, 'qdrant_not_ready')
+  assert.equal(failed.rolledBack, false)
+})
+
+test('upgrade: retry clears the failure record and re-runs the decision', async () => {
+  const f = fixture({ oldHealthy: true, targetInstalled: true })
+  writeState(f.root, `failed-${NEW}.json`, {
+    version: 1,
+    runtimeVersion: NEW,
+    fromVersion: OLD,
+    failedAt: STAMP,
+    error: { phase: 'engine', code: 'engine_not_ready' },
+    rolledBack: true,
+  })
+
+  const failed = await f.coordinator.ensure()
+  assert.equal(failed.upgrade?.state, 'failed')
+
+  const after = await f.coordinator.retry()
+
+  assert.equal(existsSync(join(f.root, 'state', `failed-${NEW}.json`)), false)
+  assert.equal(after.upgrade?.state, 'ready')
+  assert.equal(current(f.root).runtimeVersion, OLD)
+})
+
+test('upgrade: concurrent ensure calls share one switch', async () => {
+  const f = fixture({ oldHealthy: false, targetInstalled: true })
+
+  const [first, second] = await Promise.all([f.coordinator.ensure(), f.coordinator.ensure()])
+
+  assert.equal(f.supervisors.get(NEW)?.calls.ensure, 1)
+  assert.equal(first.runtimeVersion, NEW)
+  assert.equal(second.runtimeVersion, NEW)
 })
 
 test('upgrade: confirm records the config version and a later activation may proceed', async () => {

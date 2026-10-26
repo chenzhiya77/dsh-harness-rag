@@ -240,6 +240,79 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
       })
   }
 
+  /** Switch to the prepared target with the shared 90 s budget. Success moves
+   * `current.json`; failure records `failed-<target>.json` and rolls back. */
+  const switchTo = async (targetSupervisor: Supervisor, fromVersion: string): Promise<RuntimeStatusView> => {
+    if (!target) return status()
+    const targetView = await targetSupervisor.ensure({ readyTimeoutMs: 90_000 })
+    if (targetView.phase === 'ready') {
+      if (fromVersion) {
+        writeCurrent(root, { runtimeVersion: target.version, previousVersion: fromVersion }, now)
+      }
+      rmSync(failedPath(root, target.version), { force: true })
+      removeUpgrade()
+      return { ...targetView, previousVersion: fromVersion || targetView.previousVersion }
+    }
+
+    const error = targetView.error ?? { phase: 'switch', code: 'switch_failed' }
+    const failed: FailedRecord = {
+      version: 1,
+      runtimeVersion: target.version,
+      fromVersion,
+      failedAt: now(),
+      error,
+      rolledBack: false,
+    }
+    writeJson(failedPath(root, target.version), failed)
+    removeUpgrade()
+    targetSupervisor.dispose()
+
+    if (!fromVersion) {
+      return {
+        ...targetView,
+        upgrade: {
+          state: 'failed',
+          fromVersion,
+          targetVersion: target.version,
+          configVersionChanged: false,
+          requiresConfirmation: false,
+          error,
+        },
+      }
+    }
+
+    const old = supervisorFor(fromVersion)
+    running = old
+    const oldView = await old.ensure()
+    if (oldView.phase === 'ready') {
+      writeJson(failedPath(root, target.version), { ...failed, rolledBack: true })
+      return {
+        ...oldView,
+        upgrade: {
+          state: 'failed',
+          fromVersion,
+          targetVersion: target.version,
+          configVersionChanged: false,
+          requiresConfirmation: false,
+          error,
+        },
+      }
+    }
+    return {
+      ...oldView,
+      phase: 'error',
+      error: { phase: 'switch', code: 'rollback_failed', detail: oldView.error?.code },
+      upgrade: {
+        state: 'failed',
+        fromVersion,
+        targetVersion: target.version,
+        configVersionChanged: false,
+        requiresConfirmation: false,
+        error,
+      },
+    }
+  }
+
   const run = async (): Promise<RuntimeStatusView> => {
     if (disposed) return status()
     const current = readCurrent(root)
@@ -445,18 +518,6 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
 
     const targetSupervisor = supervisorFor(target.version)
     running = targetSupervisor
-    if (!options.activate) {
-      upgrade = { ...base, state: 'ready' }
-      persist(fromVersion, 'ready')
-      publishView({
-        phase: 'idle',
-        adopted: false,
-        runtimeVersion: currentVersion ?? target.version,
-        root,
-        logTail: '',
-      })
-      return status()
-    }
 
     publishView({
       phase: 'switching',
@@ -465,14 +526,18 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
       root,
       logTail: '',
     })
-    const result = await options.activate(targetSupervisor, fromVersion)
-    publishView(result)
+    const result = options.activate
+      ? await options.activate(targetSupervisor, fromVersion)
+      : await switchTo(targetSupervisor, fromVersion)
+    publishView({ ...result, previousVersion: fromVersion || result.previousVersion })
     if (result.phase === 'ready' && result.upgrade?.state !== 'failed') {
       removeUpgrade()
       upgrade = undefined
       prepared = true
     } else {
-      upgrade = result.upgrade ?? { ...base, state: 'pending', error: result.error }
+      upgrade = result.upgrade
+        ? { ...result.upgrade, configVersionChanged: configChanged, requiresConfirmation: needsConfirm }
+        : { ...base, state: 'pending', error: result.error }
     }
     return status()
   }
@@ -497,7 +562,6 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
       removeUpgrade()
       upgrade = undefined
       prepError = undefined
-      if (running) return running.retry()
       return ensure()
     },
     confirm: () => {

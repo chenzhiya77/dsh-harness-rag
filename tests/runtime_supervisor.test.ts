@@ -249,6 +249,40 @@ test('start: the seed runs before the children and points at the planned qdrant'
   assert.equal(rag.qdrant_url, `http://127.0.0.1:${status.ports?.qdrantHttp}`)
 })
 
+test('start: the startup budget is shared by qdrant and the engine', async (t) => {
+  const f = await fixture(t)
+  let clock = 0
+  const fetchImpl = (async (input: string | URL | Request) => {
+    const url = String(input)
+    clock += 40
+    if (url.includes('/readyz')) return new Response('ok', { status: 200 })
+    if (url.includes('/health')) return new Response('down', { status: 503 })
+    return new Response('[]', { status: 200 })
+  }) as typeof fetch
+  const spawn: SpawnFn = () => ({
+    pid: 1,
+    onData: () => {},
+    onExit: () => {},
+    kill: () => {},
+  })
+  const sup = supervisor(f, {
+    spawn,
+    fetchImpl,
+    nowMs: () => clock,
+    readyTimeoutMs: 90,
+    probeIntervalMs: 1,
+  })
+
+  const status = await sup.ensure()
+
+  assert.equal(status.phase, 'error')
+  assert.equal(status.error?.code, 'engine_not_ready')
+  // Qdrant used 40; a per-role engine budget would run to 130. The shared
+  // deadline cuts the second role off once the overall 90 is gone.
+  assert.ok(clock >= 90, `clock=${clock}`)
+  assert.ok(clock < 160, `clock=${clock}`)
+})
+
 // ── adopt / lease ───────────────────────────────────────────────────────────
 
 test('adopt: a live instance is reused and nothing is spawned', async (t) => {

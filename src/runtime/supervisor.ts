@@ -70,6 +70,8 @@ export interface SupervisorOptions {
   token?: string
   fetchImpl?: typeof fetch
   now?: () => string
+  /** Monotonic-ish clock for the shared startup budget; tests inject it. */
+  nowMs?: () => number
   isAlive?: (pid: number) => boolean
   executablePath?: (pid: number) => string | null
   probePort?: (port: number) => Promise<boolean>
@@ -90,7 +92,7 @@ export interface SupervisorOptions {
 
 export interface Supervisor {
   readonly root: string
-  ensure(): Promise<RuntimeStatusView>
+  ensure(options?: { readyTimeoutMs?: number }): Promise<RuntimeStatusView>
   /** Read-only: the healthy service record for this supervisor's version, or
    * null. Never spawns, never touches `current.json`. */
   probe(): Promise<ServiceRecord | null>
@@ -207,6 +209,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
   const runtimeVersion = options.runtimeVersion
   const fetchImpl = options.fetchImpl ?? fetch
   const now = options.now ?? (() => new Date().toISOString())
+  const nowMs = options.nowMs ?? Date.now
   const isAlive = options.isAlive ?? defaultIsAlive
   const executablePath = options.executablePath ?? (() => null)
   const probePort = options.probePort ?? defaultProbePort
@@ -394,13 +397,13 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     check: () => Promise<boolean>,
     child: () => ChildHandle | null,
     exited: () => boolean,
+    deadline: number,
   ): Promise<'ready' | 'exited' | 'timeout'> => {
-    const deadline = Date.now() + readyTimeoutMs
     for (;;) {
       if (disposed || !child()) return 'exited'
       if (await check()) return 'ready'
       if (exited()) return 'exited'
-      if (Date.now() > deadline) return 'timeout'
+      if (nowMs() > deadline) return 'timeout'
       await new Promise<void>((resolve) => setTimeout(resolve, probeIntervalMs))
     }
   }
@@ -554,7 +557,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
 
   /** One attempt: Qdrant first, the engine second. Killed children are the
    * caller's business, so a retry can rebuild the round from planPorts. */
-  const runRound = async (ports: PortPlan): Promise<RoundOutcome> => {
+  const runRound = async (ports: PortPlan, deadline: number): Promise<RoundOutcome> => {
     let qdrantExit: number | null | undefined
     const qdrantSpawn = spawnChild(qdrantRequest(ports), 'qdrant.log', (code) => {
       if (qdrant !== qdrantSpawn.child) return
@@ -566,6 +569,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       () => probe(`http://127.0.0.1:${ports.qdrantHttp}/readyz`),
       () => qdrant,
       () => qdrantExit !== undefined,
+      deadline,
     )
     if (qdrantReady !== 'ready') {
       return qdrantReady === 'exited'
@@ -590,6 +594,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
         }),
       () => engine,
       () => engineExit !== undefined,
+      deadline,
     )
     if (engineReady !== 'ready') {
       return engineReady === 'exited'
@@ -599,7 +604,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     return { kind: 'ready' }
   }
 
-  const start = async (): Promise<RuntimeStatusView> => {
+  const start = async (budgetMs: number): Promise<RuntimeStatusView> => {
     stopWatchdog()
     setPhase({ phase: 'preparing', adopted: false, error: undefined, logTail: '' })
     if (options.ensureRuntime) {
@@ -622,6 +627,9 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
 
     let preferred: Partial<PortPlan> | undefined = options.preferredPorts
     let retried = false
+    // One deadline for Qdrant + knowledge: a slow first role cannot borrow a
+    // fresh budget for the second.
+    const deadline = nowMs() + budgetMs
     for (;;) {
       const planned = await planPorts({
         preferred,
@@ -638,7 +646,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
       })
       if (!seeded.ok) return fail('seed', seeded.code, seeded.detail)
 
-      const outcome = await runRound(ports)
+      const outcome = await runRound(ports, deadline)
       if (outcome.kind === 'ready') {
         writeJson(statePath, {
           version: 1,
@@ -676,7 +684,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     }
   }
 
-  const ensure = async (): Promise<RuntimeStatusView> => {
+  const ensure = async (request?: { readyTimeoutMs?: number }): Promise<RuntimeStatusView> => {
     disposed = false
     if (pendingDispose !== null) {
       timers.clear(pendingDispose)
@@ -686,7 +694,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     if (startPromise) return startPromise
     const adopted = await adopt(runtimeVersion)
     if (adopted) return adopted
-    startPromise = start().finally(() => {
+    startPromise = start(request?.readyTimeoutMs ?? readyTimeoutMs).finally(() => {
       startPromise = null
     })
     return startPromise

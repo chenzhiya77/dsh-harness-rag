@@ -98,18 +98,24 @@
 
 > 动到的文件：`src/runtime/supervisor.ts`、`src/runtime/upgrade.ts`、`src/runtime/manifest.ts`、`tests/runtime_supervisor.test.ts`、`tests/runtime_upgrade.test.ts`。
 
-- [ ] 目标 supervisor 支持整栈 90 秒预算：`readyTimeoutMs=90_000` 作为 Qdrant + knowledge 的**总截止时间**，不是每个角色各 90 秒；`waitFor`/`runRound` 接受共享 deadline 或按已用时间递减。
-- [ ] 成功路径：目标 `runRound` 成功 ⇒ 写目标 `service.json` ⇒ 协调者写 `current.json`（目标 + previous）⇒ 删 `upgrade.json` 与 `failed-<target>.json` ⇒ Task 4 清理 ⇒ `phase=ready`。
-- [ ] `upgrade.json` 只记 `pending|ready|needs_confirmation|blocked`；健康门失败时删除它，由 `failed-<target>.json` 作为唯一失败记录；重试时删失败文件并重建 `pending`。
-- [ ] 失败路径：目标提前退出或 90 秒超时 ⇒ 停本轮目标子进程 ⇒ 删目标 `service.json` ⇒ 写 `failed-<target>.json`（先 `rolledBack:false`）⇒ 存在 `current` 时启动旧版 supervisor（正常 120 秒/角色）⇒ 旧版健康则 `phase=ready`、`upgrade.state=failed`、`rolledBack:true`；旧版也失败则 `phase=error`、`error.code='rollback_failed'`、`rolledBack:false`；没有 `current` 则不启动旧版、`phase=error`、`rolledBack:false`。准备阶段失败不走这条路径（见 Task 2）。
-- [ ] 90 秒预算只在有 `current` 的升级里启用；首次安装仍用现有 120 秒/角色。旧服务已不在、本进程恢复启动目标时同样走 90 秒门；成功后 `previousVersion` 取 `current.json` 的版本（若有）。
-- [ ] 失败不自动重试：后续激活见失败记录就停在旧版；`runtime/upgrade {action:'retry'}` 删记录、状态回 `pending`；有旧服务时等下次 DSH 启动，没有旧服务时本次可直接启动目标。
-- [ ] 切换中 `phase='switching'`；不允许并发第二个切换（升级记录 + 租约）。
-- [ ] 失败记录含 `runtimeVersion`、`fromVersion`、`failedAt`、`error{phase,code,detail}`、`rolledBack`；不写 token、日志全文、环境变量。
-- [ ] 单测：Qdrant 50 s + engine 30 s 成功；总 91 s 超时失败；目标 Qdrant 起不来；目标 engine 起不来；旧版回滚成功/失败（含旧版目录缺失 ⇒ `rollback_failed`）；失败记录抑制自动重试；retry 清记录。
-- [ ] 门禁：`tsc` 0 错；supervisor/upgrade 测试全绿；现有崩溃、端口重试、看门狗测试无回归。
+- [x] 目标 supervisor 支持整栈 90 秒预算：`readyTimeoutMs=90_000` 作为 Qdrant + knowledge 的**总截止时间**，不是每个角色各 90 秒；`waitFor`/`runRound` 接受共享 deadline 或按已用时间递减。
+- [x] 成功路径：目标 `runRound` 成功 ⇒ 写目标 `service.json` ⇒ 协调者写 `current.json`（目标 + previous）⇒ 删 `upgrade.json` 与 `failed-<target>.json` ⇒ Task 4 清理 ⇒ `phase=ready`。
+- [x] `upgrade.json` 只记 `pending|ready|needs_confirmation|blocked`；健康门失败时删除它，由 `failed-<target>.json` 作为唯一失败记录；重试时删失败文件并重建 `pending`。
+- [x] 失败路径：目标提前退出或 90 秒超时 ⇒ 停本轮目标子进程 ⇒ 删目标 `service.json` ⇒ 写 `failed-<target>.json`（先 `rolledBack:false`）⇒ 存在 `current` 时启动旧版 supervisor（正常 120 秒/角色）⇒ 旧版健康则 `phase=ready`、`upgrade.state=failed`、`rolledBack:true`；旧版也失败则 `phase=error`、`error.code='rollback_failed'`、`rolledBack:false`；没有 `current` 则不启动旧版、`phase=error`、`rolledBack:false`。准备阶段失败不走这条路径（见 Task 2）。
+- [x] 90 秒预算只在有 `current` 的升级里启用；首次安装仍用现有 120 秒/角色。旧服务已不在、本进程恢复启动目标时同样走 90 秒门；成功后 `previousVersion` 取 `current.json` 的版本（若有）。
+- [x] 失败不自动重试：后续激活见失败记录就停在旧版；`runtime/upgrade {action:'retry'}` 删记录、状态回 `pending`；有旧服务时等下次 DSH 启动，没有旧服务时本次可直接启动目标。
+- [x] 切换中 `phase='switching'`；不允许并发第二个切换（升级记录 + 租约）。
+- [x] 失败记录含 `runtimeVersion`、`fromVersion`、`failedAt`、`error{phase,code,detail}`、`rolledBack`；不写 token、日志全文、环境变量。
+- [x] 单测：Qdrant 50 s + engine 30 s 成功；总 91 s 超时失败；目标 Qdrant 起不来；目标 engine 起不来；旧版回滚成功/失败（含旧版目录缺失 ⇒ `rollback_failed`）；失败记录抑制自动重试；retry 清记录。
+- [x] 门禁：`tsc` 0 错；supervisor/upgrade 测试全绿；现有崩溃、端口重试、看门狗测试无回归。
 
-**实测（实施期回填）**：
+**实测（实施期回填）**：2026-10-25 实施完成（未提交）。
+- 共享预算：`SupervisorOptions.nowMs` 可注入；`start(budgetMs)` 在租约/端口准备后算一次 deadline，`runRound(ports, deadline)` 把同一截止时间传给 Qdrant 与 knowledge 两次 `waitFor`，绑定重试也共用。`ensure({readyTimeoutMs})` 只影响本次启动；默认仍 120000。
+- 切换：协调者新增 `switchTo`——`target.ensure({readyTimeoutMs:90_000})`；成功时写 `current.json`（目标 + `previousVersion`）、删 `upgrade.json` 与 `failed-<target>.json`、`phase=ready`。失败时先写 `failed-<target>.json`（`rolledBack:false`）、删 `upgrade.json`、`dispose` 目标，再以 120 秒/角色启动旧版；旧版健康则把失败记录改 `rolledBack:true` 并回 `phase=ready`，否则 `phase=error` + `rollback_failed`。无旧版时不回滚、直接 `phase=error`。
+- 重试：`retry()` 删目标失败文件、清 `upgrade.json`/`prepError` 后重跑决策；旧版健康则只认领并回 `pending/ready`，旧版不在则本次走 `switchTo`。
+- 并发：`ensure()` 单飞；切换期间 `phase='switching'`；租约仍由目标 supervisor 在启动时获取。
+- 门禁：`tsc` 0 错；`runtime_upgrade`+`runtime_supervisor` 52/52；非 G11 247/247；全量 275/275（G11 的 run_id 用例已恢复）。
+- 说明：①50 s+30 s 的成功长跑与 91 s 超时用可注入时钟按比例验证（总 90 被共享截止截断、单角色时间也够），未做真实分钟级等待；②「旧版目录缺失」以旧版 `ensure()` 报错等价覆盖，未单独删目录；③Task 4 的旧版清理未接，成功切换暂不删更老版本。
 
 ## Task 4 — provision 锁、旧版清理、配置版本确认
 
