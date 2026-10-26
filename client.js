@@ -103,6 +103,9 @@ window.__ModuleLoader__.load({
       'rt.upgradeReason.other': '准备失败',
       'rt.errorTitle': '本地知识服务未能启动',
       'rt.errorStage': '未通过阶段：{0}',
+      'rt.idleTitle': '本地服务没有在运行',
+      'rt.idleReason': '原因：{0}。',
+      'rt.idleHint': '处理上面的原因后点「重试」。',
       'rt.retry': '重试',
       'rt.copyLog': '复制日志路径',
       'rt.copied': '已复制',
@@ -112,7 +115,6 @@ window.__ModuleLoader__.load({
       'rt.continue': '继续',
       'rt.cancel': '取消',
       'rt.syncNote': '建议放在本地磁盘；同步盘上运行数据容易损坏。',
-      'rt.embedBanner': '本地服务已就绪；配置嵌入模型后即可上传文档',
       'rt.embedAction': '去配置',
       'rt.dismiss': '关闭',
       'rt.warnAnchor': '位置文件无法读取，已改用默认位置',
@@ -802,6 +804,7 @@ window.__ModuleLoader__.load({
       'upload.rejected': '已跳过不支持的文件：{0}',
       'upload.needKb': '知识库暂不可接收：请先创建知识库',
       'upload.busy': '知识库暂不可接收：上传中，请稍候',
+      'upload.needEmbedding': '先配置嵌入模型，再上传文档',
       'upload.dirSkipped': '已跳过文件夹（仅支持文件上传）',
       'dup.identicalTitle': '内容完全一致',
       'dup.identicalDescription': '「{0}」与库中已有文档内容完全相同，无需重复上传。',
@@ -1024,6 +1027,9 @@ window.__ModuleLoader__.load({
       'rt.upgradeReason.other': 'preparation failed',
       'rt.errorTitle': 'The local knowledge service could not start',
       'rt.errorStage': 'Failed at: {0}',
+      'rt.idleTitle': 'The local service is not running',
+      'rt.idleReason': 'Reason: {0}.',
+      'rt.idleHint': 'Fix the reason above, then retry.',
       'rt.retry': 'Retry',
       'rt.copyLog': 'Copy log path',
       'rt.copied': 'Copied',
@@ -1033,7 +1039,6 @@ window.__ModuleLoader__.load({
       'rt.continue': 'Continue',
       'rt.cancel': 'Cancel',
       'rt.syncNote': 'Prefer a local disk; runtime data on a synced drive is easy to corrupt.',
-      'rt.embedBanner': 'The local service is ready; configure an embedding model to start uploading documents',
       'rt.embedAction': 'Configure',
       'rt.dismiss': 'Dismiss',
       'rt.warnAnchor': 'The location file could not be read; using the default location',
@@ -1727,6 +1732,7 @@ window.__ModuleLoader__.load({
       'upload.rejected': 'Skipped unsupported files: {0}',
       'upload.needKb': 'The knowledge base cannot take files yet: create one first',
       'upload.busy': 'The knowledge base cannot take files yet: an upload is in progress',
+      'upload.needEmbedding': 'Configure an embedding model before uploading documents',
       'upload.dirSkipped': 'Skipped folders (only files can be uploaded)',
       'dup.identicalTitle': 'Identical content',
       'dup.identicalDescription': '"{0}" is byte-identical to an existing document — no need to upload again.',
@@ -2467,6 +2473,8 @@ window.__ModuleLoader__.load({
           '.hrag-pathst-degraded { color: var(--dsw-static-amber-500); }',
           '.hrag-notice { padding: 6px 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; word-break: break-word; }',
           '.hrag-notice-error { color: var(--dsw-alias-state-error-primary); }',
+          '.hrag-upload-toast { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 40; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--dsw-alias-bg-module-platform); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14); color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }',
+          '.hrag-upload-toast > span { flex: 1 1 auto; min-width: 0; }',
           '.hrag-reindex-status { padding: 0 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
           '.hrag-btn-icon { width: 32px; padding: 0; }',
           '.hrag-vec-slot { flex-direction: column; min-height: 0; flex: 1; }',
@@ -20998,12 +21006,25 @@ window.__ModuleLoader__.load({
       const [runtimeSyncConfirm, setRuntimeSyncConfirm] = React.useState(false)
       const [runtimeSetupForced, setRuntimeSetupForced] = React.useState(false)
       const [runtimeCopied, setRuntimeCopied] = React.useState(false)
-      const [embedBannerOff, setEmbedBannerOff] = React.useState(false)
+      const [embedUploadNotice, setEmbedUploadNotice] = React.useState(false)
       const [anchorWarnOff, setAnchorWarnOff] = React.useState(false)
       const [upgradeReadyOff, setUpgradeReadyOff] = React.useState(false)
       const [upgradeBlockedOff, setUpgradeBlockedOff] = React.useState(false)
       const [connectHint, setConnectHint] = React.useState(false)
       const runtimeLoadedRef = React.useRef(false)
+      const needsEmbedding = Boolean(
+        runtime && runtime.mode === 'managed' && runtime.phase === 'ready' && runtime.needsEmbeddingConfig,
+      )
+
+      React.useEffect(() => {
+        if (!needsEmbedding) setEmbedUploadNotice(false)
+      }, [needsEmbedding])
+
+      React.useEffect(() => {
+        if (!embedUploadNotice) return undefined
+        const timer = window.setTimeout(() => setEmbedUploadNotice(false), 6000)
+        return () => window.clearTimeout(timer)
+      }, [embedUploadNotice])
 
       const load = React.useCallback(() => {
         setPhase('loading')
@@ -21050,9 +21071,14 @@ window.__ModuleLoader__.load({
         if (!runtime || runtime.mode === 'external') return undefined
         const phase = runtime.phase
         if (phase === 'error' || phase === 'needs_location') return undefined
+        const upgradeState = runtime.upgrade && runtime.upgrade.state
+        // 只有还会自己动的状态才轮询：中间态，或后台准备中的 pending。
+        // idle / ready+blocked 等下去也不会变，交给卡片上的动作；但 idle 尚无
+        // upgrade 结论时再拉一拍，等协调器给出终态（否则卡片没有原因）。
         if (phase === 'ready') {
-          const upgradeState = runtime.upgrade && runtime.upgrade.state
-          if (upgradeState !== 'pending' && upgradeState !== 'blocked') return undefined
+          if (upgradeState !== 'pending') return undefined
+        } else if (phase === 'idle' && runtime.upgrade) {
+          if (upgradeState !== 'pending') return undefined
         }
         const timer = window.setTimeout(refreshRuntime, RUNTIME_POLL_MS)
         return () => window.clearTimeout(timer)
@@ -21196,6 +21222,10 @@ window.__ModuleLoader__.load({
 
       const handleUpload = (fileList) => {
         if (!kbId || uploading) return
+        if (needsEmbedding) {
+          setEmbedUploadNotice(true)
+          return
+        }
         const files = Array.from(fileList || [])
         if (files.length === 0) return
         // 白名单前置拦截（Task 5，照工作台 partitionFilesBySuffix 语义）：accept 只是
@@ -21362,6 +21392,10 @@ window.__ModuleLoader__.load({
         }
         if (!kbId) {
           showToast(t('upload.needKb'), { error: true })
+          return
+        }
+        if (needsEmbedding) {
+          setEmbedUploadNotice(true)
           return
         }
         if (uploading) {
@@ -21532,6 +21566,17 @@ window.__ModuleLoader__.load({
           opened = false
         }
         setConnectHint(!opened)
+      }
+
+      const upgradeReasonKey = (code) => {
+        if (code === 'upgrade_blocked_by_instance') return 'rt.upgradeReason.lease'
+        if (code === 'upgrade_blocked_stale_instance') return 'rt.upgradeReason.stale'
+        if (code === 'state_version_conflict') return 'rt.upgradeReason.conflict'
+        if (code === 'pack_missing' || code === 'platform_unsupported' || code === 'manifest_invalid') return 'rt.upgradeReason.pack'
+        if (code === 'no_space') return 'rt.upgradeReason.space'
+        if (code === 'provision_held') return 'rt.upgradeReason.provision'
+        if (code === 'manifest_mismatch') return 'rt.upgradeReason.manifest'
+        return 'rt.upgradeReason.other'
       }
 
       // 首启门优先于库列表四态；null ⇒ 原逻辑（external 或托管 ready）。
@@ -21709,6 +21754,55 @@ window.__ModuleLoader__.load({
                 ),
           ),
         )
+      } else if (runtime.mode === 'managed' && runtime.phase === 'idle') {
+        // 等下去不会有结果（例如没有可下载的包）：给原因和一个明确的动作，
+        // 面板不再为这种终态每秒轮询。
+        const upgrade = runtime.upgrade || {}
+        const reason = upgrade.error ? t(upgradeReasonKey(upgrade.error.code)) : ''
+        const confirmPending = upgrade.state === 'needs_confirmation'
+        const target = String(upgrade.targetVersion || runtime.targetVersion || '')
+        runtimeGate = h(
+          'div',
+          { className: 'hrag-state hrag-state-fill hrag-rt-card' },
+          h('div', { className: 'hrag-state-title' }, t('rt.idleTitle')),
+          reason ? h('div', { className: 'hrag-state-detail' }, t('rt.idleReason', { 0: reason })) : null,
+          h(
+            'div',
+            { className: 'hrag-state-detail' },
+            confirmPending ? t('rt.upgradeConfirm', { 0: target }) : t('rt.idleHint'),
+          ),
+          h(
+            'div',
+            { className: 'hrag-rt-actions' },
+            confirmPending
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-primary',
+                    disabled: runtimeBusy,
+                    onClick: () => runUpgradeAction('confirm'),
+                  },
+                  t('rt.upgradeConfirmAction'),
+                )
+              : h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-primary',
+                    disabled: runtimeBusy,
+                    onClick: retryRuntimeSetup,
+                  },
+                  t('rt.retry'),
+                ),
+            h(
+              'button',
+              { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: copyRuntimeLogPath },
+              t(runtimeCopied ? 'rt.copied' : 'rt.copyLog'),
+            ),
+          ),
+          runtime.logTail ? h('pre', { className: 'hrag-rt-log' }, runtime.logTail) : null,
+        )
       } else if (runtime.mode === 'managed' && runtime.phase !== 'ready') {
         const progress = runtime.progress
         const percent =
@@ -21847,6 +21941,10 @@ window.__ModuleLoader__.load({
               ],
               onSelect: (id) => {
                 if (id === 'upload') {
+                  if (needsEmbedding) {
+                    setEmbedUploadNotice(true)
+                    return
+                  }
                   const input = fileInputRef.current
                   if (input) input.click()
                   return
@@ -21999,19 +22097,8 @@ window.__ModuleLoader__.load({
         )
       }
 
-      // 拖拽反馈只在可落时亮（有库且面板就绪；无库落下＝先建库 toast，不亮）。
-      const dragFeedbackOn = dragActive && phase === 'ready' && Boolean(kbId)
-
-      const upgradeReasonKey = (code) => {
-        if (code === 'upgrade_blocked_by_instance') return 'rt.upgradeReason.lease'
-        if (code === 'upgrade_blocked_stale_instance') return 'rt.upgradeReason.stale'
-        if (code === 'state_version_conflict') return 'rt.upgradeReason.conflict'
-        if (code === 'pack_missing' || code === 'platform_unsupported' || code === 'manifest_invalid') return 'rt.upgradeReason.pack'
-        if (code === 'no_space') return 'rt.upgradeReason.space'
-        if (code === 'provision_held') return 'rt.upgradeReason.provision'
-        if (code === 'manifest_mismatch') return 'rt.upgradeReason.manifest'
-        return 'rt.upgradeReason.other'
-      }
+      // 拖拽反馈只在可落时亮（有库、面板就绪且嵌入模型已配置；否则落下＝拦截提示，不亮）。
+      const dragFeedbackOn = dragActive && phase === 'ready' && Boolean(kbId) && !needsEmbedding
 
       const upgradeBanner = (() => {
         if (!runtime || runtime.mode !== 'managed' || runtime.phase !== 'ready' || !runtime.upgrade) return null
@@ -22106,15 +22193,15 @@ window.__ModuleLoader__.load({
                 ),
               )
             : null,
-          // 引导横幅（Task 5）：托管模式已就绪但还没配嵌入模型，可关；空库态也显示。
-          runtime && runtime.mode === 'managed' && runtime.phase === 'ready' && runtime.needsEmbeddingConfig && !embedBannerOff
+          // 上传拦截提示：浮层 toast，不进布局；6 秒自动消失，也可手动关。
+          needsEmbedding && embedUploadNotice
             ? h(
                 'div',
-                { className: 'hrag-rt-banner' },
-                h('span', null, t('rt.embedBanner')),
+                { className: 'hrag-upload-toast', role: 'status' },
+                h('span', null, t('upload.needEmbedding')),
                 h(
                   'button',
-                  { type: 'button', className: 'hrag-btn hrag-btn-outline hrag-rt-bannerbtn', onClick: () => setSettingsOpen(true) },
+                  { type: 'button', className: 'hrag-ev-linkbtn', onClick: () => setSettingsOpen(true) },
                   t('rt.embedAction'),
                 ),
                 h(
@@ -22124,7 +22211,7 @@ window.__ModuleLoader__.load({
                     className: 'hrag-rt-bannerclose',
                     'aria-label': t('rt.dismiss'),
                     title: t('rt.dismiss'),
-                    onClick: () => setEmbedBannerOff(true),
+                    onClick: () => setEmbedUploadNotice(false),
                   },
                   dshCloseIcon(),
                 ),
@@ -22385,7 +22472,11 @@ window.__ModuleLoader__.load({
                 h(ModelSettingsPanel, {
                   t,
                   kbId,
-                  onClose: () => setSettingsOpen(false),
+                  onClose: () => {
+                    setSettingsOpen(false)
+                    // 嵌入模型可能刚配好：立刻刷新运行时状态，解除上传拦截。
+                    refreshRuntime()
+                  },
                   kbs,
                   // 托管模式（Task 5）：Qdrant 地址由内置服务拥有，设置页只读。
                   managed: Boolean(runtime && runtime.mode === 'managed'),
