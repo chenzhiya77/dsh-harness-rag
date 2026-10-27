@@ -1,6 +1,6 @@
 # R4 MinerU 令牌首用指引 —— plan
 
-**Status:** 已拍·实施中（2026-10-26 Task 0–2 完成；Task 3–4 待做；只覆盖 spec §9 R4，R2/R3/R5 仍待裁）
+**Status:** 已拍·实施完成（2026-10-26 Task 0–4 完成：门禁与 spec 回填已落，**未发布**、release 候令；只覆盖 spec §9 R4，R2/R3/R5 仍待裁）
 **Date:** 2026-10-26
 **配套 spec:** [2026-10-24-single-download-distribution-spec.md §9 R4](../specs/2026-10-24-single-download-distribution-spec.md)
 
@@ -66,35 +66,51 @@
 
 ## Task 3 — 隔离验收
 
-> 动到的文件：无（夹具与证据在仓外 `D:\hrag-r4`）。
+> 动到的文件：无（夹具与证据在仓外 `E:\hrag-r4`）。
 
-- [ ] 起隔离 DSH 沙箱（按 `reference-dsh-cli-sandbox` 配方；fake 提供方只服务嵌入/LLM，不冒充 MinerU），托管运行时用已发布的 `0.1.0-3`。
-- [ ] 无 token：选择 `.pdf` 被上传前拦截，toast 有「去配置」，点击后设置打开且高级设置已展开；库内不新增 failed 行。
-- [ ] 无 token：`.md` 与 `.csv` 正常上传到 ready；`.pdf + .md` 混合批次只有 `.md` 入队。
-- [ ] 失败卡动作：绕过面板预检（直接调 `/api/knowledge-bases/{kb}/documents` 上传 PDF，或 external 模式）制造 `serviceUnconfigured` 失败行；面板失败卡显示「去配置」，点击落到同一设置位置。
-- [ ] 配置后：填一个假 token，PDF 不再被预检拦截；用本地 MinerU v4 stub（`parse_provider=mineru-cloud` + `parse_base_url` 指向 stub）跑到 ready，证明“配置后可解析”。若无 stub，记录覆盖边界并至少证明预检放行与引擎发起 MinerU 调用。
-- [ ] 回归：`mineru-local` 不拦截；env 提供 `MINERU_API_TOKEN`（source=`env`）不拦截；`engine/` 零 diff；证据写 `D:\hrag-r4\evidence`。
+- [x] 起隔离 DSH 沙箱（按 `reference-dsh-cli-sandbox` 配方；fake 提供方只服务嵌入/LLM，不冒充 MinerU），托管运行时用已发布的 `0.1.0-3`。
+- [x] 无 token：选择 `.pdf` 被上传前拦截，toast 有「去配置」，点击后设置打开且高级设置已展开；库内不新增 failed 行。
+- [x] 无 token：`.md` 与 `.csv` 正常上传到 ready；`.pdf + .md` 混合批次只有 `.md` 入队。
+- [x] 失败卡动作：绕过面板预检（直接调 `/api/knowledge-bases/{kb}/documents` 上传 PDF，或 external 模式）制造 `serviceUnconfigured` 失败行；面板失败卡显示「去配置」，点击落到同一设置位置。
+- [x] 配置后：填一个假 token，PDF 不再被预检拦截；用本地 MinerU v4 stub（`parse_provider=mineru-cloud` + `parse_base_url` 指向 stub）跑到 ready，证明“配置后可解析”。若无 stub，记录覆盖边界并至少证明预检放行与引擎发起 MinerU 调用。
+- [x] 回归：`mineru-local` 不拦截；env 提供 `MINERU_API_TOKEN`（source=`env`）不拦截；`engine/` 零 diff；证据写 `E:\hrag-r4\evidence`。
 
-**实测（实施期回填）**：
+**实测（2026-10-26，`E:\hrag-r4\evidence\r4-task3.md`）**：
+
+- **沙箱**：`DSH_HOME=E:\hrag-r4\dsh-home`，托管运行时 `0.1.0-3`（本地 pack），Qdrant 6335/6336、knowledge 8021；fake 提供方在 9100 只服务嵌入/重排。D: 已满，证据从 plan 原定的 `D:\hrag-r4` 改落 `E:\hrag-r4`。
+- **无 token 拦截**：runtime 状态 observed `managed/ready`、`needsEmbeddingConfig=false`、`needsMineruConfig=true`；原生文件输入选 `.pdf` 后 0 行、0 次 `uploadDocument`，toast「PDF / Office / 图片解析需要 MinerU 令牌，先去配置」+「去配置」（`shot-02`）；点「去配置」打开功能模型设置且高级折叠区 `aria-expanded=true`，解析提供方与 MinerU 解析令牌可见（`shot-03`）。
+- **本地格式与混合批次**：`.md`+`.csv` 两行到 `就绪 · 部分降级`（graph 腿因沙箱宿主 LLM 代理 401 降级，与 R4 无关；向量腿就绪）；`.pdf + .md` 批次只有 `.md` 入队并到 ready，PDF 无行且 toast 出现（`shot-04`）。
+- **失败卡**：直接 POST 引擎 `/api/knowledge-bases/{kb}/documents` 上传 PDF；因首屏已预标记，改为“新 `.md` 维持 3s 轮询 + 第二枚 PDF 由 API 进入失败”制造实时转变，卡片显示「MinerU 解析令牌未配置——到「功能模型设置 → 高级设置 → 解析提供方」填写后再试」+「去配置」「重试」（`shot-05`）；点「去配置」落到同一设置位置且高级已展开（`shot-06`）。
+- **配置后放行**：UI 保存假 token 后 `/api/rag/config` 的 `sources.mineru_api_token=ui`、`needsMineruConfig=false`；保存未丢 `qdrant_url`（仍是 `http://127.0.0.1:6335`，source=`ui`）。再选 PDF 不再拦截，行进入 `待解析` 并发出 `uploadDocument`（`shot-07`）；引擎真实调用 MinerU 云得 `HTTP 401 A0202 user authenticate failed`——按 plan 回退口径记录为“预检放行 + 引擎发起 MinerU 调用”的覆盖边界，未搭 MinerU stub。
+- **回归与零 diff**：`runtime_bridge`/`runtime_ops` 36/36（含 cloud+unset/ui/env、local+unset、缺字段；ready/starting/external）；`git diff/status -- engine` 为空。
+- **环境插曲（已修复）**：搭建期一次带外 PUT 省了 `qdrant_url`，`rag_config.json` 失去该键后引擎回落到 **遗留测试 Qdrant 6333**（`D:\hrag-t6` 测试栈，非用户正式实例）；已停宿主、恢复 6335 并重启。窗口内两条上传失败、修复后重跑；该测试 Qdrant、其宿主与引擎（8020）随后在 D 盘清理时一并停掉并删除。未发现对 6333 的成功写入。后续 UI 保存经核携带 `qdrant_url`，6335 未再丢。
+- **密钥**：证据与仓内无真实 token/API key；假 token 值不入证据。
 
 ## Task 4 — 收口与发布（候令）
 
 > 动到的文件：本对 spec/plan、`package.json`（若发布）、README/手册（若发布）。
 
-- [ ] 门禁：`node --check client.js`、`tsc -p tsconfig.json`、`node --test tests/*.test.ts`；`engine/` 零 diff；主树 `deer-flow` 本 plan 零写入。
-- [ ] spec 回填：§9.2 R4 标“已实施”，补证据路径；§9.5 5.23 按甲改写；Status 与 §9.6 同步；R2/R3/R5 仍待裁。
+- [x] 门禁：`node --check client.js`、`tsc -p tsconfig.json`、`node --test tests/*.test.ts`；`engine/` 零 diff；主树 `deer-flow` 本 plan 零写入。
+- [x] spec 回填：§9.2 R4 标“已实施”，补证据路径；§9.5 5.23 按甲改写；Status 与 §9.6 同步；R2/R3/R5 仍待裁。
 - [ ] 发布（候令）：R4 只改插件，运行时保持 `0.1.0-3`；若发布，按插件 patch `v0.1.2` 走“提交 → draft → 无新运行时资产 → 发布 → `git+https#v0.1.2` 安装复验”，不重建 pack、不动 `runtime.json` 的 pack 字段；README/手册只改与 R4 有关的文案，`market/index.json` 仍不因 npm 未发布而同步。
-- [ ] 发布前确认：token 不出现在日志/证据/提交；无 failed 文档残留依赖；提交按线分笔（host 探针/测试、client UI、文档）。
-- [ ] 若不发布：停在 Task 3，plan 记录“已实施未发布”，不把 v0.1.2 写成完成态。
+- [x] 发布前确认：token 不出现在日志/证据/提交；无 failed 文档残留依赖；提交按线分笔（host 探针/测试、client UI、文档）。
+- [x] 若不发布：不执行发布动作，plan 记录“已实施未发布”，不把 v0.1.2 写成完成态。
 
-**实测（实施期回填）**：
+**实测（2026-10-26）**：
+
+- **门禁**：`node --check client.js` exit 0；`npm run typecheck`（`tsc -p tsconfig.json`）exit 0；`node --test tests/*.test.ts` **310/310**（14.3s，输出 `E:\hrag-r4\evidence\task4-tests.txt`）；`npm run build:plugin` 后 `lib/` 无新 diff；`git diff/status -- engine` 为空。
+- **主树**：本 plan 未写 `deer-flow`；该树现有 `README.md` 修改与 4 份研究文档为并行工作，不属 R4。
+- **spec 回填**：§9.2 R4 行标“已定甲·已实施”，新增“R4 实施结果”段与证据路径；§9.4 标“已实施·未发布”；§9.5 5.23 改为“已验 2026-10-26”；Status/§9 引子/§9.6 同步为“已按甲实施（未发布）”，并补 R4 门禁行。
+- **提交线**：host 探针/测试 `c67bbe7`、client UI `680190a`、lib 构建 `367d379`、Task 0–2 记录 `674ee05`；本轮 plan/spec 回填单独一笔 `docs(spec): close R4 ...`。
+- **发布状态**：**未发布**。运行时保持 `0.1.0-3`，未重建 pack、未动 `runtime.json`、未推 tag、未做 `v0.1.2` 安装复验；等 release 令。
+- **密钥面**：证据、plan/spec 与提交面只有字段名与假 token 的说明，无真实 token/API key；假 token 值未落盘。
 
 ## 验收对应
 
 | spec §9 R4 | 覆盖 Task | 证据 |
 | --- | --- | --- |
 | 未配置时上传 PDF 得到可操作的指向 | Task 2 / Task 3 | PDF 被预检拦截、toast「去配置」 |
-| 配置后解析成功 | Task 3 | 假 token + MinerU stub 到 ready |
+| 配置后解析成功 | Task 3 | 假 token 预检放行 + 引擎发起 MinerU（dummy 401/A0202 为覆盖边界） |
 | 本地格式不受影响 | Task 2 / Task 3 | `.md/.csv` 照常；混合批次只放行本地件 |
 | 失败卡可直接去配置 | Task 2 / Task 3 | API 绕过预检后的 failed 行动作 |
 | `engine/` 零 diff | Task 0 / Task 4 | `git diff -- engine` 为空 |
