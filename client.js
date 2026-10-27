@@ -298,7 +298,7 @@ window.__ModuleLoader__.load({
       'doc.err.empty': '文件内容为空',
       'doc.err.unsupported': '不支持的文件类型',
       'doc.err.retryLimit': '解析服务多次重试仍失败，请检查文件是否损坏或稍后重试',
-      'doc.err.serviceUnconfigured': '文档解析服务未配置，请联系管理员',
+      'doc.err.serviceUnconfigured': 'MinerU 解析令牌未配置——到「功能模型设置 → 高级设置 → 解析提供方」填写后再试',
       'doc.err.timeout': '解析超时，请重试',
       'doc.err.indexIncomplete': '文档索引不完整，部分切片未能入库，请重试',
       'doc.err.noIndexableContent': '文档没有可索引的内容，请检查文件内容',
@@ -806,6 +806,7 @@ window.__ModuleLoader__.load({
       'upload.needKb': '知识库暂不可接收：请先创建知识库',
       'upload.busy': '知识库暂不可接收：上传中，请稍候',
       'upload.needEmbedding': '先配置嵌入模型，再上传文档',
+      'upload.needMineru': 'PDF / Office / 图片解析需要 MinerU 令牌，先去配置',
       'upload.dirSkipped': '已跳过文件夹（仅支持文件上传）',
       'dup.identicalTitle': '内容完全一致',
       'dup.identicalDescription': '「{0}」与库中已有文档内容完全相同，无需重复上传。',
@@ -1216,7 +1217,7 @@ window.__ModuleLoader__.load({
       'doc.err.unsupported': 'Unsupported file type',
       'doc.err.retryLimit':
         'The parsing service failed after several retries — check the file for corruption or try again later',
-      'doc.err.serviceUnconfigured': 'The document parsing service is not configured — contact your admin',
+      'doc.err.serviceUnconfigured': 'MinerU parsing token is not configured — add it under Functional model settings → Advanced settings → Parse provider, then retry',
       'doc.err.timeout': 'Parsing timed out — please retry',
       'doc.err.indexIncomplete': 'The document index is incomplete — some chunks were not indexed; please retry',
       'doc.err.noIndexableContent': 'The document had no indexable content — check the file and retry',
@@ -1735,6 +1736,7 @@ window.__ModuleLoader__.load({
       'upload.needKb': 'The knowledge base cannot take files yet: create one first',
       'upload.busy': 'The knowledge base cannot take files yet: an upload is in progress',
       'upload.needEmbedding': 'Configure an embedding model before uploading documents',
+      'upload.needMineru': 'PDF, Office and image parsing need a MinerU token — configure it first',
       'upload.dirSkipped': 'Skipped folders (only files can be uploaded)',
       'dup.identicalTitle': 'Identical content',
       'dup.identicalDescription': '"{0}" is byte-identical to an existing document — no need to upload again.',
@@ -3408,7 +3410,7 @@ window.__ModuleLoader__.load({
     /** 失败折叠（小件批 Task 3，照工作台 `useDocFailureNotifier` 语义逐条移植）：
         仅入 failed 转变播报／首屏不补播（预标记）／episode 去重（离 failed 清记、
         再 failed 重报）／离 failed 或删行撤条（rejection-* 保留）。纯函数＝可冒烟。 */
-    function foldDocFailures(state, docs, reasonOf) {
+    function foldDocFailures(state, docs, reasonOf, actionOf) {
       const byId = new Map(docs.map((doc) => [doc.id, doc]))
       const entries = state.entries.filter(
         (entry) => entry.key.indexOf('rejection-') === 0 || (byId.get(entry.key) && byId.get(entry.key).status === 'failed'),
@@ -3428,7 +3430,7 @@ window.__ModuleLoader__.load({
       for (const doc of fresh) notified.add(doc.id)
       return {
         entries: entries.concat(
-          fresh.map((doc) => ({ key: doc.id, name: doc.name, reason: reasonOf(doc), retryable: true })),
+          fresh.map((doc) => ({ key: doc.id, name: doc.name, reason: reasonOf(doc), retryable: true, action: actionOf ? actionOf(doc) : null })),
         ),
         notified,
         initialized: true,
@@ -9531,7 +9533,7 @@ window.__ModuleLoader__.load({
 
     /** 失败通知卡（小件批 Task 3，照工作台 `doc-failure-panel.tsx`）：底右浮卡、
         双行制（名/因）、悬停展开（感应区不含 ✕）、逐条 ✕、重试钮、不自动消退。 */
-    function DocFailureCard({ t, failures, onDismiss, onDismissAll, onRetry }) {
+    function DocFailureCard({ t, failures, onDismiss, onDismissAll, onRetry, onConfigure }) {
       const [expanded, setExpanded] = React.useState(false)
       if (failures.length === 0) return null
       const multiple = failures.length > 1
@@ -9550,6 +9552,14 @@ window.__ModuleLoader__.load({
           hostIcon('IconRefreshOutlineRegular') ? h(hostIcon('IconRefreshOutlineRegular'), { size: 12 }) : null,
           t('doc.retry'),
         )
+      const configureButton = (entry) =>
+        entry.action === 'mineru-token' && onConfigure
+          ? h(
+              'button',
+              { type: 'button', className: 'hrag-docfail-retry', onClick: () => onConfigure(entry) },
+              t('rt.embedAction'),
+            )
+          : null
       const closeButton = (label, onClick) =>
         h(
           'button',
@@ -9577,6 +9587,7 @@ window.__ModuleLoader__.load({
               ? h('span', { className: 'hrag-docfail-count', title: t('doc.err.title') }, t('doc.err.title') + '（' + failures.length + '）')
               : entryBody(first),
           ),
+          configureButton(first),
           !multiple && first.retryable && onRetry ? retryButton(first) : null,
           closeButton(t('doc.err.dismissAll'), onDismissAll),
         ),
@@ -9589,6 +9600,7 @@ window.__ModuleLoader__.load({
                   'div',
                   { className: 'hrag-docfail-row', key: entry.key },
                   entryBody(entry),
+                  configureButton(entry),
                   entry.retryable && onRetry ? retryButton(entry) : null,
                   closeButton(t('doc.err.dismiss'), () => onDismiss(entry.key)),
                 ),
@@ -9598,7 +9610,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function DocsView({ t, kbId, kbOwnerId, refreshToken, onOpenChunks, dragProbe, setDocsEmpty, docFailures, onDocFailuresSnapshot, onDocFailureReport, onDocFailureDismiss, onDocFailureDismissAll }) {
+    function DocsView({ t, kbId, kbOwnerId, refreshToken, onOpenChunks, dragProbe, setDocsEmpty, docFailures, onDocFailuresSnapshot, onDocFailureReport, onDocFailureDismiss, onDocFailureDismissAll, onConfigureDocError }) {
       const [phase, setPhase] = React.useState('loading')
       const [docs, setDocs] = React.useState([])
       const [failure, setFailure] = React.useState(null)
@@ -11106,6 +11118,7 @@ window.__ModuleLoader__.load({
               failures: docFailures,
               onDismiss: onDocFailureDismiss,
               onDismissAll: onDocFailureDismissAll,
+              onConfigure: onConfigureDocError,
               onRetry: (key) => {
                 const doc = docs.find((item) => item.id === key)
                 if (doc) retry(doc)
@@ -18144,7 +18157,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function ModelSettingsPanel({ t, kbId, kbs, managed, onClose }) {
+    function ModelSettingsPanel({ t, kbId, kbs, managed, onClose, initialAdvancedOpen }) {
       const configQ = useEvalCall(kbId, true, 'ragConfigGet', null)
       const migrationQ = useEvalCall(kbId, true, 'ragMigration', null, (payload) =>
         Boolean(payload && payload.state === 'running'),
@@ -18250,7 +18263,7 @@ window.__ModuleLoader__.load({
       } else if (reindexState && reindexState.last_run === 'failed') {
         reindexLine = t('reindex.lastFailed')
       }
-      const [advancedOpen, setAdvancedOpen] = React.useState(false)
+      const [advancedOpen, setAdvancedOpen] = React.useState(Boolean(initialAdvancedOpen))
       // 探针结论各自跟着取值键走（Task 2）：编辑后旧结论即失效，绝不张冠李戴。
       const [capabilityProbe, setCapabilityProbe] = React.useState(null)
       const [serviceProbe, setServiceProbe] = React.useState(null)
@@ -20189,6 +20202,9 @@ window.__ModuleLoader__.load({
     // 常量照工作台 `supported-formats.ts` FALLBACK_SUPPORTED_SUFFIXES 逐条（15 项）。
     const FALLBACK_SUPPORTED_SUFFIXES = ['.md', '.markdown', '.txt', '.csv', '.tsv', '.xlsx', '.xls', '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.png', '.jpg', '.jpeg']
 
+    // Formats parsed by MinerU; the rest of the allowlist is read locally.
+    const MINERU_SUFFIXES = new Set(['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.png', '.jpg', '.jpeg'])
+
     /** 工作台同款派生（`page.tsx: data?.suffixes ?? FALLBACK`）：未取两窗回退常量。 */
     function supportedSuffixesFor(fetched) {
       return Array.isArray(fetched) && fetched.length > 0 ? fetched : FALLBACK_SUPPORTED_SUFFIXES
@@ -20928,7 +20944,14 @@ window.__ModuleLoader__.load({
       const [docFailState, setDocFailState] = React.useState({ entries: [], notified: new Set(), initialized: false })
       const reportSeqRef = React.useRef(0)
       const snapshotDocFailures = (list) => {
-        setDocFailState((prev) => foldDocFailures(prev, list, (doc) => t('doc.err.' + classifyDocError(doc.error))))
+        setDocFailState((prev) =>
+          foldDocFailures(
+            prev,
+            list,
+            (doc) => t('doc.err.' + classifyDocError(doc.error)),
+            (doc) => (classifyDocError(doc.error) === 'serviceUnconfigured' ? 'mineru-token' : null),
+          ),
+        )
       }
       const reportDocFailure = (name, reason) => {
         reportSeqRef.current += 1
@@ -20956,6 +20979,17 @@ window.__ModuleLoader__.load({
       const [kbDeleteOpen, setKbDeleteOpen] = React.useState(false)
       const [kbDeleteBusy, setKbDeleteBusy] = React.useState(false)
       const [settingsOpen, setSettingsOpen] = React.useState(false)
+      const [settingsAdvanced, setSettingsAdvanced] = React.useState(false)
+      const openSettings = (advanced) => {
+        setSettingsAdvanced(Boolean(advanced))
+        setSettingsOpen(true)
+      }
+      const closeSettings = () => {
+        setSettingsOpen(false)
+        setSettingsAdvanced(false)
+        // 嵌入模型可能刚配好：立刻刷新运行时状态，解除上传拦截。
+        refreshRuntime()
+      }
       const [shellRebuildOpen, setShellRebuildOpen] = React.useState(false)
       const [wikiCommand, setWikiCommand] = React.useState(null)
       const [wikiBusy, setWikiBusy] = React.useState(false)
@@ -21009,6 +21043,7 @@ window.__ModuleLoader__.load({
       const [runtimeSetupForced, setRuntimeSetupForced] = React.useState(false)
       const [runtimeCopied, setRuntimeCopied] = React.useState(false)
       const [embedUploadNotice, setEmbedUploadNotice] = React.useState(false)
+      const [mineruUploadNotice, setMineruUploadNotice] = React.useState(false)
       const [anchorWarnOff, setAnchorWarnOff] = React.useState(false)
       const [upgradeReadyOff, setUpgradeReadyOff] = React.useState(false)
       const [upgradeBlockedOff, setUpgradeBlockedOff] = React.useState(false)
@@ -21017,16 +21052,29 @@ window.__ModuleLoader__.load({
       const needsEmbedding = Boolean(
         runtime && runtime.mode === 'managed' && runtime.phase === 'ready' && runtime.needsEmbeddingConfig,
       )
+      const needsMineru = Boolean(
+        runtime && runtime.mode === 'managed' && runtime.phase === 'ready' && runtime.needsMineruConfig,
+      )
 
       React.useEffect(() => {
         if (!needsEmbedding) setEmbedUploadNotice(false)
       }, [needsEmbedding])
 
       React.useEffect(() => {
+        if (!needsMineru) setMineruUploadNotice(false)
+      }, [needsMineru])
+
+      React.useEffect(() => {
         if (!embedUploadNotice) return undefined
         const timer = window.setTimeout(() => setEmbedUploadNotice(false), 6000)
         return () => window.clearTimeout(timer)
       }, [embedUploadNotice])
+
+      React.useEffect(() => {
+        if (!mineruUploadNotice) return undefined
+        const timer = window.setTimeout(() => setMineruUploadNotice(false), 6000)
+        return () => window.clearTimeout(timer)
+      }, [mineruUploadNotice])
 
       const load = React.useCallback(() => {
         setPhase('loading')
@@ -21244,6 +21292,17 @@ window.__ModuleLoader__.load({
           showToast(t('upload.rejected', { 0: rejectedNames.join(', ') }), { error: true })
         }
         if (accepted.length === 0) return
+        let uploadable = accepted
+        if (needsMineru) {
+          let blocked = 0
+          uploadable = []
+          for (const file of accepted) {
+            if (MINERU_SUFFIXES.has(dupSuffix(file.name))) blocked += 1
+            else uploadable.push(file)
+          }
+          if (blocked > 0) setMineruUploadNotice(true)
+          if (uploadable.length === 0) return
+        }
         setUploading(true)
         const results = []
         const seenNames = new Set()
@@ -21345,8 +21404,8 @@ window.__ModuleLoader__.load({
           })
           .then(() => {
             const runNext = (index) => {
-              if (index >= accepted.length) return finish()
-              processFile(accepted[index]).then(() => runNext(index + 1))
+              if (index >= uploadable.length) return finish()
+              processFile(uploadable[index]).then(() => runNext(index + 1))
             }
             runNext(0)
           })
@@ -21973,7 +22032,7 @@ window.__ModuleLoader__.load({
                   setKbDeleteOpen(true)
                   return
                 }
-                if (id === 'settings') setSettingsOpen(true)
+                if (id === 'settings') openSettings(false)
               },
             }),
             h(ToasterHost, { anchorRef: toastAnchorRef }),
@@ -22007,6 +22066,7 @@ window.__ModuleLoader__.load({
               onDocFailureReport: reportDocFailure,
               onDocFailureDismiss: dismissDocFailure,
               onDocFailureDismissAll: dismissAllDocFailures,
+              onConfigureDocError: () => openSettings(true),
             })),
           ),
           // 召回视图 keep-alive（10-15 他报「切走回来结果消失」＝缺陷修正）：query/结果/选择集切走不丢。
@@ -22206,7 +22266,7 @@ window.__ModuleLoader__.load({
                 h('span', null, t('upload.needEmbedding')),
                 h(
                   'button',
-                  { type: 'button', className: 'hrag-ev-linkbtn', onClick: () => setSettingsOpen(true) },
+                  { type: 'button', className: 'hrag-ev-linkbtn', onClick: () => openSettings(false) },
                   t('rt.embedAction'),
                 ),
                 h(
@@ -22217,6 +22277,29 @@ window.__ModuleLoader__.load({
                     'aria-label': t('rt.dismiss'),
                     title: t('rt.dismiss'),
                     onClick: () => setEmbedUploadNotice(false),
+                  },
+                  dshCloseIcon(),
+                ),
+              )
+            : null,
+          !needsEmbedding && needsMineru && mineruUploadNotice
+            ? h(
+                'div',
+                { className: 'hrag-upload-toast', role: 'status' },
+                h('span', null, t('upload.needMineru')),
+                h(
+                  'button',
+                  { type: 'button', className: 'hrag-ev-linkbtn', onClick: () => openSettings(true) },
+                  t('rt.embedAction'),
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-rt-bannerclose',
+                    'aria-label': t('rt.dismiss'),
+                    title: t('rt.dismiss'),
+                    onClick: () => setMineruUploadNotice(false),
                   },
                   dshCloseIcon(),
                 ),
@@ -22477,11 +22560,8 @@ window.__ModuleLoader__.load({
                 h(ModelSettingsPanel, {
                   t,
                   kbId,
-                  onClose: () => {
-                    setSettingsOpen(false)
-                    // 嵌入模型可能刚配好：立刻刷新运行时状态，解除上传拦截。
-                    refreshRuntime()
-                  },
+                  initialAdvancedOpen: settingsAdvanced,
+                  onClose: closeSettings,
                   kbs,
                   // 托管模式（Task 5）：Qdrant 地址由内置服务拥有，设置页只读。
                   managed: Boolean(runtime && runtime.mode === 'managed'),
