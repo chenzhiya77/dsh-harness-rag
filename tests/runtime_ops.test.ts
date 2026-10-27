@@ -74,7 +74,7 @@ function fixture(overrides: Partial<RuntimeOpsDeps> = {}, phase: RuntimePhase = 
     supervisor: () => supervisor,
     version: VERSION,
     pack: () => ({ size: 100, unpackedSize: 100 }),
-    needsEmbeddingConfig: async () => false,
+    configNeeds: async () => ({ needsEmbedding: false, needsMineru: false }),
     configureRoot: (root) => configured.push(root),
     ...overrides,
   }
@@ -357,22 +357,39 @@ test('ensure: the panel starts provisioning unless it needs a location', () => {
   assert.equal(blocked.supervisor.calls.ensure, 0)
 })
 
-test('panel status: the embedding probe only runs once the service is ready', async () => {
+test('panel status: the config probe only runs once the service is ready', async () => {
   let probes = 0
   const probe = async () => {
     probes += 1
-    return true
+    return { needsEmbedding: true, needsMineru: true }
   }
 
-  const ready = fixture({ needsEmbeddingConfig: probe }, 'ready')
+  const ready = fixture({ configNeeds: probe }, 'ready')
   const readyPayload = await panelStatus(ready.deps)
   assert.equal(readyPayload.needsEmbeddingConfig, true)
+  assert.equal(readyPayload.needsMineruConfig, true)
   assert.equal(probes, 1)
 
-  const starting = fixture({ needsEmbeddingConfig: probe }, 'starting')
+  const starting = fixture({ configNeeds: probe }, 'starting')
   const startingPayload = await panelStatus(starting.deps)
   assert.equal(startingPayload.needsEmbeddingConfig, undefined)
+  assert.equal(startingPayload.needsMineruConfig, undefined)
   assert.equal(probes, 1)
+})
+
+test('panel status: external mode never probes the config', async () => {
+  let probes = 0
+  const probe = async () => {
+    probes += 1
+    return { needsEmbedding: true, needsMineru: true }
+  }
+  const external = fixture({ config: { ...defaultConfig, backendUrl: 'http://127.0.0.1:8020' }, configNeeds: probe })
+
+  const payload = await panelStatus(external.deps)
+  assert.equal(payload.mode, 'external')
+  assert.equal(payload.needsEmbeddingConfig, undefined)
+  assert.equal(payload.needsMineruConfig, undefined)
+  assert.equal(probes, 0)
 })
 
 // ── privileged-op guards ────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createRuntimeBridge, embeddingModelOf, needsEmbeddingFrom, type BridgeHost } from '../src/runtime/bridge.ts'
+import { createRuntimeBridge, embeddingModelOf, needsEmbeddingFrom, needsMineruFrom, type BridgeHost } from '../src/runtime/bridge.ts'
 import { defaultConfig } from '../src/settings.ts'
 
 const ENV = { DSH_HOME: 'C:/hrag-bridge-test' }
@@ -40,6 +40,35 @@ test('embedding readiness: only the model decides, never the environment', () =>
   assert.equal(needsEmbeddingFrom({ config: { embedding_model: null } }), true)
   assert.equal(needsEmbeddingFrom({ config: {} }), true)
   assert.equal(needsEmbeddingFrom(null), true)
+})
+
+test('MinerU readiness: cloud without a token needs one', () => {
+  assert.equal(
+    needsMineruFrom({ config: { parse_provider: 'mineru-cloud' }, sources: { mineru_api_token: 'unset' } }),
+    true,
+  )
+})
+
+test('MinerU readiness: a stored or environment token counts as configured', () => {
+  assert.equal(
+    needsMineruFrom({ config: { parse_provider: 'mineru-cloud' }, sources: { mineru_api_token: 'ui' } }),
+    false,
+  )
+  assert.equal(
+    needsMineruFrom({ config: { parse_provider: 'mineru-cloud' }, sources: { mineru_api_token: 'env' } }),
+    false,
+  )
+})
+
+test('MinerU readiness: local parsing and malformed payloads never block', () => {
+  assert.equal(
+    needsMineruFrom({ config: { parse_provider: 'mineru-local' }, sources: { mineru_api_token: 'unset' } }),
+    false,
+  )
+  assert.equal(needsMineruFrom({ config: { parse_provider: 'mineru-cloud' } }), false)
+  assert.equal(needsMineruFrom({ sources: { mineru_api_token: 'unset' } }), false)
+  assert.equal(needsMineruFrom({ config: { parse_provider: 42 }, sources: { mineru_api_token: 'unset' } }), false)
+  assert.equal(needsMineruFrom(null), false)
 })
 
 // The host's native chooser reads the caller-lifetime signal on entry, so the

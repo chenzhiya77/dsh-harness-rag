@@ -53,6 +53,17 @@ export function needsEmbeddingFrom(payload: unknown): boolean {
   return !embeddingModelOf(payload)
 }
 
+/** MinerU cloud parsing needs a token from the UI or the environment. The
+ * source field is the only reliable signal: a stored token reads back masked,
+ * while an env-backed one reads back blank. A local MinerU service needs none. */
+export function needsMineruFrom(payload: unknown): boolean {
+  const record = payload as {
+    config?: { parse_provider?: unknown }
+    sources?: { mineru_api_token?: unknown }
+  } | null
+  return record?.config?.parse_provider === 'mineru-cloud' && record?.sources?.mineru_api_token === 'unset'
+}
+
 function readService(root: string): ServiceRecord | null {
   try {
     return sanitizeService(JSON.parse(readFileSync(join(stateDir(root), 'service.json'), 'utf8')))
@@ -186,19 +197,20 @@ export function createRuntimeBridge(
     supervisor: () => currentCoordinator(),
     version,
     pack: () => (pack ? { size: pack.size, unpackedSize: pack.unpackedSize } : null),
-    needsEmbeddingConfig: async () => {
+    configNeeds: async () => {
       const view = currentCoordinator()?.status()
-      if (view?.phase !== 'ready') return false
+      if (view?.phase !== 'ready') return { needsEmbedding: false, needsMineru: false }
       const record = readService(root)
-      if (!record) return false
+      if (!record) return { needsEmbedding: false, needsMineru: false }
       try {
         const response = await fetch(`http://127.0.0.1:${record.ports.knowledge}/api/rag/config`, {
           headers: { authorization: `Bearer ${record.token}` },
         })
-        if (!response.ok) return false
-        return needsEmbeddingFrom(await response.json())
+        if (!response.ok) return { needsEmbedding: false, needsMineru: false }
+        const payload = await response.json()
+        return { needsEmbedding: needsEmbeddingFrom(payload), needsMineru: needsMineruFrom(payload) }
       } catch {
-        return false
+        return { needsEmbedding: false, needsMineru: false }
       }
     },
     configureRoot: (nextRoot) => {

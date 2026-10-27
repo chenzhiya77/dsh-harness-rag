@@ -16,6 +16,11 @@ import type { DownloadProgress } from './download.ts'
 
 export type PickerKind = 'native' | 'browse' | 'none'
 
+export interface RuntimeConfigNeeds {
+  needsEmbedding: boolean
+  needsMineru: boolean
+}
+
 export interface RuntimeStatusPayload {
   mode: 'external' | 'managed'
   phase: string
@@ -38,6 +43,7 @@ export interface RuntimeStatusPayload {
   logTail?: string
   error?: { phase: string; code: string; detail?: string }
   needsEmbeddingConfig?: boolean
+  needsMineruConfig?: boolean
   /** `state/current.json` exists: a finished runtime is installed at this root. */
   installed: boolean
   paths: { runtime: string; state: string; config: string; logs: string; downloads: string }
@@ -59,7 +65,7 @@ export interface RuntimeOpsDeps {
   } | null
   version: string
   pack: () => Pick<RuntimePack, 'size' | 'unpackedSize'> | null
-  needsEmbeddingConfig: () => Promise<boolean>
+  configNeeds: () => Promise<RuntimeConfigNeeds>
   configureRoot: (root: string) => void
 }
 
@@ -250,7 +256,9 @@ export function ensureRuntimeFromPanel(deps: RuntimeOpsDeps): RuntimeStatusPaylo
 export async function panelStatus(deps: RuntimeOpsDeps): Promise<RuntimeStatusPayload> {
   const payload = ensureRuntimeFromPanel(deps)
   if (payload.mode === 'managed' && payload.phase === 'ready') {
-    payload.needsEmbeddingConfig = await deps.needsEmbeddingConfig()
+    const needs = await deps.configNeeds()
+    payload.needsEmbeddingConfig = needs.needsEmbedding
+    payload.needsMineruConfig = needs.needsMineru
   }
   return payload
 }
