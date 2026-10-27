@@ -52,7 +52,7 @@ window.__ModuleLoader__.load({
       'shell.errorTitle': '知识库面板加载失败',
       'shell.retry': '重试',
       'shell.empty': '暂无知识库',
-      'shell.emptyHint': '创建知识库后点「刷新」重新加载。',
+      'shell.emptyHint': '新建知识库后即可上传文档。',
       'shell.refresh': '刷新',
       // 首启运行时门（Task 5）：设置卡 / 进度 / 错误三态。
       'rt.loading': '正在检查本地服务…',
@@ -802,10 +802,26 @@ window.__ModuleLoader__.load({
       'createKb.namePlaceholder': '知识库名称',
       'createKb.descPlaceholder': '补充用途、来源或维护说明',
       'createKb.create': '创建',
+      'guide.entry': '快速开始',
+      'guide.title': '快速开始',
+      'guide.lead': '完成下面三步就能完整使用 RAG；本地服务的下载、启动与模型同步都是自动的。',
+      'guide.step1.title': '配置向量模型',
+      'guide.step1.body':
+        '在 ⋯ →「功能模型设置」里填向量提供方、向量模型、向量接口地址与 API Key（向量）。这是必须手动填的一步。',
+      'guide.step1.action': '去配置',
+      'guide.step2.title': '建库并上传',
+      'guide.step2.body':
+        '新建知识库，从 ⋯ →「上传文档」添加文件；切块与向量化自动完成，等文档状态变成「就绪」。PDF / Office / 图片若提示缺少解析令牌，按提示在「功能模型设置 → 高级设置 → 解析提供方」补填 MinerU 令牌。',
+      'guide.step2.action': '新建知识库',
+      'guide.step3.title': '绑定本会话',
+      'guide.step3.body':
+        '在顶栏「会话」里选择知识库；绑定后本会话的对话自动使用该库检索。在「会话」里点「新建」的会话会自动绑定当前库（宿主里另建的会话要在这里再绑一次）。',
+      'guide.step3.action': '绑定本会话',
+      'guide.tail': '图谱、Wiki、评测等面板不影响基本使用，需要时再看。',
       'upload.rejected': '已跳过不支持的文件：{0}',
       'upload.needKb': '知识库暂不可接收：请先创建知识库',
       'upload.busy': '知识库暂不可接收：上传中，请稍候',
-      'upload.needEmbedding': '先配置嵌入模型，再上传文档',
+      'upload.needEmbedding': '先配置向量模型，再上传文档',
       'upload.needMineru': 'PDF / Office / 图片解析需要 MinerU 令牌，先去配置',
       'upload.dirSkipped': '已跳过文件夹（仅支持文件上传）',
       'dup.identicalTitle': '内容完全一致',
@@ -978,7 +994,7 @@ window.__ModuleLoader__.load({
       'shell.errorTitle': 'The knowledge panel failed to load',
       'shell.retry': 'Retry',
       'shell.empty': 'No knowledge bases yet',
-      'shell.emptyHint': 'Create a knowledge base, then hit Refresh.',
+      'shell.emptyHint': 'Create a knowledge base to start uploading.',
       'shell.refresh': 'Refresh',
       // First-run runtime gate (Task 5): setup / progress / error.
       'rt.loading': 'Checking the local service…',
@@ -1732,6 +1748,23 @@ window.__ModuleLoader__.load({
       'createKb.namePlaceholder': 'Knowledge base name',
       'createKb.descPlaceholder': 'Purpose, source, or maintenance notes',
       'createKb.create': 'Create',
+      'guide.entry': 'Quick start',
+      'guide.title': 'Quick start',
+      'guide.lead':
+        'Three steps and RAG is fully usable. Downloading and starting the local service, and syncing models, all happen automatically.',
+      'guide.step1.title': 'Set up the embedding model',
+      'guide.step1.body':
+        'In ⋯ → “Functional model settings”, fill in the embedding provider, embedding model, endpoint and API key (embedding). This is the one step that needs manual input.',
+      'guide.step1.action': 'Open settings',
+      'guide.step2.title': 'Create a library and upload',
+      'guide.step2.body':
+        'Create a knowledge base, then add files via ⋯ → “Upload document”. Chunking and embedding run automatically; wait until documents show “Ready”. If PDF / Office / images report a missing parse token, add the MinerU token under “Functional model settings → Advanced → Parse provider” as prompted.',
+      'guide.step2.action': 'New knowledge base',
+      'guide.step3.title': 'Bind this session',
+      'guide.step3.body':
+        'Choose a knowledge base under “Session” in the top bar; chat then uses retrieval from it automatically. Sessions created with “New” in “Session” bind the current library for you (sessions created elsewhere in DSH need to be bound here).',
+      'guide.step3.action': 'Bind this session',
+      'guide.tail': 'Graph, Wiki and Eval panels do not affect basic use; explore them when needed.',
       'upload.rejected': 'Skipped unsupported files: {0}',
       'upload.needKb': 'The knowledge base cannot take files yet: create one first',
       'upload.busy': 'The knowledge base cannot take files yet: an upload is in progress',
@@ -2017,6 +2050,22 @@ window.__ModuleLoader__.load({
         /* best effort */
       }
     }
+    // ── 快速开始：首开一次记本地，不跨窗口同步 ───────────────────────────
+    const GUIDE_SEEN_KEY = 'hrag-guide-seen'
+    function readGuideSeen() {
+      try {
+        return window.localStorage.getItem(GUIDE_SEEN_KEY) === '1'
+      } catch (cause) {
+        return false
+      }
+    }
+    function writeGuideSeen() {
+      try {
+        window.localStorage.setItem(GUIDE_SEEN_KEY, '1')
+      } catch (cause) {
+        /* best effort */
+      }
+    }
     // ── 库排序拖拽（照工作台 `kb-order.ts`）：localStorage 本地序——存量按用户序
     // 在前、新库尾随服务端序；越界/失效/坏值静默回退（排序是锦上添花，不值班崩溃）。
     const KB_ORDER_KEY = 'hrag-kb-order'
@@ -2129,8 +2178,8 @@ window.__ModuleLoader__.load({
           // 会话入口（会话绑定对）：顶栏 28px 图标钮；已绑定＝环内实点心（success），
           // 未绑定＝空心环；窄档只留图标（label 由面板测量隐藏）。
           '.hrag-sessionbtn { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; height: 28px; padding: 0 6px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-tertiary); font-family: inherit; font-size: 13px; font-weight: 500; line-height: 16px; white-space: nowrap; cursor: pointer; }',
-          // 顶栏三件：库选择器在左（唯一可收的一件），会话钮与 ⋯ 成组靠右。
-          '.hrag-bar > .hrag-sessionbtn { margin-left: auto; }',
+          // 顶栏四件：库选择器在左（唯一可收的一件），快速开始、会话钮与 ⋯ 成组靠右。
+          '.hrag-bar > .hrag-guidebtn { margin-left: auto; }',
           '.hrag-bar > .hrag-mmhost, .hrag-bar > .hrag-mm-wrap { flex: 0 0 auto; }',
           '.hrag-bar > .hrag-mmhost:first-child, .hrag-bar > .hrag-mm-wrap:first-child { flex: 1 1 auto; min-width: 0; }',
           '.hrag-bar > .hrag-mmhost:first-child > span { display: flex; flex: 1 1 auto; min-width: 0; }',
@@ -2138,6 +2187,17 @@ window.__ModuleLoader__.load({
           '.hrag-sessionbtn-icon { display: inline-flex; flex-shrink: 0; }',
           '.hrag-sessionbtn-dot { fill: var(--dsw-alias-state-success-primary); }',
           '.hrag-sessionbtn-icononly .hrag-sessionbtn-label { display: none; }',
+          // 快速开始入口：宽档＝罗盘＋文字药丸；中/窄档＝28×28 图标＋未读点。
+          '.hrag-guidebtn { position: relative; display: inline-flex; align-items: center; flex-shrink: 0; height: 28px; padding: 0 8px; gap: 5px; border: none; border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 13px; font-weight: 500; line-height: 16px; white-space: nowrap; cursor: pointer; }',
+          '.hrag-guidebtn:hover, .hrag-guidebtn[aria-expanded="true"] { background: color-mix(in srgb, var(--dsw-alias-label-primary) 6%, var(--dsw-alias-bg-module-platform)); }',
+          '.hrag-guidebtn-icononly { justify-content: center; width: 28px; padding: 0; gap: 0; }',
+          '.hrag-guidebtn-icononly .hrag-guidebtn-label { display: none; }',
+          '.hrag-guidebtn:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          '.hrag-guidebtn-dot { position: absolute; right: 2px; top: 2px; width: 5px; height: 5px; border-radius: 999px; background: var(--dsw-alias-state-business-primary); box-shadow: 0 0 0 2px var(--dsw-alias-bg-module-platform); pointer-events: none; }',
+          // 指南图标档（<320）：库名让位时收起 chevron、栏距降到 6px，把可用宽拉回
+          // ~66–75px；320 档文字药丸出现后恢复 chevron 与原 8px 栏距。
+          '.hrag-bar-compact { gap: 6px; }',
+          '.hrag-bar-compact .hrag-kbtrigger-chev { display: none; }',
           // 会话小面板（10-24 改版）：挂在入口钮下方的小卡片（320 宽，fixed 定位
           // 可越过 198px 面板左缘）；chip＝本会话绑定，列表＝已绑定会话。
           '.hrag-sessionbtn[aria-expanded="true"] { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
@@ -2177,6 +2237,22 @@ window.__ModuleLoader__.load({
           '.hrag-sesspop-emptybtn:hover:not(:disabled) { text-decoration: underline; }',
           '.hrag-sesspop-emptybtn:disabled { opacity: 0.45; cursor: default; }',
           '.hrag-sesspop-error { margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }',
+          // 快速开始浮层（320 宽，右缘对齐入口；正文滚动、尾注分隔）。
+          '.hrag-guidepop-backdrop { position: fixed; inset: 0; z-index: 69; background: transparent; }',
+          '.hrag-guidepop { position: fixed; z-index: 70; display: flex; flex-direction: column; gap: 8px; padding: 10px; box-sizing: border-box; border-radius: var(--dsw-radius-lg); background: var(--dsw-menu-surface-fill, var(--dsw-alias-bg-layer-1)); box-shadow: var(--dsw-elevation-prominent); backdrop-filter: var(--dsw-menu-backdrop-filter); -webkit-backdrop-filter: var(--dsw-menu-backdrop-filter); }',
+          '.hrag-guidepop-head { display: flex; align-items: center; gap: 8px; min-width: 0; }',
+          '.hrag-guidepop-title { flex: 1 1 auto; min-width: 0; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; line-height: 20px; }',
+          '.hrag-guidepop-body { display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 2px; }',
+          '.hrag-guide-lead { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }',
+          '.hrag-guide-step { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }',
+          '.hrag-guide-stepnum { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 18px; width: 18px; height: 18px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; line-height: 1; }',
+          '.hrag-guide-stepbody { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }',
+          '.hrag-guide-steptitle { color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; line-height: 18px; }',
+          '.hrag-guide-stepdesc { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-guide-action { margin-top: 1px; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 12px; font-weight: 500; line-height: 18px; text-decoration: underline; cursor: pointer; }',
+          '.hrag-guide-action:hover { color: var(--dsw-alias-state-business-primary); }',
+          '.hrag-guide-action:focus-visible, .hrag-guidepop .hrag-rt-bannerclose:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          '.hrag-guidepop-tail { padding-top: 8px; border-top: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
           '.hrag-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 0 12px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
           '.hrag-btn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-btn:active:not(:disabled) { background: var(--dsw-alias-interactive-bg-active); }',
@@ -2218,6 +2294,10 @@ window.__ModuleLoader__.load({
           '.hrag-tab:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); border-radius: 4px; }',
           '.hrag-pane { padding: 8px 2px; color: var(--dsw-alias-label-tertiary); font-size: 13px; line-height: 20px; }',
           '.hrag-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; text-align: center; }',
+          '.hrag-state-actions { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }',
+          '.hrag-guide-link { padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 12px; font-weight: 500; line-height: 18px; cursor: pointer; }',
+          '.hrag-guide-link:hover { text-decoration: underline; }',
+          '.hrag-guide-link:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
           // 空态照工作台 recall-test-panel（FlaskConical size-5 + text-sm muted，gap-2 居中）。
           '.hrag-state-empty { flex: 1; justify-content: center; gap: 8px; padding: 16px; }',
           '.hrag-state-empty .hrag-state-title { color: var(--dsw-alias-label-tertiary); }',
@@ -11583,6 +11663,24 @@ window.__ModuleLoader__.load({
         size,
       )
     }
+    /** 快速开始入口：罗盘（circle＋needle，14px、描边 1.5）。 */
+    function lucideCompassIcon(size = 14) {
+      return h(
+        'svg',
+        {
+          width: size,
+          height: size,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          strokeWidth: 1.5,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          'aria-hidden': 'true',
+        },
+        h('circle', { cx: 12, cy: 12, r: 10, stroke: 'currentColor' }),
+        h('path', { d: 'm16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12', stroke: 'currentColor' }),
+      )
+    }
     /** 造题入口（lucide Sparkles，工作台同款）。 */
     function lucideSparklesIcon() {
       return lucideMenuIcon([
@@ -20646,6 +20744,26 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 顶栏快速开始入口：宽档＝罗盘＋文字；中/窄档＝图标＋未读点。 */
+    function GuideEntryButton({ t, wide, seen, open, onOpen }) {
+      const label = t('guide.entry')
+      return h(
+        'button',
+        {
+          type: 'button',
+          className: 'hrag-guidebtn' + (wide ? '' : ' hrag-guidebtn-icononly'),
+          title: label,
+          'aria-label': label,
+          'aria-haspopup': 'dialog',
+          'aria-expanded': open ? 'true' : 'false',
+          onClick: onOpen,
+        },
+        lucideCompassIcon(14),
+        h('span', { className: 'hrag-guidebtn-label' }, label),
+        !wide && !seen ? h('span', { className: 'hrag-guidebtn-dot', 'aria-hidden': 'true' }) : null,
+      )
+    }
+
     /** 会话列表的相对时间（紧凑口径：刚刚/分钟/小时/昨天/天；再远＝日期）。 */
     function relativeTime(t, ms) {
       const value = Number(ms)
@@ -20897,6 +21015,121 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /** 快速开始浮层：320 宽、右缘对齐入口；下方不足 360 翻上；正文滚动。 */
+    function GuidePopover({ t, anchorRef, canBindSession, onClose, onSettings, onNewKb, onBindSession }) {
+      const closeRef = React.useRef(null)
+      React.useEffect(() => {
+        const onKey = (event) => {
+          if (event.key === 'Escape') onClose()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+      }, [onClose])
+      React.useEffect(() => {
+        const node = closeRef.current
+        if (!node) return undefined
+        // 宿主在面板打开后还会把焦点交回聊天输入，延后一拍再落到关闭钮。
+        const timer = window.setTimeout(() => {
+          if (node.isConnected) node.focus()
+        }, 0)
+        return () => window.clearTimeout(timer)
+      }, [])
+      const [box, setBox] = React.useState(null)
+      React.useLayoutEffect(() => {
+        const anchor = anchorRef && anchorRef.current
+        if (!anchor) return undefined
+        const measure = () => {
+          const rect = anchor.getBoundingClientRect()
+          const vw = window.innerWidth
+          const vh = window.innerHeight
+          const width = Math.min(320, vw - 16)
+          const right = Math.max(8, Math.min(vw - rect.right, vw - width - 8))
+          const below = vh - rect.bottom - 16
+          const above = rect.top - 16
+          const flip = below < 360 && above > below
+          setBox({
+            width,
+            right,
+            maxHeight: Math.max(160, Math.min(480, flip ? above : below)),
+            top: flip ? undefined : Math.max(8, Math.round(rect.bottom + 6)),
+            bottom: flip ? Math.max(8, Math.round(vh - rect.top + 6)) : undefined,
+          })
+        }
+        measure()
+        window.addEventListener('resize', measure)
+        window.addEventListener('scroll', measure, true)
+        return () => {
+          window.removeEventListener('resize', measure)
+          window.removeEventListener('scroll', measure, true)
+        }
+      }, [anchorRef])
+      const style = box
+        ? {
+            width: box.width + 'px',
+            right: box.right + 'px',
+            maxHeight: box.maxHeight + 'px',
+            top: box.top === undefined ? undefined : box.top + 'px',
+            bottom: box.bottom === undefined ? undefined : box.bottom + 'px',
+          }
+        : { width: '320px', right: '8px', top: '8px', visibility: 'hidden' }
+      const step = (index, titleKey, bodyKey, actionKey, onAction) =>
+        h(
+          'div',
+          { className: 'hrag-guide-step', key: 'step-' + index },
+          h('span', { className: 'hrag-guide-stepnum', 'aria-hidden': 'true' }, String(index)),
+          h(
+            'div',
+            { className: 'hrag-guide-stepbody' },
+            h('div', { className: 'hrag-guide-steptitle' }, t(titleKey)),
+            h('div', { className: 'hrag-guide-stepdesc' }, t(bodyKey)),
+            onAction && actionKey
+              ? h('button', { type: 'button', className: 'hrag-guide-action', onClick: onAction }, t(actionKey))
+              : null,
+          ),
+        )
+      return h(
+        React.Fragment,
+        null,
+        h('div', { className: 'hrag-guidepop-backdrop', onClick: onClose }),
+        h(
+          'div',
+          { className: 'hrag-guidepop', role: 'dialog', 'aria-label': t('guide.title'), style },
+          h(
+            'div',
+            { className: 'hrag-guidepop-head' },
+            h('div', { className: 'hrag-guidepop-title' }, t('guide.title')),
+            h(
+              'button',
+              {
+                type: 'button',
+                ref: closeRef,
+                className: 'hrag-rt-bannerclose',
+                'aria-label': t('rt.dismiss'),
+                title: t('rt.dismiss'),
+                onClick: onClose,
+              },
+              dshCloseIcon(),
+            ),
+          ),
+          h(
+            'div',
+            { className: 'hrag-guidepop-body' },
+            h('p', { className: 'hrag-guide-lead' }, t('guide.lead')),
+            step(1, 'guide.step1.title', 'guide.step1.body', 'guide.step1.action', onSettings),
+            step(2, 'guide.step2.title', 'guide.step2.body', 'guide.step2.action', onNewKb),
+            step(
+              3,
+              'guide.step3.title',
+              'guide.step3.body',
+              canBindSession ? 'guide.step3.action' : null,
+              canBindSession ? onBindSession : null,
+            ),
+          ),
+          h('div', { className: 'hrag-guidepop-tail' }, t('guide.tail')),
+        ),
+      )
+    }
+
     function KnowledgePanel({ t, sessionId }) {
       const [phase, setPhase] = React.useState('loading')
       const [kbs, setKbs] = React.useState([])
@@ -20918,11 +21151,22 @@ window.__ModuleLoader__.load({
       })
       const [sessionBusy, setSessionBusy] = React.useState(false)
       const [barNarrow, setBarNarrow] = React.useState(false)
+      const [barGuideWide, setBarGuideWide] = React.useState(false)
+      const [barEl, setBarEl] = React.useState(null)
+      const [guideOpen, setGuideOpen] = React.useState(false)
+      const [guideFromEmpty, setGuideFromEmpty] = React.useState(false)
+      const [guideSeen, setGuideSeen] = React.useState(readGuideSeen)
+      const guideAnchorRef = React.useRef(null)
       // Wiki抽屉壳（Task 9）：Wiki tab 行点击与召回 wiki 命中共用；组件级渲染
       // 在面板根（同 ChunkDrawer 层位，z 帧 56/57 垫在续读抽屉下）。
       const [wikiDrawer, setWikiDrawer] = React.useState(null)
       const [uploading, setUploading] = React.useState(false)
       const toastAnchorRef = React.useRef(null)
+      // 顶栏元素同时给三档测量（回调 ref 稳定，避免每渲染重挂）。
+      const barRef = React.useCallback((el) => {
+        toastAnchorRef.current = el
+        setBarEl(el)
+      }, [])
       // T4 摄取通道：面板根 ref＋会话 id 采集（宿主后台任务归属；失败＝空串软着陆）。
       const panelRootRef = React.useRef(null)
       React.useEffect(() => {
@@ -21161,6 +21405,38 @@ window.__ModuleLoader__.load({
         refreshSessions()
       }, [refreshSessions])
 
+      // 快速开始：两个入口共用；打开即记 seen；动作跳转不把焦点还回入口。
+      const openGuide = (anchorEl) => {
+        guideAnchorRef.current = anchorEl || null
+        setGuideFromEmpty(phase === 'empty')
+        setSessionOpen(false)
+        setGuideOpen(true)
+        if (!guideSeen) {
+          writeGuideSeen()
+          setGuideSeen(true)
+        }
+      }
+      const closeGuide = ({ restoreFocus = true } = {}) => {
+        setGuideOpen(false)
+        const anchor = guideAnchorRef.current
+        if (restoreFocus && anchor && anchor.isConnected && typeof anchor.focus === 'function') anchor.focus()
+      }
+      const guideConfigure = () => {
+        closeGuide({ restoreFocus: false })
+        openSettings(false)
+      }
+      const guideNewKb = () => {
+        closeGuide({ restoreFocus: false })
+        setCreateKbName('')
+        setCreateKbDesc('')
+        setCreateKbOpen(true)
+      }
+      const guideBindSession = () => {
+        closeGuide({ restoreFocus: false })
+        setSessionOpen(true)
+        refreshSessions()
+      }
+
       // 绑定/解绑（D7 不弹确认）：写成功即 Toast；回合在跑时文案改为「下一条消息生效」。
       const bindKb = React.useCallback(
         (nextKbId, nextKbName) => {
@@ -21229,6 +21505,19 @@ window.__ModuleLoader__.load({
           .catch((error) => showToast(errorDetail(error), { error: true }))
           .finally(() => setSessionBusy(false))
       }
+
+      // 快速开始三档：栏宽 ≥320 显示文字药丸（测量绑栏元素，运行时 gate 反复挂卸也能重测）。
+      React.useLayoutEffect(() => {
+        if (!barEl || typeof ResizeObserver === 'undefined') return undefined
+        const measure = () => {
+          const next = barEl.clientWidth >= 320
+          setBarGuideWide((prev) => (prev === next ? prev : next))
+        }
+        measure()
+        const observer = new ResizeObserver(measure)
+        observer.observe(barEl)
+        return () => observer.disconnect()
+      }, [barEl])
 
       // 198px 档只留图标：栏宽 < 208 时「会话」二字让位（此时库名仍留 ~104px）。
       React.useEffect(() => {
@@ -21517,6 +21806,7 @@ window.__ModuleLoader__.load({
             if (created && created.id) {
               setKbs((list) => list.concat([created]))
               setKbId(String(created.id))
+              setPhase((prev) => (prev === 'empty' ? 'ready' : prev))
             }
             showToast(t('createKb.created'))
           })
@@ -21915,7 +22205,34 @@ window.__ModuleLoader__.load({
           { className: 'hrag-state' },
           h('div', { className: 'hrag-state-title' }, t('shell.empty')),
           h('div', { className: 'hrag-state-detail' }, t('shell.emptyHint')),
-          h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.refresh')),
+          h(
+            'div',
+            { className: 'hrag-state-actions' },
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'hrag-btn hrag-btn-primary',
+                onClick: () => {
+                  setCreateKbName('')
+                  setCreateKbDesc('')
+                  setCreateKbOpen(true)
+                },
+              },
+              t('createKb.title'),
+            ),
+            h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.refresh')),
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'hrag-guide-link',
+              onClick: (event) => openGuide(event.currentTarget),
+            },
+            t('guide.entry'),
+            h('span', { 'aria-hidden': 'true' }, ' →'),
+          ),
         )
       } else {
         content = h(
@@ -21923,7 +22240,7 @@ window.__ModuleLoader__.load({
           { className: 'hrag-shell' },
           h(
             'div',
-            { className: 'hrag-bar', ref: toastAnchorRef },
+            { className: 'hrag-bar' + (barGuideWide ? '' : ' hrag-bar-compact'), ref: barRef },
             h(DshMenu, {
               title: t('shell.kbLabel'),
               align: 'start',
@@ -21957,6 +22274,13 @@ window.__ModuleLoader__.load({
                 setKbId(id)
               },
             }),
+            h(GuideEntryButton, {
+              t,
+              wide: barGuideWide,
+              seen: guideSeen,
+              open: guideOpen,
+              onOpen: (event) => openGuide(event.currentTarget),
+            }),
             // 会话入口（D1 甲）：库选择器只管浏览，这里才显示本会话的绑定。
             h(SessionEntryButton, {
               t,
@@ -21966,6 +22290,7 @@ window.__ModuleLoader__.load({
               open: sessionOpen,
               btnRef: sessionBtnRef,
               onOpen: () => {
+                if (guideOpen) closeGuide({ restoreFocus: false })
                 setSessionOpen((prev) => {
                   const next = !prev
                   if (next) refreshSessions()
@@ -22565,6 +22890,21 @@ window.__ModuleLoader__.load({
                   kbs,
                   // 托管模式（Task 5）：Qdrant 地址由内置服务拥有，设置页只读。
                   managed: Boolean(runtime && runtime.mode === 'managed'),
+                }),
+              )
+            : null,
+          guideOpen
+            ? h(
+                HragBoundary,
+                { t, name: t('guide.title') },
+                h(GuidePopover, {
+                  t,
+                  anchorRef: guideAnchorRef,
+                  canBindSession: !guideFromEmpty && Boolean(sessionId),
+                  onClose: () => closeGuide(),
+                  onSettings: guideConfigure,
+                  onNewKb: guideNewKb,
+                  onBindSession: guideBindSession,
                 }),
               )
             : null,
