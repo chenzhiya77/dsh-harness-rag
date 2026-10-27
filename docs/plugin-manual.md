@@ -2,18 +2,18 @@
 
 > 原根 README，现作为安装、运行与契约的操作手册保留；产品介绍见根 [README](../README.md)。
 
-现状：工具面（三检索＋文档两件＋百科清单）、右栏管理面板、摄取后台任务、子槽声明契约、单一下载分发（运行时准备/就绪/重试/嵌入模型引导）与版本化升级/回滚/旧版清理均已实装；`backendUrl` 为空即内置本地服务，非空仍走外部服务。GitHub 安装入口已发布（v0.1.2，见「安装」）；npm 待发布。
+现状：工具面（三检索＋文档两件＋百科清单）、右栏管理面板、摄取后台任务、子槽声明契约、单一下载分发（运行时准备/就绪/重试/嵌入模型引导）与版本化升级/回滚/旧版清理均已实装；`backendUrl` 为空即内置本地服务，非空仍走外部服务。GitHub 安装入口已发布（v0.1.3，见「安装」）；npm 待发布。
 
 ## 安装
 
-GitHub 安装可用（钉 tag `v0.1.2`，不要跟 main）；npm 包尚未发布：
+GitHub 安装可用（钉 tag `v0.1.3`，不要跟 main）；npm 包尚未发布：
 
 ```sh
 # 本地目录（开发安装，改码即被读取）
 dsh plugin --profile <name> add link:<本仓绝对路径>
 
 # GitHub（钉 tag；运行时包从同仓 Release 下载）
-dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.2
+dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.3
 
 # npm（发布后可用）
 dsh plugin --profile <name> add dsh-harness-rag
@@ -22,7 +22,7 @@ dsh plugin --profile <name> add dsh-harness-rag
 三种方式装的是同一份插件代码，首次运行面完全一致。装完重启该 profile 的 DSH，打开右栏「知识库」tab：
 
 1. **确认位置** — 默认 `<DSH_HOME>/harness-rag`（`DSH_HOME` 缺省 `~/.dsh`），可点「更改…」选父目录，实际根为 `<父目录>/harness-rag`。
-2. **开始准备** — 下载运行时包（约 316 MB）并解压（约 842 MB），随后启动内置 Qdrant 与知识服务；首次约 1–2 分钟，之后启动为秒级。
+2. **开始准备** — 下载运行时包（约 427 MB）并解压（约 1105 MB），随后启动内置 Qdrant 与知识服务；首次约 1–2 分钟，之后启动为秒级。
 3. **配置嵌入模型** — 未配置时点上传或拖入文件会被拦下并提示「去配置」；在「功能模型设置」里选嵌入模型后即可上传文档。
 
 平台：首期只提供 **Windows x64** 运行时包；其他平台安装后会在面板明确报「没有可用的运行时包」，此时改用外部服务（见下）。
@@ -33,7 +33,7 @@ dsh plugin --profile <name> add dsh-harness-rag
 
 ```text
 <root>/
-├─ runtime/<version>/     # 便携 Python、site-packages、engine 源码、qdrant（按版本存放；成功切换后保留当前与上一版，更老版本自动清理）
+├─ runtime/<version>/     # 便携 Python、site-packages、engine 源码、qdrant、ffmpeg/ffprobe、tiktoken-cache（按版本存放；成功切换后保留当前与上一版，更老版本自动清理）
 ├─ state/                 # data（sqlite 等）、logs、qdrant 存储、service.json、current.json、lease.json
 ├─ config/                # config.yaml、models_config.json、rag_config.json
 └─ downloads/             # 运行时包下载缓存（.part 可续传）
@@ -48,10 +48,13 @@ dsh plugin --profile <name> add dsh-harness-rag
 - **杀软**：运行时里的 `python.exe`/`qdrant.exe` 未签名，可能被 SmartScreen 或杀软拦截；把运行根加入信任即可。
 - **代理**：下载与引擎出网都跟随宿主/系统代理（`HTTPS_PROXY` 等），插件不覆盖宿主的 dispatcher。
 - **表格解析**：托管运行时已带 `python-calamine`（解析 `.xlsx` / `.xls`）；`rag.table.enabled` 默认关闭，只能改 `<root>/config/config.yaml` 开启，面板不提供开关。`.csv` 始终可用，`.tsv` 与 Excel 同受该门控。
+- **视频前置**：托管运行时随包提供 `ffmpeg` / `ffprobe`（宿主把 `<runtime>/ffmpeg` 前置进引擎 PATH），开启 `rag.video.enabled` 后探测与抽帧可用；本地 ASR（funasr / whisper）与分镜检测（scenedetect）不随包——ASR 腿失败、分镜回落等距窗口，文档仍可按其他腿 ready，或在设置里改用 ASR 服务档。
+- **离线切分**：`cl100k_base` BPE 词表随包（`<runtime>/tiktoken-cache`，宿主注入 `TIKTOKEN_CACHE_DIR`），首次摄入不需要联网。
+- **Langfuse 追踪（可选）**：宿主设置 `LANGFUSE_TRACING=true` 与 `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_BASE_URL` 时透传给引擎；运行时已带 `langfuse 4.5.1` + `backoff`，不设置则完全关闭。未接真实服务时只能证明「已启用并发出 OTLP」。
 
 ## 升级与回滚
 
-运行时的目标版本来自插件包的 `runtime.json`，当前运行版本记在 `<root>/state/current.json`。新运行时只随对应插件版本发布：已装用户先升级插件到 `v0.1.2`，其 `runtime.json` 才会把 `0.1.0-3` 暴露给既有升级链；只换运行时包不会自动生效。两者不同时：
+运行时的目标版本来自插件包的 `runtime.json`，当前运行版本记在 `<root>/state/current.json`。新运行时只随对应插件版本发布：已装用户先升级插件到 `v0.1.3`，其 `runtime.json` 才会把 `0.1.0-4` 暴露给既有升级链；只换运行时包不会自动生效。两者不同时：
 
 1. **准备**：旧服务仍健康时，插件只在后台下载、校验、解压新版本，面板提示「新版本已就绪，重启 DSH 后启用」；本次不切换，也不改数据。
 2. **切换**：下一次 DSH 启动（旧服务已退出、租约空闲）时启动新版。新版 Qdrant 与 knowledge 共享 90 秒健康门，成功后才把 `current.json` 指向新版并记下 `previousVersion`。
@@ -74,7 +77,7 @@ dsh plugin --profile <name> add dsh-harness-rag
 - `service.json` 的 `pid` 为 null、知识服务端口仍应答、且租约不存在或已陈旧时，插件判定为「旧实例残留」：服务仍可继续用，但升级会停在 `blocked` 并显示「旧实例残留」。插件不会猜 pid、也不强杀；请确认端口（默认 8020/6333/6334）上的进程属于本运行根后手工停止，再重启 DSH 或点重试。
 - `state/provision.lock` 的持有者已退出但锁仍在（例如 pid 无法判定）：确认没有其他宿主正在准备后删除该文件，再重试。
 
-**开发态本地包**：仅开发/验收用 `DSH_HARNESS_RAG_PACK=<本地 zip 绝对路径>` 覆盖下载，发布版不启用；本地包同样做空间检查与 manifest 的 `runtimeVersion`/`configVersion` 校验。`runtime.json` 已回填 GitHub Release 下载地址（v0.1.1 的 `0.1.0-3`）与 `size`/`sha256`；本地包只用于开发/验收覆盖。
+**开发态本地包**：仅开发/验收用 `DSH_HARNESS_RAG_PACK=<本地 zip 绝对路径>` 覆盖下载，发布版不启用；本地包同样做空间检查与 manifest 的 `runtimeVersion`/`configVersion` 校验。`runtime.json` 已回填 GitHub Release 下载地址（v0.1.3 的 `0.1.0-4`）与 `size`/`sha256`；本地包只用于开发/验收覆盖。
 
 ## 外部模式（自带 Harness RAG 服务）
 
@@ -87,7 +90,7 @@ cd <harness-rag>/backend && make gateway
 # uvicorn app.gateway.knowledge_app:app --host 127.0.0.1 --port 8020
 ```
 
-- 服务侧需自备：Python 3.12 ＋ 依赖同步（`make gateway` 内置 `uv sync --inexact --extra umap`）、外部 Qdrant（默认 `127.0.0.1:6333`）、`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`；数据在 `backend/.deer-flow/`。要解析 `.xlsx` / `.xls` 还需在服务环境安装 `python-calamine==0.8.2`（它不在引擎锁里，`make gateway` 不会带上）；托管运行时已自带。
+- 服务侧需自备：Python 3.12 ＋ 依赖同步（`make gateway` 内置 `uv sync --inexact --extra umap`）、外部 Qdrant（默认 `127.0.0.1:6333`）、`config.yaml`／`models_config.json`／`rag_config.json`／`backend/.env`；数据在 `backend/.deer-flow/`。要解析 `.xlsx` / `.xls` 还需在服务环境安装 `python-calamine==0.8.2`（它不在引擎锁里，`make gateway` 不会带上）；托管运行时已自带。切分用的 `tiktoken` BPE 词表在外部模式下首次会在线下载（托管运行时已随包提供）。
 - 面板或插件配置里填 `backendUrl`（如 `http://127.0.0.1:8020`）与 `apiToken`（引擎开了鉴权时必填，与服务端 `DEER_FLOW_API_TOKEN` 一致）。托管模式的 token 由插件生成，只存 `state/service.json`，面板不显示。
 - 远程部署把 `backendUrl` 指过去即可。
 
@@ -128,7 +131,7 @@ Host 半在宿主世界注册模型可见工具，并负责运行时的准备、
 - 模型目录变化或插件激活时自动同步，也可在「功能模型设置」的「DSH 模型」卡片手动同步。
 - 功能模型是全局作用域：设置对所有知识库生效。
 - 逐腿思考档位（Off / Default / 六档）取该模型声明的档位子集；不选档位即跟随 DSH 默认。
-- 托管运行时与 `make gateway` 同依赖，**不含本地视频 ASR 依赖**（funasr/torch）：视频默认档需另装，或在设置里改用 ASR 服务档。
+- 托管运行时已随包提供 `ffmpeg` / `ffprobe`，但**不含本地视频 ASR 依赖**（funasr/torch）与分镜检测（scenedetect）：视频默认档需另装，或在设置里改用 ASR 服务档；分镜缺件时回落等距窗口。
 
 ## 模型可见工具（`hrag_` 命名空间）
 
@@ -167,7 +170,7 @@ pnpm run typecheck
 
 改动后重载：Client 半（`client.js`）随窗口重开即生效；Host 半（`src/`）须桌面端托盘完整退出重启才换代（`link:` 开发安装无须重装，改码即被读取）。
 
-运行时包由仓内脚本构建：`pnpm run build:runtime -- --engine-commit "$(git rev-parse --short=9 HEAD)"`（或直接 `node scripts/build-runtime-pack.mjs --engine ./engine --engine-commit <sha>`）；默认输出 `dist/`，加 `--update-manifest` 回填 `runtime.json` 的 size/sha256（pnpm 下写作 `pnpm run build:runtime -- --update-manifest`）。冷构建固定 Python 3.12.13、Qdrant 1.20.0，要求 `uv` 0.11.2 与 `gh` ≥ 2.40。`engine/` 是本仓的后端目录、自身没有 `.git`，builder 不会向上找仓根，因此必须显式传 `--engine-commit`；`engine/UPSTREAM.md` 只记分叉基准，不作为构建来源。构建前可加 `--print-inputs` 核对解析结果。产物是 `harness-rag-runtime-win32-x64-<version>.zip`。开发时可用 `DSH_HARNESS_RAG_PACK=<本地 zip>` 跳过下载、直接解压该包。
+运行时包由仓内脚本构建：`pnpm run build:runtime -- --engine-commit "$(git rev-parse --short=9 HEAD)"`（或直接 `node scripts/build-runtime-pack.mjs --engine ./engine --engine-commit <sha>`）；默认输出 `dist/`，加 `--update-manifest` 回填 `runtime.json` 的 size/sha256（pnpm 下写作 `pnpm run build:runtime -- --update-manifest`）。冷构建固定 Python 3.12.13、Qdrant 1.20.0，要求 `uv` 0.11.2 与 `gh` ≥ 2.40。构建会额外下载并校验 BtbN 的 LGPL ffmpeg 资产（size+sha256 双钉）、生成 `tiktoken` BPE 缓存，并在包内冒烟 `langfuse`/`backoff`；Qdrant 可用本地资产覆盖（`HARNESS_RAG_QDRANT_EXE`）。`engine/` 是本仓的后端目录、自身没有 `.git`，builder 不会向上找仓根，因此必须显式传 `--engine-commit`；`engine/UPSTREAM.md` 只记分叉基准，不作为构建来源。构建前可加 `--print-inputs` 核对解析结果。产物是 `harness-rag-runtime-win32-x64-<version>.zip`。开发时可用 `DSH_HARNESS_RAG_PACK=<本地 zip>` 跳过下载、直接解压该包。
 
 面板文案走内联字典（`ctx.locale.register('harnessRag', …)`，三方插件官方模式）；`locale/*.json` 只承载清单显示元数据（title/description），不是词条文件。
 
