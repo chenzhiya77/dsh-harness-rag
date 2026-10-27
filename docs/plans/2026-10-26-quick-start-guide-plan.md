@@ -1,6 +1,6 @@
 # 面板「快速开始」引导 Plan
 
-**Status:** 已实施 · 已发布（feat 2eca02b / docs a8b0999，随 `v0.1.2` 发布；视觉重设计 `b5c76a0`；隔离沙箱验收完成，用户实例真栈与上传/拖拽回归仍待复核）
+**Status:** 已实施 · 已发布（feat 2eca02b / docs a8b0999，随 `v0.1.2` 发布；视觉重设计 `b5c76a0`、docs 修订 `e93bac8`；隔离沙箱验收完成，用户实例真栈与上传/拖拽回归仍待复核）
 **Date:** 2026-10-26
 **配套 spec:** [2026-10-26-quick-start-guide-spec.md](../specs/2026-10-26-quick-start-guide-spec.md)（D1–D7 已拍、D8 暂选乙；C1 暂选乙＝零库空态加建库主按钮＋指南链钮；五件范围、验收 1–10、视觉重设计见 spec §7）
 **Architecture:** 纯 `client.js`：栏内入口钮＋零库空态第二入口＋320 锚定浮层；定位/关闭/互斥照会话小面板词法，动作复用 `openSettings(false)`／`setCreateKbOpen`／`setSessionOpen`；图标档（<320）收起库 chevron＋栏距 6px 保库名，浮层聚焦延后一拍避开宿主聊天输入；另补建库成功链一行 `phase='ready'`、13 条 zh/en 词条、1 个 `localStorage` 键与空态/上传 toast 各一句词。不动 host 半与引擎。实测 `client.js` +347／−7 行。
@@ -172,6 +172,7 @@
 1. `feat(panel): add the quick start guide` —— `client.js`（入口、浮层、空态第二入口与建库闭环、窄档让位、词条）—— `2eca02b`。
 2. `docs(guide): record the quick start guide contract` —— `docs/specs/2026-10-26-quick-start-guide-spec.md`＋`docs/plans/2026-10-26-quick-start-guide-plan.md` —— `a8b0999`。
 3. `feat(panel): redesign the quick start guide popover` —— `client.js`（词条、`GuidePopover`、guide CSS、`dshArrowRightIcon`；含页脚依赖的 console 表/词条切片）—— `b5c76a0`。
+4. `docs(guide): record the redesigned quick start guide` —— 本对文档（视觉重设计回写）—— `e93bac8`。
 
 - 首版验收中的文案/几何微调并入第 1 笔；10-27 重设计单独成第 3 笔，不与第 1 笔压合。
 - 提交后状态回填另落一笔（`docs(guide): mark the quick start guide submitted`，哈希见 git log）。
