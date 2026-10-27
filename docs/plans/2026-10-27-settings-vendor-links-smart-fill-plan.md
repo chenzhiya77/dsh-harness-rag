@@ -176,7 +176,7 @@
 - 图片/持久化：图片轮只发本轮 1 张（附件说明 + canonical base64），落 `attachments/v1/objects`；抽屉关闭清 UI、附件保留；无识别历史/结果落盘。
 - 文案/键盘：zh 与 en 均渲染（Smart fill/Choose images/Results…）；两份字典各 974 键无缺；文本域/按钮/链接/复选框 Tab 可达且 `:focus-visible` 为真；沙箱主题 `--dsw-focus-ring-color` 为空致 box-shadow ring 不可见（复选框为原生 outline；picker `outline:none`）——环境同既有控件，列残差。
 - 范围：`engine/`、`scripts/` 零 diff；未重建 runtime pack；工作区只本笔文件。Task 5 当时 `lib/` 未随 src 重建；10-27 晚已补 `npm run build:plugin` 并提交 `49307a9`（见 Task 6）。
-- 残差：真栈真实厂商截图 + 付费视觉模型未跑（fake provider 覆盖协议/合并/回填）；401/429 分类码未透出；固定维度过滤未实跑；focus ring 依赖宿主主题变量；spec 指南条待回写。
+- 残差：真栈真实厂商截图 + 付费视觉模型未跑（fake provider 覆盖协议/合并/回填）；401/429 分类码未透出；固定维度过滤未实跑；focus ring 依赖宿主主题变量。
 - 快照时点：浏览器验收用 09:27 的 `client.js` 副本（`E:/hrag-task5/plugin`）；并行快速开始线在 09:30 又改指南 go 按钮几何（28×stretch、8px 圆角），本笔卡片/厂商链接区未变（当前文件 `node --check` 仍 0）；Task 6 在指南线稳定后复跑指南相关项。
 
 ## Task 6 — 文档、实测回填与提交链
@@ -193,6 +193,7 @@
 - 提交：host `699cb2c`；panel `299f1ee`；docs `4a6a0c6`；build `49307a9`；docs 状态回填＝本次提交。
 - 行数：`client.js` +1119/−68；`src/config_recognize.ts` 844；`tests/config_recognize.test.ts` 836；`src/index.ts` +2；`lib/config_recognize.js` 663。
 - 构建态：`npm run build:plugin` 通过；`lib/index.js` +2 注册；沙箱以构建态 `lib/` 启动，`POST /dsh-harness-rag/config/recognize` 缺 model → 400 `invalid_request`，带 `dsh:sbxalpha/sbx-pro` → 502 `model_call_failed`（fake provider 未起）——405 消失，路由与模型解析链路已通；`node --check lib/index.js`、`node --check lib/config_recognize.js` 0。
+- 对外文档（2026-10-27）：README 与 `docs/plugin-manual.md` 补「智能识别配置」（识别范围 / 分批叠加 / 文本打码与截图风险 / 限制 / 不自动保存）、⋯「项目仓库」入口与「推理等级」措辞；`docs/equivalence.md` 补两条插件增量；README 规模表按当前仓刷新（29 个 TS 文件 / 7,989 行、`client.js` 24,122 行、21 个测试文件）。
 - 状态：Task 0–5 与视觉修订 4–8 完成；真栈截图、401/429 分类、固定维度过滤、focus ring 留作残差；lib 已重建并提交 `49307a9`。
 
 ## 提交链
