@@ -166,6 +166,9 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
   }
   let upgrade = initialUpgrade()
   let running: Supervisor | null = null
+  // First-run provisioning happens inside the supervisor; forward its live view
+  // so `preparing` and download progress reach the panel while ensure is pending.
+  let forwarding: Supervisor | null = null
   let ensuring: Promise<RuntimeStatusView> | null = null
   let preparing: Promise<void> | null = null
   let abortController: AbortController | null = null
@@ -189,7 +192,8 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
     }
   }
 
-  const status = (): RuntimeStatusView => ({ ...view, upgrade })
+  const status = (): RuntimeStatusView =>
+    forwarding ? { ...forwarding.status(), upgrade } : { ...view, upgrade }
 
   const supervisorFor = (version: string): Supervisor => {
     let supervisor = created.get(version)
@@ -454,7 +458,12 @@ export function createUpgradeCoordinator(options: UpgradeCoordinatorOptions): Up
       if (target.version === currentVersion) rmSync(failedPath(root, target.version), { force: true })
       const supervisor = supervisorFor(target.version)
       running = supervisor
-      publishView(await supervisor.ensure())
+      forwarding = supervisor
+      try {
+        publishView(await supervisor.ensure())
+      } finally {
+        forwarding = null
+      }
       upgrade = undefined
       return status()
     }

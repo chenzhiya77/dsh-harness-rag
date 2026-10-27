@@ -58,6 +58,7 @@ window.__ModuleLoader__.load({
       'rt.loading': '正在检查本地服务…',
       'rt.setupTitle': '准备本地知识服务',
       'rt.setupHint': '首次使用需下载约 {0}，安装后约 {1}；运行时、数据与配置都放在这个目录下。',
+      'rt.setupSize': '首次使用需下载约 {0}，安装后约 {1}。',
       'rt.setupHintNoSize': '运行时、数据与配置都放在这个目录下。',
       'rt.location': '安装到',
       'rt.willInstallTo': '将安装到 {0}',
@@ -1000,6 +1001,7 @@ window.__ModuleLoader__.load({
       'rt.loading': 'Checking the local service…',
       'rt.setupTitle': 'Set up the local knowledge service',
       'rt.setupHint': 'The first run downloads about {0} and installs about {1}; the runtime, data and config all live in this directory.',
+      'rt.setupSize': 'The first run downloads about {0} and installs about {1}.',
       'rt.setupHintNoSize': 'The runtime, data and config all live in this directory.',
       'rt.location': 'Install to',
       'rt.willInstallTo': 'Installs to {0}',
@@ -2295,8 +2297,9 @@ window.__ModuleLoader__.load({
           '.hrag-pane { padding: 8px 2px; color: var(--dsw-alias-label-tertiary); font-size: 13px; line-height: 20px; }',
           '.hrag-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; text-align: center; }',
           '.hrag-state-actions { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }',
-          '.hrag-guide-link { padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 12px; font-weight: 500; line-height: 18px; cursor: pointer; }',
-          '.hrag-guide-link:hover { text-decoration: underline; }',
+          '.hrag-kbempty { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 400px; box-sizing: border-box; padding: 16px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-lg); text-align: center; }',
+          '.hrag-guide-link { padding: 0 2px; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 11px; font-weight: 500; line-height: 16px; text-decoration: underline; cursor: pointer; }',
+          '.hrag-guide-link:hover { color: var(--dsw-alias-label-primary); }',
           '.hrag-guide-link:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
           // 空态照工作台 recall-test-panel（FlaskConical size-5 + text-sm muted，gap-2 居中）。
           '.hrag-state-empty { flex: 1; justify-content: center; gap: 8px; padding: 16px; }',
@@ -2310,13 +2313,28 @@ window.__ModuleLoader__.load({
           '.hrag-state-error .hrag-state-title { color: var(--dsw-alias-state-error-primary); }',
           // 首启运行时门（Task 5）：设置卡行/进度条/日志尾/引导横幅。
           '.hrag-rt-card { gap: 10px; }',
+          // 设置卡是表单，用左对齐 448 列；进度/错误/闲置卡保持居中空态。
+          '.hrag-rt-setup { gap: 16px; }',
+          '.hrag-rt-setup > .hrag-state-title { width: 100%; max-width: 448px; font-weight: 600; text-align: left; }',
+          '.hrag-rt-setup .hrag-state-detail { text-align: left; }',
+          '.hrag-rt-setup .hrag-rt-confirm { align-items: stretch; }',
+          '.hrag-rt-form { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 448px; }',
+          '.hrag-rt-hints { display: flex; flex-direction: column; gap: 2px; width: 100%; max-width: 448px; }',
           '.hrag-rt-row { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 448px; }',
           '.hrag-rt-label { flex: 0 0 auto; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-rt-input { flex: 1 1 auto; min-width: 0; }',
           '.hrag-rt-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; padding: 0 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 6px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 26px; }',
-          '.hrag-rt-warnrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; max-width: 448px; }',
-          '.hrag-rt-warn { color: var(--dsw-alias-state-warn-primary); text-align: left; }',
-          '.hrag-rt-inlineerror { max-width: 448px; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; word-break: break-word; }',
+          '.hrag-rt-warnbox { display: flex; flex-direction: column; gap: 4px; width: 100%; max-width: 448px; box-sizing: border-box; padding: 8px 10px 8px 12px; border-left: 2px solid var(--dsw-alias-state-warn-primary); border-radius: 8px; background: var(--dsw-alias-bg-module-platform); text-align: left; }',
+          '.hrag-rt-warnhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }',
+          '.hrag-rt-warnmain { flex: 1 1 auto; min-width: 0; color: var(--dsw-alias-state-warn-primary); font-size: 12px; line-height: 18px; }',
+          '.hrag-rt-warntitle { font-weight: 600; }',
+          '.hrag-rt-warnreason { color: var(--dsw-alias-label-tertiary); font-weight: 400; }',
+          '.hrag-rt-warnlink { flex: 0 0 auto; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 12px; font-weight: 500; line-height: 18px; cursor: pointer; }',
+          '.hrag-rt-warnlink:hover { text-decoration: underline; }',
+          '.hrag-rt-warnlink:focus-visible { outline: none; border-radius: 4px; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          '.hrag-rt-warnlink:disabled { opacity: 0.5; cursor: default; }',
+          '.hrag-rt-warnpath { color: var(--dsw-alias-label-secondary); font-family: ui-monospace, monospace; font-size: 11px; line-height: 16px; word-break: break-all; }',
+          '.hrag-rt-inlineerror { width: 100%; max-width: 448px; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; text-align: left; word-break: break-word; }',
           '.hrag-rt-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }',
           '.hrag-rt-bar { width: 100%; max-width: 280px; height: 4px; border-radius: 2px; background: var(--dsw-alias-interactive-bg-hover); overflow: hidden; }',
           '.hrag-rt-barfill { height: 100%; background: var(--dsw-alias-state-business-primary); transition: width 200ms linear; }',
@@ -21950,72 +21968,87 @@ window.__ModuleLoader__.load({
         const reason = runtime.previousRoot ? runtimeReasonText(t, runtime.reason) : ''
         const sizeHint =
           runtime.pack && runtime.pack.size > 0
-            ? t('rt.setupHint', { 0: docFmtBytes(runtime.pack.size), 1: docFmtBytes(runtime.pack.unpackedSize) })
-            : t('rt.setupHintNoSize')
+            ? t('rt.setupSize', { 0: docFmtBytes(runtime.pack.size), 1: docFmtBytes(runtime.pack.unpackedSize) })
+            : ''
         runtimeGate = h(
           'div',
-          { className: 'hrag-state hrag-state-fill hrag-rt-card' },
+          { className: 'hrag-state hrag-state-fill hrag-rt-card hrag-rt-setup' },
           h('div', { className: 'hrag-state-title' }, t('rt.setupTitle')),
           runtime.previousRoot
             ? h(
                 'div',
-                { className: 'hrag-rt-warnrow' },
+                { className: 'hrag-rt-warnbox' },
                 h(
                   'div',
-                  { className: 'hrag-state-detail hrag-rt-warn' },
-                  t('rt.previousBroken') + ': ' + runtime.previousRoot + (reason ? ' (' + reason + ')' : ''),
-                ),
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'hrag-btn hrag-btn-outline',
-                    disabled: runtimeBusy,
-                    onClick: () => {
-                      setRuntimeInput('')
-                      setRuntimeFormError(null)
-                      setRuntimeSyncConfirm(false)
+                  { className: 'hrag-rt-warnhead' },
+                  h(
+                    'div',
+                    { className: 'hrag-rt-warnmain' },
+                    h('span', { className: 'hrag-rt-warntitle' }, t('rt.previousBroken')),
+                    reason ? h('span', { className: 'hrag-rt-warnreason' }, ' · ' + reason) : null,
+                  ),
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'hrag-rt-warnlink',
+                      disabled: runtimeBusy,
+                      onClick: () => {
+                        setRuntimeInput('')
+                        setRuntimeFormError(null)
+                        setRuntimeSyncConfirm(false)
+                      },
                     },
-                  },
-                  t('rt.useDefault'),
+                    t('rt.useDefault'),
+                  ),
                 ),
+                h('div', { className: 'hrag-rt-warnpath', title: runtime.previousRoot }, runtime.previousRoot),
               )
             : null,
           h(
             'div',
-            { className: 'hrag-rt-row' },
-            h('span', { className: 'hrag-rt-label' }, t('rt.location')),
-            runtimeEditable
-              ? h(HostInput, {
-                  className: 'hrag-rt-input hrag-set-control',
-                  spellCheck: false,
-                  value: runtimeInput,
-                  placeholder: runtime.defaultRoot,
-                  'aria-label': t('rt.location'),
-                  onChange: (event) => {
-                    setRuntimeInput(event.target.value)
-                    setRuntimeFormError(null)
-                    setRuntimeSyncConfirm(false)
-                  },
-                })
-              : h(
-                  'span',
-                  { className: 'hrag-rt-input hrag-rt-path', title: runtimeTargetResolved },
-                  runtimePathLabel(runtimeTargetResolved, runtime.defaultRoot),
-                ),
-            runtimeEditable
-              ? null
-              : h(
-                  'button',
-                  { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: runtimeBusy, onClick: pickRuntimeLocation },
-                  t('rt.change'),
-                ),
+            { className: 'hrag-rt-form' },
+            h(
+              'div',
+              { className: 'hrag-rt-row' },
+              h('span', { className: 'hrag-rt-label' }, t('rt.location')),
+              runtimeEditable
+                ? h(HostInput, {
+                    className: 'hrag-rt-input hrag-set-control',
+                    spellCheck: false,
+                    value: runtimeInput,
+                    placeholder: runtime.defaultRoot,
+                    'aria-label': t('rt.location'),
+                    onChange: (event) => {
+                      setRuntimeInput(event.target.value)
+                      setRuntimeFormError(null)
+                      setRuntimeSyncConfirm(false)
+                    },
+                  })
+                : h(
+                    'span',
+                    { className: 'hrag-rt-input hrag-rt-path', title: runtimeTargetResolved },
+                    runtimePathLabel(runtimeTargetResolved, runtime.defaultRoot),
+                  ),
+              runtimeEditable
+                ? null
+                : h(
+                    'button',
+                    { type: 'button', className: 'hrag-btn hrag-btn-outline', disabled: runtimeBusy, onClick: pickRuntimeLocation },
+                    t('rt.change'),
+                  ),
+            ),
+            runtimeInput.trim() && runtimeTargetResolved !== runtimeInput.trim()
+              ? h('div', { className: 'hrag-state-detail' }, t('rt.willInstallTo', { 0: runtimeTargetResolved }))
+              : null,
+            runtimeFormError ? h('div', { className: 'hrag-rt-inlineerror' }, runtimeFormError) : null,
           ),
-          runtimeInput.trim() && runtimeTargetResolved !== runtimeInput.trim()
-            ? h('div', { className: 'hrag-state-detail' }, t('rt.willInstallTo', { 0: runtimeTargetResolved }))
-            : null,
-          runtimeFormError ? h('div', { className: 'hrag-rt-inlineerror' }, runtimeFormError) : null,
-          h('div', { className: 'hrag-state-detail' }, sizeHint),
+          h(
+            'div',
+            { className: 'hrag-rt-hints' },
+            sizeHint ? h('div', { className: 'hrag-state-detail' }, sizeHint) : null,
+            h('div', { className: 'hrag-state-detail' }, t('rt.setupHintNoSize')),
+          ),
           runtimeSyncConfirm
             ? h(
                 'div',
@@ -22202,36 +22235,40 @@ window.__ModuleLoader__.load({
       } else if (phase === 'empty') {
         content = h(
           'div',
-          { className: 'hrag-state' },
-          h('div', { className: 'hrag-state-title' }, t('shell.empty')),
-          h('div', { className: 'hrag-state-detail' }, t('shell.emptyHint')),
+          { className: 'hrag-state hrag-state-fill' },
           h(
             'div',
-            { className: 'hrag-state-actions' },
+            { className: 'hrag-kbempty' },
+            h('div', { className: 'hrag-state-title' }, t('shell.empty')),
+            h('div', { className: 'hrag-state-detail' }, t('shell.emptyHint')),
+            h(
+              'div',
+              { className: 'hrag-state-actions' },
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-btn hrag-btn-primary',
+                  onClick: () => {
+                    setCreateKbName('')
+                    setCreateKbDesc('')
+                    setCreateKbOpen(true)
+                  },
+                },
+                t('createKb.title'),
+              ),
+              h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.refresh')),
+            ),
             h(
               'button',
               {
                 type: 'button',
-                className: 'hrag-btn hrag-btn-primary',
-                onClick: () => {
-                  setCreateKbName('')
-                  setCreateKbDesc('')
-                  setCreateKbOpen(true)
-                },
+                className: 'hrag-guide-link',
+                onClick: (event) => openGuide(event.currentTarget),
               },
-              t('createKb.title'),
+              t('guide.entry'),
+              h('span', { 'aria-hidden': 'true' }, ' →'),
             ),
-            h('button', { type: 'button', className: 'hrag-btn hrag-btn-outline', onClick: load }, t('shell.refresh')),
-          ),
-          h(
-            'button',
-            {
-              type: 'button',
-              className: 'hrag-guide-link',
-              onClick: (event) => openGuide(event.currentTarget),
-            },
-            t('guide.entry'),
-            h('span', { 'aria-hidden': 'true' }, ' →'),
           ),
         )
       } else {

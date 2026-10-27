@@ -217,6 +217,56 @@ test('upgrade: the same version delegates to the existing supervisor', async () 
   assert.equal(status.upgrade, undefined)
 })
 
+test('upgrade: first-run provisioning forwards the supervisor live status', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'hrag-upgrade-'))
+  const live: RuntimeStatusView = {
+    phase: 'preparing',
+    adopted: false,
+    runtimeVersion: NEW,
+    root,
+    logTail: '',
+    progress: { phase: 'download', received: 3, total: 10 },
+  }
+  let finish!: (view: RuntimeStatusView) => void
+  const pending = new Promise<RuntimeStatusView>((resolve) => {
+    finish = resolve
+  })
+  const supervisor: Supervisor = {
+    root,
+    ensure: () => pending,
+    probe: async () => null,
+    adopt: async () => null,
+    status: () => live,
+    retry: async () => live,
+    rebind: () => {},
+    dispose: () => {},
+  }
+  const coordinator = createUpgradeCoordinator({
+    root,
+    target: { version: NEW, pack: pack(NEW, 44), configVersion: 44 },
+    headless: true,
+    isAlive: () => false,
+    probePort: async () => false,
+    supervisorFor: () => supervisor,
+    provision: async () => ({ kind: 'ok' }),
+    now: () => STAMP,
+  })
+
+  assert.equal(coordinator.status().phase, 'idle')
+  const running = coordinator.ensure()
+  await settle()
+
+  const mid = coordinator.status()
+  assert.equal(mid.phase, 'preparing')
+  assert.deepEqual(mid.progress, { phase: 'download', received: 3, total: 10 })
+  live.progress = { phase: 'download', received: 6, total: 10 }
+  assert.equal(coordinator.status().progress?.received, 6)
+
+  finish({ phase: 'ready', adopted: false, runtimeVersion: NEW, root, logTail: '' })
+  assert.equal((await running).phase, 'ready')
+  assert.equal(coordinator.status().phase, 'ready')
+})
+
 test('upgrade: a current.json that lags behind a healthy service is rewritten', async () => {
   const f = fixture({ targetInstalled: true })
   writeState(f.root, 'service.json', {
