@@ -1,7 +1,7 @@
 {
   "name": "dsh-harness-rag",
   "description": "Harness RAG for DeepSeek Harness: three-path retrieval (hybrid/graph/wiki), document continuation reading, and a knowledge-base management panel over the Harness RAG knowledge service.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "icon": "./icon.svg",
   "type": "module",
   "main": "./lib/index.js",

@@ -27,7 +27,7 @@ Host 半在宿主世界注册 `hrag_*` 工具、面板数据桥与摄取后台�
 
 解析、切片、嵌入、索引、图谱、wiki、评测与存储全部在 knowledge 服务侧。默认由插件托管：运行时落在 `<root>/runtime/<version>/`（便携 Python、site-packages、engine 源码、Qdrant），数据落在 `<root>/state/`；`backendUrl` 非空时完全走外部服务，不下载、不起进程。
 
-运行时支持版本化升级：旧服务仍在运行时只后台准备新包，重启 DSH 才切换；新版本起不来会自动回到旧版，并在面板留下失败横幅与 `state/failed-<version>.json`。升级前先备份 `state/` 与 `config/`，详见操作手册的「升级与回滚」。新运行时只随对应插件版本的 `runtime.json` 发布：已装用户先把插件升级到 `v0.1.1`，既有升级链才会看到 `0.1.0-3`。
+运行时支持版本化升级：旧服务仍在运行时只后台准备新包，重启 DSH 才切换；新版本起不来会自动回到旧版，并在面板留下失败横幅与 `state/failed-<version>.json`。升级前先备份 `state/` 与 `config/`，详见操作手册的「升级与回滚」。新运行时只随对应插件版本的 `runtime.json` 发布：已装用户先把插件升级到 `v0.1.2`，既有升级链才会看到 `0.1.0-3`。
 
 **访问与安全边界**
 
@@ -160,14 +160,14 @@ AI 按实体资格自动沉淀「生成条目」；用户自建的「我的条�
 
 ## 🚀 快速开始
 
-GitHub 安装可用（钉 tag `v0.1.1`，不要跟 main）；npm 包尚未发布：
+GitHub 安装可用（钉 tag `v0.1.2`，不要跟 main）；npm 包尚未发布：
 
 ```sh
 # 本地目录（开发安装，改码即被读取）
 dsh plugin --profile <name> add link:<本仓绝对路径>
 
 # GitHub（钉 tag；运行时包从同仓 Release 下载）
-dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.1
+dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.2
 
 # npm（发布后可用）
 dsh plugin --profile <name> add dsh-harness-rag
@@ -201,7 +201,7 @@ dsh plugin --profile <name> add dsh-harness-rag
 | 右栏「知识库」管理面板 | 已实装 |
 | 摄取后台任务 | 已实装 |
 | 运行时准备 / 就绪 / 重试 / 版本化升级 / 回滚 / 嵌入模型引导 | 已实装 |
-| GitHub 安装入口 | 已发布（v0.1.1） |
+| GitHub 安装入口 | 已发布（v0.1.2） |
 | npm 安装入口 | 待发布 |
 
 ## ⚖️ 归属与许可
