@@ -1,6 +1,6 @@
 # 引擎 + 插件 —— RAG 腿思考档位 Spec
 
-**Status:** 已交付（2026-10-21；Task 0–7 全过，真面板换模型清回已由用户实点复验；`minimal` 已裁 D1＝甲）。
+**Status:** 已交付（2026-10-21；Task 0–7 全过，真面板换模型清回已由用户实点复验；`minimal` 已裁 D1＝甲）。**2026-10-27 文案修订（用户裁）**：选择器内「思考档位」统一改称「推理等级」（与宿主 `menu.effort` 同词；内部字段仍 `*_thinking`/`*_reasoning_effort`；样式与菜单形态不变）。
 **Date:** 2026-10-21
 **配套 plan:** [2026-10-21-rag-leg-effort-plan.md](../plans/2026-10-21-rag-leg-effort-plan.md)
 
@@ -113,10 +113,10 @@ RAG 的生产搭配是多模型：抽取常用便宜快模型、裁判/百科用
 
 ```
 图谱抽取模型   [ MiMo-V2.6-Flash     High ⌄ ]
-                 └ 根面板：模型 [MiMo-V2.6-Flash] › ／ 思考档位 [High] ›
+                 └ 根面板：模型 [MiMo-V2.6-Flash] › ／ 推理等级 [High] ›
 ```
 
-- 触发盒＝模型名（不带厂商后缀）＋当前档位＋下箭头。点开先见根面板两格（「模型」/「思考档位」，左标签、右当前值、右侧右箭头）；点格下钻；下钻页顶部有返回箭头与页名，Escape 先退一页再关闭。
+- 触发盒＝模型名（不带厂商后缀）＋当前档位＋下箭头。点开先见根面板两格（「模型」/「推理等级」，左标签、右当前值、右侧右箭头）；点格下钻；下钻页顶部有返回箭头与页名，Escape 先退一页再关闭。
 - 跟随态照 DSH 显示**宿主默认档的名字**（如 `High`）；模型未声明默认档时才显示 `Default`。该解析只用于显示，存档值仍是「跟随」；映射由 `dshModelStatus.defaults` 提供。
 - 模型页：候选超过 4 条时出现搜索框（照 DSH 的阈值）；`dsh:<provider>/<model>` 条目按 provider 分组，组标题＝厂商显示名（`deepseek-account` 用本地化 `DeepSeek 账号`，其余用 provider id），条目名只用模型名（显示名去掉「 · provider」后缀），手动条目归末组，默认项单独置顶；选中项打勾，选中即写值并关闭。组标题样式取宿主 `MenuGroup`：11px/16px、`4px 7px 2px`、默认透明、滚到钉住时（`data-stuck`）填 `--dsw-alias-menu-group-header-fill`、组间 3px；每组包一层 section 以限定吸顶范围。
 - 档位页：值域 `Off / Default / Minimal / Low / Medium / High / Xhigh / Max`（`off`/跟随/六档）；标签用宿主适配器给出的英文名（pi-ai 即首字母大写，不随界面语言翻译）。模型声明子集时只列子集；`supports_thinking=false` 时只留 `Off`，`supports_reasoning_effort=false` 时只留 `Off / Default`，页脚用「由模型能力决定」说明。
@@ -127,7 +127,7 @@ RAG 的生产搭配是多模型：抽取常用便宜快模型、裁判/百科用
 - 菜单定位按**当前页**的实际内容高度决定向上或向下展开（根页两格最矮），下钻与搜索改变高度后重放位置；不按固定 360px 预估，避免靠底部的腿把菜单甩到面板顶部。
 - 旧五勾选菜单与「DSH 主模型」只读行删除；`dshModelStatus.mainModel` 保留为诊断字段（无 UI）。
 - 「DSH 模型」卡片不再显示说明段落（同文已在组标题的悬停提示里，组标题保留 `title`）。
-- 文案：`Off`、`Default`、`Minimal/Low/Medium/High/Xhigh/Max`（档位名固定英文，不进 zh/en 字典）、`由模型能力决定`（不可选时的说明）、`模型`、`思考档位`、`返回`、`搜索模型…`、`没有匹配的模型`、`手动条目`、`DeepSeek 账号`；其余 zh/en 内联字典同步。
+- 文案：`Off`、`Default`、`Minimal/Low/Medium/High/Xhigh/Max`（档位名固定英文，不进 zh/en 字典）、`由模型能力决定`（不可选时的说明）、`模型`、`推理等级`、`返回`、`搜索模型…`、`没有匹配的模型`、`手动条目`、`DeepSeek 账号`；其余 zh/en 内联字典同步（aria 用「模型 X，推理等级 Y」）。
 
 ### 4.5 与模型发布的关系
 
