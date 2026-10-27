@@ -1,6 +1,6 @@
 # 面板「快速开始」引导 Plan
 
-**Status:** 已实施 · 已发布（feat 2eca02b / docs a8b0999，随 `v0.1.2` 发布；视觉重设计 `b5c76a0`、docs 修订 `e93bac8`；隔离沙箱验收完成，用户实例真栈与上传/拖拽回归仍待复核）
+**Status:** 已实施 · 已发布（feat 2eca02b / docs a8b0999，随 `v0.1.2` 发布；视觉重设计 `b5c76a0`、docs 修订 `e93bac8`；隔离沙箱验收完成；上传/拖拽/运行时卡已在隔离真栈回归，用户实例真栈待复核）
 **Date:** 2026-10-26
 **配套 spec:** [2026-10-26-quick-start-guide-spec.md](../specs/2026-10-26-quick-start-guide-spec.md)（D1–D7 已拍、D8 暂选乙；C1 暂选乙＝零库空态加建库主按钮＋指南链钮；五件范围、验收 1–10、视觉重设计见 spec §7）
 **Architecture:** 纯 `client.js`：栏内入口钮＋零库空态第二入口＋320 锚定浮层；定位/关闭/互斥照会话小面板词法，动作复用 `openSettings(false)`／`setCreateKbOpen`／`setSessionOpen`；图标档（<320）收起库 chevron＋栏距 6px 保库名，浮层聚焦延后一拍避开宿主聊天输入；另补建库成功链一行 `phase='ready'`、13 条 zh/en 词条、1 个 `localStorage` 键与空态/上传 toast 各一句词。不动 host 半与引擎。实测 `client.js` +347／−7 行。
@@ -133,11 +133,13 @@
 - [x] 浮层：198 下卡 320 越过面板边缘不被裁；空态链钮开卡翻上；外点/Esc/× 关闭；开卡不切 tab、顶栏 top 不变；点与罗盘不互相压住。
 - [x] 动作三落点＋互斥；zh 文案；zh toast 已改「向量模型」；空态提示已改。
 - [x] 回归（已跑）：库选择器（<320 收起 chevron 但菜单可开）、会话钮、`⋯` 菜单、六 tab、focus 回焦、互斥。
-- [ ] 回归（未跑）：上传/拖拽/运行时卡真跑——沙箱无解析链；本笔对这三条路径零改动，待用户实例复核。
+- [x] 回归（隔离真栈）：运行时卡（解压→启动→就绪）、隐藏 input 上传 `.md`、合成 drop 拖拽均真跑通过；证据 `E:/hrag-r5/evidence/guide-regression`。用户实例未触碰。
 - [x] 阈值复核：320 档库选择器可用宽 124（≥120），不调阈值；药丸实测 87 与估算一致。
 - [x] 引擎 `harness-rag` 与主树 `deer-flow` 零 diff；仓面只 `client.js`＋本对 spec/plan（另有并行 R4 plan 修改，排除）。
 
 **实测（2026-10-26）**：门禁 310/310＋tsc 零错＋guide-probe OK；隔离沙箱三档/边界/空态/点/浮层/动作/互斥/库菜单/tab 全部通过。未跑：用户 3080 实例真栈、上传/拖拽/运行时卡（代码面零改动）。证据截图：`E:/appdevelop/hrag-probe/shot-dot.png`、`shot-guide-198.png`、`shot-wide-320.png`。
+
+**补跑（10-27，隔离真栈）**：HEAD `42eaef7` 的 `git archive` 副本＋运行时 0.1.0-4（本地 pack）；宿主 3090、Qdrant 6335/6336、knowledge 8021、CDP 9224。运行时卡「解压→启动」实见（`runtime-card.png`）；隐藏 input 上传 `fixture-guide-upload.md` → 就绪（1 chunk）；合成 drop `fixture-guide-drag.md` → 就绪（1 chunk，合计 2 文档/2 切片）；指南 3 步、箭头 2（空态）/3（ready）、说明各 3 行（54px）、页脚在滚动区外、chip 20px 无下划线；Esc/backdrop/焦点/三动作/六 tab 全过；门禁 347/347＋tsc 0。证据 `E:/hrag-r5/evidence/guide-regression`（README＋4 图＋夹具＋驱动）。
 
 ## Task 6 — 收口（spec §5 / 三源交叉）
 

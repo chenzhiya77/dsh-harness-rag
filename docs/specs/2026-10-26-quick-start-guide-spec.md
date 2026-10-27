@@ -1,6 +1,6 @@
 # 面板「快速开始」引导 —— spec
 
-**Status:** 已实施 · 已发布（feat 2eca02b / docs a8b0999，随 `v0.1.2` 发布；10-27 视觉重设计 `b5c76a0`、docs 修订 `e93bac8`；隔离沙箱验收完成；用户实例真栈与上传/拖拽回归待复核）
+**Status:** 已实施 · 已发布（feat 2eca02b / docs a8b0999，随 `v0.1.2` 发布；10-27 视觉重设计 `b5c76a0`、docs 修订 `e93bac8`；隔离沙箱验收完成；上传/拖拽/运行时卡已在隔离真栈回归；用户实例真栈待复核）
 **Date:** 2026-10-26
 **来源:** 10-26 他提「加在会话按钮的左边……用来说明使用的步骤，而不是整体的介绍项目」，要「告诉用户你只需要完成这几步后就可以完整的使用 rag 的功能」；否掉纯 `?` 图标（「没有焦点，用户不能一眼注意到」），定「加上文字，例如：快速开始」。
 **承接:** 顶栏与会话入口（[会话绑定 spec](2026-10-23-conversation-binding-spec.md) §4.1；`client.js:20630`、`client.js:21961`）；会话小面板底座（`client.js:20674`、`client.js:22575`，CSS `client.js:2144-2160`）；窄档测量（`client.js:21233-21238`）；零库空态（`client.js:21912`）与建库成功链（`client.js:21507-21529`）；上传 toast（`client.js:22262`）与并行 R4 的 MinerU toast（`client.js:22285`）；设置入口（`client.js:20983`、`client.js:22035`）；口径词表 `client.js:790/931-934`。
@@ -126,7 +126,7 @@
 - 头部：标题「快速开始」13/600＋右侧 24px ghost 关闭钮（`dshCloseIcon()`，`aria-label`＝`rt.dismiss`）。
 - 主体：无编号；标题 12/600 `label-secondary`（照会话弹层 `.hrag-sesspop-label`）＋说明 12/18 `label-tertiary`、`padding-left:8px`（照会话弹层列表行的缩进）；标题→说明 gap 4px；说明按 264px 文本列校准为三行、末行写满（实测行宽填充 zh 95%/97%/91%、en 95%/87%/92%），步高随文案自然撑开；步间 0.5px `border-l2` 发丝线；步内上下 8px，首步与副标题间 8px，末步去底内边距。
 - 箭头钮：每步右缘无字按钮——24px 宽、`align-self:stretch` 随步骤通高、图标 16px（`IconArrowRightOutlineRegular`，缺件回退手绘）、与正文 gap 2px、无竖分隔线、hover 整条浅底（`interactive-bg-hover`＋`label-primary`）、focus ring；`title`/`aria-label`＝动作词。
-- 页脚：挂在 `.hrag-guidepop-body` 之外的常驻行（矮窗时步骤区滚动、页脚不动）；「厂商控制台」11/16 `label-tertiary`＋三枚胶囊 chip（阿里百炼／火山方舟／MinerU）——20px 高、0.5px `border-l3` 描边、999px 圆角、`interactive-bg-hover` 底、11px `label-secondary`、无下划线；hover 底 `interactive-bg-active`＋`label-primary`；focus ring；与识别卡尾栏共用同一组 chip 选择器。点击 `window.open(url,'_blank','noopener')` 打开对应厂商控制台。
+- 页脚：挂在 `.hrag-guidepop-body` 之外的常驻行（矮窗时步骤区滚动、页脚不动）；「厂商控制台」11/16 `label-tertiary`＋三枚胶囊 chip（阿里百炼 ↗／火山方舟 ↗／MinerU ↗）——20px 高、0.5px `border-l3` 描边、999px 圆角、`interactive-bg-hover` 底、11px `label-secondary`、无下划线；hover 底 `interactive-bg-active`＋`label-primary`；focus ring；与识别卡尾栏共用同一组 chip 选择器。点击 `window.open(url,'_blank','noopener')` 打开对应厂商控制台。
 - 关闭：外点／Esc／×；收起后焦点回触发入口；动作跳转不回焦。互斥：打开指南先关会话小面板，反之亦然。
 - 动作：
   - 去配置 → 关指南 → `openSettings(false)`。
