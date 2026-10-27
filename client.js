@@ -805,20 +805,18 @@ window.__ModuleLoader__.load({
       'createKb.create': '创建',
       'guide.entry': '快速开始',
       'guide.title': '快速开始',
-      'guide.lead': '完成下面三步就能完整使用 RAG；本地服务的下载、启动与模型同步都是自动的。',
-      'guide.step1.title': '配置向量模型',
+      'guide.lead': '三步启用知识库；本地服务与模型同步全自动。',
+      'guide.step1.title': '配置模型',
       'guide.step1.body':
-        '在 ⋯ →「功能模型设置」里填向量提供方、向量模型、向量接口地址与 API Key（向量）。这是必须手动填的一步。',
+        '在 ⋯ →「功能模型设置」里填向量提供方、向量模型、向量接口地址与 API Key；这是整套流程里唯一需要手动填写的一步，填完才能上传文档。',
       'guide.step1.action': '去配置',
-      'guide.step2.title': '建库并上传',
-      'guide.step2.body':
-        '新建知识库，从 ⋯ →「上传文档」添加文件；切块与向量化自动完成，等文档状态变成「就绪」。PDF / Office / 图片若提示缺少解析令牌，按提示在「功能模型设置 → 高级设置 → 解析提供方」补填 MinerU 令牌。',
+      'guide.step2.title': '建库上传',
+      'guide.step2.body': '新建知识库，从 ⋯ →「上传文档」添加文件；切块与向量化自动完成，等文档状态变成「就绪」。PDF / Office / 图片缺少解析令牌时按提示补填。',
       'guide.step2.action': '新建知识库',
-      'guide.step3.title': '绑定本会话',
-      'guide.step3.body':
-        '在顶栏「会话」里选择知识库；绑定后本会话的对话自动使用该库检索。在「会话」里点「新建」的会话会自动绑定当前库（宿主里另建的会话要在这里再绑一次）。',
+      'guide.step3.title': '绑定会话',
+      'guide.step3.body': '在顶栏「会话」里选择知识库；绑定后本会话的对话自动使用该库检索。绑定只对当前会话生效，别处新建的会话需要回到「会话」里再绑一次。',
       'guide.step3.action': '绑定本会话',
-      'guide.tail': '图谱、Wiki、评测等面板不影响基本使用，需要时再看。',
+      'guide.vendors': '厂商控制台',
       'upload.rejected': '已跳过不支持的文件：{0}',
       'upload.needKb': '知识库暂不可接收：请先创建知识库',
       'upload.busy': '知识库暂不可接收：上传中，请稍候',
@@ -973,6 +971,11 @@ window.__ModuleLoader__.load({
       'set.field.mineruToken': 'MinerU 解析令牌',
       'set.form.providerMineruCloud': 'MinerU 官方云',
       'set.form.providerMineruLocal': '本地 MinerU 服务',
+      'set.providerConsole': '控制台 ↗',
+      'set.providerConsoleOpen': '在新标签页打开{0}控制台',
+      'vendor.dashscope': '阿里百炼',
+      'vendor.volcengineArk': '火山方舟',
+      'vendor.mineru': 'MinerU',
       'set.form.parseTierAuto': '（由服务决定）',
       'set.form.parseLanguageDefault': '（使用配置默认）',
       'set.form.parseModelVersionDefault': '（使用配置默认）',
@@ -1752,21 +1755,17 @@ window.__ModuleLoader__.load({
       'createKb.create': 'Create',
       'guide.entry': 'Quick start',
       'guide.title': 'Quick start',
-      'guide.lead':
-        'Three steps and RAG is fully usable. Downloading and starting the local service, and syncing models, all happen automatically.',
-      'guide.step1.title': 'Set up the embedding model',
-      'guide.step1.body':
-        'In ⋯ → “Functional model settings”, fill in the embedding provider, embedding model, endpoint and API key (embedding). This is the one step that needs manual input.',
+      'guide.lead': 'Three steps to get RAG running; the local service and model sync are automatic.',
+      'guide.step1.title': 'Configure model',
+      'guide.step1.body': 'In ⋯ → “Functional model settings”, fill in the embedding provider, model, endpoint and API key. This is the only step needing manual input.',
       'guide.step1.action': 'Open settings',
-      'guide.step2.title': 'Create a library and upload',
-      'guide.step2.body':
-        'Create a knowledge base, then add files via ⋯ → “Upload document”. Chunking and embedding run automatically; wait until documents show “Ready”. If PDF / Office / images report a missing parse token, add the MinerU token under “Functional model settings → Advanced → Parse provider” as prompted.',
+      'guide.step2.title': 'Create & upload',
+      'guide.step2.body': 'Create a library, add files via ⋯ → “Upload document”. Chunking and embedding run automatically; wait until they show “Ready”.',
       'guide.step2.action': 'New knowledge base',
-      'guide.step3.title': 'Bind this session',
-      'guide.step3.body':
-        'Choose a knowledge base under “Session” in the top bar; chat then uses retrieval from it automatically. Sessions created with “New” in “Session” bind the current library for you (sessions created elsewhere in DSH need to be bound here).',
+      'guide.step3.title': 'Bind session',
+      'guide.step3.body': 'Choose a library under “Session”; this chat then retrieves from it automatically. Chats created elsewhere in DSH need to be bound here too.',
       'guide.step3.action': 'Bind this session',
-      'guide.tail': 'Graph, Wiki and Eval panels do not affect basic use; explore them when needed.',
+      'guide.vendors': 'Vendor consoles',
       'upload.rejected': 'Skipped unsupported files: {0}',
       'upload.needKb': 'The knowledge base cannot take files yet: create one first',
       'upload.busy': 'The knowledge base cannot take files yet: an upload is in progress',
@@ -1937,6 +1936,11 @@ window.__ModuleLoader__.load({
       'set.field.mineruToken': 'MinerU parsing token',
       'set.form.providerMineruCloud': 'MinerU cloud API',
       'set.form.providerMineruLocal': 'Local MinerU service',
+      'set.providerConsole': 'Console ↗',
+      'set.providerConsoleOpen': 'Open the {0} console in a new tab',
+      'vendor.dashscope': 'Aliyun Bailian',
+      'vendor.volcengineArk': 'Volcengine Ark',
+      'vendor.mineru': 'MinerU',
       'set.form.parseTierAuto': '(let the service decide)',
       'set.form.parseLanguageDefault': '(use the configured default)',
       'set.form.parseModelVersionDefault': '(use the configured default)',
@@ -2239,22 +2243,28 @@ window.__ModuleLoader__.load({
           '.hrag-sesspop-emptybtn:hover:not(:disabled) { text-decoration: underline; }',
           '.hrag-sesspop-emptybtn:disabled { opacity: 0.45; cursor: default; }',
           '.hrag-sesspop-error { margin: 0; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }',
-          // 快速开始浮层（320 宽，右缘对齐入口；正文滚动、尾注分隔）。
+          // 快速开始浮层（320 宽，右缘对齐入口；步骤间发丝线、页脚厂商行）。
           '.hrag-guidepop-backdrop { position: fixed; inset: 0; z-index: 69; background: transparent; }',
           '.hrag-guidepop { position: fixed; z-index: 70; display: flex; flex-direction: column; gap: 8px; padding: 10px; box-sizing: border-box; border-radius: var(--dsw-radius-lg); background: var(--dsw-menu-surface-fill, var(--dsw-alias-bg-layer-1)); box-shadow: var(--dsw-elevation-prominent); backdrop-filter: var(--dsw-menu-backdrop-filter); -webkit-backdrop-filter: var(--dsw-menu-backdrop-filter); }',
           '.hrag-guidepop-head { display: flex; align-items: center; gap: 8px; min-width: 0; }',
           '.hrag-guidepop-title { flex: 1 1 auto; min-width: 0; color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; line-height: 20px; }',
-          '.hrag-guidepop-body { display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 2px; }',
+          '.hrag-guidepop-body { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 2px; }',
           '.hrag-guide-lead { margin: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }',
-          '.hrag-guide-step { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }',
-          '.hrag-guide-stepnum { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 18px; width: 18px; height: 18px; border-radius: 999px; background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; line-height: 1; }',
-          '.hrag-guide-stepbody { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }',
-          '.hrag-guide-steptitle { color: var(--dsw-alias-label-primary); font-size: 13px; font-weight: 600; line-height: 18px; }',
-          '.hrag-guide-stepdesc { color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
-          '.hrag-guide-action { margin-top: 1px; padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-primary); font-family: inherit; font-size: 12px; font-weight: 500; line-height: 18px; text-decoration: underline; cursor: pointer; }',
-          '.hrag-guide-action:hover { color: var(--dsw-alias-state-business-primary); }',
-          '.hrag-guide-action:focus-visible, .hrag-guidepop .hrag-rt-bannerclose:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
-          '.hrag-guidepop-tail { padding-top: 8px; border-top: 0.5px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-guide-step { display: flex; align-items: stretch; gap: 2px; min-width: 0; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-guide-lead + .hrag-guide-step { margin-top: 8px; }',
+          '.hrag-guide-stepbody { display: flex; flex-direction: column; align-items: stretch; gap: 4px; flex: 1 1 auto; min-width: 0; padding: 8px 0; }',
+          '.hrag-guide-step:last-child { padding-bottom: 0; }',
+          '.hrag-guide-steptitle { min-width: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; line-height: 18px; }',
+          '.hrag-guide-stepdesc { padding-left: 8px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
+          '.hrag-guide-go { display: inline-flex; align-items: center; justify-content: center; align-self: stretch; flex: 0 0 24px; width: 24px; padding: 0; border: none; border-radius: 8px; background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; }',
+          '.hrag-guide-go:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-guide-go svg { display: block; width: 16px; height: 16px; }',
+          '.hrag-guide-go:focus-visible, .hrag-guidepop .hrag-rt-bannerclose:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          '.hrag-guidepop-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 8px; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-guidepop-footlabel { margin-right: 2px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-guidepop .hrag-guide-chip { display: inline-flex; align-items: center; justify-content: center; height: 20px; padding: 0 8px; box-sizing: border-box; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 11px; line-height: 20px; text-decoration: none; }',
+          '.hrag-guidepop .hrag-guide-chip:hover { background: var(--dsw-alias-interactive-bg-active); color: var(--dsw-alias-label-primary); }',
+          '.hrag-guidepop .hrag-guide-chip:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
           '.hrag-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 0 12px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
           '.hrag-btn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-btn:active:not(:disabled) { background: var(--dsw-alias-interactive-bg-active); }',
@@ -11611,6 +11621,12 @@ window.__ModuleLoader__.load({
         { d: 'M4 9L8 13L12 9' },
       ]),
     )
+    const dshArrowRightIcon = dshIconOr('IconArrowRightOutlineRegular', () =>
+      dshMenuIcon([
+        { d: 'M3 8H13' },
+        { d: 'M9 4L13 8L9 12' },
+      ]),
+    )
     /** 「在 Wiki 中查看」导航图标（小件批 Task 8）：宿主最近邻 IconRightUp（右上
         箭头＝跳转语义）；缺件回退工作台原形 lucide ExternalLink。 */
     const dshRightUpIcon = dshIconOr('IconRightUpOutlineRegular', () =>
@@ -19715,6 +19731,28 @@ window.__ModuleLoader__.load({
       'el', 'th', 'latin', 'arabic', 'cyrillic', 'east_slavic', 'devanagari',
     ]
     const RAG_PARSE_VERSION_OPTIONS = ['', 'pipeline', 'vlm']
+    // 厂商控制台入口（spec §4.1）：静态 https 白名单，不读配置、不拼 URL。
+    const RAG_PROVIDER_CONSOLES = {
+      dashscope: { vendorKey: 'vendor.dashscope', url: 'https://bailian.console.aliyun.com/' },
+      'volcengine-ark': { vendorKey: 'vendor.volcengineArk', url: 'https://console.volcengine.com/ark' },
+      'mineru-cloud': { vendorKey: 'vendor.mineru', url: 'https://mineru.net/' },
+    }
+    const ragConsoleButton = (provider, t, labelMode, extraClass) => {
+      const entry = RAG_PROVIDER_CONSOLES[provider]
+      if (!entry) return null
+      const vendor = t(entry.vendorKey)
+      return h(
+        'button',
+        {
+          type: 'button',
+          className: 'hrag-set-console' + (extraClass ? ' ' + extraClass : ''),
+          title: t('set.providerConsoleOpen', { 0: vendor }),
+          'aria-label': t('set.providerConsoleOpen', { 0: vendor }),
+          onClick: () => window.open(entry.url, '_blank', 'noopener'),
+        },
+        labelMode === 'vendor' ? vendor + ' ↗' : t('set.providerConsole'),
+      )
+    }
     const RAG_TEXT_FIELDS = [
       'qdrant_url', 'embedding_model', 'rerank_model', 'vlm_model', 'extract_model',
       'judge_model', 'default_model', 'wiki_model', 'synthesis_model', 'embedding_base_url',
@@ -21094,16 +21132,25 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'hrag-guide-step', key: 'step-' + index },
-          h('span', { className: 'hrag-guide-stepnum', 'aria-hidden': 'true' }, String(index)),
           h(
             'div',
             { className: 'hrag-guide-stepbody' },
             h('div', { className: 'hrag-guide-steptitle' }, t(titleKey)),
             h('div', { className: 'hrag-guide-stepdesc' }, t(bodyKey)),
-            onAction && actionKey
-              ? h('button', { type: 'button', className: 'hrag-guide-action', onClick: onAction }, t(actionKey))
-              : null,
           ),
+          onAction && actionKey
+            ? h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-guide-go',
+                  title: t(actionKey),
+                  'aria-label': t(actionKey),
+                  onClick: onAction,
+                },
+                dshArrowRightIcon(),
+              )
+            : null,
         )
       return h(
         React.Fragment,
@@ -21143,7 +21190,14 @@ window.__ModuleLoader__.load({
               canBindSession ? onBindSession : null,
             ),
           ),
-          h('div', { className: 'hrag-guidepop-tail' }, t('guide.tail')),
+          h(
+            'div',
+            { className: 'hrag-guidepop-foot' },
+            h('span', { className: 'hrag-guidepop-footlabel' }, t('guide.vendors')),
+            ragConsoleButton('dashscope', t, 'vendor', 'hrag-guide-chip'),
+            ragConsoleButton('volcengine-ark', t, 'vendor', 'hrag-guide-chip'),
+            ragConsoleButton('mineru-cloud', t, 'vendor', 'hrag-guide-chip'),
+          ),
         ),
       )
     }
