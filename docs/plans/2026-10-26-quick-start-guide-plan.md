@@ -1,6 +1,6 @@
 # 面板「快速开始」引导 Plan
 
-**Status:** 已实施 · 未提交（2026-10-26；隔离沙箱验收完成，用户实例真栈与上传/拖拽回归未跑；提交候令）
+**Status:** 已实施 · 已提交（2026-10-26；feat 2eca02b / docs a8b0999；隔离沙箱验收完成，用户实例真栈与上传/拖拽回归未跑）
 **Date:** 2026-10-26
 **配套 spec:** [2026-10-26-quick-start-guide-spec.md](../specs/2026-10-26-quick-start-guide-spec.md)（D1–D7 已拍、D8 暂选乙；C1 暂选乙＝零库空态加建库主按钮＋指南链钮；五件范围、验收 1–9）
 **Architecture:** 纯 `client.js`：栏内入口钮＋零库空态第二入口＋320 锚定浮层；定位/关闭/互斥照会话小面板词法，动作复用 `openSettings(false)`／`setCreateKbOpen`／`setSessionOpen`；图标档（<320）收起库 chevron＋栏距 6px 保库名，浮层聚焦延后一拍避开宿主聊天输入；另补建库成功链一行 `phase='ready'`、13 条 zh/en 词条、1 个 `localStorage` 键与空态/上传 toast 各一句词。不动 host 半与引擎。实测 `client.js` +347／−7 行。
@@ -146,17 +146,18 @@
 
 - [x] 回填 spec Status、plan Status 与各 Task 实测；勾选与 Status 不滞后。
 - [x] 逐条核验收 1–9，未做项显式标残差（用户实例真栈、上传/拖拽/运行时卡）。
-- [ ] 提交前核：`git status --short` 只 add `client.js`＋本对两文件；不卷入并行 R4 plan；`git diff --cached --stat` 与预期一致。
-- [ ] 提交后核：Status 不写「未提交」；仓面零残留；不推送。
+- [x] 提交前核：`git status --short` 只 add `client.js`＋本对两文件；不卷入并行 R4 plan；`git diff --cached --stat` 与预期一致。
+- [x] 提交后核：Status 不写「未提交」；仓面零残留；不推送。
 
-**实测**：spec/plan 回填完成；提交未执行（候令）。
+**实测**：两笔已提交（`2eca02b`、`a8b0999`）；本笔补状态回填；仓面仅剩并行 R4 plan 修改；未推送。
 
 ## 提交链
 
-> 候令；英文 Conventional ASCII；不推送。哈希随落随记。
+> 已提交；英文 Conventional ASCII；不推送。哈希随落随记。
 
-1. `feat(panel): add the quick start guide` —— `client.js`（入口、浮层、空态第二入口与建库闭环、窄档让位、词条）。
-2. `docs(guide): record the quick start guide contract` —— `docs/specs/2026-10-26-quick-start-guide-spec.md`＋`docs/plans/2026-10-26-quick-start-guide-plan.md`。
+1. `feat(panel): add the quick start guide` —— `client.js`（入口、浮层、空态第二入口与建库闭环、窄档让位、词条）—— `2eca02b`。
+2. `docs(guide): record the quick start guide contract` —— `docs/specs/2026-10-26-quick-start-guide-spec.md`＋`docs/plans/2026-10-26-quick-start-guide-plan.md` —— `a8b0999`。
 
 - 验收中的文案/几何微调并入第 1 笔，不落第三笔。
-- 实测回填：第 1 笔 `（待填）`；第 2 笔 `（待填）`。
+- 提交后状态回填另落一笔（`docs(guide): mark the quick start guide submitted`，哈希见 git log）。
+- 实测回填：第 1 笔 `2eca02b`；第 2 笔 `a8b0999`。
