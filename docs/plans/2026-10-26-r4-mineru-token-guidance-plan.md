@@ -1,6 +1,6 @@
 # R4 MinerU 令牌首用指引 —— plan
 
-**Status:** 已拍·实施完成（2026-10-26 Task 0–4 完成：门禁与 spec 回填已落，**未发布**、release 候令；只覆盖 spec §9 R4，R2/R3/R5 仍待裁）
+**Status:** 已拍·实施完成并发布（2026-10-26 Task 0–4 完成；`v0.1.2` 已发布并复验 `git+https#v0.1.2` 安装；运行时仍 `0.1.0-3`；只覆盖 spec §9 R4，R2/R3/R5 仍待裁）
 **Date:** 2026-10-26
 **配套 spec:** [2026-10-24-single-download-distribution-spec.md §9 R4](../specs/2026-10-24-single-download-distribution-spec.md)
 
@@ -92,7 +92,7 @@
 
 - [x] 门禁：`node --check client.js`、`tsc -p tsconfig.json`、`node --test tests/*.test.ts`；`engine/` 零 diff；主树 `deer-flow` 本 plan 零写入。
 - [x] spec 回填：§9.2 R4 标“已实施”，补证据路径；§9.5 5.23 按甲改写；Status 与 §9.6 同步；R2/R3/R5 仍待裁。
-- [ ] 发布（候令）：R4 只改插件，运行时保持 `0.1.0-3`；若发布，按插件 patch `v0.1.2` 走“提交 → draft → 无新运行时资产 → 发布 → `git+https#v0.1.2` 安装复验”，不重建 pack、不动 `runtime.json` 的 pack 字段；README/手册只改与 R4 有关的文案，`market/index.json` 仍不因 npm 未发布而同步。
+- [x] 发布（候令）：R4 只改插件，运行时保持 `0.1.0-3`；若发布，按插件 patch `v0.1.2` 走“提交 → draft → 无新运行时资产 → 发布 → `git+https#v0.1.2` 安装复验”，不重建 pack、不动 `runtime.json` 的 pack 字段；README/手册只改与 R4 有关的文案，`market/index.json` 仍不因 npm 未发布而同步。
 - [x] 发布前确认：token 不出现在日志/证据/提交；无 failed 文档残留依赖；提交按线分笔（host 探针/测试、client UI、文档）。
 - [x] 若不发布：不执行发布动作，plan 记录“已实施未发布”，不把 v0.1.2 写成完成态。
 
@@ -100,9 +100,9 @@
 
 - **门禁**：`node --check client.js` exit 0；`npm run typecheck`（`tsc -p tsconfig.json`）exit 0；`node --test tests/*.test.ts` **310/310**（14.3s，输出 `E:\hrag-r4\evidence\task4-tests.txt`）；`npm run build:plugin` 后 `lib/` 无新 diff；`git diff/status -- engine` 为空。
 - **主树**：本 plan 未写 `deer-flow`；该树现有 `README.md` 修改与 4 份研究文档为并行工作，不属 R4。
-- **spec 回填**：§9.2 R4 行标“已定甲·已实施”，新增“R4 实施结果”段与证据路径；§9.4 标“已实施·未发布”；§9.5 5.23 改为“已验 2026-10-26”；Status/§9 引子/§9.6 同步为“已按甲实施（未发布）”，并补 R4 门禁行。
-- **提交线**：host 探针/测试 `c67bbe7`、client UI `680190a`、lib 构建 `367d379`、Task 0–2 记录 `674ee05`；本轮 plan/spec 回填单独一笔 `docs(spec): close R4 ...`。
-- **发布状态**：**未发布**。运行时保持 `0.1.0-3`，未重建 pack、未动 `runtime.json`、未推 tag、未做 `v0.1.2` 安装复验；等 release 令。
+- **spec 回填**：§9.2 R4 行标“已定甲·已实施”并新增实施结果段与证据路径；§9.4 标“已实施·未发布”；§9.5 5.23 改为“已验 2026-10-26”；发布后（2026-10-27）Status/§9 引子/§9.2/§9.4/§9.6 改为“已随 `v0.1.2` 发布”，并补发布证据与 R4 门禁行。
+- **提交线**：host 探针/测试 `c67bbe7`、client UI `680190a`、lib 构建 `367d379`、Task 0–2 记录 `674ee05`、文档收口 `b395ffd`；版本提交 `b877623`。
+- **发布**：`v0.1.2` 于 2026-10-27T02:41:31Z 发布，tag → `b877623`，**无运行时资产**；`runtime.json` 保持 `0.1.0-3`、URL 仍指 `v0.1.1` 资产。`git+https#v0.1.2` 隔离安装复验通过（`DSH_HOME=E:\hrag-r4\install-check-home`，装出 `dsh-harness-rag 0.1.2`，profile bundles 含插件、`--dump-config` 有 `harness-rag`、安装后 `runtime.json` 与仓内一致）。证据 `E:\hrag-r4\evidence\release-v0.1.2.md`。
 - **密钥面**：证据、plan/spec 与提交面只有字段名与假 token 的说明，无真实 token/API key；假 token 值未落盘。
 
 ## 验收对应

@@ -1,6 +1,6 @@
 # 面板「快速开始」引导 Plan
 
-**Status:** 已实施 · 已提交（2026-10-26；feat 2eca02b / docs a8b0999；隔离沙箱验收完成，用户实例真栈与上传/拖拽回归未跑）
+**Status:** 已实施 · 已发布（2026-10-26；feat 2eca02b / docs a8b0999；随 `v0.1.2` 发布 2026-10-27；隔离沙箱验收完成，用户实例真栈与上传/拖拽回归仍待复核）
 **Date:** 2026-10-26
 **配套 spec:** [2026-10-26-quick-start-guide-spec.md](../specs/2026-10-26-quick-start-guide-spec.md)（D1–D7 已拍、D8 暂选乙；C1 暂选乙＝零库空态加建库主按钮＋指南链钮；五件范围、验收 1–9）
 **Architecture:** 纯 `client.js`：栏内入口钮＋零库空态第二入口＋320 锚定浮层；定位/关闭/互斥照会话小面板词法，动作复用 `openSettings(false)`／`setCreateKbOpen`／`setSessionOpen`；图标档（<320）收起库 chevron＋栏距 6px 保库名，浮层聚焦延后一拍避开宿主聊天输入；另补建库成功链一行 `phase='ready'`、13 条 zh/en 词条、1 个 `localStorage` 键与空态/上传 toast 各一句词。不动 host 半与引擎。实测 `client.js` +347／−7 行。
@@ -149,7 +149,7 @@
 - [x] 提交前核：`git status --short` 只 add `client.js`＋本对两文件；不卷入并行 R4 plan；`git diff --cached --stat` 与预期一致。
 - [x] 提交后核：Status 不写「未提交」；仓面零残留；不推送。
 
-**实测**：两笔已提交（`2eca02b`、`a8b0999`）；本笔补状态回填；仓面仅剩并行 R4 plan 修改；未推送。
+**实测**：两笔已提交（`2eca02b`、`a8b0999`）；状态回填 `4dc7883`；已随 `v0.1.2` 发布（2026-10-27，tag `b877623`，与并行 R4 同发，无运行时资产）；用户实例真栈与上传/拖拽回归仍待复核。
 
 ## 提交链
 
