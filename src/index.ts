@@ -2,6 +2,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-tools'
 import { createBindingsStore } from './bindings.ts'
 import { defaultConfig, type Config } from './settings.ts'
+import { registerConfigRecognize, type ConfigRecognizeContextLike } from './config_recognize.ts'
 import { registerKbProxy } from './kb_proxy.ts'
 import { registerModelProxy, type ProxyHostContextLike } from './model_proxy.ts'
 import { registerModelSync, type SyncHostContextLike } from './model_sync.ts'
@@ -32,6 +33,7 @@ export function apply(ctx: Context, config: Config = defaultConfig): void {
   // The panel's data seam (T3 Task 1): a named route on the browser-facing
   // web server, skipped where that service does not exist (headless).
   const modelProxy = registerModelProxy(ctx as unknown as ProxyHostContextLike, runtime.effective)
+  registerConfigRecognize(ctx as unknown as ConfigRecognizeContextLike, modelProxy)
   const modelSync = registerModelSync(ctx as unknown as SyncHostContextLike, runtime.effective, modelProxy)
   runtime.addReadyListener(modelSync)
   registerKbProxy(ctx, runtime.effective, bindings, modelSync, gating, runtime.ops)
