@@ -1,6 +1,6 @@
 # 功能模型设置：厂商入口与智能识别配置 —— plan
 
-**Status:** 已完成并提交（2026-10-27；Task 0–5 与 10-27 视觉修订 4–8；提交链 `699cb2c` / `299f1ee` / 本次 docs；347/347＋`tsc` 0＋`node --check` 0；真栈截图、401/429 分类、固定维度过滤、focus ring 留作残差）
+**Status:** 已完成并提交（2026-10-27；Task 0–5 与 10-27 视觉修订 4–8；提交链 `699cb2c` / `299f1ee` / `4a6a0c6` / `49307a9`（lib 重建）；347/347＋`tsc` 0＋`node --check` 0；构建态识别路由 400/502 复验；真栈截图、401/429 分类、固定维度过滤、focus ring 留作残差）
 **Date:** 2026-10-27
 **配套 spec:** [2026-10-27-settings-vendor-links-smart-fill-spec.md](../specs/2026-10-27-settings-vendor-links-smart-fill-spec.md)（D1–D13；§4.3 字段表；§5 验收 1–19）
 
@@ -175,7 +175,7 @@
 - 条件字段：cloud 丢 tier、local 丢 language/model_version、bm25 丢 sparse_*、funasr/whisper 丢 asr_base_url、菜单外 ASR model 给 warning；维度探针不可用时保留识别值并 warning。固定维度 provider 过滤未实跑（无固定维度样本），列残差。
 - 图片/持久化：图片轮只发本轮 1 张（附件说明 + canonical base64），落 `attachments/v1/objects`；抽屉关闭清 UI、附件保留；无识别历史/结果落盘。
 - 文案/键盘：zh 与 en 均渲染（Smart fill/Choose images/Results…）；两份字典各 974 键无缺；文本域/按钮/链接/复选框 Tab 可达且 `:focus-visible` 为真；沙箱主题 `--dsw-focus-ring-color` 为空致 box-shadow ring 不可见（复选框为原生 outline；picker `outline:none`）——环境同既有控件，列残差。
-- 范围：`engine/`、`scripts/`、`lib/` 零 diff；未重建 runtime pack；工作区只本笔文件。**`lib/` 未随 src 重建（packaging `prepack` 会构建），Task 6/发布前需 `npm run build:plugin` 或提交构建产物**。
+- 范围：`engine/`、`scripts/` 零 diff；未重建 runtime pack；工作区只本笔文件。Task 5 当时 `lib/` 未随 src 重建；10-27 晚已补 `npm run build:plugin` 并提交 `49307a9`（见 Task 6）。
 - 残差：真栈真实厂商截图 + 付费视觉模型未跑（fake provider 覆盖协议/合并/回填）；401/429 分类码未透出；固定维度过滤未实跑；focus ring 依赖宿主主题变量；spec 指南条待回写。
 - 快照时点：浏览器验收用 09:27 的 `client.js` 副本（`E:/hrag-task5/plugin`）；并行快速开始线在 09:30 又改指南 go 按钮几何（28×stretch、8px 圆角），本笔卡片/厂商链接区未变（当前文件 `node --check` 仍 0）；Task 6 在指南线稳定后复跑指南相关项。
 
@@ -190,9 +190,10 @@
 - [x] 提交后核：Status 不写“未提交”；工作区零残留；不重开 R2/R3/R5 与发布面。
 
 **实测（2026-10-27 提交）**：
-- 提交：host `699cb2c`；panel `299f1ee`；docs＝本次提交（哈希见 `git log -1`）。
-- 行数：`client.js` +1119/−68；`src/config_recognize.ts` 844；`tests/config_recognize.test.ts` 836；`src/index.ts` +2。
-- 状态：Task 0–5 与视觉修订 4–8 完成；真栈截图、401/429 分类、固定维度过滤、focus ring 留作残差；`lib/` 未重建（发布前需 `npm run build:plugin`）。
+- 提交：host `699cb2c`；panel `299f1ee`；docs `4a6a0c6`；build `49307a9`；docs 状态回填＝本次提交。
+- 行数：`client.js` +1119/−68；`src/config_recognize.ts` 844；`tests/config_recognize.test.ts` 836；`src/index.ts` +2；`lib/config_recognize.js` 663。
+- 构建态：`npm run build:plugin` 通过；`lib/index.js` +2 注册；沙箱以构建态 `lib/` 启动，`POST /dsh-harness-rag/config/recognize` 缺 model → 400 `invalid_request`，带 `dsh:sbxalpha/sbx-pro` → 502 `model_call_failed`（fake provider 未起）——405 消失，路由与模型解析链路已通；`node --check lib/index.js`、`node --check lib/config_recognize.js` 0。
+- 状态：Task 0–5 与视觉修订 4–8 完成；真栈截图、401/429 分类、固定维度过滤、focus ring 留作残差；lib 已重建并提交 `49307a9`。
 
 ## 提交链
 
@@ -200,7 +201,9 @@
 
 1. `feat(host): add the config recognition endpoint` —— `src/config_recognize.ts`、`src/index.ts`、`tests/config_recognize.test.ts` —— `699cb2c`。
 2. `feat(panel): add vendor links and smart configuration fill` —— `client.js` —— `299f1ee`。
-3. `docs(settings): record the vendor links and smart fill contract` —— 本 spec/plan、两份 tracked spec 注、状态回填 —— 本次提交（哈希见 `git log -1`）。
+3. `docs(settings): record the vendor links and smart fill contract` —— 本 spec/plan、两份 tracked spec 注、状态回填 —— `4a6a0c6`。
+4. `chore(build): rebuild the plugin lib for config recognition` —— `lib/index.js`、`lib/config_recognize.js` —— `49307a9`。
+5. `docs(settings): record the rebuilt lib` —— 本 spec/plan 状态回填 —— 本次提交（哈希见 `git log -1`）。
 
 ## 风险与回退
 
