@@ -1,6 +1,6 @@
 # 面板「快速开始」引导 —— spec
 
-**Status:** 已实施 · 已发布（feat 2eca02b / docs a8b0999；随 `v0.1.2` 发布 2026-10-27；隔离沙箱验收完成；用户实例真栈与上传/拖拽回归待复核）
+**Status:** 已实施 · 已发布（feat 2eca02b / docs a8b0999，随 `v0.1.2` 发布；10-27 视觉重设计 `b5c76a0`；隔离沙箱验收完成；用户实例真栈与上传/拖拽回归待复核）
 **Date:** 2026-10-26
 **来源:** 10-26 他提「加在会话按钮的左边……用来说明使用的步骤，而不是整体的介绍项目」，要「告诉用户你只需要完成这几步后就可以完整的使用 rag 的功能」；否掉纯 `?` 图标（「没有焦点，用户不能一眼注意到」），定「加上文字，例如：快速开始」。
 **承接:** 顶栏与会话入口（[会话绑定 spec](2026-10-23-conversation-binding-spec.md) §4.1；`client.js:20630`、`client.js:21961`）；会话小面板底座（`client.js:20674`、`client.js:22575`，CSS `client.js:2144-2160`）；窄档测量（`client.js:21233-21238`）；零库空态（`client.js:21912`）与建库成功链（`client.js:21507-21529`）；上传 toast（`client.js:22262`）与并行 R4 的 MinerU toast（`client.js:22285`）；设置入口（`client.js:20983`、`client.js:22035`）；口径词表 `client.js:790/931-934`。
@@ -13,7 +13,7 @@
 
 1. **主入口**：`hrag-bar` 内在「会话」钮左侧新增「快速开始」钮；宽档＝罗盘＋文字药丸，中/窄档＝图标（未看过时带点）。
 2. **零库空态第二入口（C1 暂选乙）**：空态卡加「新建知识库」主按钮＋「快速开始」文字链钮，打开同一浮层；空态上下文里指南的 step 3 动作不渲染；建库成功后把空态切到主面板（`confirmCreateKb` 成功时置 `phase='ready'`），不再要求手动点「刷新」。
-3. **卡片**：320 宽锚定浮层，内容＝一句自动说明＋三步＋一句尾注，每步一个动作入口；从栏内打开时 step 3 动作可用，从空态打开时隐藏。
+3. **卡片**：320 宽锚定浮层，内容＝一句自动说明＋三步＋页脚厂商控制台胶囊行；每步右缘一个无字箭头动作；从栏内打开时 step 3 动作可用，从空态打开时隐藏。
 4. **三档**：指南文字在栏宽 <320 时让位；会话文字沿用现状 <208 让位。
 5. **记忆与词汇**：首开点用 `hrag-guide-seen` 记一次（两个入口都写）；同轮把 zh 上传 toast 的「嵌入模型」改为「向量模型」，并把空态提示改成不要求手动刷新。
 
@@ -68,7 +68,7 @@
 - 乙（不做）：抽屉；丙（不做）：弹窗——读一次的低频内容，两个底座都太重。
 
 ### D4 内容（拍定：甲）
-- **甲（拍定）**：一句自动说明＋三步＋一句尾注＋每步一个动作入口；空态上下文里 step 3 动作不渲染（步骤说明保留）。不写项目介绍、不复述六 tab。
+- **甲（拍定）**：一句自动说明＋三步＋页脚厂商控制台胶囊行；每步右缘一个无字箭头动作；空态上下文里 step 3 动作不渲染（步骤说明保留）。不写项目介绍、不复述六 tab。
 - 乙（不做）：完整帮助文档/功能导览。
 
 ### D5 文案词汇（拍定：甲）
@@ -124,8 +124,9 @@
 
 - 320 宽、fixed；右缘对齐触发入口；下方空间 <360（指南卡比会话卡高）且上方更大时翻上；max-height `min(480, 可用空间)`；正文区独立滚动。surface/阴影/圆角完全复用会话小面板（`--dsw-menu-surface-fill`、`--dsw-elevation-prominent`、`--dsw-radius-lg`）。
 - 头部：标题「快速开始」13/600＋右侧 24px ghost 关闭钮（`dshCloseIcon()`，`aria-label`＝`rt.dismiss`）。
-- 主体：序号圆 18px（底 `bg-module-platform`、12/600 `label-secondary`）＋标题 13/600＋说明 12/18 `label-tertiary`＋动作链钮 12/500 `label-primary` 下划线；步骤间 8px 纵距。
-- 尾注：与主体间 0.5px `border-l2` 分隔；11/16 `label-tertiary`。
+- 主体：无编号；标题 12/600 `label-secondary`（照会话弹层 `.hrag-sesspop-label`）＋说明 12/18 `label-tertiary`、`padding-left:8px`（照会话弹层列表行的缩进）；标题→说明 gap 4px；说明按 264px 文本列校准为三行、末行写满（实测行宽填充 zh 95%/97%/91%、en 95%/87%/92%），步高随文案自然撑开；步间 0.5px `border-l2` 发丝线；步内上下 8px，首步与副标题间 8px，末步去底内边距。
+- 箭头钮：每步右缘无字按钮——24px 宽、`align-self:stretch` 随步骤通高、图标 16px（`IconArrowRightOutlineRegular`，缺件回退手绘）、与正文 gap 2px、无竖分隔线、hover 整条浅底（`interactive-bg-hover`＋`label-primary`）、focus ring；`title`/`aria-label`＝动作词。
+- 页脚：挂在 `.hrag-guidepop-body` 之外的常驻行（矮窗时步骤区滚动、页脚不动）；「厂商控制台」11/16 `label-tertiary`＋三枚胶囊 chip（阿里百炼／火山方舟／MinerU）——20px 高、0.5px `border-l3` 描边、999px 圆角、`interactive-bg-hover` 底、11px `label-secondary`、无下划线；hover 底 `interactive-bg-active`＋`label-primary`；focus ring；与识别卡尾栏共用同一组 chip 选择器。点击 `window.open(url,'_blank','noopener')` 打开对应厂商控制台。
 - 关闭：外点／Esc／×；收起后焦点回触发入口；动作跳转不回焦。互斥：打开指南先关会话小面板，反之亦然。
 - 动作：
   - 去配置 → 关指南 → `openSettings(false)`。
@@ -139,22 +140,22 @@
 | 键 | zh | en |
 |---|---|---|
 | guide.entry / guide.title | 快速开始 | Quick start |
-| guide.lead | 完成下面三步就能完整使用 RAG；本地服务的下载、启动与模型同步都是自动的。 | Three steps and RAG is fully usable. Downloading and starting the local service, and syncing models, all happen automatically. |
-| guide.step1.title | 配置向量模型 | Set up the embedding model |
-| guide.step1.body | 在 ⋯ →「功能模型设置」里填向量提供方、向量模型、向量接口地址与 API Key（向量）。这是必须手动填的一步。 | In ⋯ → “Functional model settings”, fill in the embedding provider, embedding model, endpoint and API key (embedding). This is the one step that needs manual input. |
+| guide.lead | 三步启用知识库；本地服务与模型同步全自动。 | Three steps to get RAG running; the local service and model sync are automatic. |
+| guide.step1.title | 配置模型 | Configure model |
+| guide.step1.body | 在 ⋯ →「功能模型设置」里填向量提供方、向量模型、向量接口地址与 API Key；这是整套流程里唯一需要手动填写的一步，填完才能上传文档。 | In ⋯ → “Functional model settings”, fill in the embedding provider, model, endpoint and API key. This is the only step needing manual input. |
 | guide.step1.action | 去配置 | Open settings |
-| guide.step2.title | 建库并上传 | Create a library and upload |
-| guide.step2.body | 新建知识库，从 ⋯ →「上传文档」添加文件；切块与向量化自动完成，等文档状态变成「就绪」。PDF / Office / 图片若提示缺少解析令牌，按提示在「功能模型设置 → 高级设置 → 解析提供方」补填 MinerU 令牌。 | Create a knowledge base, then add files via ⋯ → “Upload document”. Chunking and embedding run automatically; wait until documents show “Ready”. If PDF / Office / images report a missing parse token, add the MinerU token under “Functional model settings → Advanced → Parse provider” as prompted. |
+| guide.step2.title | 建库上传 | Create & upload |
+| guide.step2.body | 新建知识库，从 ⋯ →「上传文档」添加文件；切块与向量化自动完成，等文档状态变成「就绪」。PDF / Office / 图片缺少解析令牌时按提示补填。 | Create a library, add files via ⋯ → “Upload document”. Chunking and embedding run automatically; wait until they show “Ready”. |
 | guide.step2.action | 新建知识库 | New knowledge base |
-| guide.step3.title | 绑定本会话 | Bind this session |
-| guide.step3.body | 在顶栏「会话」里选择知识库；绑定后本会话的对话自动使用该库检索。在「会话」里点「新建」的会话会自动绑定当前库（宿主里另建的会话要在这里再绑一次）。 | Choose a knowledge base under “Session” in the top bar; chat then uses retrieval from it automatically. Sessions created with “New” in “Session” bind the current library for you (sessions created elsewhere in DSH need to be bound here). |
+| guide.step3.title | 绑定会话 | Bind session |
+| guide.step3.body | 在顶栏「会话」里选择知识库；绑定后本会话的对话自动使用该库检索。绑定只对当前会话生效，别处新建的会话需要回到「会话」里再绑一次。 | Choose a library under “Session”; this chat then retrieves from it automatically. Chats created elsewhere in DSH need to be bound here too. |
 | guide.step3.action | 绑定本会话 | Bind this session |
-| guide.tail | 图谱、Wiki、评测等面板不影响基本使用，需要时再看。 | Graph, Wiki and Eval panels do not affect basic use; explore them when needed. |
+| guide.vendors | 厂商控制台 | Vendor consoles |
 
 - 关闭钮的 `aria-label`/title 复用 `rt.dismiss`（关闭／Dismiss）。
 - zh toast 改：`upload.needEmbedding` →「先配置向量模型，再上传文档」；EN 不动（"embedding model" 与设置页 EN 一致）。
 - 空态提示改：`shell.emptyHint` →「新建知识库后即可上传文档。」/「Create a knowledge base to start uploading.」。
-- MinerU 条件句以 R4 落地为准；R4 撤线时删这一句，其余不变。
+- MinerU 条件句收敛为「缺少解析令牌时按提示补填」；具体补填路径由上传拦截/失败卡承载（R4 已落地）。
 
 ### 4.4 持久与容错
 
@@ -167,7 +168,8 @@
 - 只走现有 token，不新增底色层；深浅色一致。
 - 图标用罗盘（circle＋needle，14px、描边 1.5），不新增图标库。
 - 空态：主按钮＋outline 刷新＋文字链钮；按钮行 gap 8，链钮另起一行。
-- 入口钮、空态链钮、关闭钮、动作链均可用 Tab 到达；Esc 从卡内关闭；focus ring 可见。
+- 入口钮、空态链钮、关闭钮、箭头钮与页脚 chip 均可用 Tab 到达；Esc 从卡内关闭；focus ring 可见。
+- 三步等高靠文案长度（各三行）自然撑开，不用 min-height 压齐。
 
 ## 5. 验收
 
@@ -176,13 +178,27 @@
 3. **点与持久**：首开前栏内图标档有点；打开一次后消失，reload 仍在；清 `hrag-guide-seen` 后复现；宽档与空态链钮始终无点。
 4. **浮层**：198px 下卡宽 320、越过面板左缘不被裁；下方 <360 时翻上；外点/Esc/× 关闭；打开不动当前 tab、顶栏 top 不变；点与罗盘不互相压住。
 5. **动作与互斥**：栏内指南→去配置落功能模型设置（基本区）、新建知识库落空输入弹层、绑定本会话落会话小面板且列表刷新；空态指南不出现绑定动作；指南与会话小面板不同时开。
-6. **文案**：zh/en 全文一致；字段名与设置页一致；MinerU 条件句路径与 R4 一致；空态提示已改；zh 上传 toast 已改「向量模型」。
+6. **文案**：zh/en 全文一致；字段名与设置页一致；step 2 缺令牌提示收敛为「按提示补填」（路径由上传拦截/失败卡承载）；空态提示已改；zh 上传 toast 已改「向量模型」。
 7. **回归**：库选择器、会话钮、`⋯` 菜单、六 tab、拖拽、运行时卡、上传拦截行为/布局零变化（嵌入 toast 仅 zh 一词按 §4.3 改；MinerU toast 属 R4，不动）；键盘 Tab/Enter/Esc 可用；删最后一个库后的空态可用。
 8. **门禁**：`node --check client.js`；`node --test tests/*.test.ts` 全绿；`node node_modules/typescript/bin/tsc -p tsconfig.json` 零错；真 DSH 面板内完成 1–7。
 9. **并行面**：指南提交只含自己的改动；不夹带其他并行会话的在途改动；引擎 `harness-rag` 与主树 `deer-flow` 零 diff。
+10. **视觉重设计**：无编号、四字标题；三步说明各三行、末行写满（264px 文本列，headless 量行宽，填充 87–97%）；步间 0.5px 发丝线；箭头钮 24px 通高、图标 16px、无竖分隔线、hover 整条浅底、`title`/`aria-label` 正确、键盘可达；页脚在滚动区外（矮窗时步骤滚动、页脚常驻），三枚 chip 无下划线、描边/底色/hover 如 §4.2、URL 指向对应厂商控制台。
 
 ## 6. 影响面
 
 - 只 `client.js`：新增一个栏内入口、一个空态第二入口与建库闭环、一个浮层组件、一段测量状态、窄档库 chevron/栏距调整、13 条 zh/en 词条、1 个 localStorage 键、建库成功链一行；实测 +347／−7 行。
+- 视觉重设计（`b5c76a0`）：`client.js` +92／−38——词条、`GuidePopover` 结构、guide CSS 与 `dshArrowRightIcon`；页脚依赖的 `RAG_PROVIDER_CONSOLES`／`ragConsoleButton` 与 `set.providerConsole*`、`vendor.*` 词条属并行配置辅助线，随该笔先行落入；设置页四处调用点等并行改动未含。
 - 不改 host 半/引擎/后端，不改运行时状态机、存储文件、工具面。
-- zh 上传 toast 一词、空态提示一句与入口词汇对齐；MinerU 条件句依赖已提交的 R4。
+- zh 上传 toast 一词、空态提示一句与入口词汇对齐；step 2 的缺令牌提示由 R4 的上传拦截/失败卡承载。
+
+## 7. 修订记录
+
+### 7.1 视觉重设计（已落 `b5c76a0`）
+
+用户逐轮看图裁定，最终形态取代 §4.2／§4.3 的原编号版：
+
+- 去编号；标题改四字，采用会话弹层二级标题词法（12/600 `label-secondary`）；说明缩进 8px，各三行且末行写满。
+- 每步动作从步内下划线链钮改为右缘无字箭头钮（24px 通高、16px 图标、无竖分隔线）。
+- 原尾注改为页脚厂商控制台胶囊行，并移出滚动区常驻。
+- 文案全表按 §4.3 更新：`guide.tail` 删除，新增 `guide.vendors`；zh/en 同步。
+- 空态上下文行为、`hrag-guide-seen`、三档让位、互斥与焦点规则不变。

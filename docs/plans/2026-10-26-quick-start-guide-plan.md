@@ -1,8 +1,8 @@
 # 面板「快速开始」引导 Plan
 
-**Status:** 已实施 · 已发布（2026-10-26；feat 2eca02b / docs a8b0999；随 `v0.1.2` 发布 2026-10-27；隔离沙箱验收完成，用户实例真栈与上传/拖拽回归仍待复核）
+**Status:** 已实施 · 已发布（feat 2eca02b / docs a8b0999，随 `v0.1.2` 发布；视觉重设计 `b5c76a0`；隔离沙箱验收完成，用户实例真栈与上传/拖拽回归仍待复核）
 **Date:** 2026-10-26
-**配套 spec:** [2026-10-26-quick-start-guide-spec.md](../specs/2026-10-26-quick-start-guide-spec.md)（D1–D7 已拍、D8 暂选乙；C1 暂选乙＝零库空态加建库主按钮＋指南链钮；五件范围、验收 1–9）
+**配套 spec:** [2026-10-26-quick-start-guide-spec.md](../specs/2026-10-26-quick-start-guide-spec.md)（D1–D7 已拍、D8 暂选乙；C1 暂选乙＝零库空态加建库主按钮＋指南链钮；五件范围、验收 1–10、视觉重设计见 spec §7）
 **Architecture:** 纯 `client.js`：栏内入口钮＋零库空态第二入口＋320 锚定浮层；定位/关闭/互斥照会话小面板词法，动作复用 `openSettings(false)`／`setCreateKbOpen`／`setSessionOpen`；图标档（<320）收起库 chevron＋栏距 6px 保库名，浮层聚焦延后一拍避开宿主聊天输入；另补建库成功链一行 `phase='ready'`、13 条 zh/en 词条、1 个 `localStorage` 键与空态/上传 toast 各一句词。不动 host 半与引擎。实测 `client.js` +347／−7 行。
 
 ## 范围与交接
@@ -14,7 +14,7 @@
 
 ## 硬约束（执行期注意）
 
-- **文案逐字**：spec §4.3 全表为准；字段名「向量提供方／向量模型／向量接口地址／API Key（向量）」与设置页一致；MinerU 条件句以 R4 已落地路径为准。
+- **文案逐字**：spec §4.3 全表为准；字段名与设置页一致；step 2 缺令牌提示收敛为「按提示补填」（路径由上传拦截/失败卡承载）。
 - **测量口径**：三档按栏宽 `clientWidth`，不是窗口宽；`barGuideWide` 阈值 320。测量绑到栏元素本身（稳定回调 ref＋`ResizeObserver`），因为面板初始 `phase='loading'`、运行时 gate 还会让栏反复挂卸（`runtimeGate || content`）；只写 `[]` 或只写 `[phase]` 都可能漏测。
 - **窄档口径**：图标档（<320）`.hrag-bar-compact` 隐藏库 chevron、栏距 6px；320 档恢复 chevron 与原 8px。208 线仍只管会话文字。
 - **动作口径**：去配置必须 `openSettings(false)`（重置高级档、落基本区）；三个动作跳转前先关指南。
@@ -151,13 +151,28 @@
 
 **实测**：两笔已提交（`2eca02b`、`a8b0999`）；状态回填 `4dc7883`；已随 `v0.1.2` 发布（2026-10-27，tag `b877623`，与并行 R4 同发，无运行时资产）；用户实例真栈与上传/拖拽回归仍待复核。
 
+## Task 7 — 视觉重设计（spec §7 / §5 10）
+
+> 动到的文件：`client.js`（guide 词条、`GuidePopover`、guide CSS、`dshArrowRightIcon`）。
+> **验收对应**：spec §5 10。
+
+- [x] 文案：lead／step1–3 四字标题按 spec §4.3 更新；删 `guide.tail`，加 `guide.vendors`；zh/en 同步；说明按 264px 文本列校准为三行且末行写满（headless 实测行宽填充 zh 95%/97%/91%、en 95%/87%/92%）。
+- [x] 结构：去编号；标题 12/600 secondary（照 `.hrag-sesspop-label`）；说明 `padding-left:8px`；标题→说明 gap 4px；步间 0.5px 发丝线；末步去底内边距；步高随文案撑开。
+- [x] 箭头钮：右缘无字按钮（24px 通高、图标 16px、gap 2px、无竖分隔线、hover 整条浅底、focus ring、`title`/`aria-label`＝动作词）；`dshArrowRightIcon`＝`IconArrowRightOutlineRegular` 缺件回退手绘。
+- [x] 页脚：`guide.vendors`＋三枚 chip，移出 `.hrag-guidepop-body` 常驻；chip 与识别卡尾栏共用选择器；`ragConsoleButton(provider, t, 'vendor', 'hrag-guide-chip')`。
+- [x] 门禁：`node --check client.js` 通过；`node --test tests/*.test.ts` 345/345；`tsc` 零错。
+- [x] 提交：`b5c76a0`（仅 `client.js`，+92／−38）；页脚依赖的 console 表/函数与 6 组词条随本笔落入，设置页四处调用点等并行改动排除。
+
+**实测（10-27）**：静态复刻逐轮截图核对（`E:/hrag-r5/evidence/guide-preview-2x.png`），文案行宽用 headless Chrome 量（`E:/hrag-r5/guide-measure.html`，六条说明均三行）；门禁 345/345；提交 `b5c76a0`。
+
 ## 提交链
 
 > 已提交；英文 Conventional ASCII；不推送。哈希随落随记。
 
 1. `feat(panel): add the quick start guide` —— `client.js`（入口、浮层、空态第二入口与建库闭环、窄档让位、词条）—— `2eca02b`。
 2. `docs(guide): record the quick start guide contract` —— `docs/specs/2026-10-26-quick-start-guide-spec.md`＋`docs/plans/2026-10-26-quick-start-guide-plan.md` —— `a8b0999`。
+3. `feat(panel): redesign the quick start guide popover` —— `client.js`（词条、`GuidePopover`、guide CSS、`dshArrowRightIcon`；含页脚依赖的 console 表/词条切片）—— `b5c76a0`。
 
-- 验收中的文案/几何微调并入第 1 笔，不落第三笔。
+- 首版验收中的文案/几何微调并入第 1 笔；10-27 重设计单独成第 3 笔，不与第 1 笔压合。
 - 提交后状态回填另落一笔（`docs(guide): mark the quick start guide submitted`，哈希见 git log）。
-- 实测回填：第 1 笔 `2eca02b`；第 2 笔 `a8b0999`。
+- 实测回填：第 1 笔 `2eca02b`；第 2 笔 `a8b0999`；第 3 笔 `b5c76a0`。
