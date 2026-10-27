@@ -1,6 +1,6 @@
 # R4 MinerU 令牌首用指引 —— plan
 
-**Status:** 已拍·待实施（2026-10-26 R4=甲·完整；只覆盖 spec §9 R4，R2/R3/R5 仍待裁）
+**Status:** 已拍·实施中（2026-10-26 Task 0–2 完成；Task 3–4 待做；只覆盖 spec §9 R4，R2/R3/R5 仍待裁）
 **Date:** 2026-10-26
 **配套 spec:** [2026-10-24-single-download-distribution-spec.md §9 R4](../specs/2026-10-24-single-download-distribution-spec.md)
 
@@ -10,38 +10,59 @@
 
 > 目的：钉死配置判据、上传分支、失败卡与设置深链；发现与 spec 冲突先停下登记。
 
-- [ ] 配置响应：确认 `/api/rag/config` 的 `config.parse_provider` 恒为生效值（缺省 `mineru-cloud`），`sources.mineru_api_token` 恒为 `ui`/`env`/`unset` 之一（`rag_config.py:298-313`）；确认 env 提供 token 时 `config.mineru_api_token` 为空串但 source 为 `env`，不能用“输入框非空”当判据。
-- [ ] 格式面：确认 MinerU 格式＝`.pdf/.doc/.docx/.ppt/.pptx/.png/.jpg/.jpeg`；`.md/.markdown/.txt/.csv/.tsv/.xlsx/.xls` 本地解析、不受令牌影响（`parser.py:69-102`、`parser.py:1031-1048`）。
-- [ ] host 探针：确认 `needsEmbeddingConfig` 的现有路径（`bridge.ts:189-203`、`ops.ts:250-255`）与测试缝；确定把嵌入/ MinerU 两个判断合并到同一次 `/api/rag/config` 读取，避免每次状态轮询发两次请求；确认 `runtime/status` 只在 `managed + ready` 探测，external 模式不探测。
-- [ ] client 上传：确认三个入口（文件输入/拖拽/⋯ 上传）都汇入 `handleUpload`，且现有嵌入拦截在 `handleUpload`/`panelDrop`/菜单三处（`client.js:21225-21230`、`21399-21401`、`21946-21948`）；确认可在白名单过滤后按后缀分流，只拦 MinerU 格式。
-- [ ] 失败卡：确认失败条目由 `foldDocFailures` 生成（`client.js:3411-3431`），`DocFailureCard` 只渲染重试/关闭（`client.js:9534-9598`）；确认可给条目加动作标记并在卡片里加「去配置」，且能打开设置。
-- [ ] 设置深链：确认「MinerU 解析令牌」位于 `ModelSettingsPanel` 的高级设置折叠区（`client.js:18253`、`19161-19239`）；确认从面板外打开设置并展开高级设置需要的最小 prop/状态改动。
-- [ ] 零 diff 基线：记录 `git diff -- engine` 为空；若实现需要任何引擎改动，立即停止并回报。
+- [x] 配置响应：确认 `/api/rag/config` 的 `config.parse_provider` 恒为生效值（缺省 `mineru-cloud`），`sources.mineru_api_token` 恒为 `ui`/`env`/`unset` 之一（`rag_config.py:298-313`）；确认 env 提供 token 时 `config.mineru_api_token` 为空串但 source 为 `env`，不能用“输入框非空”当判据。
+- [x] 格式面：确认 MinerU 格式＝`.pdf/.doc/.docx/.ppt/.pptx/.png/.jpg/.jpeg`；`.md/.markdown/.txt/.csv/.tsv/.xlsx/.xls` 本地解析、不受令牌影响（`parser.py:69-102`、`parser.py:1031-1048`）。
+- [x] host 探针：确认 `needsEmbeddingConfig` 的现有路径（`bridge.ts:189-203`、`ops.ts:250-255`）与测试缝；确定把嵌入/ MinerU 两个判断合并到同一次 `/api/rag/config` 读取，避免每次状态轮询发两次请求；确认 `runtime/status` 只在 `managed + ready` 探测，external 模式不探测。
+- [x] client 上传：确认三个入口（文件输入/拖拽/⋯ 上传）都汇入 `handleUpload`，且现有嵌入拦截在 `handleUpload`/`panelDrop`/菜单三处（`client.js:21225-21230`、`21399-21401`、`21946-21948`）；确认可在白名单过滤后按后缀分流，只拦 MinerU 格式。
+- [x] 失败卡：确认失败条目由 `foldDocFailures` 生成（`client.js:3411-3435`），`DocFailureCard` 只渲染重试/关闭（`client.js:9534-9598`）；确认可给条目加动作标记并在卡片里加「去配置」，且能打开设置。
+- [x] 设置深链：确认「MinerU 解析令牌」位于 `ModelSettingsPanel` 的高级设置折叠区（`client.js:18253`、`19161-19239`）；确认从面板外打开设置并展开高级设置需要的最小 prop/状态改动。
+- [x] 零 diff 基线：记录 `git diff -- engine` 为空；若实现需要任何引擎改动，立即停止并回报。
 
-**实测（实施期回填）**：
+**实测（2026-10-26，只读）**：
+
+- **配置响应**：`_build_response` 对非 secret 用 `written.get(name, getattr(config.rag, name))`，`RagConfig` 的 `parse_provider` 缺省 `mineru-cloud`（`app_config.py:233`）；secret 只写 `MASKED_SECRET` 或空串，`sources` 只落 `ui`/`env`/`unset`（`rag_config.py:304-313`）。golden 响应里 GET 为 `config.parse_provider=mineru-cloud`、`sources.mineru_api_token=unset`；PUT/local 段为 `parse_provider=mineru-local` 与 `sources=unset/ui`（`engine/backend/tests/fixtures/rag_config/response_golden.json:29`、`:63`、`:104`、`:170`）。未跑引擎 pytest（`engine/backend/.venv` 不存在）；以响应构造代码 + 仓内 golden 为据。
+- **secret 来源边界**：`_build_response` 对 secret 只看 `rag_config.json` 与 env，不看 `config.yaml` 里的同名值；默认 `config.example.yaml` 没有 `mineru_api_token`。因此“手改 config.yaml 填 token”会被预检误拦；文档按既有口径写“在功能模型设置填写/用 env”，不扩后端 sources 语义。
+- **格式面**：`SUPPORTED_UPLOAD_SUFFIXES` 与 `_LOCAL_READ_SUFFIXES`/`_DELIMITED_SUFFIXES`/`_EXCEL_SUFFIXES` 在 `parser.py:69-102`；`parse_document` 先分流 `.csv/.tsv`、`.xlsx/.xls`、本地文本，再走 MinerU（`parser.py:1031-1048`）。客户端兜底白名单 15 项与 `.pdf` 等完全对齐（`client.js:20190`）。
+- **host 探针**：`needsEmbeddingConfig` 是插件内唯一的配置探针（`bridge.ts:189-203`），`panelStatus` 只在 managed+ready 调用（`ops.ts:250-255`）；external 在 `statusPayload` 提前返回（`ops.ts:77-98`），不会探测。`RuntimeOpsDeps` 只有该依赖，改成一次读取返回双旗标无第二调用方。
+- **上传**：三个入口最终都到 `handleUpload`——文件 input `onChange`（`client.js:21988`）与 drop（`client.js:21412`），菜单只负责触发 input（`client.js:21946-21952`）。`handleUpload` 先查嵌入（`:21227-21230`），白名单过滤在 `:21236-21246`，之后才 `setUploading`；按后缀分流可插在过滤后，不误伤本地件。拖拽高亮只由 `!needsEmbedding` 控制（`:22103`），不得把 MinerU 旗标并进去。
+- **失败卡**：`foldDocFailures` 生成 `{key,name,reason,retryable}`（`client.js:3411-3435`），`DocFailureCard` 只渲染原因与重试/关闭（`:9534-9598`），由 `DocsView` 在 `:11103-11113` 挂载；新增动作需把回调从面板根（`:22005-22009`）穿过 `DocsView`。`classifyDocError` 的 `serviceUnconfigured` 只由 `mineru_api_token` 触发（`:3403`），动作映射安全。
+- **设置深链**：`ModelSettingsPanel` 的 `advancedOpen` 是组件内 state（`client.js:18253`），高级折叠按钮在 `:19102-19113`，解析字段在 `:19161-19239`；父层在 `:22473-22483` 只传 `t/kbId/onClose`。最小改法是新增 `initialAdvancedOpen`（或等价信号），失败卡动作打开时置 true，菜单/嵌入 toast 打开时置 false。
+- **零 diff**：`git diff --stat -- engine` 与 `git status --short -- engine` 均为空；本轮只读，除本 plan 回填外未改文件。
 
 ## Task 1 — host 配置探针
 
 > 动到的文件：`src/runtime/bridge.ts`、`src/runtime/ops.ts`、`tests/runtime_bridge.test.ts`、`tests/runtime_ops.test.ts`。
 
-- [ ] `bridge.ts` 新增纯函数 `needsMineruFrom(payload)`：当 `config.parse_provider === 'mineru-cloud'` 且 `sources.mineru_api_token === 'unset'` 时为 true；`mineru-local`、`ui`、`env`、字段缺失一律 false。
-- [ ] 把 `needsEmbeddingConfig` 改成一次配置读取返回 `{ needsEmbedding, needsMineru }`（命名按实现定）；保留 ready 门与失败时“不拦”的语义（fetch 失败/非 200 返回双 false）。
-- [ ] `RuntimeStatusPayload` 增加 `needsMineruConfig?: boolean`；`panelStatus` 只在 managed + ready 写入两个旗标；external 模式不新增字段。
-- [ ] 测试：`needsMineruFrom` 覆盖云+unset、云+ui、云+env、local+unset、缺字段；`panelStatus` 覆盖 ready 两个旗标、starting 不写、external 不探测；已有嵌入探针用例同步改成合并返回。
+- [x] `bridge.ts` 新增纯函数 `needsMineruFrom(payload)`：当 `config.parse_provider === 'mineru-cloud'` 且 `sources.mineru_api_token === 'unset'` 时为 true；`mineru-local`、`ui`、`env`、字段缺失一律 false。
+- [x] 把 `needsEmbeddingConfig` 改成一次配置读取返回 `{ needsEmbedding, needsMineru }`（命名按实现定）；保留 ready 门与失败时“不拦”的语义（fetch 失败/非 200 返回双 false）。
+- [x] `RuntimeStatusPayload` 增加 `needsMineruConfig?: boolean`；`panelStatus` 只在 managed + ready 写入两个旗标；external 模式不新增字段。
+- [x] 测试：`needsMineruFrom` 覆盖云+unset、云+ui、云+env、local+unset、缺字段；`panelStatus` 覆盖 ready 两个旗标、starting 不写、external 不探测；已有嵌入探针用例同步改成合并返回。
 
-**实测（实施期回填）**：
+**实测（2026-10-26）**：
+
+- **纯函数**：`needsMineruFrom`（`src/runtime/bridge.ts:59-66`）只认 `parse_provider === 'mineru-cloud'` + `sources.mineru_api_token === 'unset'`；非字符串 provider、缺 `sources`、`null` 均 false。
+- **合并探针**：`createRuntimeBridge` 的 `configNeeds`（`bridge.ts:200-214`）保留 ready 门与 fetch 失败双 false；一次 `/api/rag/config` 同时算 `needsEmbeddingFrom` 与 `needsMineruFrom`；原 `needsEmbeddingConfig` 依赖已移除，无第二调用方。
+- **status 面**：`RuntimeConfigNeeds`（`ops.ts:19-22`）、`needsMineruConfig?`（`:46`）、`RuntimeOpsDeps.configNeeds`（`:68`）；`panelStatus` 在 managed+ready 一次调用并写两旗标（`:257-263`）；external 提前返回、不探测。
+- **测试**：`runtime_bridge.test.ts:44-72` 覆盖 cloud+unset/ui/env、local+unset、缺字段/非法类型/null；`runtime_ops.test.ts:360-393` 覆盖 ready 双 true、starting 双 undefined、external 探针 0 次。全量 `node --test tests/*.test.ts` 310/310；`npm run typecheck` exit 0；`node --check client.js`、`node --check scripts/build-runtime-pack.mjs` 通过。
+- **反向验证**：临时把 `needsMineruFrom` 改成恒 false，`MinerU readiness: cloud without a token needs one` 变红（8/9）；还原后 9/9。证明测试咬住“云 + unset”这条判据。
 
 ## Task 2 — 上传前拦截、失败卡动作与文案
 
 > 动到的文件：`client.js`。
 
-- [ ] 文案：`doc.err.serviceUnconfigured` 中英改为可操作路径——中文“MinerU 解析令牌未配置——到「功能模型设置 → 高级设置 → 解析提供方」填写后再试”，英文同义；新增 `upload.needMineru` 与复用现有「去配置」动作词，不再出现“请联系管理员/contact your admin”。
-- [ ] 上传前拦截：按格式把候选文件分成 MinerU 组与本地组；仅当 managed + ready + `runtime.needsMineruConfig` 时，拦住 MinerU 组并弹同款 toast（带「去配置」），本地组照常入队；不得整批拦掉 `.md/.csv`。
-- [ ] 失败卡动作：`foldDocFailures` 给 `serviceUnconfigured` 条目带动作标记；`DocFailureCard` 在该条目渲染「去配置」，点击打开设置并展开高级设置；external 模式的失败卡同样可用（不依赖 runtime 探针）。
-- [ ] 设置深链：`ModelSettingsPanel` 接受“初始展开高级设置”的信号（prop/状态二选一），关闭后复位；不新造设置入口，不把解析设置搬出原分组。
-- [ ] 回归面：拖拽高亮不因 MinerU 旗标关闭（否则本地文件也失去落点反馈）；菜单「上传」仍先开文件选择器，由 `handleUpload` 按格式分流；混合批次不产生 MinerU 的 failed 行。
+- [x] 文案：`doc.err.serviceUnconfigured` 中英改为可操作路径——中文“MinerU 解析令牌未配置——到「功能模型设置 → 高级设置 → 解析提供方」填写后再试”，英文同义；新增 `upload.needMineru` 与复用现有「去配置」动作词，不再出现“请联系管理员/contact your admin”。
+- [x] 上传前拦截：按格式把候选文件分成 MinerU 组与本地组；仅当 managed + ready + `runtime.needsMineruConfig` 时，拦住 MinerU 组并弹同款 toast（带「去配置」），本地组照常入队；不得整批拦掉 `.md/.csv`。
+- [x] 失败卡动作：`foldDocFailures` 给 `serviceUnconfigured` 条目带动作标记；`DocFailureCard` 在该条目渲染「去配置」，点击打开设置并展开高级设置；external 模式的失败卡同样可用（不依赖 runtime 探针）。
+- [x] 设置深链：`ModelSettingsPanel` 接受“初始展开高级设置”的信号（prop/状态二选一），关闭后复位；不新造设置入口，不把解析设置搬出原分组。
+- [x] 回归面：拖拽高亮不因 MinerU 旗标关闭（否则本地文件也失去落点反馈）；菜单「上传」仍先开文件选择器，由 `handleUpload` 按格式分流；混合批次不产生 MinerU 的 failed 行。
 
-**实测（实施期回填）**：
+**实测（2026-10-26）**：
+
+- **文案**：中英 `doc.err.serviceUnconfigured` 均改为指向「功能模型设置 → 高级设置 → 解析提供方」；新增中英 `upload.needMineru`；全文件已无“文档解析服务未配置 / 请联系管理员 / contact your admin”。
+- **上传拦截**：`MINERU_SUFFIXES`（`client.js:20206`）固定 8 个 MinerU 后缀；`needsMineru` 只读 managed+ready 的 `runtime.needsMineruConfig`（`:21055`）；`handleUpload` 在白名单过滤后分组（`:21294-21305`），MinerU 组只触发 6 秒 toast、本地组继续 `runNext(uploadable)`；拖拽高亮仍只由 `!needsEmbedding` 控制，未把 MinerU 旗标并进去。
+- **失败卡**：`foldDocFailures` 接受 `actionOf`（`client.js:3413-3435`），`snapshotDocFailures` 只给 `serviceUnconfigured` 条目写 `action='mineru-token'`（`:20949-20956`）；`DocFailureCard` 对该条目渲染「去配置」（`:9555-9562`、`:9590`、`:9603`），回调由 `DocsView` 穿到面板根（`:22069`）。external 没有 runtime 探针时，失败卡动作仍可用。
+- **设置深链**：面板根新增 `openSettings(advanced)` / `closeSettings()`（`:20981-20992`），菜单与嵌入 toast 走 false，MinerU toast 与失败卡走 true；`ModelSettingsPanel` 新增 `initialAdvancedOpen` 并以它初始化 `advancedOpen`（`:18160`、`:18266`、`:22560-22563`），关闭复位。
+- **校验**：`node --check client.js`、`npm run typecheck` 通过；全量 `node --test tests/*.test.ts` 310/310；`engine/` 零 diff。UI 实机验收留 Task 3（本 Task 只做代码与静态回归）。
 
 ## Task 3 — 隔离验收
 
@@ -82,6 +103,7 @@
 ## 风险与回退
 
 - **误拦 token 已在环境**：判据必须用 `sources.mineru_api_token === 'unset'`，不能看输入框是否为空；env 来源放行。
+- **config.yaml 手写 token**：`/api/rag/config` 的 secret `sources` 不覆盖 `config.yaml`；手改该文件填 token 会被预检误拦。默认种子无此键，文档统一指向「功能模型设置」/ env，不为此改后端。
 - **误拦本地服务**：`parse_provider === 'mineru-local'` 不拦；本地格式永不按 MinerU 处理。
 - **混合批次**：只拦 MinerU 组、不整批拒绝；上传后的失败卡只针对真正入队的文件。
 - **状态探针失败**：配置读取失败时双旗标为 false（宁可不拦，不回退到“联系管理员”文案）；失败卡动作仍可用。
