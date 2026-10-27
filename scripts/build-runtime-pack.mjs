@@ -37,6 +37,11 @@ const PACKAGE_ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const QDRANT_VERSION = '1.20.0'
 const QDRANT_ASSET = 'qdrant-x86_64-pc-windows-msvc.zip'
 const QDRANT_SIZE = 30_801_664
+const FFMPEG_VERSION = 'n9.0-lgpl'
+const FFMPEG_ASSET = 'ffmpeg-n9.0-latest-win64-lgpl-9.0.zip'
+const FFMPEG_SIZE = 171_481_203
+const FFMPEG_SHA256 = 'c1044833f3e9b30de2e3d80faef815998624d568fee0493eb49ecb13e5ef0980'
+const FFMPEG_LICENSE_URL = 'https://github.com/BtbN/FFmpeg-Builds'
 const PYTHON_VERSION = '3.12.13'
 const UV_VERSION = '0.11.2'
 const GH_MIN_VERSION = '2.40.0'
@@ -249,6 +254,7 @@ rmSync(packDir, { recursive: true, force: true })
 mkdirSync(join(packDir, 'site-packages'), { recursive: true })
 mkdirSync(join(packDir, 'engine'), { recursive: true })
 mkdirSync(join(packDir, 'qdrant'), { recursive: true })
+mkdirSync(join(packDir, 'ffmpeg'), { recursive: true })
 mkdirSync(workDir, { recursive: true })
 mkdirSync(dirname(zipPath), { recursive: true })
 
@@ -378,6 +384,71 @@ console.log(`[build]   ${(smoke.stdout ?? '').trim()}`)
 rmSync(smokeXlsx, { force: true })
 done()
 
+// ── 2b. tiktoken BPE cache + tracing smoke ───────────────────────────────────
+step('prepare the tiktoken BPE cache')
+const tiktokenCache = join(packDir, 'tiktoken-cache')
+mkdirSync(tiktokenCache, { recursive: true })
+const tokenizerScript = `import importlib.metadata as m
+import pathlib
+import sys
+
+import tiktoken
+
+assert m.version("tiktoken") == "0.12.0", m.version("tiktoken")
+encoding = tiktoken.get_encoding("cl100k_base")
+assert encoding.encode("harness rag"), "cl100k_base returned no tokens"
+cache = pathlib.Path(sys.argv[1])
+files = [path for path in cache.iterdir() if path.is_file()]
+assert files, "tiktoken cache is empty"
+assert all(path.suffix != ".tmp" for path in files), files
+print(f"tiktoken {m.version('tiktoken')}, cache files {len(files)}")`
+const tokenizer = spawnSync(pythonExe, ['-c', tokenizerScript, tiktokenCache], {
+  cwd: workDir,
+  encoding: 'utf8',
+  env: {
+    ...process.env,
+    PYTHONPATH: join(packDir, 'site-packages'),
+    PYTHONNOUSERSITE: '1',
+    PYTHONUTF8: '1',
+    PYTHONIOENCODING: 'utf-8',
+    TIKTOKEN_CACHE_DIR: tiktokenCache,
+  },
+})
+if (tokenizer.status !== 0) {
+  const detail = (tokenizer.stderr || tokenizer.stdout || tokenizer.error?.message || '').trim()
+  fail(`tiktoken BPE cache smoke test failed (exit ${tokenizer.status}): ${detail}`)
+}
+console.log(`[build]   ${(tokenizer.stdout ?? '').trim()}`)
+done()
+
+step('smoke-test langfuse')
+const tracingScript = `import importlib.metadata as m
+
+import langfuse
+from langfuse import Langfuse
+from langfuse.langchain import CallbackHandler
+
+assert m.version("langfuse") == "4.5.1", m.version("langfuse")
+assert m.version("backoff") == "2.2.1", m.version("backoff")
+print(f"langfuse {m.version('langfuse')}, backoff {m.version('backoff')}")`
+const tracing = spawnSync(pythonExe, ['-c', tracingScript], {
+  cwd: workDir,
+  encoding: 'utf8',
+  env: {
+    ...process.env,
+    PYTHONPATH: join(packDir, 'site-packages'),
+    PYTHONNOUSERSITE: '1',
+    PYTHONUTF8: '1',
+    PYTHONIOENCODING: 'utf-8',
+  },
+})
+if (tracing.status !== 0) {
+  const detail = (tracing.stderr || tracing.stdout || tracing.error?.message || '').trim()
+  fail(`langfuse smoke test failed (exit ${tracing.status}): ${detail}`)
+}
+console.log(`[build]   ${(tracing.stdout ?? '').trim()}`)
+done()
+
 // ── 3. engine source ─────────────────────────────────────────────────────────
 step('copy the engine source')
 const engineOut = join(packDir, 'engine')
@@ -401,21 +472,87 @@ done()
 
 // ── 4. Qdrant ────────────────────────────────────────────────────────────────
 step(`qdrant ${QDRANT_VERSION}`)
-const qdrantDir = join(workDir, 'qdrant-dl')
-const qdrantZip = join(qdrantDir, QDRANT_ASSET)
-mkdirSync(qdrantDir, { recursive: true })
-if (!existsSync(qdrantZip) || statSync(qdrantZip).size !== QDRANT_SIZE) {
-  rmSync(qdrantZip, { force: true })
-  const gh = spawnSync('gh', ['release', 'download', `v${QDRANT_VERSION}`, '-R', 'qdrant/qdrant', '-p', QDRANT_ASSET, '-D', qdrantDir, '--clobber'], {
-    stdio: 'inherit',
-  })
-  if (gh.status !== 0 || !existsSync(qdrantZip)) fail('gh release download failed for the qdrant asset')
+if (process.env.HARNESS_RAG_QDRANT_EXE) {
+  const localExe = resolve(process.env.HARNESS_RAG_QDRANT_EXE)
+  if (!existsSync(localExe)) fail(`HARNESS_RAG_QDRANT_EXE does not exist: ${localExe}`)
+  copyFileSync(localExe, join(packDir, 'qdrant', 'qdrant.exe'))
+  console.log(`[build]   offline qdrant.exe ${localExe}`)
+} else {
+  const qdrantDir = join(workDir, 'qdrant-dl')
+  const qdrantZip = join(qdrantDir, QDRANT_ASSET)
+  mkdirSync(qdrantDir, { recursive: true })
+  if (!existsSync(qdrantZip) || statSync(qdrantZip).size !== QDRANT_SIZE) {
+    rmSync(qdrantZip, { force: true })
+    const gh = spawnSync('gh', ['release', 'download', `v${QDRANT_VERSION}`, '-R', 'qdrant/qdrant', '-p', QDRANT_ASSET, '-D', qdrantDir, '--clobber'], {
+      stdio: 'inherit',
+    })
+    if (gh.status !== 0 || !existsSync(qdrantZip)) fail('gh release download failed for the qdrant asset')
+  }
+  if (statSync(qdrantZip).size !== QDRANT_SIZE) {
+    fail(`qdrant asset size ${statSync(qdrantZip).size} != ${QDRANT_SIZE}`)
+  }
+  await unzipTo(qdrantZip, join(packDir, 'qdrant'))
+  if (!existsSync(join(packDir, 'qdrant', 'qdrant.exe'))) fail('qdrant.exe missing after unpacking the asset')
 }
-if (statSync(qdrantZip).size !== QDRANT_SIZE) {
-  fail(`qdrant asset size ${statSync(qdrantZip).size} != ${QDRANT_SIZE}`)
+done()
+
+// ── 4b. ffmpeg / ffprobe ─────────────────────────────────────────────────────
+step(`ffmpeg ${process.env.HARNESS_RAG_FFMPEG_DIR ? 'local build' : FFMPEG_VERSION}`)
+let ffmpegVersion = FFMPEG_VERSION
+let ffmpegSource = `${FFMPEG_LICENSE_URL} (BtbN FFmpeg-Builds, win64-lgpl)`
+let ffmpegLicense = 'LGPL v3'
+if (process.env.HARNESS_RAG_FFMPEG_DIR) {
+  const ffmpegSourceDir = resolve(process.env.HARNESS_RAG_FFMPEG_DIR)
+  for (const name of ['ffmpeg.exe', 'ffprobe.exe', 'LICENSE.txt']) {
+    const source = join(ffmpegSourceDir, name)
+    if (!existsSync(source)) fail(`HARNESS_RAG_FFMPEG_DIR is missing ${name}: ${source}`)
+    copyFileSync(source, join(packDir, 'ffmpeg', name))
+  }
+  const ffprobeVersion = spawnSync(join(packDir, 'ffmpeg', 'ffprobe.exe'), ['-version'], { encoding: 'utf8' })
+  if (ffprobeVersion.status !== 0) fail('packed ffprobe did not answer -version')
+  const parsed = /^ffprobe version (\S+)/m.exec(ffprobeVersion.stdout ?? '')
+  if (!parsed) fail('cannot parse the local ffprobe version')
+  ffmpegVersion = parsed[1]
+  ffmpegSource = `local build (${ffmpegSourceDir})`
+  ffmpegLicense = 'GPL v3'
+  console.log(`[build]   ${parsed[1]} from ${ffmpegSourceDir}`)
+} else {
+  const ffmpegDir = join(workDir, 'ffmpeg-dl')
+  const ffmpegZip = join(ffmpegDir, FFMPEG_ASSET)
+  mkdirSync(ffmpegDir, { recursive: true })
+  if (!existsSync(ffmpegZip) || statSync(ffmpegZip).size !== FFMPEG_SIZE) {
+    rmSync(ffmpegZip, { force: true })
+    const gh = spawnSync('gh', ['release', 'download', 'latest', '-R', 'BtbN/FFmpeg-Builds', '-p', FFMPEG_ASSET, '-D', ffmpegDir, '--clobber'], {
+      stdio: 'inherit',
+    })
+    if (gh.status !== 0 || !existsSync(ffmpegZip)) fail('gh release download failed for the ffmpeg asset')
+  }
+  if (statSync(ffmpegZip).size !== FFMPEG_SIZE) {
+    fail(`ffmpeg asset size ${statSync(ffmpegZip).size} != ${FFMPEG_SIZE}`)
+  }
+  const ffmpegSha = await hashFile(ffmpegZip)
+  if (ffmpegSha !== FFMPEG_SHA256) {
+    fail(`ffmpeg asset sha256 ${ffmpegSha} != ${FFMPEG_SHA256} (the rolling asset changed; re-pin it)`)
+  }
+  const ffmpegUnzip = join(workDir, 'ffmpeg-unzip')
+  rmSync(ffmpegUnzip, { recursive: true, force: true })
+  mkdirSync(ffmpegUnzip, { recursive: true })
+  await unzipTo(ffmpegZip, ffmpegUnzip)
+  const ffmpegRoots = readdirSync(ffmpegUnzip, { withFileTypes: true }).filter((entry) => entry.isDirectory())
+  if (ffmpegRoots.length !== 1) fail(`ffmpeg archive should unpack one root directory, got ${ffmpegRoots.length}`)
+  const ffmpegRoot = join(ffmpegUnzip, ffmpegRoots[0].name)
+  for (const name of ['ffmpeg.exe', 'ffprobe.exe']) {
+    const source = join(ffmpegRoot, 'bin', name)
+    if (!existsSync(source)) fail(`${name} missing after unpacking the ffmpeg asset`)
+    copyFileSync(source, join(packDir, 'ffmpeg', name))
+  }
+  const ffmpegLicenseFile = ['LICENSE.txt', 'LICENSE'].map((name) => join(ffmpegRoot, name)).find((path) => existsSync(path))
+  if (!ffmpegLicenseFile) fail('ffmpeg license text missing after unpacking the asset')
+  copyFileSync(ffmpegLicenseFile, join(packDir, 'ffmpeg', 'LICENSE.txt'))
+  const ffprobeVersion = spawnSync(join(packDir, 'ffmpeg', 'ffprobe.exe'), ['-version'], { encoding: 'utf8' })
+  if (ffprobeVersion.status !== 0) fail('packed ffprobe did not answer -version')
+  console.log(`[build]   ${(ffprobeVersion.stdout ?? '').split(/\r?\n/)[0]}`)
 }
-await unzipTo(qdrantZip, join(packDir, 'qdrant'))
-if (!existsSync(join(packDir, 'qdrant', 'qdrant.exe'))) fail('qdrant.exe missing after unpacking the asset')
 done()
 
 // ── 5. manifest + notices ────────────────────────────────────────────────────
@@ -428,11 +565,21 @@ const runtimeManifest = {
   engineCommit: engineCommitInfo.commit,
   pythonVersion,
   qdrantVersion: QDRANT_VERSION,
+  ffmpegVersion,
   configVersion,
   builtAt: new Date().toISOString(),
 }
 writeFileSync(join(packDir, 'runtime-manifest.json'), `${JSON.stringify(runtimeManifest, null, 2)}\n`)
-writeFileSync(join(packDir, 'THIRD_PARTY_NOTICES.md'), notices({ pythonVersion: runtimeManifest.pythonVersion, configVersion }))
+writeFileSync(
+  join(packDir, 'THIRD_PARTY_NOTICES.md'),
+  notices({
+    pythonVersion: runtimeManifest.pythonVersion,
+    configVersion,
+    ffmpegVersion,
+    ffmpegSource,
+    ffmpegLicense,
+  }),
+)
 done()
 
 // ── 6. zip ───────────────────────────────────────────────────────────────────
@@ -498,7 +645,7 @@ if (args.clean) {
 }
 
 // ── implementations ──────────────────────────────────────────────────────────
-function notices({ pythonVersion, configVersion }) {
+function notices({ pythonVersion, configVersion, ffmpegVersion, ffmpegSource, ffmpegLicense }) {
   const projectLicense = readFileSync(join(PACKAGE_ROOT, 'LICENSE'), 'utf8').trim()
   return `# Runtime pack notices
 
@@ -539,6 +686,27 @@ License: Python Software Foundation License 2.0 (\`python/LICENSE.txt\`).
 
 Source: https://github.com/qdrant/qdrant
 License: Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+
+## FFmpeg / ffprobe ${ffmpegVersion} (${ffmpegLicense})
+
+Source: ${ffmpegSource}.
+License: ${ffmpegLicense}; the full text ships as \`ffmpeg/LICENSE.txt\`. FFmpeg
+source is available at https://ffmpeg.org/download.html and the build scripts at
+the source repository above.
+
+## tiktoken BPE cache (MIT)
+
+The pack ships the \`cl100k_base\` BPE file under \`tiktoken-cache/\` so the first
+ingestion does not need network access. Source: https://github.com/openai/tiktoken
+(MIT). The file is fetched from OpenAI's public encodings endpoint at build time.
+
+## Langfuse SDK (MIT)
+
+\`site-packages/langfuse\` and \`site-packages/backoff\` are installed as extra
+wheels for optional evaluation tracing. Sources:
+https://github.com/langfuse/langfuse-python and
+https://github.com/litl/backoff (both MIT). They activate only when
+\`LANGFUSE_TRACING\` and the Langfuse credentials are set.
 
 ## Python wheels (site-packages)
 

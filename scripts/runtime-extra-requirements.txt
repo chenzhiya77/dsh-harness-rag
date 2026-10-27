@@ -2,3 +2,19 @@
 # These packages are NOT in engine/backend/uv.lock; keep one exact pin per line.
 # python-calamine backs .xlsx/.xls parsing (the engine imports it lazily).
 python-calamine==0.8.2
+# R5: Langfuse tracing (the engine imports it lazily when LANGFUSE_TRACING is on).
+# The engine lock has these only as optional/unused graph nodes, so the export
+# does not carry them; pin the exact Langfuse closure from the main-tree lock.
+langfuse==4.5.1
+backoff==2.2.1
+googleapis-common-protos==1.74.0
+importlib-metadata==8.7.1
+opentelemetry-api==1.41.1
+opentelemetry-exporter-otlp-proto-common==1.41.1
+opentelemetry-exporter-otlp-proto-http==1.41.1
+opentelemetry-proto==1.41.1
+opentelemetry-sdk==1.41.1
+opentelemetry-semantic-conventions==0.62b1
+socksio==1.0.0
+wrapt==1.17.3
+zipp==3.23.1

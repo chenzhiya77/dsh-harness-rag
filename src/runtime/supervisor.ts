@@ -15,6 +15,7 @@ import {
 } from 'node:fs'
 import { connect as connectNet, createServer as createNetServer } from 'node:net'
 import { dirname, join } from 'node:path'
+import { runtimeEngineExtras } from './engine_env.ts'
 import { configDir, downloadsDir, logsDir, runtimeDir, stateDir } from './paths.ts'
 import { planPorts, type PortPlan } from './ports.ts'
 import {
@@ -538,6 +539,7 @@ export function createSupervisor(options: SupervisorOptions): Supervisor {
     ],
     cwd: root,
     env: {
+      ...runtimeEngineExtras(runtime, process.env),
       DEER_FLOW_PROJECT_ROOT: root,
       DEER_FLOW_HOME: stateDir(root),
       DEER_FLOW_CONFIG_PATH: join(configDir(root), 'config.yaml'),
