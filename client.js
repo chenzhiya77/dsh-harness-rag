@@ -789,6 +789,7 @@ window.__ModuleLoader__.load({
       'menu.renameKb': '重命名知识库',
       'menu.deleteKb': '删除知识库',
       'menu.modelSettings': '功能模型设置',
+      'menu.repository': '项目仓库',
       'renameKb.title': '重命名知识库',
       'renameKb.nameLabel': '知识库名称',
       'renameKb.save': '保存',
@@ -851,12 +852,12 @@ window.__ModuleLoader__.load({
       'set.form.dshSyncFailed': 'DSH 模型同步失败',
       'set.form.dshUnavailableToggle': '不可用的 DSH 提供方（{0}）',
       'set.form.dshUnavailableRow': '{0} · {1}',
-      'set.form.effortAria': '{0} · 思考档位',
+      'set.form.effortAria': '{0} · 推理等级',
       'set.form.effortFixedNote': '由模型能力决定',
-      'set.form.legPickerAria': '{0} · 模型 {1}，思考档位 {2}',
+      'set.form.legPickerAria': '{0} · 模型 {1}，推理等级 {2}',
       'set.form.modelPickerAria': '选择模型，当前 {0}',
       'set.form.legPickerModel': '模型',
-      'set.form.legPickerEffort': '思考档位',
+      'set.form.legPickerEffort': '推理等级',
       'set.form.legPickerBack': '返回',
       'set.form.legPickerSearch': '搜索模型…',
       'set.form.legPickerNoMatch': '没有匹配的模型',
@@ -935,7 +936,6 @@ window.__ModuleLoader__.load({
       'set.migrationRunning': '维度迁移中',
       'set.migrationSucceeded': '维度迁移已完成，新宽度已生效。',
       'set.migrationFailed': '维度迁移失败：',
-      'set.group.default': 'RAG 默认模型',
       'set.group.dsh': 'DSH 模型',
       'set.group.retrieval': '检索',
       'set.group.extraction': '图谱抽取',
@@ -976,6 +976,55 @@ window.__ModuleLoader__.load({
       'vendor.dashscope': '阿里百炼',
       'vendor.volcengineArk': '火山方舟',
       'vendor.mineru': 'MinerU',
+      'set.smart.title': '智能识别配置',
+      'set.smart.subtitle': '粘贴厂商控制台截图或配置文本，自动填入模型与地址；可分批粘贴，结果会合并。',
+      'set.smart.placeholder': '粘贴配置文本，或 Ctrl+V / 拖入截图…',
+      'set.smart.choose': '选择图片',
+      'set.smart.remove': '移除',
+      'set.smart.model': '识别模型',
+      'set.smart.recognizeNew': '识别新增（{0}）',
+      'set.smart.recognizeNewShort': '识别新增',
+      'set.smart.recognize': '识别',
+      'set.smart.recognizing': '识别中…',
+      'set.smart.clearInput': '清空输入',
+      'set.smart.sent': '已包含：{0} 张截图 · {1} 段文本',
+      'set.smart.includedImage': '截图 {0} · {1} · {2}',
+      'set.smart.includedText': '文本 · {0}',
+      'set.smart.expand': '展开查看',
+      'set.smart.collapse': '收起',
+      'set.smart.result': '识别结果 · 已识别 {0} 项 · {1} 轮',
+      'set.smart.warning': '提示：{0}',
+      'set.smart.apply': '应用选中项',
+      'set.smart.clearAll': '清除全部',
+      'set.smart.clearAllConfirm': '再点一次清除全部',
+      'set.smart.empty': '没有识别到可填入的配置，换一张更清晰的截图或手动填写。',
+      'set.smart.current': '当前：{0}',
+      'set.smart.form': '表单：{0}',
+      'set.smart.unchanged': '无变化',
+      'set.smart.roundNew': '本轮',
+      'set.smart.roundPrev': '第 {0} 轮',
+      'set.smart.conflict': '上次/表单：{0}；本次：{1}',
+      'set.smart.useThis': '改用本次',
+      'set.smart.applied': '已填入 {0} 项；还需手动填写：{1}。',
+      'set.smart.appliedAll': '已填入 {0} 项。',
+      'set.smart.noVision': '没有可用的视觉模型。先在 DSH 中启用一个支持图片的模型。',
+      'set.smart.tooMany': '本轮最多 3 张截图，累计最多 20 张。',
+      'set.smart.tooLarge': '单张不能超过 5 MiB。',
+      'set.smart.totalLarge': '本轮图片总大小不能超过 10 MiB。',
+      'set.smart.badType': '只支持 PNG / JPEG / WebP / GIF。',
+      'set.smart.timeout': '识别超时，请重试或手动填写。',
+      'set.smart.failed': '识别失败：{0}',
+      'set.smart.noVisionShort': '无视觉模型',
+      'set.smart.group.embedding': '向量',
+      'set.smart.group.sparse': '稀疏',
+      'set.smart.group.rerank': '重排',
+      'set.smart.group.parse': '解析',
+      'set.smart.group.asr': '语音识别',
+      'set.smart.field.baseUrl': '接口地址',
+      'set.smart.field.dimension': '维度',
+      'set.smart.field.source': '来源',
+      'set.smart.dimensionFixed': '该提供商使用固定维度 {0}，已忽略识别值。',
+      'set.smart.dimensionUnverified': '维度未验证，已保留识别值。',
       'set.form.parseTierAuto': '（由服务决定）',
       'set.form.parseLanguageDefault': '（使用配置默认）',
       'set.form.parseModelVersionDefault': '（使用配置默认）',
@@ -1738,6 +1787,7 @@ window.__ModuleLoader__.load({
       'menu.renameKb': 'Rename knowledge base',
       'menu.deleteKb': 'Delete knowledge base',
       'menu.modelSettings': 'Functional model settings',
+      'menu.repository': 'Project repository',
       'renameKb.title': 'Rename knowledge base',
       'renameKb.nameLabel': 'Knowledge base name',
       'renameKb.save': 'Save',
@@ -1801,12 +1851,12 @@ window.__ModuleLoader__.load({
       'set.form.dshSyncFailed': 'DSH model sync failed',
       'set.form.dshUnavailableToggle': 'Unavailable DSH providers ({0})',
       'set.form.dshUnavailableRow': '{0} \u00b7 {1}',
-      'set.form.effortAria': '{0} \u00b7 Thinking effort',
+      'set.form.effortAria': '{0} \u00b7 Reasoning effort',
       'set.form.effortFixedNote': 'Determined by model capability',
-      'set.form.legPickerAria': '{0} \u00b7 Model {1}, thinking effort {2}',
+      'set.form.legPickerAria': '{0} \u00b7 Model {1}, reasoning effort {2}',
       'set.form.modelPickerAria': 'Choose a model; current: {0}',
       'set.form.legPickerModel': 'Model',
-      'set.form.legPickerEffort': 'Thinking effort',
+      'set.form.legPickerEffort': 'Reasoning effort',
       'set.form.legPickerBack': 'Back',
       'set.form.legPickerSearch': 'Search models\u2026',
       'set.form.legPickerNoMatch': 'No matching models',
@@ -1900,7 +1950,6 @@ window.__ModuleLoader__.load({
       'set.migrationRunning': 'Dimension migration in progress',
       'set.migrationSucceeded': 'Dimension migration finished; the new width is in effect.',
       'set.migrationFailed': 'Dimension migration failed:',
-      'set.group.default': 'RAG default model',
       'set.group.dsh': 'DSH models',
       'set.group.retrieval': 'Retrieval',
       'set.group.extraction': 'Graph extraction',
@@ -1941,6 +1990,55 @@ window.__ModuleLoader__.load({
       'vendor.dashscope': 'Aliyun Bailian',
       'vendor.volcengineArk': 'Volcengine Ark',
       'vendor.mineru': 'MinerU',
+      'set.smart.title': 'Smart fill',
+      'set.smart.subtitle': 'Paste a vendor console screenshot or config text to fill models and endpoints. You can add more later; results are merged.',
+      'set.smart.placeholder': 'Paste config text, or Ctrl+V / drop screenshots…',
+      'set.smart.choose': 'Choose images',
+      'set.smart.remove': 'Remove',
+      'set.smart.model': 'Recognition model',
+      'set.smart.recognizeNew': 'Recognize new ({0})',
+      'set.smart.recognizeNewShort': 'Recognize new',
+      'set.smart.recognize': 'Recognize',
+      'set.smart.recognizing': 'Recognizing…',
+      'set.smart.clearInput': 'Clear input',
+      'set.smart.sent': 'Included: {0} images · {1} text blocks',
+      'set.smart.includedImage': 'Image {0} · {1} · {2}',
+      'set.smart.includedText': 'Text · {0}',
+      'set.smart.expand': 'Show',
+      'set.smart.collapse': 'Hide',
+      'set.smart.result': 'Results · {0} fields · {1} rounds',
+      'set.smart.warning': 'Note: {0}',
+      'set.smart.apply': 'Apply selected',
+      'set.smart.clearAll': 'Clear all',
+      'set.smart.clearAllConfirm': 'Click again to clear all',
+      'set.smart.empty': 'No usable configuration found. Try a clearer screenshot or fill it in manually.',
+      'set.smart.current': 'Current: {0}',
+      'set.smart.form': 'Form: {0}',
+      'set.smart.unchanged': 'No change',
+      'set.smart.roundNew': 'This round',
+      'set.smart.roundPrev': 'Round {0}',
+      'set.smart.conflict': 'Previous/form: {0}; this round: {1}',
+      'set.smart.useThis': 'Use this round',
+      'set.smart.applied': 'Filled {0} fields. Still needed: {1}.',
+      'set.smart.appliedAll': 'Filled {0} fields.',
+      'set.smart.noVision': 'No vision model is available. Enable an image-capable model in DSH first.',
+      'set.smart.tooMany': 'Up to 3 screenshots per round; 20 in total.',
+      'set.smart.tooLarge': 'Each image must be 5 MiB or smaller.',
+      'set.smart.totalLarge': 'Images in one round must total 10 MiB or less.',
+      'set.smart.badType': 'Only PNG, JPEG, WebP and GIF are supported.',
+      'set.smart.timeout': 'Recognition timed out. Retry or fill it in manually.',
+      'set.smart.failed': 'Recognition failed: {0}',
+      'set.smart.noVisionShort': 'No vision model',
+      'set.smart.group.embedding': 'Embedding',
+      'set.smart.group.sparse': 'Sparse',
+      'set.smart.group.rerank': 'Rerank',
+      'set.smart.group.parse': 'Parsing',
+      'set.smart.group.asr': 'Speech',
+      'set.smart.field.baseUrl': 'Endpoint',
+      'set.smart.field.dimension': 'Dimension',
+      'set.smart.field.source': 'Source',
+      'set.smart.dimensionFixed': 'This provider uses a fixed dimension ({0}); the recognized value was ignored.',
+      'set.smart.dimensionUnverified': 'The dimension was not verified; the recognized value was kept.',
       'set.form.parseTierAuto': '(let the service decide)',
       'set.form.parseLanguageDefault': '(use the configured default)',
       'set.form.parseModelVersionDefault': '(use the configured default)',
@@ -2262,9 +2360,9 @@ window.__ModuleLoader__.load({
           '.hrag-guide-go:focus-visible, .hrag-guidepop .hrag-rt-bannerclose:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
           '.hrag-guidepop-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 8px; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
           '.hrag-guidepop-footlabel { margin-right: 2px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
-          '.hrag-guidepop .hrag-guide-chip { display: inline-flex; align-items: center; justify-content: center; height: 20px; padding: 0 8px; box-sizing: border-box; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 11px; line-height: 20px; text-decoration: none; }',
-          '.hrag-guidepop .hrag-guide-chip:hover { background: var(--dsw-alias-interactive-bg-active); color: var(--dsw-alias-label-primary); }',
-          '.hrag-guidepop .hrag-guide-chip:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          '.hrag-guidepop .hrag-guide-chip, .hrag-smart-foot .hrag-smart-chip { display: inline-flex; align-items: center; justify-content: center; height: 20px; padding: 0 8px; box-sizing: border-box; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 11px; line-height: 20px; text-decoration: none; }',
+          '.hrag-guidepop .hrag-guide-chip:hover, .hrag-smart-foot .hrag-smart-chip:hover { background: var(--dsw-alias-interactive-bg-active); color: var(--dsw-alias-label-primary); }',
+          '.hrag-guidepop .hrag-guide-chip:focus-visible, .hrag-smart-foot .hrag-smart-chip:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
           '.hrag-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 0 12px; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-primary); font-size: 14px; font-family: inherit; cursor: pointer; white-space: nowrap; }',
           '.hrag-btn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-btn:active:not(:disabled) { background: var(--dsw-alias-interactive-bg-active); }',
@@ -2808,6 +2906,62 @@ window.__ModuleLoader__.load({
           '.hrag-set-group { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px 12px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--hrag-surface); }',
           '.hrag-set-grouptitle { margin: -10px -12px 0; padding: 6px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md) var(--dsw-radius-md) 0 0; background: var(--hrag-surface-head); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; }',
           '.hrag-set-row { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 32px; font-size: 12px; line-height: 20px; }',
+          '.hrag-set-console { padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 12px; line-height: 20px; text-decoration: underline; cursor: pointer; }',
+          '.hrag-set-console:hover { color: var(--dsw-alias-label-primary); }',
+          '.hrag-set-console:focus-visible { outline: none; border-radius: 4px; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
+          '.hrag-smart { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--hrag-surface); }',
+          '.hrag-smart-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 -12px -12px; padding: 0 12px 8px; }',
+          '.hrag-smart-footlabel { margin-right: 2px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-head { margin: -10px -12px 0; padding: 6px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md) var(--dsw-radius-md) 0 0; background: var(--hrag-surface-head); }',
+          '.hrag-smart-title { color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; line-height: 18px; cursor: default; }',
+          '.hrag-smart-composer { position: relative; display: flex; flex-direction: column; box-sizing: border-box; width: 100%; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); padding-top: 8px; }',
+          '.hrag-smart-input { display: block; width: 100%; box-sizing: border-box; min-height: 88px; max-height: 160px; padding: 4px 30px 0 14px; border: none; background: transparent; color: var(--dsw-alias-label-primary); caret-color: var(--dsw-alias-state-business-primary); font-family: inherit; font-size: 12px; line-height: 20px; resize: none; overflow-y: auto; outline: none; }',
+          '.hrag-smart-input::placeholder { color: var(--dsw-alias-label-caption); }',
+          '.hrag-smart-input:disabled { opacity: 0.6; }',
+          '.hrag-smart-pending { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 0 30px 6px 14px; }',
+          '.hrag-smart-thumb { position: relative; width: 56px; height: 56px; border-radius: 4px; overflow: hidden; border: 0.5px solid var(--dsw-alias-border-l3); }',
+          '.hrag-smart-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }',
+          '.hrag-smart-thumbx { position: absolute; top: 1px; right: 1px; width: 16px; height: 16px; padding: 0; border: none; border-radius: 999px; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 11px; line-height: 16px; cursor: pointer; }',
+          '.hrag-smart-bar { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; padding: 2px 8px 6px; }',
+          '.hrag-smart-tools { display: flex; align-items: center; gap: 8px; min-width: 0; flex: none; }',
+          '.hrag-smart-addbtn { width: 26px; height: 26px; padding: 0; border: none; border-radius: var(--dsw-radius-md); background: transparent; color: var(--dsw-alias-label-secondary); display: grid; place-items: center; flex: none; cursor: pointer; }',
+          '.hrag-smart-addbtn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }',
+          '.hrag-smart-addbtn:disabled { opacity: 0.5; cursor: default; }',
+          '.hrag-smart-clearbtn { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); display: grid; place-items: center; cursor: pointer; }',
+          '.hrag-smart-clearbtn:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-secondary); }',
+          '.hrag-smart-clearbtn:disabled { opacity: 0.45; cursor: default; }',
+          '.hrag-smart-clearbtn svg { width: 12px; height: 12px; flex: none; }',
+          '.hrag-smart-trailing { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 0 1 auto; margin-left: auto; }',
+          '.hrag-smart-trailing .hrag-legpick { width: auto; max-width: 220px; flex: 0 1 auto; }',
+          '.hrag-smart-trailing .hrag-set-picker { width: auto; max-width: 100%; height: 28px; padding: 0 2px 0 8px; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-secondary); font-size: 13px; font-weight: 400; gap: 2px; }',
+          '.hrag-smart-trailing .hrag-set-picker:hover:not(:disabled) { background: var(--dsw-alias-interactive-bg-hover); }',
+          '.hrag-smart-trailing .hrag-set-picker-label { flex: 0 1 auto; }',
+          '.hrag-smart-trailing .hrag-legpick-effort { flex: 0 8 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }',
+          '.hrag-smart-trailing .hrag-set-picker svg { width: 12px; height: 12px; flex: none; }',
+          '.hrag-smart-addbtn:focus-visible, .hrag-smart-clearbtn:focus-visible { outline: var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary)); outline-offset: -2px; }',
+          '.hrag-smart-privacy { color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-linkbtn { padding: 0; border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-family: inherit; font-size: 12px; line-height: 18px; text-decoration: underline; cursor: pointer; }',
+          '.hrag-smart-linkbtn:hover { color: var(--dsw-alias-label-primary); }',
+          '.hrag-smart-linkbtn:disabled { opacity: 0.5; cursor: default; text-decoration: none; }',
+          '.hrag-smart-countline { color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-error { color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }',
+          '.hrag-smart-included { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-smart-includedhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-includedlist { display: flex; flex-direction: column; gap: 2px; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-results { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
+          '.hrag-smart-resultshead { color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-groupname { margin-top: 2px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-row { display: flex; align-items: flex-start; gap: 4px 8px; flex-wrap: wrap; font-size: 12px; line-height: 18px; }',
+          '.hrag-smart-rowlabel { flex: 0 1 120px; min-width: 96px; color: var(--dsw-alias-label-secondary); }',
+          '.hrag-smart-rowvalue { flex: 1 1 160px; min-width: 0; color: var(--dsw-alias-label-primary); overflow-wrap: anywhere; }',
+          '.hrag-smart-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }',
+          '.hrag-smart-rowmeta { flex: 1 1 100%; min-width: 0; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; overflow-wrap: anywhere; }',
+          '.hrag-smart-rowactions { display: flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }',
+          '.hrag-smart-round { color: var(--dsw-alias-label-tertiary); font-size: 11px; white-space: nowrap; }',
+          '.hrag-smart-check { width: 14px; height: 14px; margin: 2px 0 0; accent-color: var(--dsw-alias-state-business-primary); }',
+          '.hrag-smart-applyline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }',
+          '.hrag-smart-status { color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-drag { outline: 1px dashed var(--dsw-alias-state-business-primary); outline-offset: -4px; }',
           // 模型＋思考档位单框（照 DSH 模型选择）：触发器显示模型与档位，菜单根层两格下钻。
           '.hrag-legpick { position: relative; display: flex; min-width: 0; }',
           '.hrag-legpick-trigger { gap: 8px; }',
@@ -2847,6 +3001,7 @@ window.__ModuleLoader__.load({
           '.hrag-legpick-empty { padding: 8px; color: var(--dsw-alias-label-tertiary); font-size: 12px; line-height: 18px; }',
           '.hrag-legpick-note { padding: 2px 7px 6px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
           '.hrag-set-label { color: var(--dsw-alias-label-tertiary); }',
+          '.hrag-set-required { margin-left: 2px; color: var(--dsw-alias-state-error-primary); }',
           '.hrag-set-value { color: var(--dsw-alias-label-primary); word-break: break-word; }',
           // 下拉选择器＝与 Model ID 输入框同款外观（宿主 Input 真值：l4 边框／layer-1 底／32 高／
           // 8 左距／14px；右侧 chevron 12px 同轨）——整盒可点开菜单；选项与更新逻辑不变（10-14 他令）。
@@ -17937,7 +18092,7 @@ window.__ModuleLoader__.load({
     }
 
     /** 单框双配置（照 DSH 模型选择）：触发器＝模型＋档位；根面板两格
-        （模型／思考档位）→ 点格下钻到对应列表；模型页按厂商分组并带搜索。 */
+        （模型／推理等级）→ 点格下钻到对应列表；模型页按厂商分组并带搜索。 */
     function LegPicker({ t, leg, values, models, modelOptions, currentModelValue, update, onModelPicked, effortLabel, resolveEffortLabel, modelsOnly }) {
       const [open, setOpen] = React.useState(false)
       const [pane, setPane] = React.useState('root')
@@ -17957,9 +18112,11 @@ window.__ModuleLoader__.load({
       const effectiveModel = ragLegModel(modelList, effectiveName)
       const effortOptions = ragEffortOptionsForModel(effectiveModel)
       const currentEffort = ragLegEffortValue(values, effectiveModel, leg)
-      const currentEffortLabel = (resolveEffortLabel || effortLabel)(currentEffort, effectiveName)
+      const currentEffortLabel = modelsOnly ? '' : (resolveEffortLabel || effortLabel)(currentEffort, effectiveName)
       const note =
-        effectiveModel && (effectiveModel.supports_thinking === false || effectiveModel.supports_reasoning_effort === false)
+        !modelsOnly &&
+        effectiveModel &&
+        (effectiveModel.supports_thinking === false || effectiveModel.supports_reasoning_effort === false)
           ? t('set.form.effortFixedNote')
           : ''
       const showSearch = options.length > 4
@@ -18270,11 +18427,13 @@ window.__ModuleLoader__.load({
                   ref: popRef,
                   className: 'hrag-mm hrag-legpick-pop',
                   role: 'menu',
-                  'aria-label': t('set.form.legPickerAria', {
-                    0: t(leg.labelKey),
-                    1: currentModelLabel,
-                    2: currentEffortLabel,
-                  }),
+                  'aria-label': modelsOnly
+                    ? t('set.form.modelPickerAria', { 0: currentModelLabel })
+                    : t('set.form.legPickerAria', {
+                        0: t(leg.labelKey),
+                        1: currentModelLabel,
+                        2: currentEffortLabel,
+                      }),
                   style: {
                     top: box.top + 'px',
                     left: box.left + 'px',
@@ -18289,7 +18448,850 @@ window.__ModuleLoader__.load({
       )
     }
 
-    function ModelSettingsPanel({ t, kbId, kbs, managed, onClose, initialAdvancedOpen }) {
+    const SMART_RECOGNIZE_ROUTE = '/dsh-harness-rag/config/recognize'
+    const SMART_MAX_TEXT = 20000
+    const SMART_MAX_ROUND_IMAGES = 3
+    const SMART_MAX_IMAGE_BYTES = 5 * 1024 * 1024
+    const SMART_MAX_ROUND_BYTES = 10 * 1024 * 1024
+    const SMART_MAX_TOTAL_IMAGES = 20
+    const SMART_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+    const SMART_FIELDS = [
+      { key: 'embedding.provider', group: 'embedding', field: 'embedding_provider', labelKey: 'set.form.provider', provider: true },
+      { key: 'embedding.model', group: 'embedding', field: 'embedding_model', labelKey: 'set.form.model', mono: true },
+      { key: 'embedding.base_url', group: 'embedding', field: 'embedding_base_url', labelKey: 'set.smart.field.baseUrl', mono: true },
+      { key: 'embedding.dimension', group: 'embedding', field: 'embedding_dimension', labelKey: 'set.smart.field.dimension' },
+      { key: 'sparse.source', group: 'sparse', field: 'embedding_sparse_source', labelKey: 'set.smart.field.source', sparseSource: true },
+      { key: 'sparse.provider', group: 'sparse', field: 'sparse_provider', labelKey: 'set.form.provider', provider: true },
+      { key: 'sparse.model', group: 'sparse', field: 'sparse_model', labelKey: 'set.form.model', mono: true },
+      { key: 'sparse.base_url', group: 'sparse', field: 'sparse_base_url', labelKey: 'set.smart.field.baseUrl', mono: true },
+      { key: 'rerank.provider', group: 'rerank', field: 'rerank_provider', labelKey: 'set.form.provider', provider: true },
+      { key: 'rerank.model', group: 'rerank', field: 'rerank_model', labelKey: 'set.form.model', mono: true },
+      { key: 'rerank.base_url', group: 'rerank', field: 'rerank_base_url', labelKey: 'set.smart.field.baseUrl', mono: true },
+      { key: 'parse.provider', group: 'parse', field: 'parse_provider', labelKey: 'set.form.provider', provider: true },
+      { key: 'parse.base_url', group: 'parse', field: 'parse_base_url', labelKey: 'set.smart.field.baseUrl', mono: true },
+      { key: 'parse.tier', group: 'parse', field: 'parse_tier', labelKey: 'set.field.parseTier' },
+      { key: 'parse.language', group: 'parse', field: 'parse_language', labelKey: 'set.field.parseLanguage' },
+      { key: 'parse.model_version', group: 'parse', field: 'parse_model_version', labelKey: 'set.field.parseModelVersion' },
+      { key: 'asr.provider', group: 'asr', field: 'video.asr_provider', labelKey: 'set.form.provider', asrProvider: true },
+      { key: 'asr.model', group: 'asr', field: 'video.asr_model', labelKey: 'set.form.model', mono: true },
+      { key: 'asr.base_url', group: 'asr', field: 'asr_base_url', labelKey: 'set.smart.field.baseUrl', mono: true },
+    ]
+    const SMART_FIELD_MAP = new Map(SMART_FIELDS.map((spec) => [spec.key, spec]))
+    const SMART_GROUP_ORDER = ['embedding', 'sparse', 'rerank', 'parse', 'asr']
+
+    function ragMaskSecrets(text) {
+      return String(text || '')
+        .replace(/\b(sk-[A-Za-z0-9_-]{6,})/g, 'sk-***')
+        .replace(/\b(Bearer\s+)[A-Za-z0-9._~+/=-]{8,}/gi, '$1***')
+        .replace(/\b(api[_-]?key|access[_-]?key|secret|token)(\s*[:=]\s*)(["']?)[^\s"',;]{4,}\3/gi, '$1$2$3***$3')
+    }
+
+    function ragSmartFormValue(values, field) {
+      if (!values) return ''
+      if (field.startsWith('video.')) return String((values.video && values.video[field.slice(6)]) || '')
+      return String(values[field] || '')
+    }
+
+    function ragSmartFormatBytes(bytes) {
+      const kib = Number(bytes || 0) / 1024
+      return kib < 1024 ? kib.toFixed(kib < 10 ? 1 : 0) + ' KiB' : (kib / 1024).toFixed(1) + ' MiB'
+    }
+
+    function ragSmartValueText(t, spec, value, providerLabel, asrProviderLabel) {
+      if (spec.provider) return providerLabel(String(value))
+      if (spec.asrProvider) return asrProviderLabel(String(value))
+      if (spec.sparseSource) {
+        const key = {
+          provider: 'set.form.sparseSourceProvider',
+          external: 'set.form.sparseSourceExternal',
+          bm25: 'set.form.sparseSourceBm25',
+        }[String(value)]
+        return key ? t(key) : String(value)
+      }
+      return String(value)
+    }
+
+    function ragSmartMissingSecrets(t, values, sources, applied) {
+      const filled = (field) => {
+        if (sources && sources[field] === 'env') return true
+        return ragSmartFormValue(values, field).trim() !== ''
+      }
+      const hasGroup = (group) => applied.some((row) => row.group === group)
+      const appliedValue = (key, fallback) => {
+        const row = applied.find((item) => item.key === key)
+        return row ? row.value : fallback
+      }
+      const out = []
+      if (hasGroup('embedding') && !filled('embedding_api_key')) {
+        out.push(t('set.form.apiKey') + '（' + t('set.smart.group.embedding') + '）')
+      }
+      if (hasGroup('rerank') && !filled('rerank_api_key')) {
+        out.push(t('set.form.apiKey') + '（' + t('set.smart.group.rerank') + '）')
+      }
+      if (hasGroup('sparse') && !filled('sparse_api_key')) {
+        out.push(t('set.form.apiKey') + '（' + t('set.smart.group.sparse') + '）')
+      }
+      const parseProvider = appliedValue('parse.provider', values.parse_provider)
+      if (hasGroup('parse') && parseProvider === 'mineru-cloud' && !filled('mineru_api_token')) {
+        out.push(t('set.field.mineruToken'))
+      }
+      const asrProvider = appliedValue('asr.provider', values.video.asr_provider)
+      if (hasGroup('asr') && (asrProvider === 'dashscope' || asrProvider === 'openai-audio') && !filled('asr_api_key')) {
+        out.push(t('set.form.apiKey') + '（' + t('set.smart.group.asr') + '）')
+      }
+      return out
+    }
+
+    function SmartFillCard({
+      t,
+      values,
+      managedModels,
+      dimensionVerdict,
+      sources,
+      providerLabel,
+      asrProviderLabel,
+      effortLabel,
+      resolveEffortLabel,
+      update,
+      updateVideo,
+      onResetDrag,
+    }) {
+      const visionModels = (managedModels || []).filter(
+        (model) =>
+          model &&
+          typeof model.name === 'string' &&
+          model.name.startsWith('dsh:') &&
+          ragIsCaptionCapable(model),
+      )
+      const visionValues = visionModels.map((model) => model.name)
+      const visionOptions = visionModels.map((model) => ({
+        value: model.name,
+        label:
+          typeof model.display_name === 'string' && model.display_name.trim() !== ''
+            ? model.display_name
+            : model.name,
+      }))
+      const [model, setModel] = React.useState('')
+      const [modelThinking, setModelThinking] = React.useState(true)
+      const [modelEffort, setModelEffort] = React.useState(RAG_EFFORT_FOLLOW)
+      const smartLeg = { key: 'smart', model: 'smart_model', thinking: 'smart_thinking', effort: 'smart_effort', labelKey: 'set.smart.model' }
+      const smartValues = { smart_model: model, smart_thinking: modelThinking, smart_effort: modelEffort }
+      const updateSmartLeg = (key, value) => {
+        if (key === 'smart_thinking') setModelThinking(value)
+        else if (key === 'smart_effort') setModelEffort(value)
+      }
+      const pickSmartModel = (next) => {
+        setModel(next)
+        const info = ragLegModel(managedModels || [], next)
+        setModelEffort((prev) => ragEffortAfterModelChange(info, prev, true))
+        setModelThinking((prev) => ragThinkingAfterModelChange(info, prev, true))
+      }
+      const smartEffortValue = ragLegEffortValue(smartValues, ragLegModel(managedModels || [], model), smartLeg)
+      const [text, setText] = React.useState('')
+      const [pending, setPending] = React.useState([])
+      const [includedImages, setIncludedImages] = React.useState([])
+      const [includedTexts, setIncludedTexts] = React.useState(0)
+      const [includeOpen, setIncludeOpen] = React.useState(false)
+      const [rows, setRows] = React.useState([])
+      const [rounds, setRounds] = React.useState(0)
+      const [warnings, setWarnings] = React.useState([])
+      const [error, setError] = React.useState(null)
+      const [empty, setEmpty] = React.useState(false)
+      const [busy, setBusy] = React.useState(false)
+      const [clearConfirm, setClearConfirm] = React.useState(false)
+      const [dragOver, setDragOver] = React.useState(false)
+      const [appliedNotice, setAppliedNotice] = React.useState(null)
+      const textareaRef = React.useRef(null)
+      const fileRef = React.useRef(null)
+      const idRef = React.useRef(0)
+      const clearTimerRef = React.useRef(null)
+      const abortRef = React.useRef(null)
+
+      React.useEffect(() => {
+        if (model && visionValues.indexOf(model) >= 0) return
+        const current = values && values.vlm_model ? values.vlm_model : ''
+        setModel(visionValues.indexOf(current) >= 0 ? current : visionValues[0] || '')
+      }, [visionValues.join('\u0000'), values && values.vlm_model])
+
+      React.useEffect(() => {
+        if (text === '' && textareaRef.current) textareaRef.current.style.height = ''
+      }, [text])
+
+      React.useEffect(
+        () => () => {
+          if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current)
+          if (abortRef.current) abortRef.current.abort()
+        },
+        [],
+      )
+
+      const formSignature = JSON.stringify(SMART_FIELDS.map((spec) => [spec.field, ragSmartFormValue(values, spec.field)]))
+      React.useEffect(() => {
+        if (rows.length === 0) return
+        setRows((prev) =>
+          prev.map((row) => {
+            const formValue = ragSmartFormValue(values, row.field)
+            const same = formValue.trim() !== '' && formValue === row.value
+            return Object.assign({}, row, { sameAsForm: same, checked: same ? false : formValue.trim() === '' })
+          }),
+        )
+      }, [formSignature])
+
+      const addFiles = (fileList) => {
+        const files = Array.from(fileList || [])
+        if (files.length === 0) return
+        setError(null)
+        setAppliedNotice(null)
+        const accepted = []
+        let total = pending.reduce((sum, item) => sum + item.bytes, 0)
+        for (const file of files) {
+          if (SMART_IMAGE_TYPES.indexOf(file.type) < 0) {
+            setError(t('set.smart.badType'))
+            continue
+          }
+          if (file.size > SMART_MAX_IMAGE_BYTES) {
+            setError(t('set.smart.tooLarge'))
+            continue
+          }
+          if (pending.length + accepted.length >= SMART_MAX_ROUND_IMAGES) {
+            setError(t('set.smart.tooMany'))
+            break
+          }
+          if (includedImages.length + pending.length + accepted.length >= SMART_MAX_TOTAL_IMAGES) {
+            setError(t('set.smart.tooMany'))
+            break
+          }
+          if (total + file.size > SMART_MAX_ROUND_BYTES) {
+            setError(t('set.smart.totalLarge'))
+            break
+          }
+          total += file.size
+          accepted.push(file)
+        }
+        if (accepted.length === 0) return
+        Promise.all(
+          accepted.map(
+            (file) =>
+              new Promise((resolve, reject) => {
+                const reader = new FileReader()
+                reader.onload = () => {
+                  const dataUrl = String(reader.result || '')
+                  const comma = dataUrl.indexOf(',')
+                  resolve({
+                    id: ++idRef.current,
+                    type: file.type,
+                    bytes: file.size,
+                    dataUrl: dataUrl,
+                    data: comma >= 0 ? dataUrl.slice(comma + 1) : '',
+                  })
+                }
+                reader.onerror = reject
+                reader.readAsDataURL(file)
+              }),
+          ),
+        )
+          .then((items) => setPending((prev) => prev.concat(items)))
+          .catch(() => setError(t('set.smart.badType')))
+      }
+
+      const removePending = (id) => setPending((prev) => prev.filter((item) => item.id !== id))
+      const clearInput = () => {
+        setText('')
+        setPending([])
+        setError(null)
+      }
+      const clearAll = () => {
+        if (!clearConfirm) {
+          setClearConfirm(true)
+          if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current)
+          clearTimerRef.current = window.setTimeout(() => {
+            setClearConfirm(false)
+            clearTimerRef.current = null
+          }, 3000)
+          return
+        }
+        if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current)
+        clearTimerRef.current = null
+        setClearConfirm(false)
+        setText('')
+        setPending([])
+        setIncludedImages([])
+        setIncludedTexts(0)
+        setIncludeOpen(false)
+        setRows([])
+        setRounds(0)
+        setWarnings([])
+        setError(null)
+        setEmpty(false)
+        setAppliedNotice(null)
+      }
+
+      const mergeFields = (fields, nextRound) => {
+        const flat = []
+        const nextWarnings = []
+        const add = (key, value) => {
+          const spec = SMART_FIELD_MAP.get(key)
+          if (!spec || value === null || value === undefined || String(value) === '') return
+          flat.push(Object.assign({}, spec, { value: String(value) }))
+        }
+        const embedding = fields.embedding && typeof fields.embedding === 'object' ? fields.embedding : {}
+        const sparse = fields.sparse && typeof fields.sparse === 'object' ? fields.sparse : {}
+        const rerank = fields.rerank && typeof fields.rerank === 'object' ? fields.rerank : {}
+        const parse = fields.parse && typeof fields.parse === 'object' ? fields.parse : {}
+        const asr = fields.asr && typeof fields.asr === 'object' ? fields.asr : {}
+        add('embedding.provider', embedding.provider)
+        add('embedding.model', embedding.model)
+        add('embedding.base_url', embedding.base_url)
+        if (embedding.dimension !== null && embedding.dimension !== undefined && embedding.dimension !== '') {
+          const provider = String(embedding.provider || (values && values.embedding_provider) || '')
+          const applies = dimensionVerdict && dimensionVerdict.status !== 'unreachable' && provider === (values && values.embedding_provider)
+          if (applies && dimensionVerdict.type === 'fixed' && dimensionVerdict.native != null) {
+            nextWarnings.push({
+              code: 'fixed_dimension',
+              field: 'embedding.dimension',
+              detail: t('set.smart.dimensionFixed', { 0: String(dimensionVerdict.native) }),
+            })
+          } else {
+            add('embedding.dimension', embedding.dimension)
+            if (!applies) {
+              nextWarnings.push({
+                code: 'dimension_unverified',
+                field: 'embedding.dimension',
+                detail: t('set.smart.dimensionUnverified'),
+              })
+            }
+          }
+        }
+        add('sparse.source', sparse.source)
+        add('sparse.provider', sparse.provider)
+        add('sparse.model', sparse.model)
+        add('sparse.base_url', sparse.base_url)
+        add('rerank.provider', rerank.provider)
+        add('rerank.model', rerank.model)
+        add('rerank.base_url', rerank.base_url)
+        add('parse.provider', parse.provider)
+        add('parse.base_url', parse.base_url)
+        add('parse.tier', parse.tier)
+        add('parse.language', parse.language)
+        add('parse.model_version', parse.model_version)
+        add('asr.provider', asr.provider)
+        add('asr.model', asr.model)
+        add('asr.base_url', asr.base_url)
+
+        setRows((prev) => {
+          const map = new Map(prev.map((row) => [row.key, row]))
+          for (const field of flat) {
+            const existing = map.get(field.key)
+            const formValue = ragSmartFormValue(values, field.field)
+            const same = formValue.trim() !== '' && formValue === field.value
+            if (!existing) {
+              map.set(field.key, Object.assign({}, field, {
+                round: nextRound,
+                altValue: null,
+                altRound: null,
+                sameAsForm: same,
+                checked: !same && formValue.trim() === '',
+                unchanged: false,
+              }))
+            } else if (existing.value === field.value) {
+              map.set(field.key, Object.assign({}, existing, {
+                sameAsForm: same,
+                checked: !same && formValue.trim() === '',
+                unchanged: true,
+              }))
+            } else {
+              map.set(field.key, Object.assign({}, existing, {
+                altValue: field.value,
+                altRound: nextRound,
+                sameAsForm: formValue.trim() !== '' && formValue === existing.value,
+                checked: formValue.trim() === '',
+              }))
+            }
+          }
+          return Array.from(map.values())
+        })
+        setWarnings((prev) => {
+          const all = prev.concat(nextWarnings)
+          const seen = new Set()
+          return all.filter((item) => {
+            const key = String(item.code || '') + '|' + String(item.field || '') + '|' + String(item.detail || '')
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+          })
+        })
+        return flat.length
+      }
+
+      const recognize = () => {
+        if (busy || !model) return
+        const masked = ragMaskSecrets(text)
+        if (masked.trim() === '' && pending.length === 0) return
+        setBusy(true)
+        setError(null)
+        setEmpty(false)
+        setAppliedNotice(null)
+        const controller = new AbortController()
+        abortRef.current = controller
+        const timer = window.setTimeout(() => controller.abort(), 60000)
+        fetch(SMART_RECOGNIZE_ROUTE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: model,
+            text: masked,
+            images: pending.map((item) => ({ mediaType: item.type, data: item.data })),
+            ...(smartEffortValue === RAG_EFFORT_FOLLOW ? {} : { reasoning_effort: smartEffortValue }),
+          }),
+        })
+          .then((response) =>
+            response
+              .json()
+              .catch(() => ({}))
+              .then((payload) => {
+                if (!response.ok) {
+                  const failure = payload && payload.error ? payload.error : {}
+                  throw new Error(String(failure.detail || failure.code || 'HTTP ' + response.status))
+                }
+                return payload
+              }),
+          )
+          .then((payload) => {
+            const fields = payload && payload.fields && typeof payload.fields === 'object' ? payload.fields : {}
+            const nextWarnings = payload && Array.isArray(payload.warnings) ? payload.warnings : []
+            const nextRound = rounds + 1
+            const count = mergeFields(fields, nextRound)
+            setRounds(nextRound)
+            if (nextWarnings.length > 0) {
+              setWarnings((prev) => {
+                const all = prev.concat(nextWarnings)
+                const seen = new Set()
+                return all.filter((item) => {
+                  const key = String(item.code || '') + '|' + String(item.field || '') + '|' + String(item.detail || '')
+                  if (seen.has(key)) return false
+                  seen.add(key)
+                  return true
+                })
+              })
+            }
+            if (count === 0) setEmpty(true)
+            setIncludedImages((prev) => prev.concat(pending.map((item) => ({ type: item.type, bytes: item.bytes }))))
+            setIncludedTexts((prev) => prev + (text.trim() !== '' ? 1 : 0))
+            setPending([])
+            setText('')
+          })
+          .catch((failure) => {
+            if (failure && failure.name === 'AbortError') setError(t('set.smart.timeout'))
+            else setError(t('set.smart.failed', { 0: String((failure && failure.message) || failure) }))
+          })
+          .then(() => {
+            window.clearTimeout(timer)
+            abortRef.current = null
+            setBusy(false)
+          })
+      }
+
+      const useThis = (row) => {
+        setRows((prev) =>
+          prev.map((item) =>
+            item.key === row.key
+              ? Object.assign({}, item, {
+                  value: item.altValue,
+                  round: item.altRound,
+                  altValue: null,
+                  altRound: null,
+                  checked: true,
+                  unchanged: false,
+                })
+              : item,
+          ),
+        )
+      }
+
+      const checkedRows = rows.filter((row) => row.checked && !row.sameAsForm)
+      const applySelected = () => {
+        if (checkedRows.length === 0 || busy) return
+        const sorted = checkedRows.slice().sort((a, b) => (b.provider ? 1 : 0) - (a.provider ? 1 : 0))
+        for (const row of sorted) {
+          if (row.field.startsWith('video.')) updateVideo(row.field.slice(6), row.value)
+          else update(row.field, row.value)
+        }
+        const missing = ragSmartMissingSecrets(t, values, sources, sorted)
+        setAppliedNotice(
+          missing.length > 0
+            ? t('set.smart.applied', { 0: sorted.length, 1: missing.join('、') })
+            : t('set.smart.appliedAll', { 0: sorted.length }),
+        )
+        setRows((prev) =>
+          prev.map((row) =>
+            sorted.some((item) => item.key === row.key) ? Object.assign({}, row, { checked: false }) : row,
+          ),
+        )
+        window.requestAnimationFrame(() => {
+          const first = sorted[0]
+          const target = first ? document.querySelector('.hrag-set-body [data-hrag-field="' + first.field + '"]') : null
+          if (target) target.scrollIntoView({ block: 'center' })
+        })
+      }
+
+      const onPaste = (event) => {
+        const items = event.clipboardData && event.clipboardData.items
+        if (!items) return
+        const files = []
+        for (const item of items) {
+          if (item.kind === 'file' && item.type && item.type.indexOf('image/') === 0) {
+            const file = item.getAsFile()
+            if (file) files.push(file)
+          }
+        }
+        if (files.length > 0) {
+          event.preventDefault()
+          const pastedText = (event.clipboardData.getData && event.clipboardData.getData('text/plain')) || ''
+          if (pastedText.trim() !== '') {
+            setText((prev) => {
+              const joined = prev.trim() === '' ? pastedText : prev + (prev.endsWith('\n') ? '' : '\n') + pastedText
+              return joined.slice(0, SMART_MAX_TEXT)
+            })
+          }
+          addFiles(files)
+        }
+      }
+
+      const onDragEnter = (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        if (onResetDrag) onResetDrag()
+        if (isFileDrag(event.dataTransfer)) setDragOver(true)
+      }
+      const onDragOver = (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        if (onResetDrag) onResetDrag()
+        if (isFileDrag(event.dataTransfer)) setDragOver(true)
+      }
+      const onDragLeave = (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        setDragOver(false)
+        if (onResetDrag) onResetDrag()
+      }
+      const onDrop = (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        setDragOver(false)
+        if (onResetDrag) onResetDrag()
+        if (event.dataTransfer && event.dataTransfer.files) addFiles(event.dataTransfer.files)
+      }
+
+      const materialCount = pending.length
+      const canRecognize = !busy && Boolean(model) && (pending.length > 0 || text.trim() !== '')
+      const sendLabel =
+        materialCount > 0 ? t('set.smart.recognizeNew', { 0: materialCount }) : t('set.smart.recognizeNewShort')
+      const rowValueText = (row) => ragSmartValueText(t, row, row.value, providerLabel, asrProviderLabel)
+      const formText = (row) => ragSmartValueText(t, row, ragSmartFormValue(values, row.field), providerLabel, asrProviderLabel)
+
+      return h(
+        'div',
+        {
+          className: 'hrag-smart' + (dragOver ? ' hrag-smart-drag' : ''),
+          onDragEnter,
+          onDragOver,
+          onDragLeave,
+          onDrop,
+        },
+        h(
+          'div',
+          { className: 'hrag-smart-head' },
+          h('div', { className: 'hrag-smart-title', title: t('set.smart.subtitle') }, t('set.smart.title')),
+        ),
+        h(
+          'div',
+          { className: 'hrag-smart-composer' },
+          pending.length > 0
+            ? h(
+                'div',
+                { className: 'hrag-smart-pending' },
+                pending.map((item) =>
+                  h(
+                    'span',
+                    { className: 'hrag-smart-thumb', key: item.id },
+                    h('img', { src: item.dataUrl, alt: '' }),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'hrag-smart-thumbx',
+                        title: t('set.smart.remove'),
+                        'aria-label': t('set.smart.remove'),
+                        disabled: busy,
+                        onClick: () => removePending(item.id),
+                      },
+                      '×',
+                    ),
+                  ),
+                ),
+              )
+            : null,
+          h('textarea', {
+            ref: textareaRef,
+            className: 'hrag-smart-input',
+            value: text,
+            placeholder: t('set.smart.placeholder'),
+            maxLength: SMART_MAX_TEXT,
+            disabled: busy,
+            spellCheck: false,
+            'aria-label': t('set.smart.title'),
+            onPaste,
+            onChange: (event) => {
+              const next = event.target.value
+              setText(next)
+              const el = event.target
+              el.style.height = 'auto'
+              el.style.height = Math.min(el.scrollHeight, 160) + 'px'
+            },
+          }),
+          pending.length > 0 || text !== ''
+            ? h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-smart-clearbtn',
+                  title: t('set.smart.clearInput'),
+                  'aria-label': t('set.smart.clearInput'),
+                  disabled: busy,
+                  onClick: clearInput,
+                },
+                dshCloseIcon(),
+              )
+            : null,
+          h(
+            'div',
+            { className: 'hrag-smart-bar' },
+            h(
+              'div',
+              { className: 'hrag-smart-tools' },
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-smart-addbtn',
+                  title: t('set.smart.choose'),
+                  'aria-label': t('set.smart.choose'),
+                  disabled:
+                    busy ||
+                    pending.length >= SMART_MAX_ROUND_IMAGES ||
+                    includedImages.length + pending.length >= SMART_MAX_TOTAL_IMAGES,
+                  onClick: () => fileRef.current && fileRef.current.click(),
+                },
+                dshPlusIcon(),
+              ),
+              busy ? h('span', { className: 'hrag-smart-countline' }, t('set.smart.recognizing')) : null,
+            ),
+            h(
+              'div',
+              { className: 'hrag-smart-trailing' },
+              visionValues.length > 0
+                ? h(LegPicker, {
+                    t,
+                    leg: smartLeg,
+                    values: smartValues,
+                    models: managedModels || [],
+                    modelOptions: visionOptions,
+                    currentModelValue: model,
+                    update: updateSmartLeg,
+                    onModelPicked: pickSmartModel,
+                    effortLabel,
+                    resolveEffortLabel,
+                  })
+                : h('span', { className: 'hrag-smart-countline' }, t('set.smart.noVisionShort')),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'hrag-btn hrag-btn-primary hrag-btn-sm',
+                  title: sendLabel,
+                  'aria-label': sendLabel,
+                  disabled: !canRecognize,
+                  onClick: recognize,
+                },
+                t('set.smart.recognize'),
+              ),
+            ),
+          ),
+          h('input', {
+            ref: fileRef,
+            type: 'file',
+            multiple: true,
+            accept: SMART_IMAGE_TYPES.join(','),
+            style: { display: 'none' },
+            onChange: (event) => {
+              addFiles(event.target.files)
+              event.target.value = ''
+            },
+          }),
+        ),
+        model ? null : h('div', { className: 'hrag-smart-privacy' }, t('set.smart.noVision')),
+        error ? h('div', { className: 'hrag-smart-error' }, error) : null,
+        includedImages.length > 0 || includedTexts > 0
+          ? h(
+              'div',
+              { className: 'hrag-smart-included' },
+              h(
+                'div',
+                { className: 'hrag-smart-includedhead' },
+                h('span', null, t('set.smart.sent', { 0: includedImages.length, 1: includedTexts })),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-smart-linkbtn',
+                    onClick: () => setIncludeOpen((prev) => !prev),
+                  },
+                  includeOpen ? t('set.smart.collapse') : t('set.smart.expand'),
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-smart-linkbtn',
+                    disabled: busy,
+                    onClick: clearAll,
+                  },
+                  clearConfirm ? t('set.smart.clearAllConfirm') : t('set.smart.clearAll'),
+                ),
+              ),
+              includeOpen
+                ? h(
+                    'div',
+                    { className: 'hrag-smart-includedlist' },
+                    includedImages.map((item, index) =>
+                      h(
+                        'span',
+                        { key: 'img-' + index },
+                        t('set.smart.includedImage', {
+                          0: String(index + 1),
+                          1: String(item.type).replace('image/', '').toUpperCase(),
+                          2: ragSmartFormatBytes(item.bytes),
+                        }),
+                      ),
+                    ),
+                    includedTexts > 0 ? h('span', null, t('set.smart.includedText', { 0: includedTexts })) : null,
+                  )
+                : null,
+            )
+          : null,
+        rows.length > 0
+          ? h(
+              'div',
+              { className: 'hrag-smart-results' },
+              h(
+                'div',
+                { className: 'hrag-smart-resultshead' },
+                t('set.smart.result', { 0: rows.length, 1: rounds }),
+              ),
+              SMART_GROUP_ORDER.map((group) => {
+                const list = rows.filter((row) => row.group === group)
+                if (list.length === 0) return null
+                return h(
+                  'div',
+                  { className: 'hrag-smart-group', key: group },
+                  h('div', { className: 'hrag-smart-groupname' }, t('set.smart.group.' + group)),
+                  list.map((row) =>
+                    h(
+                      'div',
+                      { className: 'hrag-smart-row', key: row.key },
+                      row.sameAsForm
+                        ? h('span', { className: 'hrag-smart-check', 'aria-hidden': 'true' })
+                        : h('input', {
+                            type: 'checkbox',
+                            className: 'hrag-smart-check',
+                            checked: Boolean(row.checked),
+                            'aria-label': t(row.labelKey),
+                            onChange: () =>
+                              setRows((prev) =>
+                                prev.map((item) =>
+                                  item.key === row.key ? Object.assign({}, item, { checked: !item.checked }) : item,
+                                ),
+                              ),
+                          }),
+                      h('span', { className: 'hrag-smart-rowlabel' }, t(row.labelKey)),
+                      h(
+                        'span',
+                        { className: 'hrag-smart-rowvalue' + (row.mono ? ' hrag-smart-mono' : ''), title: rowValueText(row) },
+                        rowValueText(row),
+                      ),
+                      h(
+                        'span',
+                        { className: 'hrag-smart-rowactions' },
+                        row.provider ? ragConsoleButton(row.value, t) : null,
+                        h(
+                          'span',
+                          { className: 'hrag-smart-round' },
+                          row.round === rounds ? t('set.smart.roundNew') : t('set.smart.roundPrev', { 0: row.round }),
+                        ),
+                      ),
+                      row.altValue !== null && row.altValue !== undefined
+                        ? h(
+                            'div',
+                            { className: 'hrag-smart-rowmeta' },
+                            t('set.smart.conflict', { 0: rowValueText(row), 1: row.altValue }) + ' ',
+                            h(
+                              'button',
+                              { type: 'button', className: 'hrag-smart-linkbtn', onClick: () => useThis(row) },
+                              t('set.smart.useThis'),
+                            ),
+                          )
+                        : row.unchanged
+                          ? h('div', { className: 'hrag-smart-rowmeta' }, t('set.smart.unchanged'))
+                          : row.sameAsForm
+                            ? h('div', { className: 'hrag-smart-rowmeta' }, t('set.smart.unchanged'))
+                            : ragSmartFormValue(values, row.field).trim() !== ''
+                              ? h('div', { className: 'hrag-smart-rowmeta' }, t('set.smart.form', { 0: formText(row) }))
+                              : null,
+                    ),
+                  ),
+                )
+              }),
+              h(
+                'div',
+                { className: 'hrag-smart-applyline' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-btn hrag-btn-primary hrag-btn-sm',
+                    disabled: checkedRows.length === 0 || busy,
+                    onClick: applySelected,
+                  },
+                  t('set.smart.apply'),
+                ),
+                appliedNotice ? h('span', { className: 'hrag-smart-status' }, appliedNotice) : null,
+              ),
+              warnings.map((warning, index) =>
+                h(
+                  'div',
+                  { className: 'hrag-smart-rowmeta', key: 'warn-' + index },
+                  t('set.smart.warning', { 0: String(warning.detail || warning.code || '') }),
+                ),
+              ),
+              empty && !busy ? h('div', { className: 'hrag-smart-countline' }, t('set.smart.empty')) : null,
+            )
+          : empty && !busy
+            ? h('div', { className: 'hrag-smart-countline' }, t('set.smart.empty'))
+            : null,
+        h(
+          'div',
+          { className: 'hrag-smart-foot' },
+          h('span', { className: 'hrag-smart-footlabel' }, t('guide.vendors')),
+          ragConsoleButton('dashscope', t, 'vendor', 'hrag-smart-chip'),
+          ragConsoleButton('volcengine-ark', t, 'vendor', 'hrag-smart-chip'),
+          ragConsoleButton('mineru-cloud', t, 'vendor', 'hrag-smart-chip'),
+        ),
+      )
+    }
+
+    function ModelSettingsPanel({ t, kbId, kbs, managed, onClose, initialAdvancedOpen, onResetDrag }) {
       const configQ = useEvalCall(kbId, true, 'ragConfigGet', null)
       const migrationQ = useEvalCall(kbId, true, 'ragMigration', null, (payload) =>
         Boolean(payload && payload.state === 'running'),
@@ -18601,6 +19603,8 @@ window.__ModuleLoader__.load({
       const asrBlockReason =
         asrServiceApplies && ragAsrProbeBlocksSave(asrVerdict) ? t('set.form.asrProbeBlocksSave') : null
       const saveBlockReason = sparseBlockReason || endpointRequiredReason || asrBlockReason || null
+      // 字段级阻断（接口地址）在字段上标必填；尾部只留错误/已保存/全局阻断/警告。
+      const tailBlockReason = sparseBlockReason || asrBlockReason || null
       const sparseUnverified = Boolean(
         values &&
           values.embedding_sparse_source === 'provider' &&
@@ -18769,13 +19773,22 @@ window.__ModuleLoader__.load({
         return keys[id] ? t('set.form.' + keys[id]) : id
       }
 
-      const fieldRow = (label, control, options) =>
-        h(
+      const fieldRow = (label, control, options) => {
+        const className = options && options.nested ? 'hrag-set-row hrag-set-row-nested' : 'hrag-set-row'
+        return h(
           'div',
-          { className: options && options.nested ? 'hrag-set-row hrag-set-row-nested' : 'hrag-set-row' },
-          h('span', { className: 'hrag-set-label', title: options ? options.info : undefined }, label),
+          { className, 'data-hrag-field': options ? options.field : undefined },
+          h(
+            'span',
+            { className: 'hrag-set-label', title: options ? options.info : undefined },
+            label,
+            options && options.required
+              ? h('span', { className: 'hrag-set-required', 'aria-hidden': 'true' }, '*')
+              : null,
+          ),
           control,
         )
+      }
 
       /** 下拉选择器共用件（与 Model ID 同款外观，10-14 他令「统一同款·逻辑不变」）：
           盒＝宿主 Input 真值样式＋工作台 chevron（CSS `.hrag-set-picker`）；整盒即 DshMenu
@@ -18854,6 +19867,9 @@ window.__ModuleLoader__.load({
               providerLabel,
               (next) => update(embedding ? 'embedding_provider' : 'rerank_provider', next),
             ),
+            {
+              field: embedding ? 'embedding_provider' : 'rerank_provider',
+            },
           ),
           fieldRow(
             t('set.form.model'),
@@ -18864,6 +19880,7 @@ window.__ModuleLoader__.load({
               'aria-label': info.label,
               onChange: (event) => update(embedding ? 'embedding_model' : 'rerank_model', event.target.value),
             }),
+            { field: embedding ? 'embedding_model' : 'rerank_model' },
           ),
           fieldRow(
             t('set.form.apiKey'),
@@ -18885,9 +19902,14 @@ window.__ModuleLoader__.load({
                 embedding ? values.embedding_provider : values.rerank_provider,
               ),
               'aria-label': embedding ? t('set.field.embeddingBaseUrl') : t('set.field.rerankBaseUrl'),
+              'aria-required': 'true',
               onChange: (event) => update(embedding ? 'embedding_base_url' : 'rerank_base_url', event.target.value),
             }),
-            embedding ? { info: t('set.form.endpointHint') } : undefined,
+            {
+              field: embedding ? 'embedding_base_url' : 'rerank_base_url',
+              info: embedding ? t('set.form.endpointHint') : undefined,
+              required: true,
+            },
           ),
         )
       }
@@ -19043,35 +20065,33 @@ window.__ModuleLoader__.load({
                 : null,
             )
           : null,
+        view && values
+          ? fieldRow(
+              t('set.field.defaultModel'),
+              h(LegPicker, {
+                t,
+                // 默认模型只需要模型一层：复用同一套厂商分组/搜索/空值项，
+                // 不显示档位格与下钻根页。
+                leg: {
+                  model: 'default_model',
+                  thinking: 'default_thinking',
+                  effort: 'default_reasoning_effort',
+                  labelKey: 'set.field.defaultModel',
+                },
+                values,
+                models,
+                modelOptions: ragModelReferenceOptions(models, values.default_model, t('set.form.defaultNone')),
+                currentModelValue: values.default_model || RAG_MODEL_NONE,
+                update,
+                onModelPicked: (next) => update('default_model', next),
+                effortLabel,
+                resolveEffortLabel,
+                modelsOnly: true,
+              }),
+              { field: 'default_model', info: t('set.form.defaultHint') },
+            )
+          : null,
       )
-
-      const defaultModelGroup = view && values
-        ? h(
-        'div',
-        { className: 'hrag-set-group' },
-        h('div', { className: 'hrag-set-grouptitle', title: t('set.form.defaultHint') }, t('set.group.default')),
-        h(LegPicker, {
-          t,
-          // 「RAG 默认模型」只需要模型一层：复用同一套厂商分组/搜索/空值项，
-          // 不显示档位格与下钻根页。
-          leg: {
-            model: 'default_model',
-            thinking: 'default_thinking',
-            effort: 'default_reasoning_effort',
-            labelKey: 'set.field.defaultModel',
-          },
-          values,
-          models,
-          modelOptions: ragModelReferenceOptions(models, values.default_model, t('set.form.defaultNone')),
-          currentModelValue: values.default_model || RAG_MODEL_NONE,
-          update,
-          onModelPicked: (next) => update('default_model', next),
-          effortLabel,
-          resolveEffortLabel,
-          modelsOnly: true,
-        }),
-      )
-        : null
 
       const retrievalAdvanced = advancedOpen && view && values
         ? h(
@@ -19125,6 +20145,7 @@ window.__ModuleLoader__.load({
                 ),
               ),
               {
+                field: 'embedding_dimension',
                 info: [
                   t('set.form.dimensionHint'),
                   t('set.form.dimensionProbeHint'),
@@ -19164,7 +20185,7 @@ window.__ModuleLoader__.load({
                     ? h('span', { className: 'hrag-set-trail' }, t('set.form.sparseUnverified'))
                     : null,
               ),
-              { info: t('set.form.sparseSourceHint') + ' ' + t('set.form.sparseProbeHint') },
+              { field: 'embedding_sparse_source', info: t('set.form.sparseSourceHint') + ' ' + t('set.form.sparseProbeHint') },
             ),
             values.embedding_sparse_source === 'external'
               ? h(
@@ -19179,7 +20200,7 @@ window.__ModuleLoader__.load({
                       (id) => (id === '' ? t('set.form.sparseProviderNone') : providerLabel(id)),
                       (next) => update('sparse_provider', next),
                     ),
-                    { nested: true },
+                    { nested: true, field: 'sparse_provider' },
                   ),
                   fieldRow(
                     t('set.form.model'),
@@ -19190,7 +20211,7 @@ window.__ModuleLoader__.load({
                       'aria-label': t('set.field.sparseModel'),
                       onChange: (event) => update('sparse_model', event.target.value),
                     }),
-                    { nested: true, info: t('set.form.sparseModelHint') },
+                    { nested: true, field: 'sparse_model', info: t('set.form.sparseModelHint') },
                   ),
                   fieldRow(
                     t('set.form.apiKey'),
@@ -19219,7 +20240,7 @@ window.__ModuleLoader__.load({
                           )
                         : null,
                     ),
-                    { nested: true },
+                    { nested: true, field: 'sparse_base_url' },
                   ),
                 )
               : h(
@@ -19308,7 +20329,10 @@ window.__ModuleLoader__.load({
               pickerControl(t('set.field.parseProvider'), values.parse_provider, RAG_PARSE_PROVIDER_OPTIONS, providerLabel, (next) =>
                 update('parse_provider', next),
               ),
-              { info: t('set.form.parseBaseUrlHint') },
+              {
+                field: 'parse_provider',
+                info: t('set.form.parseBaseUrlHint'),
+              },
             ),
             values.parse_provider === 'mineru-local'
               ? h(
@@ -19323,6 +20347,7 @@ window.__ModuleLoader__.load({
                       'aria-label': t('set.field.parseBaseUrl'),
                       onChange: (event) => update('parse_base_url', event.target.value),
                     }),
+                    { field: 'parse_base_url' },
                   ),
                   fieldRow(
                     t('set.field.parseTier'),
@@ -19333,7 +20358,7 @@ window.__ModuleLoader__.load({
                       (option) => (option === '' ? t('set.form.parseTierAuto') : option),
                       (next) => update('parse_tier', next),
                     ),
-                    { info: t('set.form.parseTierHint') },
+                    { field: 'parse_tier', info: t('set.form.parseTierHint') },
                   ),
                   fieldRow(t('set.field.parseLanguage'), h('div', { className: 'hrag-set-locked' }, t('set.form.lockedCloudOnly'))),
                   fieldRow(t('set.field.parseModelVersion'), h('div', { className: 'hrag-set-locked' }, t('set.form.lockedCloudOnly'))),
@@ -19352,6 +20377,7 @@ window.__ModuleLoader__.load({
                       'aria-label': t('set.field.parseBaseUrl'),
                       onChange: (event) => update('parse_base_url', event.target.value),
                     }),
+                    { field: 'parse_base_url' },
                   ),
                   fieldRow(t('set.field.parseTier'), h('div', { className: 'hrag-set-locked' }, t('set.form.lockedLocalOnly'))),
                   fieldRow(
@@ -19363,7 +20389,7 @@ window.__ModuleLoader__.load({
                       (option) => (option === '' ? t('set.form.parseLanguageDefault') : option),
                       (next) => update('parse_language', next),
                     ),
-                    { info: t('set.form.parseLanguageHint') },
+                    { field: 'parse_language', info: t('set.form.parseLanguageHint') },
                   ),
                   fieldRow(
                     t('set.field.parseModelVersion'),
@@ -19374,7 +20400,7 @@ window.__ModuleLoader__.load({
                       (option) => (option === '' ? t('set.form.parseModelVersionDefault') : option),
                       (next) => update('parse_model_version', next),
                     ),
-                    { info: t('set.form.parseModelVersionHint') },
+                    { field: 'parse_model_version', info: t('set.form.parseModelVersionHint') },
                   ),
                   fieldRow(
                     t('set.field.mineruToken'),
@@ -19466,6 +20492,7 @@ window.__ModuleLoader__.load({
                   },
                 }),
               ),
+              { field: 'video.asr_provider' },
             ),
             fieldRow(
               t('set.form.model'),
@@ -19511,7 +20538,7 @@ window.__ModuleLoader__.load({
                       }),
                     ),
               ),
-              { nested: true, info: asrModelHint },
+              { nested: true, field: 'video.asr_model', info: asrModelHint },
             ),
             asrServiceApplies
               ? fieldRow(
@@ -19537,7 +20564,7 @@ window.__ModuleLoader__.load({
                     'aria-label': t('set.field.asrBaseUrl'),
                     onChange: (event) => update('asr_base_url', event.target.value),
                   }),
-                  { nested: true },
+                  { nested: true, field: 'asr_base_url' },
                 )
               : fieldRow(
                   t('set.form.endpoint'),
@@ -19561,9 +20588,9 @@ window.__ModuleLoader__.load({
         t('set.form.save'),
       )
       // 保存按钮已上标题栏（10-15）；无反馈时不再占一行「没有需要保存的改动」。
-      // 只有错误/已保存/阻断原因/校验警告才在表单尾留状态行。
+      // 只有错误/已保存/全局阻断原因/校验警告才在表单尾留状态行（字段级阻断留在字段上）。
       const saveStatus =
-        saveError || savedNotice || saveWarning || saveBlockReason
+        saveError || savedNotice || saveWarning || tailBlockReason
           ? h(
               'div',
               { className: 'hrag-set-saverow' },
@@ -19571,8 +20598,8 @@ window.__ModuleLoader__.load({
                 ? h('span', { className: 'hrag-set-saveerr' }, saveError)
                 : savedNotice
                   ? h('span', { className: 'hrag-set-savehint' }, t('set.form.saved'))
-                  : saveBlockReason
-                    ? h('span', { className: 'hrag-set-savehint' }, saveBlockReason)
+                  : tailBlockReason
+                    ? h('span', { className: 'hrag-set-savehint' }, tailBlockReason)
                     : null,
               saveWarning ? h('span', { className: 'hrag-set-savewarn', role: 'status' }, saveWarning) : null,
             )
@@ -19620,8 +20647,21 @@ window.__ModuleLoader__.load({
                 : h(
                     React.Fragment,
                     null,
+                    h(SmartFillCard, {
+                      t,
+                      values,
+                      managedModels,
+                      dimensionVerdict,
+                      sources: view.sources,
+                      providerLabel,
+                      asrProviderLabel,
+                      effortLabel,
+                      resolveEffortLabel,
+                      update,
+                      updateVideo,
+                      onResetDrag,
+                    }),
                     dshGroup,
-                    defaultModelGroup,
                     retrievalGroup,
                     extractionGroup,
                     evaluationGroup,
@@ -19731,6 +20771,8 @@ window.__ModuleLoader__.load({
       'el', 'th', 'latin', 'arabic', 'cyrillic', 'east_slavic', 'devanagari',
     ]
     const RAG_PARSE_VERSION_OPTIONS = ['', 'pipeline', 'vlm']
+    // 项目仓库入口：静态公开地址，不读配置、不拼 URL。
+    const RAG_REPOSITORY_URL = 'https://github.com/chenzhiya77/dsh-harness-rag'
     // 厂商控制台入口（spec §4.1）：静态 https 白名单，不读配置、不拼 URL。
     const RAG_PROVIDER_CONSOLES = {
       dashscope: { vendorKey: 'vendor.dashscope', url: 'https://bailian.console.aliyun.com/' },
@@ -22415,6 +23457,7 @@ window.__ModuleLoader__.load({
                 { id: 'delete', label: t('menu.deleteKb'), danger: true, icon: dshTrashIcon() },
                 { type: 'separator', id: 'sep-3' },
                 { id: 'settings', label: t('menu.modelSettings'), icon: dshSettingsIcon() },
+                { id: 'repository', label: t('menu.repository'), icon: dshRightUpIcon() },
               ],
               onSelect: (id) => {
                 if (id === 'upload') {
@@ -22449,6 +23492,10 @@ window.__ModuleLoader__.load({
                   return
                 }
                 if (id === 'settings') openSettings(false)
+                if (id === 'repository') {
+                  window.open(RAG_REPOSITORY_URL, '_blank', 'noopener')
+                  return
+                }
               },
             }),
             h(ToasterHost, { anchorRef: toastAnchorRef }),
@@ -22981,6 +24028,10 @@ window.__ModuleLoader__.load({
                   kbs,
                   // 托管模式（Task 5）：Qdrant 地址由内置服务拥有，设置页只读。
                   managed: Boolean(runtime && runtime.mode === 'managed'),
+                  onResetDrag: () => {
+                    setDragActive(false)
+                    setDragProbe(null)
+                  },
                 }),
               )
             : null,
