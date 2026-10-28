@@ -386,6 +386,48 @@ class TestAnswerPhaseBudget:
 
         assert captured["recursion_limit"] == 300
 
+    async def test_runner_runs_rag_agent_with_deep_research(self, monkeypatch):
+        """Layer 2 exercises the full workflow: the ``rag`` preset + deep_research=true."""
+        import deerflow.agents.lead_agent.agent as lead_agent_mod
+
+        captured: dict = {}
+
+        class _FakeGraph:
+            async def ainvoke(self, payload, config, context=None):
+                captured["config"] = config
+                captured["context"] = context
+                return {"messages": [AIMessage(content="答案")]}
+
+        monkeypatch.setattr(lead_agent_mod, "make_lead_agent", lambda config: _FakeGraph())
+
+        runner = build_lead_agent_runner(kb_id="kb-1", user_id="u-1", run_id="run-1")
+        await runner(_question("q1"))
+
+        assert captured["config"]["context"]["agent_name"] == "rag"
+        assert captured["config"]["context"]["deep_research"] is True
+        # The middleware reads runtime.context — only the top-level context= reaches it.
+        assert captured["context"]["deep_research"] is True
+
+    async def test_runner_can_opt_out_of_deep_research(self, monkeypatch):
+        """``deep_research=False`` keeps the pre-change free path-selection mode."""
+        import deerflow.agents.lead_agent.agent as lead_agent_mod
+
+        captured: dict = {}
+
+        class _FakeGraph:
+            async def ainvoke(self, payload, config, context=None):
+                captured["config"] = config
+                captured["context"] = context
+                return {"messages": [AIMessage(content="答案")]}
+
+        monkeypatch.setattr(lead_agent_mod, "make_lead_agent", lambda config: _FakeGraph())
+
+        runner = build_lead_agent_runner(kb_id="kb-1", user_id="u-1", run_id="run-1", deep_research=False)
+        await runner(_question("q1"))
+
+        assert captured["config"]["context"]["deep_research"] is False
+        assert captured["context"]["deep_research"] is False
+
     async def test_slow_question_times_out_and_batch_continues(self, monkeypatch):
         import deerflow.knowledge.eval.ragas_eval as mod
 

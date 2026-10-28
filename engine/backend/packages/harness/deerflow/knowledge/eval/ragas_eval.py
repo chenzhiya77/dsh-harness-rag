@@ -916,16 +916,20 @@ def build_lead_agent_runner(
     user_id: str,
     run_id: str,
     model_name: str | None = None,
+    deep_research: bool = True,
 ) -> Callable[[GoldenQuestion], Awaitable[TraceOutcome]]:
     """Real ``agent_runner``: one fresh lead-agent run per golden question.
 
     Each question gets a new thread_id (fresh runtime context → the shared
     citation counter restarts at 1, so the citation map is per-question) and
     runs as the ``rag`` agent — the only preset whose ``tool_groups`` carry the
-    three retrieval tools. ``deep_research`` is deliberately left UNSET so the
-    DeepResearchMiddleware stays passive and the agent picks paths on its own;
-    otherwise the mandatory three-path instruction would make path-selection
-    accuracy trivially 100% and meaningless.
+    six knowledge tools (three retrieval + three read-only). The run carries
+    ``deep_research=true`` by default so Layer 2 exercises the full workflow:
+    the mandatory three-path instruction makes the agent call hybrid + wiki +
+    graph on every question. This intentionally gives up path-selection
+    discrimination (100% by instruction); Layer 1 still measures each path's
+    own retrieval quality. Pass ``deep_research=False`` to measure free path
+    selection instead.
     """
 
     async def runner(question: GoldenQuestion) -> TraceOutcome:
@@ -933,7 +937,7 @@ def build_lead_agent_runner(
         from deerflow.tracing import build_langfuse_trace_metadata
 
         thread_id = uuid.uuid4().hex
-        context: dict[str, Any] = {"kb_id": kb_id, "user_id": user_id, "agent_name": "rag"}
+        context: dict[str, Any] = {"kb_id": kb_id, "user_id": user_id, "agent_name": "rag", "deep_research": deep_research}
         if model_name:
             context["model_name"] = model_name
         config: dict[str, Any] = {
@@ -962,7 +966,7 @@ def build_lead_agent_runner(
         result = await graph.ainvoke(
             {"messages": [{"role": "user", "content": question.query}]},
             config,
-            context={"kb_id": kb_id, "user_id": user_id},
+            context={"kb_id": kb_id, "user_id": user_id, "deep_research": deep_research},
         )
         messages = result.get("messages", []) if isinstance(result, Mapping) else []
         return TraceOutcome(
