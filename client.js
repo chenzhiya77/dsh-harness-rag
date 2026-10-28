@@ -294,7 +294,6 @@ window.__ModuleLoader__.load({
       'doc.status.indexing': '索引中',
       'doc.status.ready': '就绪',
       'doc.status.failed': '失败',
-      'doc.degraded': '部分降级',
       'doc.uploaderMe': '我',
       'doc.retry': '重试',
       'doc.retrySubmitted': '已提交重试',
@@ -1282,7 +1281,6 @@ window.__ModuleLoader__.load({
       'doc.status.indexing': 'Indexing',
       'doc.status.ready': 'Ready',
       'doc.status.failed': 'Failed',
-      'doc.degraded': 'Degraded',
       'doc.uploaderMe': 'Me',
       'doc.retry': 'Retry',
       'doc.retrySubmitted': 'Retry submitted',
@@ -2566,6 +2564,9 @@ window.__ModuleLoader__.load({
           '.hrag-docth-createdAt-rel { width: clamp(72px, calc(3px + 12.5cqw), 88px); }',
           '.hrag-docth-size { width: 74px; }',
           '.hrag-docth-chunks { width: 68px; }',
+          // 数值列（大小/切片数）表头随数值右对齐：标签与悬停 chevron 作为整体靠右，chevron
+          // 常驻占位（14px）留在数值右缘处，标签只左移这一枚 chevron 的宽度。
+          '.hrag-doctable th.hrag-docth-size, .hrag-doctable th.hrag-docth-chunks { text-align: right; }',
           '.hrag-docrow { cursor: pointer; }',
           '.hrag-docrow:hover { background: var(--dsw-alias-interactive-bg-hover); }',
           // 行拖拽（10-21 Task 3，D4 甲）：可拖时抓手指针；拖动源降透明；落点行用
@@ -2590,10 +2591,11 @@ window.__ModuleLoader__.load({
           // 落 ±1px 带内（行内选框维持现状：本就只偏 0.5px）。
           '.hrag-docth-check .hrag-ev-check { vertical-align: middle; }',
           '.hrag-docrow-selected { background: var(--dsw-alias-interactive-bg-hover); }',
-          // 行尾窄列（w-10＝工作台）：行 ⋯ 与表头「列」总控同列对位（内衬走 th/td 基准
-          // 规则——表头 0 8px 居中、行 8px）；按钮悬停淡入（行/表头 hover、键盘聚焦、
-          // 菜单展开常亮）。
-          '.hrag-docops { width: 40px; }',
+          // 行尾窄列：行 ⋯ 与表头「列」总控同列对位；10-27 由 40→32、内衬 8→4（按钮 24
+          // 恰满内宽），⋯ 与前一列之间从两格内衬降成一格，距行右缘 4+6（按钮内衬 + 图标
+          // 内衬）。按钮悬停淡入（行/表头 hover、键盘聚焦、菜单展开常亮）。
+          '.hrag-docops { width: 32px; }',
+          '.hrag-doctable th.hrag-docops, .hrag-doctable td.hrag-docops { padding-left: 4px; padding-right: 4px; }',
           '.hrag-docopscell { display: flex; align-items: center; justify-content: flex-end; }',
           '.hrag-docrow-more, .hrag-doccolbtn, .hrag-doccolchev { display: inline-flex; align-items: center; justify-content: center; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); cursor: pointer; opacity: 0; transition: opacity 120ms ease; }',
           '.hrag-docrow-more, .hrag-doccolbtn { width: 24px; height: 24px; }',
@@ -2635,10 +2637,16 @@ window.__ModuleLoader__.load({
           '.hrag-docgroup-dragging { opacity: 0.45; }',
           '.hrag-docgroup-drop-before td { box-shadow: inset 0 2px 0 var(--dsw-alias-button-primary-fill); }',
           '.hrag-docgroup-drop-after td { box-shadow: inset 0 -2px 0 var(--dsw-alias-button-primary-fill); }',
-          '.hrag-docgroup td { height: 36px; padding: 0 8px; vertical-align: middle; }',
+          '.hrag-docgroup td { height: 36px; padding: 0 4px 0 8px; vertical-align: middle; }',
           '.hrag-docgroup-drop { background: var(--dsw-alias-interactive-bg-hover); }',
           '.hrag-docgroup-drop td { box-shadow: inset 0 0 0 2px var(--dsw-alias-button-primary-fill); }',
           '.hrag-docgroupcell { display: flex; align-items: center; min-width: 0; height: 36px; padding-left: 0; }',
+          // 行尾两槽与真实列位重合：勾选右缘＝切片数数值右缘（列右缘 −8：槽内 4 + 组行 td
+          // 右内衬 4），⋯ 与文档行同一条竖线；切片数列隐藏时勾选槽收成 24，位置不变。
+          '.hrag-docgroup-tail { display: flex; align-items: center; flex-shrink: 0; }',
+          '.hrag-docgroup-checkcell { display: flex; align-items: center; justify-content: flex-end; width: 68px; padding-right: 4px; box-sizing: border-box; flex-shrink: 0; }',
+          '.hrag-docgroup-checkcell-compact { width: 24px; }',
+          '.hrag-docgroup-opscell { display: flex; align-items: center; justify-content: flex-end; width: 32px; flex-shrink: 0; }',
           '.hrag-docgroup-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; margin-left: -4px; margin-right: 8px; flex-shrink: 0; padding: 0; border: none; border-radius: var(--dsw-radius-sm); background: transparent; color: var(--dsw-alias-label-tertiary); }',
           '.hrag-docgroup-iconbtn { cursor: pointer; }',
           '.hrag-docgroup-iconbtn:hover { color: var(--dsw-alias-label-primary); background: var(--dsw-alias-interactive-bg-hover); }',
@@ -2663,11 +2671,10 @@ window.__ModuleLoader__.load({
           '.hrag-folder-style-reset:hover { color: var(--dsw-alias-label-primary); }',
           '.hrag-folder-style-done { height: 28px; padding: 0 12px; font-size: 12px; }',
           '.hrag-folder-style-btn:focus-visible, .hrag-folder-style-swatch:focus-visible, .hrag-folder-style-reset:focus-visible { outline: none; box-shadow: 0 0 0 var(--dsw-focus-ring-width) var(--dsw-focus-ring-color); }',
-          '.hrag-docgroup-check { margin-left: 8px; opacity: 0; transition: opacity 120ms ease; cursor: pointer; }',
+          '.hrag-docgroup-check { opacity: 0; transition: opacity 120ms ease; cursor: pointer; }',
           '.hrag-docgroup-check:disabled { cursor: default; }',
           '.hrag-docgroup:hover .hrag-docgroup-check, .hrag-docgroup-check:focus-visible, .hrag-docgroup-check:checked, .hrag-docgroup-check:indeterminate { opacity: 1; }',
           '.hrag-docgroup-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dsw-alias-label-primary); font-size: 13px; line-height: 20px; font-weight: 500; }',
-          '.hrag-docgroup .hrag-docrow-more { margin-left: 4px; }',
           '.hrag-docgroup:hover .hrag-docrow-more, .hrag-docgroup .hrag-docrow-more:focus-visible, .hrag-docgroup .hrag-docrow-more[aria-expanded="true"] { opacity: 1; }',
           '.hrag-docgroup-input { flex: 1; height: 26px; }',
           '.hrag-docgroup-error td { padding: 0 8px 6px 32px; color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }',
@@ -10871,7 +10878,6 @@ window.__ModuleLoader__.load({
             const statusKey = DOC_STATUS_KEYS[doc.status]
             let meta = statusKey ? t(statusKey) : String(doc.status)
             if (doc.status === 'indexing') meta += ' ' + String(doc.progress_percent) + '%'
-            if (degraded) meta += ' · ' + t('doc.degraded')
             // 状态悬停（小件批 Task 4；10-18 他点名修正）：凡有 path_status 的行
             // （含 failed）一律挂宿主 Tooltip 出六腿分解——失败行也要看各阶段状态；
             // 无 path_status 的老行回退原生 title（分类错误文案）。
@@ -10879,8 +10885,7 @@ window.__ModuleLoader__.load({
             // 状态点（10-16 他截图对照补，照工作台 DocumentStatusCell）：6px 悬挂在
             // 文字左缘外 10px（点 6px＋间隙 4px；与 td px-2 配对，文字左缘同表头线）。
             const dotNode = h('span', { className: 'hrag-docdot ' + docDotClass(doc.status), 'aria-hidden': 'true' })
-            // 状态文本吃省略号（fixed 布局窄档：长态「就绪 · 部分降级」不撑列；点在外，
-            // 不被文本裁剪面影响）。
+            // 状态文本吃省略号（fixed 布局窄档；点在外，不被文本裁剪面影响）。
             const metaNode = h('span', { className: 'hrag-docrow-statustext' }, meta)
             const pathLines = pathStatusLines(doc)
             let statusNode
@@ -11275,32 +11280,48 @@ window.__ModuleLoader__.load({
                                 docFolderStateIcon(!group.collapsed, 14, group.icon, group.color),
                               ),
                               nameNode,
-                              h('input', {
-                                type: 'checkbox',
-                                className: 'hrag-ev-check hrag-docgroup-check',
-                                'aria-label': t('doc.selectGroup') + ': ' + (isFolder ? group.name : unfiledLabel),
-                                checked: allGroupSelected,
-                                disabled: group.docs.length === 0,
-                                ref: (el) => {
-                                  if (el) el.indeterminate = someGroupSelected
-                                },
-                                onClick: (event) => event.stopPropagation(),
-                                onChange: (event) => toggleGroupSelection(group, event.target.checked),
-                              }),
-                              h(DshMenu, {
-                                title: isFolder ? t('doc.folderMenu') : t('doc.unfiledMenu'),
-                                align: 'end',
-                                className: 'hrag-docrow-more',
-                                trigger: dshEllipsisIcon(),
-                                items: moreItems,
-                                onSelect: (id) => {
-                                  if (isFolder) {
-                                    handleFolderMenu(folder, id)
-                                    return
-                                  }
-                                  handleUnfiledMenu(id, group.collapsed)
-                                },
-                              }),
+                              h(
+                                'div',
+                                { className: 'hrag-docgroup-tail' },
+                                h(
+                                  'div',
+                                  {
+                                    className:
+                                      'hrag-docgroup-checkcell' +
+                                      (colVisible('chunks') ? '' : ' hrag-docgroup-checkcell-compact'),
+                                  },
+                                  h('input', {
+                                    type: 'checkbox',
+                                    className: 'hrag-ev-check hrag-docgroup-check',
+                                    'aria-label': t('doc.selectGroup') + ': ' + (isFolder ? group.name : unfiledLabel),
+                                    checked: allGroupSelected,
+                                    disabled: group.docs.length === 0,
+                                    ref: (el) => {
+                                      if (el) el.indeterminate = someGroupSelected
+                                    },
+                                    onClick: (event) => event.stopPropagation(),
+                                    onChange: (event) => toggleGroupSelection(group, event.target.checked),
+                                  }),
+                                ),
+                                h(
+                                  'div',
+                                  { className: 'hrag-docgroup-opscell' },
+                                  h(DshMenu, {
+                                    title: isFolder ? t('doc.folderMenu') : t('doc.unfiledMenu'),
+                                    align: 'end',
+                                    className: 'hrag-docrow-more',
+                                    trigger: dshEllipsisIcon(),
+                                    items: moreItems,
+                                    onSelect: (id) => {
+                                      if (isFolder) {
+                                        handleFolderMenu(folder, id)
+                                        return
+                                      }
+                                      handleUnfiledMenu(id, group.collapsed)
+                                    },
+                                  }),
+                                ),
+                              ),
                             ),
                           ),
                         )
