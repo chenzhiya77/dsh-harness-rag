@@ -109,6 +109,8 @@ Host 半在宿主世界注册模型可见工具，并负责运行时的准备、
 
 右栏「知识库」tab 的文档面支持本地文件夹分组：新建/改名/折叠/移动/删除，归属键为 per-kb localStorage（`hrag-doc-folders.<kbId>.v1`），与 Wiki 卡片抽屉同口径；只影响视图，不改变检索范围与检索结果。
 
+图谱与投影各有一枚「跟随会话」开关（两页共享，缺省开，按库记在 `hrag-follow-session.<kbId>`）：本会话每次 `hrag_*` 检索的命中由宿主记下（hybrid → 投影命中星标，`hrag_graph_search` → 种子/扩展/证据三层路径），面板每 2.5s 取最新一次并叠加——不切 tab，tab 开着当场叠、关着等下次打开补上；关闭后只保留手动叠加。与工作台的差异：工作台用回答里的引用切片喂投影，本插件按 D6 不注入引用，改用检索工具自己的命中（更接近「检索实际看了什么」）。
+
 本包不含 RAG 逻辑；解析、切片、图谱、wiki、评测、存储全部在 knowledge 服务侧（运行根里的 `runtime/<version>/engine`）。发布包的 Host 入口是 `src/index.ts` 的编译产物 `lib/index.js`（`npm run build:plugin`），源码与 `lib/` 同时入库。
 
 ## 隔离与 kb_id 解析
@@ -169,7 +171,7 @@ Host 半在宿主世界注册模型可见工具，并负责运行时的准备、
 | 生命周期 | 三件注册（字典/tab 类型/tab 体）全在 `ctx.effect` 内（插件卸载即注销）；tab 体未设 `keepMounted`——按访问挂载、切走/折叠即卸载；持久状态只落服务端与 localStorage；普通↔全屏切换不重挂 |
 | 冲突语义 | 工具同名＝宿主按视图（scope）遮蔽；槽位同位＝keyed 替换点；往未声明槽注册＝激活期失败；tab 类型 id 重复＝抛；kind 冲突（超出 builtin+extension 一对）＝抛 |
 
-命名空间四防（与其他插件零冲突面）：工具名 `hrag_*`；槽位标识 `dsh-harness-rag` / `harness-rag` / `harnessRag`；配置行 id `harness-rag`；localStorage 键 `hrag-last-kb` / `hrag-kb-order` / `hrag-doc-table-prefs.<kbId>` / `hrag-card-drawers.<kbId>.v1` / `hrag-doc-folders.<kbId>.v1`；代理路由 `/dsh-harness-rag/api`；后台任务 kind `hrag-ingest` / `hrag-reindex`。
+命名空间四防（与其他插件零冲突面）：工具名 `hrag_*`；槽位标识 `dsh-harness-rag` / `harness-rag` / `harnessRag`；配置行 id `harness-rag`；localStorage 键 `hrag-last-kb` / `hrag-kb-order` / `hrag-doc-table-prefs.<kbId>` / `hrag-card-drawers.<kbId>.v1` / `hrag-doc-folders.<kbId>.v1` / `hrag-follow-session.<kbId>`；代理路由 `/dsh-harness-rag/api`；后台任务 kind `hrag-ingest` / `hrag-reindex`。
 
 ## 开发
 

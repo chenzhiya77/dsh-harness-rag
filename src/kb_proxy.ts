@@ -18,6 +18,7 @@ import type { IngestJobs } from './jobs.ts'
 import { unavailableModelStatus } from './model_sync.ts'
 import type { ModelSyncHandle } from './model_sync.ts'
 import type { Config } from './settings.ts'
+import type { SessionTraceStore } from './session_traces.ts'
 import {
   configureRuntime,
   panelStatus,
@@ -433,6 +434,21 @@ export function checkPrivilegedRequest(headers: PrivilegedHeaders): void {
   }
 }
 
+/** The panel's "follow the session" read: latest retrieval trace recorded by
+ * this session's hrag_* calls for the browsing kb. Read-only and unscoped on
+ * purpose — the panel polls it while the conversation is live. */
+function sessionTraceOps(traces: SessionTraceStore): Record<string, (args: unknown) => Promise<unknown>> {
+  return {
+    sessionTrace: async (args) => {
+      const body = (args ?? {}) as { session_id?: unknown; kb_id?: unknown }
+      const sessionId = typeof body.session_id === 'string' ? body.session_id : ''
+      const kbId = typeof body.kb_id === 'string' ? body.kb_id : ''
+      if (!sessionId || !kbId) return { vector: null, graph: null }
+      return traces.latest(sessionId, kbId)
+    },
+  }
+}
+
 function runtimePanelOps(deps: RuntimeOpsDeps): Record<string, (args: unknown) => Promise<unknown>> {
   return {
     'runtime/status': async () => panelStatus(deps),
@@ -655,6 +671,7 @@ export function registerKbProxy(
   modelSync?: ModelSyncHandle,
   gating?: ToolGatingHandle,
   runtimeOps?: RuntimeOpsDeps,
+  traces?: SessionTraceStore,
 ): void {
   const ingestJobs = registerIngestJobs(ctx, config)
   // The conversation drawer's four ops: they read the host session catalog and
@@ -664,6 +681,7 @@ export function registerKbProxy(
     ...buildOps(config, ingestJobs, modelSync),
     ...conversationOps({ host: conversations, bindings, ...(gating ? { gating } : {}) }),
     ...(runtimeOps ? runtimePanelOps(runtimeOps) : {}),
+    ...(traces ? sessionTraceOps(traces) : {}),
   }
 
   const handler = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {

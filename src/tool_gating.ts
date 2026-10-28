@@ -1,6 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { BindingsStore } from './bindings.ts'
 import type { Config } from './settings.ts'
+import type { SessionTraceStore } from './session_traces.ts'
 import { DISCIPLINE_SECTION, RETRIEVAL_DISCIPLINE } from './retrieval_discipline.ts'
 import { buildToolDefinitions } from './tools.ts'
 
@@ -33,8 +34,8 @@ export interface ToolGating {
  * discipline section rides the same scope and the same transaction: tools and
  * prompt either both mount or neither does (spec 2026-10-25 rag-soul-section
  * D1/D2). */
-export function createToolGating(options: { config: Config; bindings: BindingsStore }): ToolGating {
-  const definitions = buildToolDefinitions(options.config, options.bindings)
+export function createToolGating(options: { config: Config; bindings: BindingsStore; traces?: SessionTraceStore }): ToolGating {
+  const definitions = buildToolDefinitions(options.config, options.bindings, options.traces)
   const live = new Map<string, Array<() => void>>()
   return {
     mountAgent(agent) {
@@ -101,8 +102,13 @@ export interface ToolGatingHandle {
 /** Wire the gating to the host: mount bound sessions as they come alive (fresh
  * and resumed), drop records when agents go away, and expose bind/unbind hooks
  * for the panel ops. */
-export function registerToolGating(ctx: Context, config: Config, bindings: BindingsStore): ToolGatingHandle {
-  const gating = createToolGating({ config, bindings })
+export function registerToolGating(
+  ctx: Context,
+  config: Config,
+  bindings: BindingsStore,
+  traces?: SessionTraceStore,
+): ToolGatingHandle {
+  const gating = createToolGating({ config, bindings, ...(traces ? { traces } : {}) })
   const host = ctx as unknown as GatingHostContext
   let agents: AgentsLike | null = null
   const warn = (detail: string): void => {

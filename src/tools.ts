@@ -2,6 +2,7 @@ import { defineTool, type JsonValue } from '@deepseek-ai/dsh-tools'
 import { resolveKbId, type BindingsStore } from './bindings.ts'
 import { api, HarnessRagError } from './http.ts'
 import type { Config } from './settings.ts'
+import type { SessionTraceStore } from './session_traces.ts'
 
 const jsonRender = (_args: unknown, value: unknown) => [
   { type: 'text' as const, text: JSON.stringify(value, null, 2) },
@@ -52,13 +53,34 @@ const CITATION_NOTE = /（引用编号 \[[^）]+\]，标注时照抄 citation_no
 
 /** One model-facing call. The engine owns argument defaults, boundary
  * validation, refusals and citation numbering; the plugin maps the tool name
- * and forwards the model's arguments unchanged apart from the citation note. */
-async function callTool(config: Config, kbId: string, name: ToolName, args: Record<string, unknown>, exec: ToolExec) {
+ * and forwards the model's arguments unchanged apart from the citation note.
+ * Successful retrieval calls also feed the session trace store the panel
+ * follows (projection hits / graph trace); refusals and empty payloads are
+ * not recorded so a failed lookup never clears an overlay. */
+async function callTool(
+  config: Config,
+  kbId: string,
+  name: ToolName,
+  args: Record<string, unknown>,
+  exec: ToolExec,
+  traces?: SessionTraceStore,
+) {
   const body: Record<string, unknown> = { name, ...args }
   const runId = citationRunId(exec)
   if (runId !== undefined) body.run_id = runId
   const payload = await api<Record<string, unknown>>(config, `/api/knowledge-bases/${kbId}/tools`, { body, signal: exec.signal })
   if (typeof payload.message === 'string') payload.message = payload.message.replace(CITATION_NOTE, '')
+  const sessionId = exec.agent?.id
+  if (traces && typeof sessionId === 'string' && sessionId) {
+    if (name === 'hybrid_search') {
+      const text = typeof args.query === 'string' ? args.query : ''
+      traces.recordVector(sessionId, kbId, text, payload.results)
+    } else if (name === 'graph_search') {
+      const query = typeof args.query === 'string' ? args.query : ''
+      const entity = typeof args.entity === 'string' ? args.entity : ''
+      traces.recordGraph(sessionId, kbId, query || entity, payload.trace)
+    }
+  }
   return payload
 }
 
@@ -73,7 +95,7 @@ function echo(target: KbTarget): { kb_id: string; kb_name?: string } {
   return { kb_id: target.kbId, ...(target.kbName ? { kb_name: target.kbName } : {}) }
 }
 
-export function buildToolDefinitions(config: Config, bindings: BindingsStore) {
+export function buildToolDefinitions(config: Config, bindings: BindingsStore, traces?: SessionTraceStore) {
   /** kb_id resolution order (spec 2026-10-23 binding-tool-gating D1): tool
    * argument > this session's binding. The binding is keyed by the live
    * session identity (`exec.agent.id`); the tools themselves are only mounted
@@ -120,7 +142,7 @@ export function buildToolDefinitions(config: Config, bindings: BindingsStore) {
     }),
     async execute(args, exec) {
       const target = kb(args, exec)
-      const payload = await callTool(config, target.kbId, 'hybrid_search', { query: args.query, top_k: args.top_k, doc_id: args.doc_id }, exec)
+      const payload = await callTool(config, target.kbId, 'hybrid_search', { query: args.query, top_k: args.top_k, doc_id: args.doc_id }, exec, traces)
       return {
         ...echo(target),
         results: (payload.results ?? []) as JsonValue,
@@ -150,7 +172,7 @@ export function buildToolDefinitions(config: Config, bindings: BindingsStore) {
     }),
     async execute(args, exec) {
       const target = kb(args, exec)
-      const payload = await callTool(config, target.kbId, 'graph_search', { query: args.query, entity: args.entity, hops: args.hops }, exec)
+      const payload = await callTool(config, target.kbId, 'graph_search', { query: args.query, entity: args.entity, hops: args.hops }, exec, traces)
       return {
         ...echo(target),
         entities: (payload.entities ?? []) as JsonValue,

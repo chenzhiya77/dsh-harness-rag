@@ -407,6 +407,8 @@ window.__ModuleLoader__.load({
       'vec.overlayFailed': '检索叠加失败——请重试',
       'vec.hitsPrefix': '命中',
       'vec.clearOverlay': '清除叠加',
+      'vec.followSession': '跟随会话',
+      'vec.followSessionHint': '本会话的检索命中实时叠加到投影；关闭后只保留手动叠加',
       // ③档批 G 组（照工作台 vectorSpace 逐字）：全量搜索＋范围＋更多选项＋索引提示。
       'vec.searchAll': '搜索…',
       'vec.searchScopeLabel': '搜索范围',
@@ -446,6 +448,8 @@ window.__ModuleLoader__.load({
       'graph.overlayEvidence': '证据',
       'graph.overlayStale': '图谱内容已更新，检索路径高亮已清除',
       'graph.clearOverlay': '清除路径高亮',
+      'graph.followSession': '跟随会话',
+      'graph.followSessionHint': '本会话的检索路径实时叠加到图谱；关闭后只保留手动叠加',
       'graph.guideHint': '实体过多，已隐藏细节——放大查看，或点开实体查看其邻居',
       'graph.focusHidden': '实体过多，该实体未在当前层显示',
       'graph.neighborhoodTitle': '局部图',
@@ -1391,6 +1395,8 @@ window.__ModuleLoader__.load({
       'vec.overlayFailed': 'Overlay failed — please retry',
       'vec.hitsPrefix': 'Hits',
       'vec.clearOverlay': 'Clear overlay',
+      'vec.followSession': 'Follow session',
+      'vec.followSessionHint': "Overlay this session's retrieval hits on the projection live; off keeps manual overlays only",
       // ③档批 G 组（照工作台 vectorSpace 逐字）。
       'vec.searchAll': 'Search…',
       'vec.searchScopeLabel': 'Search scope',
@@ -1430,6 +1436,8 @@ window.__ModuleLoader__.load({
       'graph.overlayEvidence': 'Evidence',
       'graph.overlayStale': 'The graph changed — the retrieval path highlight was cleared',
       'graph.clearOverlay': 'Clear path highlight',
+      'graph.followSession': 'Follow session',
+      'graph.followSessionHint': "Overlay this session's retrieval path on the graph live; off keeps manual overlays only",
       'graph.guideHint': 'Too many entities — details hidden; zoom in, or open an entity for its neighborhood',
       'graph.focusHidden': 'Too many entities — this one is hidden at the current detail level',
       'graph.neighborhoodTitle': 'Neighborhood',
@@ -2165,6 +2173,22 @@ window.__ModuleLoader__.load({
         /* best effort */
       }
     }
+    // ── 跟随会话（图谱/投影叠加跟随本会话检索）：按库持久化，缺省开 ─────────────
+    const FOLLOW_SESSION_KEY_PREFIX = 'hrag-follow-session.'
+    function readFollowSession(kbId) {
+      try {
+        return window.localStorage.getItem(FOLLOW_SESSION_KEY_PREFIX + String(kbId)) !== '0'
+      } catch (cause) {
+        return true
+      }
+    }
+    function writeFollowSession(kbId, on) {
+      try {
+        window.localStorage.setItem(FOLLOW_SESSION_KEY_PREFIX + String(kbId), on ? '1' : '0')
+      } catch (cause) {
+        /* best effort */
+      }
+    }
     // ── 快速开始：首开一次记本地，不跨窗口同步 ───────────────────────────
     const GUIDE_SEEN_KEY = 'hrag-guide-seen'
     function readGuideSeen() {
@@ -2765,6 +2789,10 @@ window.__ModuleLoader__.load({
           '.hrag-graph-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }',
           '.hrag-graph-bar .hrag-seg { height: 28px; box-sizing: border-box; }',
           '.hrag-graph-bar .hrag-seg button { height: 100%; }',
+          // 「跟随会话」开关（图谱/投影共用）：11px 文字＋32×18 开关；图谱条贴右、换行自持。
+          '.hrag-follow { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; white-space: nowrap; }',
+          '.hrag-follow-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }',
+          '.hrag-graph-bar .hrag-follow { margin-left: auto; }',
           '.hrag-graph-search { flex: 1; min-width: 120px; display: flex; }',
           '.hrag-graph-body { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }',
           '.hrag-graph-canvas { position: relative; flex: 1; min-height: 220px; overflow: hidden; }',
@@ -3967,6 +3995,8 @@ window.__ModuleLoader__.load({
     /** Poll cadence for the documents list and the reindex status — the
      * workbench's library pipelines share this 3s cadence. */
     const PIPELINE_POLL_MS = 3000
+    // 跟随会话轮询：宿主内存读，同一进程的小 op；2.5s 一拍足够跟手步进。
+    const SESSION_TRACE_POLL_MS = 2500
     /** Bar-notice auto-dismiss (toast semantics in the workbench: brief
      * acknowledgment; the durable truth lives in the list and status line).
      * Errors get a longer read. */
@@ -7331,7 +7361,7 @@ window.__ModuleLoader__.load({
     /** 投影视图（Task 6）：工具栏（四类 chips／2D·3D／算法／重算）＋画布＋
         图例＋叠加徽标；三态与提示行照面板既有口径。keep-alive 挂载——enabled
         门控首次取数，切走不丢配置与叠加。 */
-    function VectorView({ t, kbId, enabled, overlayRequest, onOpenChunk, onOpenWikiEntry, onOpenManualCard, onOpenEntity }) {
+    function VectorView({ t, kbId, enabled, overlayRequest, followSession, onFollowSessionChange, onOpenChunk, onOpenWikiEntry, onOpenManualCard, onOpenEntity }) {
       const [collections, setCollections] = React.useState(VEC_COLLECTIONS)
       const [algo, setAlgo] = React.useState('pca')
       const [dims, setDims] = React.useState(2)
@@ -7481,13 +7511,16 @@ window.__ModuleLoader__.load({
       const overlayNonceRef = React.useRef(null)
       React.useEffect(() => {
         if (!enabled || !overlayRequest) return
+        // 「跟随会话」关掉时只挡会话源；手动叠加（召回/评测）照常。
+        const fromChat = overlayRequest.source === 'chat'
+        if (fromChat && !followSession) return
         const current = projectionRef.current
         if (!current) return
         if (current.algo !== algo || current.dims !== dims) return // 等新参数投影落地
         const isNew = overlayNonceRef.current !== overlayRequest
         if (isNew) overlayNonceRef.current = overlayRequest
         if (algo !== 'pca') {
-          if (isNew) showToast(t('vec.overlayPcaOnly'))
+          if (isNew && !fromChat) showToast(t('vec.overlayPcaOnly'))
           return
         }
         let cancelled = false
@@ -7504,7 +7537,7 @@ window.__ModuleLoader__.load({
             const latest = projectionRef.current
             if (!result || !latest || result.fingerprint !== latest.fingerprint) {
               setActiveOverlay(null)
-              showToast(t('vec.overlayStale'))
+              if (!fromChat) showToast(t('vec.overlayStale'))
               return
             }
             setActiveOverlay({
@@ -7514,12 +7547,12 @@ window.__ModuleLoader__.load({
             })
           })
           .catch(() => {
-            if (!cancelled) showToast(t('vec.overlayFailed'))
+            if (!cancelled && !fromChat) showToast(t('vec.overlayFailed'))
           })
         return () => {
           cancelled = true
         }
-      }, [enabled, overlayRequest, projectionFp, algo, kbId, collectionsKey, dims, t]) // eslint-disable-line react-hooks/exhaustive-deps
+      }, [enabled, overlayRequest, projectionFp, algo, kbId, collectionsKey, dims, t, followSession]) // eslint-disable-line react-hooks/exhaustive-deps
 
       const points = React.useMemo(() => (projection ? projection.points : []), [projection])
       const groups = React.useMemo(() => groupVectorPoints(points), [points])
@@ -7722,6 +7755,16 @@ window.__ModuleLoader__.load({
               onClick: handleRecompute,
             },
             refreshIcon(recomputing),
+          ),
+          h(
+            'span',
+            { className: 'hrag-follow', title: t('vec.followSessionHint') },
+            h(CardSwitch, {
+              checked: followSession,
+              onChange: onFollowSessionChange,
+              label: t('vec.followSession'),
+            }),
+            toolbarTier === 0 ? h('span', { className: 'hrag-follow-label' }, t('vec.followSession')) : null,
           ),
         ),
       )
@@ -8457,7 +8500,7 @@ window.__ModuleLoader__.load({
     /** 图谱视图（Task 7）：工具栏（实体搜索／着色切换）＋画布＋统计/叠加徽标；
         点击实体开「实体抽屉」（描述＋关联切片 #K → 切片抽屉，链式复用）；召回
         「在图谱中查看」叠加三层路径高亮。keep-alive；enabled 门控首次取数。 */
-    function GraphView({ t, kbId, enabled, overlayRequest, entityRequest, onOpenChunk }) {
+    function GraphView({ t, kbId, enabled, overlayRequest, followSession, onFollowSessionChange, entityRequest, onOpenChunk }) {
       const [phase, setPhase] = React.useState('idle')
       const [graph, setGraph] = React.useState(null)
       const [failure, setFailure] = React.useState(null)
@@ -8543,13 +8586,14 @@ window.__ModuleLoader__.load({
           .catch(() => setDocNames(new Map()))
       }, [enabled, kbId, docNames])
 
-      // 叠加消费（召回跳转）：图就绪后应用；同一请求不重复（nonce 去重）。
+      // 叠加消费（召回跳转／跟随会话）：图就绪后应用；同一请求不重复（nonce 去重）。
       React.useEffect(() => {
         if (!enabled || !overlayRequest || !graph) return
+        if (overlayRequest.source === 'chat' && !followSession) return
         if (overlayNonceRef.current === overlayRequest.nonce) return
         overlayNonceRef.current = overlayRequest.nonce
         setActiveOverlay({ text: overlayRequest.text, trace: overlayRequest.trace, fingerprint: graphFp })
-      }, [enabled, overlayRequest, graph, graphFp])
+      }, [enabled, overlayRequest, graph, graphFp, followSession])
 
       // 实体定位消费（召回实体点击，D1 丙）：图就绪后按 id 选中开抽屉并定位；同一请求只消费一次。
       React.useEffect(() => {
@@ -8674,6 +8718,16 @@ window.__ModuleLoader__.load({
             },
             t('graph.colorByType'),
           ),
+        ),
+        h(
+          'span',
+          { className: 'hrag-follow', title: t('graph.followSessionHint') },
+          h(CardSwitch, {
+            checked: followSession,
+            onChange: onFollowSessionChange,
+            label: t('graph.followSession'),
+          }),
+          h('span', { className: 'hrag-follow-label' }, t('graph.followSession')),
         ),
       )
 
@@ -22429,6 +22483,65 @@ window.__ModuleLoader__.load({
       const [recallPrefill, setRecallPrefill] = React.useState(null)
       // 图谱联动叠加（Task 7「在图谱中查看」）：召回触发 → 切图谱分区并高亮路径。
       const [graphOverlayRequest, setGraphOverlayRequest] = React.useState(null)
+      // 跟随会话（spec 2026-10-28 follow-session）：本会话的 hrag_* 检索轨迹每拍轮询，
+      // 修订号一变就喂给投影/图谱叠加；页面级共享开关，按库持久化、缺省开。
+      const [followSession, setFollowSessionState] = React.useState(() => readFollowSession(kbId))
+      const sessionTraceRevRef = React.useRef({ vector: 0, graph: 0 })
+      const setFollowSession = React.useCallback(
+        (next) => {
+          setFollowSessionState(next)
+          writeFollowSession(kbId, next)
+        },
+        [kbId],
+      )
+      React.useEffect(() => {
+        setFollowSessionState(readFollowSession(kbId))
+      }, [kbId])
+      // 跟随会话轮询：宿主内存记着本会话每个库最近一次检索（向量命中 / 图谱 trace），
+      // 修订号变新才写叠加请求——不切 tab：tab 开着当场叠，关着等下次打开补上。
+      React.useEffect(() => {
+        sessionTraceRevRef.current = { vector: 0, graph: 0 }
+        if (!sessionId || !kbId) return undefined
+        let cancelled = false
+        let timer = 0
+        const tick = () => {
+          callOp('sessionTrace', { session_id: sessionId, kb_id: kbId })
+            .then((data) => {
+              if (cancelled || !data) return
+              const vector = data.vector
+              const vectorRevision = vector ? Number(vector.revision) || 0 : 0
+              if (vector && vectorRevision > sessionTraceRevRef.current.vector) {
+                sessionTraceRevRef.current.vector = vectorRevision
+                setOverlayRequest({
+                  text: String(vector.text || ''),
+                  hits: Array.isArray(vector.hits) ? vector.hits : [],
+                  nonce: 'chat-' + String(vectorRevision),
+                  source: 'chat',
+                })
+              }
+              const graphTrace = data.graph
+              const graphRevision = graphTrace ? Number(graphTrace.revision) || 0 : 0
+              if (graphTrace && graphRevision > sessionTraceRevRef.current.graph) {
+                sessionTraceRevRef.current.graph = graphRevision
+                setGraphOverlayRequest({
+                  text: String(graphTrace.text || ''),
+                  trace: graphTrace.trace,
+                  nonce: 'chat-' + String(graphRevision),
+                  source: 'chat',
+                })
+              }
+            })
+            .catch(() => {})
+            .then(() => {
+              if (!cancelled) timer = window.setTimeout(tick, SESSION_TRACE_POLL_MS)
+            })
+        }
+        tick()
+        return () => {
+          cancelled = true
+          window.clearTimeout(timer)
+        }
+      }, [sessionId, kbId])
       // 召回／投影实体点击（D1／D2 丙）：切图谱分区并选中实体开抽屉。
       const [graphEntityRequest, setGraphEntityRequest] = React.useState(null)
       const openEntityInGraph = React.useCallback((name) => {
@@ -23643,6 +23756,8 @@ window.__ModuleLoader__.load({
               kbId,
               enabled: section === 'vectors',
               overlayRequest,
+              followSession,
+              onFollowSessionChange: setFollowSession,
               onOpenChunk: (docId, chunkId, docName) => {
                 setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })
               },
@@ -23660,6 +23775,8 @@ window.__ModuleLoader__.load({
               kbId,
               enabled: section === 'graph',
               overlayRequest: graphOverlayRequest,
+              followSession,
+              onFollowSessionChange: setFollowSession,
               entityRequest: graphEntityRequest,
               onOpenChunk: (docId, chunkId, docName) => {
                 setDrawer({ doc: { id: docId, name: docName || docId }, focus: chunkId })

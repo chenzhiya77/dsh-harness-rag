@@ -7,6 +7,7 @@ import { registerKbProxy } from './kb_proxy.ts'
 import { registerModelProxy, type ProxyHostContextLike } from './model_proxy.ts'
 import { registerModelSync, type SyncHostContextLike } from './model_sync.ts'
 import { registerToolGating } from './tool_gating.ts'
+import { createSessionTraceStore } from './session_traces.ts'
 import { createRuntimeBridge, type BridgeHost } from './runtime/bridge.ts'
 
 export const name = 'dsh-harness-rag'
@@ -29,13 +30,17 @@ export function apply(ctx: Context, config: Config = defaultConfig): void {
   // Knowledge tools and the retrieval-discipline prompt section mount per
   // bound session (agent scope), never globally (spec 2026-10-23
   // binding-tool-gating D1/D2, spec 2026-10-25 rag-soul-section D1/D2).
-  const gating = registerToolGating(ctx, runtime.effective, bindings)
+  // Live retrieval traces keyed by session × kb: the panel's projection and
+  // graph overlays follow the conversation's own hrag_* calls (the workbench
+  // feeds them from chat turns; here the tool dispatch records the payloads).
+  const traces = createSessionTraceStore()
+  const gating = registerToolGating(ctx, runtime.effective, bindings, traces)
   // The panel's data seam (T3 Task 1): a named route on the browser-facing
   // web server, skipped where that service does not exist (headless).
   const modelProxy = registerModelProxy(ctx as unknown as ProxyHostContextLike, runtime.effective)
   registerConfigRecognize(ctx as unknown as ConfigRecognizeContextLike, modelProxy)
   const modelSync = registerModelSync(ctx as unknown as SyncHostContextLike, runtime.effective, modelProxy)
   runtime.addReadyListener(modelSync)
-  registerKbProxy(ctx, runtime.effective, bindings, modelSync, gating, runtime.ops)
+  registerKbProxy(ctx, runtime.effective, bindings, modelSync, gating, runtime.ops, traces)
   ctx.effect(() => () => runtime.stop(), 'harness-rag: runtime bridge')
 }
