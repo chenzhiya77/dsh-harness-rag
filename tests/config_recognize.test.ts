@@ -189,6 +189,8 @@ test('buildSystemPrompt pins the schema, enums and secret rules', () => {
     'vlm',
     'funasr',
     'tei-sparse',
+    'Never reuse a URL',
+    'Copy digits',
   ]) {
     assert.ok(prompt.includes(token), `missing prompt token: ${token}`)
   }
@@ -255,6 +257,38 @@ test('validateRecognizedFields keeps valid values and drops empty or unknown val
     warnings: [],
   })
   assert.deepEqual(validateRecognizedFields(null), { fields: {}, warnings: [] })
+})
+
+test('validateRecognizedFields drops a DashScope rerank URL reused from the embedding compatible-mode URL', () => {
+  const compatibleUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+  const reused = validateRecognizedFields({
+    embedding: { provider: 'dashscope', model: 'text-embedding-v4', base_url: compatibleUrl },
+    rerank: { provider: 'dashscope', model: 'gte-rerank-v2', base_url: compatibleUrl + '/' },
+  })
+  assert.equal(reused.fields.rerank?.base_url, undefined)
+  assert.equal(reused.fields.rerank?.provider, 'dashscope')
+  assert.ok(reused.warnings.some((warning) => warning.code === 'rerank_base_url_reused'))
+
+  const explicit = validateRecognizedFields({
+    embedding: { provider: 'dashscope', base_url: compatibleUrl },
+    rerank: {
+      provider: 'dashscope',
+      model: 'gte-rerank-v2',
+      base_url: 'https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank',
+    },
+  })
+  assert.equal(
+    explicit.fields.rerank?.base_url,
+    'https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank',
+  )
+  assert.ok(!explicit.warnings.some((warning) => warning.code === 'rerank_base_url_reused'))
+
+  const generic = validateRecognizedFields({
+    embedding: { provider: 'openai-compatible', base_url: 'https://example.com/v1' },
+    rerank: { provider: 'generic-rerank', model: 'rerank', base_url: 'https://example.com/v1' },
+  })
+  assert.equal(generic.fields.rerank?.base_url, 'https://example.com/v1')
+  assert.ok(!generic.warnings.some((warning) => warning.code === 'rerank_base_url_reused'))
 })
 
 test('validateRecognizedFields validates enums, lengths, integers and URLs', () => {
