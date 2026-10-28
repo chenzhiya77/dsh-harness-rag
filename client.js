@@ -3076,6 +3076,9 @@ window.__ModuleLoader__.load({
           '.hrag-secret-wrap { position: relative; width: 100%; min-width: 0; }',
           '.hrag-secret-badge { position: absolute; top: 50%; left: 10px; transform: translateY(-50%); pointer-events: none; color: var(--dsw-alias-label-tertiary); font-size: 12px; }',
           '.hrag-graph-drawer-body { display: flex; flex-direction: column; gap: 10px; }',
+          // 同 .hrag-set-body：滚动体是 flex 列时子卡禁缩，超出的高度交给抽屉滚，
+          // 否则 overflow:hidden 的卡把描述与关联切片裁在视口内（10-28 实体抽屉实报）。
+          '.hrag-graph-drawer-body > * { flex-shrink: 0; }',
           '.hrag-gchips { display: flex; flex-wrap: wrap; gap: 6px; }',
           '.hrag-gchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 11px; }',
           '.hrag-gcard { border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); overflow: hidden; background: var(--hrag-surface); }',
@@ -3556,6 +3559,7 @@ window.__ModuleLoader__.load({
           '.hrag-ev-iconbtn-text { font-size: 10px; border: 0.5px solid var(--dsw-alias-border-l3); }',
           '.hrag-ev-drawer-qtitle { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }',
           '.hrag-ev-drawerbody { display: flex; flex-direction: column; gap: 10px; }',
+          '.hrag-ev-drawerbody > * { flex-shrink: 0; }',
           '.hrag-ev-footer { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 0.5px solid var(--dsw-alias-border-l2); flex-shrink: 0; }',
           '.hrag-ev-danger-text { color: var(--dsw-alias-state-error-primary); }',
           '.hrag-ev-pre { margin: 0; font-size: 12px; white-space: pre-wrap; word-break: break-word; }',
