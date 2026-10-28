@@ -1,6 +1,6 @@
 # 功能模型设置：厂商入口与智能识别配置 —— plan
 
-**Status:** 已完成并提交（2026-10-27；Task 0–5 与 10-27 视觉修订 4–8；提交链 `699cb2c` / `299f1ee` / `4a6a0c6` / `49307a9`（lib 重建）；347/347＋`tsc` 0＋`node --check` 0；构建态识别路由 400/502 复验；真栈截图、401/429 分类、固定维度过滤、focus ring 留作残差）
+**Status:** 已完成并提交（2026-10-27；Task 0–5 与 10-27 视觉修订 4–9；提交链 `699cb2c` / `299f1ee` / `4a6a0c6` / `49307a9`（lib 重建）；349/349＋`tsc` 0＋`node --check` 0；构建态识别路由 400/502 复验；真栈真实视觉模型已跑通（图文 17 项 / 纯图 16 项）；按真栈发现修复提示词与 DashScope rerank URL 兜底并重建 lib（`cebbcc1`）；固定维度过滤已补客户端集成测试（`tests/client_smart_dimension.test.ts`）；结果表按他裁 B 重构（命令栏/分组计数；行内去掉控制台与无变化，始终展开；`8806d9d`）；真实厂商控制台截图未跑；OCR 8080→8880、401/429 分类、focus ring 留作残差）
 **Date:** 2026-10-27
 **配套 spec:** [2026-10-27-settings-vendor-links-smart-fill-spec.md](../specs/2026-10-27-settings-vendor-links-smart-fill-spec.md)（D1–D13；§4.3 字段表；§5 验收 1–19）
 
@@ -127,7 +127,7 @@
 - [x] 模型：复用设置页同一枚 `LegPicker`（根页「模型 / 推理等级」两格 → 模型页/档位页）；只列 `dsh:` + `supports_vision`；默认 `vlm_model` 或首个视觉模型；档位本地状态并随请求下发（`Off`→`"off"`、`Default`→不带、档位→id）；无视觉模型禁用并提示。
 - [x] 请求：独立 `fetch('/dsh-harness-rag/config/recognize')`，不经过 `callOp`；只发本轮；60s `AbortController`；错误映射；图片转 canonical base64；发前本地打码（前缀/键值上下文；保留 Model ID/URL/哈希）；不发 Key、不写日志。
 - [x] 结果：合并规则（新字段/相同/冲突/未提及）、`改用本次`、按当前表单值重算勾选、空 fields 空态、warnings 行、`第 N 轮`/`本轮`、provider 链接；应用选中（provider 先写，model/地址后写，无菜单副作用，滚到首个改动字段）；provider 有值而 model 无值时保留旧 Model ID + warning。
-- [x] 词条：spec §4.7 全表（含 `expand`/`collapse`/`form`/`warning`/`roundPrev`；`chars` 已于 10-27 修订 3 删除）；不写 localStorage；关闭抽屉状态清空。
+- [x] 词条：spec §4.7 全表（含 `form`/`warning`/`roundPrev`；`chars` 已于 10-27 修订 3 删除，`sent`/`expand`/`collapse` 于 10-27 结果表续修订删除）；不写 localStorage；关闭抽屉状态清空。
 - [x] 探针/沙箱：固定展开、无折叠控件；textarea 增高与上限；材料累加；清空两档；结果合并/冲突；应用后表单草稿与右上角保存；`node --check client.js`。
 
 **实测（2026-10-27，隔离沙箱 fake vision provider；证据 `E:/hrag-task4/evidence`）**：
@@ -149,6 +149,12 @@
 - 10-27 视觉修订 6（他裁：合并「DSH 模型」与「RAG 默认模型」两个容器）：`defaultModelGroup` 退役，默认模型改为 `dshGroup` 内一行——`fieldRow` 标签「RAG 默认模型」＋原 `modelsOnly` LegPicker，`data-hrag-field=default_model`，默认模型说明挂标签 `title`；组顺序变为 `dshGroup（含默认模型行）→ retrievalGroup → … → servicesGroup → saveStatus`，`set.group.default` 词条（zh/en）随之删除，组标题仍为「DSH 模型」。实测（隔离沙箱 `E:/hrag-task5m`，已清理；证据 `E:/hrag-task5m/evidence/merged-models-wide.png`、`merged-default-menu.png`、`merged-models-20261027.json`）：设置页 6 个组；DSH 卡片 567×121（标题 565×29 → 10px → 状态行 541×26 → 10px → 默认模型行 541×32），标签 132×20、picker 399×32；picker 菜单 399×269，选项「使用配置默认＋sbx-pro/sbx-flash/sbx-reasoner/sbx-mini」，两个厂商分组；改选 `sbx-flash` 后字段值即时更新、菜单关闭；198 档 body scrollWidth 223＝既有基线，无新增整体溢出（行内 132px 标签溢出与既有设置行同款，不重排）。同一轮确认「RAG 默认模型」保持单档（`modelsOnly`，无根页/档位格）：引擎 `RagConfigFile` 没有 `default_thinking` / `default_reasoning_effort`，档位只在五条腿各自行上，第二格没有保存落点；2026-10-27 他拍定保持单档。门禁：`node --check` 0、`tsc` 0、347/347。
 - 10-27 视觉修订 7（他裁：粘贴图片应显示在输入区上方）：`pending` 缩略图行从「文本域之后、工具行之前」移到「文本域之前、输入区顶部」，DOM 顺序改为缩略图→textarea→清空 ×→工具行；`.hrag-smart-pending` padding 由 `8px 12px 0 14px` 改为 `0 30px 6px 14px`（顶部由 composer 的 8px 承担，底部 6px 与文本域分隔，右侧 30px 避让清空 ×）。实测（隔离沙箱 `E:/hrag-task5m`，已清理；证据 `E:/hrag-task5m/evidence/composer-image-top-{wide,3-wide,198}.png`）：宽档 composer 541×198，缩略图行 539×64（3 张 58×58，首张 x=841.5/y=164），距 composer 顶 9px，缩略图底到文本域 6px，文本域 539×88，工具行 539×36；清空 × 20×20 在右上角、与第三张缩略图不重叠；198 模拟档每张缩略图单行换行、pending 105×192、composer 105×326，`scrollWidth=clientWidth` 无横向溢出，body scrollWidth 223＝既有基线。门禁 347/347＋tsc 0＋`node --check` 0。
 - 10-27 小件（他提：⋯ 菜单加「项目仓库」）：`DshMenu` 最后一项（「功能模型设置」之后）加 `id:'repository'`，图标 `dshRightUpIcon`（右上箭头＝跳转语义），点击 `window.open(RAG_REPOSITORY_URL, '_blank', 'noopener')`；地址为静态常量 `https://github.com/chenzhiya77/dsh-harness-rag`，不读配置、不拼 URL；zh/en 词条 `menu.repository`。实测（隔离沙箱 `E:/hrag-task5m`，已清理；证据 `E:/hrag-task5m/evidence/menu-repository.png`、`menu-repository-20261027.json`）：菜单 8 项、项目仓库在末项；点击捕获 URL/`_blank`/`noopener`，菜单收起；页面不跳走。门禁 347/347＋tsc 0＋`node --check` 0。
+- 10-27 视觉修订 9（他裁：项目仓库移到「功能模型设置」上方）：底部末项保留「功能模型设置」以维持底部肌肉记忆，避免想点设置却误开外链；`repository` 与 `settings` 交换顺序，分隔线、图标与点击行为不变。随附文档同步：README ⋯ 菜单顺序改为「… / 项目仓库 / 功能模型设置」，手册改为「菜单里『功能模型设置』上方的『项目仓库』」。实测（隔离沙箱 `E:/hrag-realstack`，已清理；证据 `menu-order-20261027.png`）：菜单 8 项，项目仓库第 7、功能模型设置第 8（末项）；`node --check client.js` 0。
+- 10-27 真栈冒烟（真实视觉模型，非 fake provider）：隔离 `E:/hrag-realstack`，真 DSH web 3087 + fake backend 18080（仅提供设置配置与真实别名清单），provider 凭据从 `~/.dsh` 复制、跑完删除；模型 `dsh:xiaomi/mimo-v2.6-flash`。图文一轮（公开 Chatbox/Bailian 截图 + YAML）6s / 17 项；纯图一轮（合成控制台截图，字段清晰）9s / 16 项，证明图片准入与视觉识别链路；应用 5 项并提示缺重排/稀疏 Key。发现：稀疏 base_url `8080` 被 OCR 成 `8880`；截图未给重排地址时，模型把 embedding 的 compatible-mode 地址推断成 rerank base_url，并默认勾选应用。证据 `E:/hrag-realstack/evidence/real-stack-summary-20261027.json`、`real-recognize-20261027.json`、`real-recognize-image-20261027.json`、`recognize-result-20261027.png`、`recognize-applied-20261027.png`。
+- 10-27 真栈修复（他裁：按发现修）：提示词新增「缺 URL 就省略、禁止跨组复用、逐字复制数字」；宿主 `validateRecognizedFields` 新增 DashScope 兜底——`rerank.provider=dashscope` 且 `rerank.base_url` 与 embedding 的 compatible-mode 地址相同（忽略尾部 `/` 与大小写）时丢弃并给 `rerank_base_url_reused` warning；新增单测覆盖复用丢弃、显式 rerank 地址保留、generic-rerank 同址保留。门禁：348/348＋`tsc` 0＋`node --check client.js/lib` 0＋`npm run build:plugin`。OCR 数字误读不设规则，保留逐项确认。修复后真栈复跑（同一合成控制台截图，直打构建态 route）：200，rerank 只剩 provider/model、无 base_url；稀疏 `8080` 仍被 OCR 成 `8880`；证据 `E:/hrag-realstack/evidence/direct-recognize-after-fix-20261027.json`。
+- 10-27 固定维度过滤集成测试（他提「补一条固定维度过滤的集成测试」）：把 SmartFillCard 里内联的维度判定抽成 `client.js` 顶层纯函数 `ragSmartDimensionDecision`，行为不变——同 provider 且 verdict 为 `status=ok/type=fixed/native!=null` ⇒ 丢弃识别值并给 `fixed_dimension`；verdict 缺失、`unreachable` 或识别到的 provider 与表单当前 provider 不同 ⇒ 保留并给 `dimension_unverified`；tiered/range ⇒ 原样应用。新增 `tests/client_smart_dimension.test.ts`：用 Node `vm` 加载真实 `client.js`（只桩 `window.__ModuleLoader__`），断言引擎 `probe-dimensions` 的 `fixed 768`、`unreachable`、`null`、`tiered`、`range`、`fixed` 但无 native 与空维度门共 13 个断言。门禁：349/349＋`tsc` 0＋`node --check client.js` 0。
+- 10-27 结果表修订（他裁 B；`8806d9d`）：结果头右侧改为命令栏——`全选`/`取消全选` + `应用选中项（N）`（N＝勾选且可应用行数，0 时禁用并显示 0）；组头由 11px tertiary 改为 12/600 secondary＋`{0} 项` 计数；行尾取消逐行「本轮」，仅更早批次标「第 N 轮」；冲突说明移到值列下方第二行（不再占全宽）；行改为固定四列（勾选 14 / 字段 96 / 值 flex / 行尾动作），值列等宽单行省略＋title、窄档保底 120px 换行；行内去掉「控制台 ↗」与「无变化」，一致项不做折叠、全部行始终展开；`set.smart.apply` 改带计数，新增 `groupCount` / `selectAll` / `selectNone` 三键（zh/en），删除 `roundNew` / `unchanged` / `unchangedCount`。门禁：349/349＋`tsc` 0＋`node --check client.js` 0；静态复刻 660/300px 核对（临时文件已清理）；真实 DSH 窗口未驱动（Web UI 401），待他刷新页面复验。
+- 10-27 结果表修订续（他裁：去掉第二条状态行、缩小应用钮；`8806d9d`）：删除主体区底部独立「已包含：N 张截图 · M 段文本 展开查看 清除全部」行，已含计数与 `清除全部` 并入卡片标题栏右侧（`.hrag-smart-headmeta`，11px tertiary；`title` 悬浮列出每张图类型/大小与文本段数；`已含 {0} 张截图` · `{0} 段文本`）；`includeOpen` 状态、`set.smart.sent`/`expand`/`collapse` 三键与 `.hrag-smart-included*` CSS 全部删除。结果头标题简化为 `识别结果 · {0} 项`，轮次 > 1 时用 `resultRounds` 显示 `识别结果 · {0} 项 · {1} 轮`（不再固定带「已识别/轮」）；应用钮文案 `应用选中项（{0}）`→`应用（{0}）`→`应用`（纯文字、不显示计数，仍为 `hrag-btn-primary hrag-btn-sm`，无可应用行时禁用）。门禁：`node --check client.js` 0、349/349、`tsc` 0；client.js 24,158 行。
 
 ## Task 5 — 门禁与沙箱验收（spec §5 1–19）
 
@@ -172,11 +178,11 @@
 - 识别流程：一次点击一次请求；`识别中…` 禁用；成功材料移入已包含；超时 60.2s 后「识别超时，请重试或手动填写。」且文本保留；空 fields 空态；非法/截断 JSON 提示；401/429 归为通用「模型调用失败」（可读、无原文）——列为残差。
 - 合并/回填：两轮 9→11 行、未提及字段保留；冲突保留旧值 + `改用本次`；表单空勾/异值不勾/同值无变化；轮间手改表单会重算勾选；应用只写草稿（配置 GET 未变）、provider 先写、切换后 model 保留、滚到首个改动字段、缺失 Key 状态正确；provider-without-model 保留旧 Model 并给 warning。
 - 密钥：请求体 4 处 `***`、无原始 `sk-`/`Bearer`/`api_key`/`token`；UI 与表单无密钥；模型返回的 key 字段不出现（隐私行在 10-27 视觉修订中已裁掉，见 Task 4 实测末条）。
-- 条件字段：cloud 丢 tier、local 丢 language/model_version、bm25 丢 sparse_*、funasr/whisper 丢 asr_base_url、菜单外 ASR model 给 warning；维度探针不可用时保留识别值并 warning。固定维度 provider 过滤未实跑（无固定维度样本），列残差。
+- 条件字段：cloud 丢 tier、local 丢 language/model_version、bm25 丢 sparse_*、funasr/whisper 丢 asr_base_url、菜单外 ASR model 给 warning；维度探针不可用时保留识别值并 warning。固定维度 provider 过滤未实跑（无固定维度样本），列残差（10-27 已补客户端集成测试，见 Task 4 末条）。
 - 图片/持久化：图片轮只发本轮 1 张（附件说明 + canonical base64），落 `attachments/v1/objects`；抽屉关闭清 UI、附件保留；无识别历史/结果落盘。
 - 文案/键盘：zh 与 en 均渲染（Smart fill/Choose images/Results…）；两份字典各 974 键无缺；文本域/按钮/链接/复选框 Tab 可达且 `:focus-visible` 为真；沙箱主题 `--dsw-focus-ring-color` 为空致 box-shadow ring 不可见（复选框为原生 outline；picker `outline:none`）——环境同既有控件，列残差。
 - 范围：`engine/`、`scripts/` 零 diff；未重建 runtime pack；工作区只本笔文件。Task 5 当时 `lib/` 未随 src 重建；10-27 晚已补 `npm run build:plugin` 并提交 `49307a9`（见 Task 6）。
-- 残差：真栈真实厂商截图 + 付费视觉模型未跑（fake provider 覆盖协议/合并/回填）；401/429 分类码未透出；固定维度过滤未实跑；focus ring 依赖宿主主题变量。
+- 残差：真实厂商控制台截图未跑（已用公开真实截图 + 合成控制台截图跑真实视觉模型）；OCR `8080→8880`（无可靠规则，保留逐项确认）；401/429 分类码未透出；focus ring 依赖宿主主题变量。
 - 快照时点：浏览器验收用 09:27 的 `client.js` 副本（`E:/hrag-task5/plugin`）；并行快速开始线在 09:30 又改指南 go 按钮几何（28×stretch、8px 圆角），本笔卡片/厂商链接区未变（当前文件 `node --check` 仍 0）；Task 6 在指南线稳定后复跑指南相关项。
 
 ## Task 6 — 文档、实测回填与提交链
@@ -185,16 +191,16 @@
 > **验收对应**：spec §5.3 17–19。
 
 - [x] 回填 spec Status、plan Status 与各 Task 实测；勾选与 Status 不滞后。
-- [x] 量 `git diff --stat`，回填 spec §6 的实际行数（`client.js +1119/−68`；宿主 844＋836＋2 行）。
+- [x] 量 `git diff --stat`，回填 spec §6 的实际行数（`client.js +1119/−68`；宿主 877＋870＋2 行）。
 - [x] 提交前核：`git status --short` 只含本笔文件；`git diff --cached --stat` 与预期一致；不推送。
 - [x] 提交后核：Status 不写“未提交”；工作区零残留；不重开 R2/R3/R5 与发布面。
 
 **实测（2026-10-27 提交）**：
 - 提交：host `699cb2c`；panel `299f1ee`；docs `4a6a0c6`；build `49307a9`；docs 状态回填＝本次提交。
-- 行数：`client.js` +1119/−68；`src/config_recognize.ts` 844；`tests/config_recognize.test.ts` 836；`src/index.ts` +2；`lib/config_recognize.js` 663。
+- 行数：`client.js` +1119/−68；`src/config_recognize.ts` 877；`tests/config_recognize.test.ts` 870；`src/index.ts` +2；`lib/config_recognize.js` 686。
 - 构建态：`npm run build:plugin` 通过；`lib/index.js` +2 注册；沙箱以构建态 `lib/` 启动，`POST /dsh-harness-rag/config/recognize` 缺 model → 400 `invalid_request`，带 `dsh:sbxalpha/sbx-pro` → 502 `model_call_failed`（fake provider 未起）——405 消失，路由与模型解析链路已通；`node --check lib/index.js`、`node --check lib/config_recognize.js` 0。
 - 对外文档（2026-10-27）：README 与 `docs/plugin-manual.md` 补「智能识别配置」（识别范围 / 分批叠加 / 文本打码与截图风险 / 限制 / 不自动保存）、⋯「项目仓库」入口与「推理等级」措辞；`docs/equivalence.md` 补两条插件增量；README 规模表按当前仓刷新（29 个 TS 文件 / 7,989 行、`client.js` 24,122 行、21 个测试文件）。
-- 状态：Task 0–5 与视觉修订 4–8 完成；真栈截图、401/429 分类、固定维度过滤、focus ring 留作残差；lib 已重建并提交 `49307a9`。
+- 状态：Task 0–5 与视觉修订 4–9 完成；真栈真实视觉模型已跑通（图文 17 / 纯图 16），并按发现修复提示词与 DashScope rerank URL 兜底；固定维度过滤已补客户端集成测试（349/349）；修复后真栈复跑 rerank 不再带 base_url；真实厂商控制台截图、OCR 偏差、401/429 分类、focus ring 留作残差；`lib/` 已重建（`49307a9` 及本轮宿主修复 `cebbcc1`）。
 
 ## 提交链
 

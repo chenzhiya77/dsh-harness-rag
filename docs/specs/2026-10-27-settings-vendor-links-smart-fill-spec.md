@@ -1,6 +1,6 @@
 # 功能模型设置：厂商入口与智能识别配置 —— spec
 
-**Status:** 已实施、验收并提交（2026-10-27；Task 0–5 完成，提交链 `699cb2c` / `299f1ee` / `4a6a0c6` / `49307a9`（lib 重建）；门禁 347/347＋`tsc` 0＋`node --check` 0；构建态识别路由已复验（400/502，不再 405）；厂商链接已移入识别卡尾栏；「RAG 默认模型」已并入 DSH 模型卡；真栈截图与 401/429 分类留作残差）
+**Status:** 已实施、验收并提交（2026-10-27；Task 0–5 完成，提交链 `699cb2c` / `299f1ee` / `4a6a0c6` / `49307a9`（lib 重建）；门禁 349/349＋`tsc` 0＋`node --check` 0；构建态识别路由已复验（400/502，不再 405）；厂商链接已移入识别卡尾栏；「RAG 默认模型」已并入 DSH 模型卡；2026-10-27 真栈冒烟：真实视觉模型 `dsh:xiaomi/mimo-v2.6-flash` 跑通（图文 17 项 / 纯图 16 项），真实厂商控制台截图未跑；随后按发现修复：提示词禁止跨组复用 URL/要求逐字复制，DashScope rerank 复用 embedding 的 compatible-mode 地址时丢弃并给 warning，门禁 348/348＋lib 重建（`cebbcc1`）；修复后真栈复跑：rerank 不再带 base_url；客户端固定维度过滤已补集成测试（`tests/client_smart_dimension.test.ts` 以 `vm` 加载真实 `client.js`，覆盖 fixed/unreachable/tiered/range 矩阵），门禁 349/349；结果表已按他裁 B 重构（命令栏/分组计数；行内去掉控制台链接与「无变化」，全部行始终展开；已含计数并入卡片标题栏、应用钮缩为纯文字「应用」，`8806d9d`）；OCR 8080→8880、真实厂商控制台截图与 401/429 分类留作残差）
 **Date:** 2026-10-27
 **来源:** 10-27 他先提出「厂商链接」：RAG 模型的推荐厂商用户找不到，问能否在指南/设置里加跳转；随后提出设置顶部「懒人一键识别配置」：粘贴截图或文本，交给模型识别后回填。已确认口径：**都支持识别、没有就不填、截图持久化可接受**；图片按识别卡自己的单轮 3 张 × 5 MiB；位置在功能模型设置顶部。追加要求：**像输入框一样可多次叠加——第一次没识别完整，再上传只合并、不清空已有结果**；因此按“单轮 3 张/累计 20 张、只发本轮”设计。
 **承接:** 设置抽屉与组顺序（`client.js:19604-19614`）；向量/重排提供商行（`client.js:18832`）、解析提供方行（`client.js:19290`）、ASR 提供商行（`client.js:19424`）；高级设置字段（`client.js:19070-19221`）；解析/ASR 后半段（`client.js:19297-19369`、`client.js:19424-19531`）；模型列表与视觉筛选（`client.js:18284`、`client.js:20048-20152`）。宿主模型代理（`src/model_proxy.ts:684-859`）、图片准入（`src/model_proxy.ts:741`）、模型同步（`src/model_sync.ts:3/129`）、panel 路由与 1 MiB 限制（`src/kb_proxy.ts:37/348/392/651-729`）。
@@ -71,7 +71,7 @@
 
 - **甲（拍定）**：只有具名厂商预设给链接：`dashscope`、`volcengine-ark`、`mineru-cloud`；`openai-compatible`、`generic-rerank`、`tei-rerank`、`tei-sparse`、`mineru-local`、`funasr`、`whisper`、`openai-audio` 不给（无唯一厂商或自部署）。
 - 固定三枚：`dashscope`、`volcengine-ark`、`mineru-cloud`，放在识别卡底部尾栏，不随 provider 显隐。
-- 识别结果里给「识别到的这一家」的控制台链接；尾栏与结果行共用同一张静态表。
+- 识别卡底部的静态尾栏是唯一的厂商入口；结果行不再显示控制台链接。
 - 快速开始指南的页脚厂商胶囊行已随 `b5c76a0` 发布，识别卡尾栏与其同款；设置页四处行尾链接撤销。
 
 ### D3 链接落点（拍定：甲）
@@ -81,7 +81,7 @@
   - `volcengine-ark` → `https://console.volcengine.com/ark`
   - `mineru-cloud` → `https://mineru.net/`
 - 理由：深链随控制台改版易失效（MinerU 的 `/apiManage/token` 无登录探测返回 404）；首页是稳定入口。
-- 文案：尾栏胶囊 `{厂商} ↗`，结果行 `控制台 ↗`；`title`/`aria-label` 为「在新标签页打开{厂商}控制台」。
+- 文案：尾栏胶囊 `{厂商} ↗`；结果行不显示「控制台 ↗」；`title`/`aria-label` 为「在新标签页打开{厂商}控制台」。
 
 ### D4 识别卡位置（拍定：甲）
 
@@ -130,12 +130,12 @@
 
 ### D12 链接与识别结果（10-27 改判）
 
-- **拍定**：设置行四处链接撤销；识别卡底部新增静态尾栏（固定三厂商）；识别结果里识别到的 provider 仍给「控制台 ↗」动态链接。
+- **拍定**：设置行四处链接撤销；识别卡底部新增静态尾栏（固定三厂商）；结果行不再显示控制台链接，尾栏是唯一入口。
 - 原「四处链接保留 + 识别卡不做静态目录」方案已撤。
 
 ### D13 叠加识别（拍定：甲）
 
-- **甲（拍定）**：卡片是**累加式材料盒**。一次点击只发“待识别”的本轮新材料，结果与已有结果**合并**；后续批次没提到的字段一律保留。同字段不同值不静默覆盖：保留旧值，显示“本次：Y / 改用本次”，需用户显式选择。每个材料批次成功后移入「已包含」摘要，输入区清空，可继续加下一批。
+- **甲（拍定）**：卡片是**累加式材料盒**。一次点击只发“待识别”的本轮新材料，结果与已有结果**合并**；后续批次没提到的字段一律保留。同字段不同值不静默覆盖：保留旧值，显示“本次：Y / 改用本次”，需用户显式选择。每个材料批次成功后并入标题栏已含计数，输入区清空，可继续加下一批。
 - **不做全量重跑**：没有“重新识别全部”按钮。要重来用“清除全部”（二次确认）；只想重试失败的本轮，材料会留在输入区，直接再点一次。
 - 乙（不做）：每次识别清空旧结果重新来——他明确要“第一次没识别完整，再上传不会清空”。
 - 丙（不做）：后一次识别静默覆盖旧值——会丢第一次结果。
@@ -149,7 +149,6 @@
 ```text
 ┌ 智能识别配置 ────────────────────────────────────┐
 │ …                                                │
-│ 已包含：1 张截图 · 1 段文本（可展开）  [清除全部]   │
 │ 厂商控制台  [阿里百炼 ↗] [火山方舟 ↗] [MinerU ↗]   │
 └──────────────────────────────────────────────────┘
 ```
@@ -157,16 +156,16 @@
 - 位置：`SmartFillCard` 的最后一个子节点（`.hrag-smart-foot`），始终渲染；设置页四处 provider 行尾不再显示控制台链接，原 `fieldRow` 的 `trail` 机制及 `.hrag-set-row-trail`/`.hrag-set-controlwrap`/`.hrag-set-consoles` 已删除。
 - 布局：尾栏用负边距贴齐卡片左右下缘（`margin: 0 -12px -12px`、`padding: 0 12px 8px`），**不加分割线**；与 composer 的间距用卡片 gap 8、与卡片底缘用 padding-bottom 8，前后一致；标签「厂商控制台」11px tertiary；三枚胶囊 `flex-wrap: wrap`、gap 6px，窄档换行不压扁。
 - 胶囊视觉：与快速开始指南页脚同款（共用同一组 CSS 选择器）——20px 高、11px、0.5px `--dsw-alias-border-l3` 描边、`999px` 圆角、`--dsw-alias-interactive-bg-hover` 底、secondary 文字、无下划线；hover 底 `-active`、文字 `label-primary`；focus-visible 用宿主 focus ring。
-- 固定三枚，不随当前 provider 变化：阿里百炼、火山方舟、MinerU；结果行的动态「控制台 ↗」仍保留，二者并存。
+- 固定三枚，不随当前 provider 变化：阿里百炼、火山方舟、MinerU；结果行不显示控制台链接。
 - 行为：`button` + `window.open(url, '_blank', 'noopener')`；`title`/`aria-label` 同 D3；无新窗口失败提示时静默（与 Langfuse trace 现有口径一致）。
 
 #### 4.1.2 静态表
 
-| id | 尾栏标签 | 结果行标签 | URL |
-| --- | --- | --- | --- |
-| `dashscope` | 阿里百炼 ↗ | 控制台 ↗ | https://bailian.console.aliyun.com/ |
-| `volcengine-ark` | 火山方舟 ↗ | 控制台 ↗ | https://console.volcengine.com/ark |
-| `mineru-cloud` | MinerU ↗ | 控制台 ↗ | https://mineru.net/ |
+| id | 尾栏标签 | URL |
+| --- | --- | --- |
+| `dashscope` | 阿里百炼 ↗ | https://bailian.console.aliyun.com/ |
+| `volcengine-ark` | 火山方舟 ↗ | https://console.volcengine.com/ark |
+| `mineru-cloud` | MinerU ↗ | https://mineru.net/ |
 
 - 只接受 https；表是代码常量，不读用户配置、不拼 URL、不做厂商排序/推荐标记。
 
@@ -198,7 +197,6 @@
 │ │                                              │ │
 │ │ (+)                      fake-vlm ⌄  [识别]   │ │
 │ └──────────────────────────────────────────────┘ │
-│ 已包含：1 张截图 · 1 段文本（可展开）  [清除全部]   │
 │ 厂商控制台  [阿里百炼 ↗] [火山方舟 ↗] [MinerU ↗]   │
 └──────────────────────────────────────────────────┘
 ```
@@ -208,7 +206,7 @@
 - 输入壳体：按设置卡族几何，不再复刻宿主会话 composer——`--dsw-radius-md` 圆角（当前主题 12px，与 `.hrag-smart` 及下方设置组一致）、0.5px `--dsw-alias-border-l3`、`--dsw-alias-bg-layer-1` 底、无阴影；文本域透明底无边框、caret 用 `--dsw-alias-state-business-primary`；底部工具行（`+` 上传 / 视觉模型 chip / 识别主钮）两端对齐、不换行。这样读作设置输入控件，而不是聊天输入框（10-27 他裁：先对齐设置卡圆角，按钮随之换成设置族）。
 - 粘贴区：原生 `<textarea>`（最小 3 行，随内容增高，最大 8 行/160px，超出后内部滚动；resize none、`maxLength=20000`，**不显示字符计数**（10-27 他裁去掉右下角 `0 / 20000`），超限不发请求）；`onPaste` 同时处理文本与图片；拖拽区覆盖整张卡，但 `dragenter` / `dragover` / `dragleave` / `drop` 必须 `preventDefault` + `stopPropagation`，并在 drop/leave 时复位面板根的拖拽态（`stopPropagation` 会绕过根 `panelDrop` 的既有复位），避免触发面板全局的文档上传、toast 与拖拽遮罩残留；图片显示 56×56 缩略图 + ×，缩略图行在文本域**上方**（贴输入区顶部，文本域在下、工具行最后；照宿主 composer 的附件在上），清空 × 固定在输入区右上角；缩略图行右侧留 30px 避让。它是**累加式材料盒**，不是一次性表单：文本/图片可分批继续加。
 - `+` 方形 ghost 钮（26×26，`--dsw-radius-md`、透明底、secondary 图标，hover 浅底；aria-label/title「选择图片」）打开文件选择器（`<input type=file multiple accept=image/png,image/jpeg,image/webp,image/gif>`），与粘贴/拖入走同一条添加与校验路径；选完只进待识别区，不自动识别。
-- 待识别 vs 已包含：主体区只放本轮新材料；一次识别成功后，材料移入「已包含」摘要（只读，可展开查看，`set.smart.expand` / `set.smart.collapse`），输入区清空，等待下一批；失败则材料留在输入区，可直接重试。已包含材料 v1 不提供单条删除；要重来用「清除全部」。
+- 待识别 vs 已包含：主体区只放本轮新材料；一次识别成功后，输入区清空，材料并入卡片标题栏右侧的已含计数（`已含 {0} 张截图` · `{0} 段文本`，悬浮 `title` 列出每张图类型/大小与文本段数；`清除全部` 同在标题栏），等待下一批；失败则材料留在输入区，可直接重试。已包含材料 v1 不提供明细展开与单条删除；要重来用「清除全部」。
 - 图片上限在添加时校验：本轮最多 3 张、单张 5 MiB、本轮总计 10 MiB；累计最多 20 张（计数 = 待识别 + 已包含；宿主单条消息同为 20 张）；类型 PNG/JPEG/WebP/GIF。超过累计上限时禁用添加并提示；超限就地提示，不发请求。`清空输入` 只清待识别材料（其中图片释放槽位）；`清除全部` 同时清材料+结果、累计计数归零。
 - 识别模型：复用设置页同一枚 `LegPicker`（与腿选择器完全同款：点开先见根页「模型 / 推理等级」两格，再下钻模型页/档位页；弹层宽 max(chip,320) 截到 420、max-height 420、>4 项出搜索框、按厂商分组、选中打勾），不是平坦长列表，也不按 chip 等宽。触发钮在工具行右端以 chip 形态出现（无边框透明底、13px/400 secondary、模型名＋当前档位＋chevron 12px、max-width 220px，窄档省略号截断；悬停/展开给浅底）。只列 `dsh:` + `supports_vision`；默认当前 `values.vlm_model`（若合格），否则第一个视觉模型。**模型与档位都是识别卡本地状态**（不写 VLM 腿配置/表单）；档位随识别请求下发：`Off`→`reasoning_effort:"off"`、`Default/跟随`→不带该字段（宿主用模型默认）、具体档位→档位 id（如 `high`）。没有视觉模型时 chip 位置显示「无视觉模型」并禁用识别。窄档收缩时**先收档位文字、保留模型名**（档位 span 可缩至 0，title 仍带完整「模型 · 档位」）。**范围口径（10-27 他裁）**：样式问题只限本识别卡容器；其他容器只做「思考档位→推理等级」文案，选择器样式/菜单形态不变。
 - 识别钮：26px 高文字主钮（`hrag-btn hrag-btn-primary hrag-btn-sm`，12px/radius-sm；可见文字「识别」，aria-label/title 带本轮材料数（如「识别新增（2）」）），只发本轮新材料、结果合并到已有表。无待识别材料或识别中时禁用；识别中工具行显示「识别中…」并禁用输入、上传与清空；不做取消按钮（底层模型调用无取消口，客户端超时只停 UI）。
@@ -219,27 +217,31 @@
 #### 4.2.3 结果态
 
 ```text
-识别结果 · 已识别 8 项 · 2 轮
-向量 · 提供商      DashScope            控制台 ↗   [✓] 第 1 轮
-向量 · Model ID    text-embedding-v4              [✓] 第 1 轮
-向量 · 维度        1024  （表单：512）              [ ] 本轮 · 改用本次
-解析 · 提供方      MinerU 官方云         控制台 ↗   [✓] 本轮
-解析 · 语言        ch                              [ ]
-[应用选中项]
-
-已填入 6 项；还需手动填写 API Key（向量）、MinerU 解析令牌。
+识别结果 · 8 项 · 2 轮                       全选   [应用]
+已填入 3 项；还需手动填写 API Key（向量）、MinerU 解析令牌。
+向量 3 项
+  [✓] 提供商      DashScope
+  [✓] Model ID    text-embedding-v4
+  [ ] 维度        1024
+      上次/表单：1024；本次：768  改用本次
+解析 2 项
+  [✓] 提供方      MinerU 官方云
 ```
 
-- 只渲染识别到非空值的字段；按「向量/稀疏/重排/解析/语音识别」分组；组头 11px tertiary，行 12px。每个字段只保留一行，行尾标 `本轮`（最近一次）或 `第 N 轮`（更早批次）。
+- 只渲染识别到非空值的字段；按「向量/稀疏/重排/解析/语音识别」分组；组头 12px/600 secondary + 11px tertiary 计数；行 12px。
+- 四列固定：勾选 14 / 字段 96 / 值 flex（等宽、单行省略 + title）/ 行尾动作。仅更早批次的行尾标「第 N 轮」；本批次不标「本轮」。
+- 命令栏在结果头右侧：`全选` / `取消全选` + `应用`；按钮不显示计数，无可应用行时禁用。
+- 所有行始终展开；与表单当前值一致的行不提供勾选框、行尾不标状态（不再显示「无变化」，也不做一致项折叠）。冲突行的「上次/表单：X；本次：Y · 改用本次」落在值列下方第二行（11px tertiary），不再占全宽行。
+- 应用后的状态行放在结果头下方常驻可见；`warnings` 仍在结果表下方。
+- 窄档：值列保底 120px，不足时整列换行；不新增横向溢出。
 - 合并规则（每次识别新增后执行）：
   - 新字段：加入结果表；按表单当前值决定默认勾选（空/相同 ⇒ 勾；不同 ⇒ 不勾并标冲突）。
-  - 已有字段、值相同：保留原行，标「无变化」，不重复。
+  - 已有字段、值相同：保留原行；不提供勾选框，行尾不标状态。
   - 已有字段、值不同：**保留旧值作为行值**，冲突行显示「上次/表单：X；本次：Y」与「改用本次」；默认不采用新值，用户点「改用本次」才替换行值并勾选。
   - 本次批次没提到的字段：原样保留，不清空、不改勾选。
-- 每次合并后按**表单当前值**重算勾选：表单为空 ⇒ 勾；表单与识别值不同 ⇒ 不勾，并显示「表单：X」；表单与识别值相同 ⇒ 标「已填入/无变化」，不提供勾选框。用户在两轮之间手改表单也按此重算，避免旧勾选静默覆盖。
+- 每次合并后按**表单当前值**重算勾选：表单为空 ⇒ 勾；表单与识别值不同 ⇒ 不勾，并显示「表单：X」；表单与识别值相同 ⇒ 不提供勾选框。用户在两轮之间手改表单也按此重算，避免旧勾选静默覆盖。
 - 枚举值显示本地化标签，但提交的是 ID；model/URL 用等宽字体；URL 过长省略，title 全文。
-- 每行右侧若 provider 在静态表内，显示「控制台 ↗」（同 §4.1）；卡底部另有固定厂商尾栏（§4.1.1），二者并存。
-- 「应用选中项」：只写勾选字段到表单草稿；provider 先写，model/地址后写；不调用 provider 菜单的切换副作用（避免清空识别值）；随后滚到第一个改动字段。provider 有值但同段 model 无值时，保留旧 Model ID（若有）并在结果表下给 warning，不自动清空。应用后可继续加材料、再识别新增；已填入字段在下一轮出现不同值时按冲突规则处理。
+- 「应用」：只写勾选字段到表单草稿；provider 先写，model/地址后写；不调用 provider 菜单的切换副作用（避免清空识别值）；随后滚到第一个改动字段。provider 有值但同段 model 无值时，保留旧 Model ID（若有）并在结果表下给 warning，不自动清空。应用后可继续加材料、再识别新增；已填入字段在下一轮出现不同值时按冲突规则处理。
 - `warnings` 以 11px tertiary 行显示在结果表下方（`set.smart.warning` 包 detail）；不阻断应用；provider 已识别但同段 model 未识别时也走这条。
 - 应用后状态行：`已填入 N 项；还需手动填写：<按识别段计算的必需密钥>`；保存仍由右上角按钮触发。
 - 结果表不提供单独清除；要重来用材料区的「清除全部」（二次确认）。没有「重新识别全部」；已包含材料只用于展示，不再参与识别。
@@ -271,6 +273,7 @@
 **不识别/不回填**：`embedding_api_key`、`rerank_api_key`、`sparse_api_key`、`mineru_api_token`、`asr_api_key`、`qdrant_url`、DSH 六条模型角色、运行时/安装路径、重建索引目标。
 
 - 「没有就不填」：模型返回 `null`/缺省的字段不进入结果表；未识别不会猜、不会清空当前值。
+- URL 不复用：提示词要求「缺 URL 就省略、禁止跨组复用、逐字复制数字」；宿主兜底：`rerank.provider=dashscope` 且 `rerank.base_url` 与 embedding 的 compatible-mode 地址相同（忽略尾部 `/` 与大小写）时丢弃该 URL 并给 `rerank_base_url_reused` warning。
 - 条件字段：宿主按识别出的 provider/source 做联动校验；不合法字段丢弃并给 warning（如 `parse_provider=mineru-cloud` 却返回 tier、`mineru-local` 却返回 language/model_version；`sparse_source!=external` 却返回 sparse_provider）。
 - 维度：客户端按 `embedding_providers` 能力与 `dimensionVerdict` 过滤；固定维度的 provider 不应用识别到的 dimension，只提示；`dimensionVerdict` 缺失/探针不可达时保留识别值并给 warning。
 
@@ -353,19 +356,22 @@
 | `set.smart.recognize` | 识别 | Recognize |
 | `set.smart.recognizing` | 识别中… | Recognizing… |
 | `set.smart.clearInput` | 清空输入 | Clear input |
-| `set.smart.sent` | 已包含：{0} 张截图 · {1} 段文本 | Included: {0} images · {1} text blocks |
-| `set.smart.expand` | 展开查看 | Show |
-| `set.smart.collapse` | 收起 | Hide |
-| `set.smart.result` | 识别结果 · 已识别 {0} 项 · {1} 轮 | Results · {0} fields · {1} rounds |
+| `set.smart.includedShort` | 已含 {0} 张截图 | {0} images included |
+| `set.smart.includedTextsShort` | {0} 段文本 | {0} text blocks |
+| `set.smart.includedImage`（标题栏 `title` 明细） | 截图 {0} · {1} · {2} | Image {0} · {1} · {2} |
+| `set.smart.includedText`（标题栏 `title` 明细） | 文本 · {0} | Text · {0} |
+| `set.smart.result` | 识别结果 · {0} 项 | Results · {0} fields |
+| `set.smart.resultRounds`（仅轮次 > 1） | 识别结果 · {0} 项 · {1} 轮 | Results · {0} fields · {1} rounds |
+| `set.smart.groupCount` | {0} 项 | {0} fields |
+| `set.smart.selectAll` | 全选 | Select all |
+| `set.smart.selectNone` | 取消全选 | Clear selection |
 | `set.smart.warning` | 提示：{0} | Note: {0} |
-| `set.smart.apply` | 应用选中项 | Apply selected |
+| `set.smart.apply` | 应用 | Apply |
 | `set.smart.clearAll` | 清除全部 | Clear all |
 | `set.smart.clearAllConfirm` | 再点一次清除全部 | Click again to clear all |
 | `set.smart.empty` | 没有识别到可填入的配置，换一张更清晰的截图或手动填写。 | No usable configuration found. Try a clearer screenshot or fill it in manually. |
 | `set.smart.current` | 当前：{0} | Current: {0} |
 | `set.smart.form` | 表单：{0} | Form: {0} |
-| `set.smart.unchanged` | 无变化 | No change |
-| `set.smart.roundNew` | 本轮 | This round |
 | `set.smart.roundPrev` | 第 {0} 轮 | Round {0} |
 | `set.smart.conflict` | 上次/表单：{0}；本次：{1} | Previous/form: {0}; this round: {1} |
 | `set.smart.useThis` | 改用本次 | Use this round |
@@ -399,32 +405,32 @@
 2. 智能识别配置卡底部有固定尾栏：「厂商控制台」+ 阿里百炼/火山方舟/MinerU 三枚胶囊，不随 provider 变化；三枚分别打开三个 URL，新标签、当前面板不跳走。
 3. 快速开始指南页脚厂商胶囊保留（`b5c76a0`），与识别卡尾栏同款（20px、11px、0.5px border-l3、radius 999、无下划线）；指南正文与动作不变。
 4. 尾栏在 198 卡换行为两行（标签+阿里百炼 / 火山方舟+MinerU），无横向溢出；胶囊键盘可聚焦。
-5. 识别结果里识别到的 provider 仍有「控制台 ↗」动态链接；静态尾栏是卡片级目录，二者并存。
+5. 识别结果行不显示「控制台 ↗」；静态尾栏是唯一的厂商入口。
 
 ### 5.2 智能识别卡
 
 6. 位置/形态：设置顶部、固定展开（无折叠控件）；输入区为设置卡族几何（`--dsw-radius-md`、0.5px `--dsw-alias-border-l3`、`--dsw-alias-bg-layer-1`、无阴影），识别为文字主钮，清空为文本区右上角 ×；文本域随内容增高，最大 8 行/160px 后内部滚动；配置 loading/error 时不渲染；关闭抽屉后状态清空。
 7. 输入：粘贴文本、Ctrl+V 截图、拖入截图、「选择图片」文件选择器四条路径都能进，且走同一校验；单轮 3 张/单张 5 MiB/单轮 10 MiB/类型四种限制就地提示；累计 20 张后禁用添加（计数 = 待识别 + 已包含）；`清空输入` 只清待识别材料并释放槽位，`清除全部` 归零；文本超过 20,000 字符时客户端拦截；拖入卡片不得触发面板的文档上传、toast 或拖拽遮罩。
 8. 模型：默认当前 VLM；只列 `dsh:` 视觉模型；点开先见「模型 / 推理等级」两格，再下钻模型页/档位页；档位选 `Off`/`Default`/具体档时请求分别带 `"off"`/不带字段/档位 id；切到无视觉模型场景识别禁用并提示；纯文字也可用同一模型识别。
-9. 识别：一次点击只发本轮材料、只调用一次；加载中禁用；成功后本轮材料移入「已包含」摘要，输入区清空；失败则材料留在输入区可重试；无字段显示空态（200 空 fields）；warnings 在结果表下可见；错误（无模型/鉴权/限流/超时/JSON 非法/截断）有可读提示，不显示原文。
+9. 识别：一次点击只发本轮材料、只调用一次；加载中禁用；成功后本轮材料并入标题栏已含计数（悬浮见明细），输入区清空；失败则材料留在输入区可重试；无字段显示空态（200 空 fields）；warnings 在结果表下可见；错误（无模型/鉴权/限流/超时/JSON 非法/截断）有可读提示，不显示原文。
 10. **叠加合并**：第一轮向量截图识别出 4 项；再贴一张重排截图、点「识别新增」，新增字段追加，原 4 项保留；新批次没提到的字段不消失、不改勾选。
 11. **冲突**：第二轮同一字段识别出不同值（如提供商 DashScope → 火山方舟），原值保留为行值，显示「上次/表单：X；本次：Y」；不点「改用本次」不覆盖；点了才替换并勾选；结果表没有单独清除，`清除全部` 二次确认才清材料+结果。
-12. 回填：空字段默认勾选；有值不同默认不勾且显示当前→识别；相同显示无变化；只写表单草稿，右上角保存前配置不变；应用后滚到第一个改动字段；必需密钥提示正确；两轮之间手改表单后，勾选按表单当前值重算；provider 有值、同段 model 无值时保留旧 Model ID 并显示 warning。
+12. 回填：空字段默认勾选；有值不同默认不勾且显示当前→识别；相同不提供勾选框、行尾不标状态；结果头右侧有全选与「应用」；只写表单草稿，右上角保存前配置不变；应用后滚到第一个改动字段；必需密钥提示正确；两轮之间手改表单后，勾选按表单当前值重算；provider 有值、同段 model 无值时保留旧 Model ID 并显示 warning。
 13. 密钥：粘贴含 `sk-...`/`Bearer ...`/`api_key=...` 的文本，请求体（用 fake provider 抓包）中不出现原值；模型即使返回 key 字段，UI/表单也不出现。
-14. 条件字段：`mineru-cloud` 不应用 tier；`mineru-local` 不应用 language/model_version；`sparse_source != external` 不应用 sparse_*；`funasr/whisper` 不应用 asr_base_url，model 不在菜单时给 warning；固定维度 provider 不应用 dimension；`dimensionVerdict` 不可用时保留 dimension 并标 warning。
+14. 条件字段：`mineru-cloud` 不应用 tier；`mineru-local` 不应用 language/model_version；`sparse_source != external` 不应用 sparse_*；`funasr/whisper` 不应用 asr_base_url，model 不在菜单时给 warning；固定维度 provider 不应用 dimension；`dimensionVerdict` 不可用时保留 dimension 并标 warning；DashScope 重排地址若复用 embedding 的 compatible-mode 地址，丢弃并给 warning。
 15. 图片：识别后截图可出现在 `~/.dsh/attachments/v1/objects`（与聊天同库）；无识别历史/结果落盘；关闭抽屉后不残留；单轮请求只有本轮 3 张，不做 20 张全量重跑。
 16. 文案/视觉：zh/en 全量；窄面板无溢出；链接/按钮/复选框键盘可达；focus ring 可见。
 
 ### 5.3 门禁与并行
 
-17. `node --check client.js`；`node --test tests/*.test.ts` 全绿（含新增 recognizer 单测）；`node node_modules/typescript/bin/tsc -p tsconfig.json` 零错。
+17. `node --check client.js`；`node --test tests/*.test.ts` 全绿（含新增 recognizer 单测与客户端固定维度过滤用例）；`node node_modules/typescript/bin/tsc -p tsconfig.json` 零错。
 18. 沙箱：fake provider 抓请求，验证打码/模型/图片/档位/错误；真栈：用一张 DashScope 控制台截图 + 一段 YAML 跑通全字段与回填。
 19. engine 零 diff；runtime pack 不重建；不重开 R2/R3/R5 与 v0.1.3 发布面回退；不混入既有发布面改动。
 
 ## 6. 影响面
 
-- 浏览器半 `client.js`：厂商链接表 + 智能卡尾栏 + 结果行链接 + 智能卡组件/结果表/CSS/i18n；实际 `+1119/−68`（2026-10-27 回填，含设置页合并、缩略图置顶、⋮ 项目仓库入口）。
-- 宿主半：`src/config_recognize.ts` 844 行（route、鉴权、body 限制、prompt、schema、校验、错误映射、文本打码）；`tests/config_recognize.test.ts` 836 行；`src/index.ts` +2 行注册。不改 `kb_proxy`，不改 engine，不改配置 schema。
+- 浏览器半 `client.js`：厂商链接表 + 智能卡尾栏 + 智能卡组件/结果表/CSS/i18n；实际 `+1119/−68`（2026-10-27 回填，含设置页合并、缩略图置顶、⋮ 项目仓库入口）；10-27 结果表修订另加命令栏/分组计数、行内去掉控制台与无变化，已含计数并入卡片标题栏、应用钮缩为纯文字「应用」（当前文件 24,158 行；`8806d9d`）。
+- 宿主半：`src/config_recognize.ts` 877 行（route、鉴权、body 限制、prompt、schema、校验、错误映射、文本打码）；`tests/config_recognize.test.ts` 870 行；`tests/client_smart_dimension.test.ts` 68 行（加载真实 `client.js` 的固定维度判定）；`src/index.ts` +2 行注册。不改 `kb_proxy`，不改 engine，不改配置 schema。
 - 版本：插件 patch（当前 `package.json` 0.1.2；下一次 patch 按发布窗口定，计划 0.1.3）；runtime 不变。
 - 并行：不碰 `scripts/build-runtime-pack.mjs`、`src/runtime/supervisor.ts`、`src/runtime/engine_env.ts` 及 R2/R3/R5 文档；不重开 R2/R3/R5 与 v0.1.3 发布面回退（`f9ef9d9`）。
 
