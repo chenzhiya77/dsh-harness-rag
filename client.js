@@ -3,6 +3,17 @@
 // templates/decoration/client.js). One self-contained plain-JS file by
 // decision (T3 plan Task 0 ⑥): the host serves exactly one client.js per
 // package and relative requires resolve against the platform module table.
+
+// 固定维度过滤：verdict 由引擎 probe-dimensions 下发（status/type/native/values），
+// 只有同一 provider 的可用结论才能挡住识别值；其余情况保留并标未验证。
+function ragSmartDimensionDecision(recognizedDimension, recognizedProvider, formProvider, verdict) {
+  if (recognizedDimension === null || recognizedDimension === undefined || recognizedDimension === '') return 'empty'
+  const provider = String(recognizedProvider || formProvider || '')
+  const applies = Boolean(verdict) && verdict.status !== 'unreachable' && provider === formProvider
+  if (applies && verdict.type === 'fixed' && verdict.native != null) return 'fixed'
+  return applies ? 'apply' : 'unverified'
+}
+
 window.__ModuleLoader__.load({
   id: 'dsh-harness-rag',
   factory(require) {
@@ -987,21 +998,22 @@ window.__ModuleLoader__.load({
       'set.smart.recognize': '识别',
       'set.smart.recognizing': '识别中…',
       'set.smart.clearInput': '清空输入',
-      'set.smart.sent': '已包含：{0} 张截图 · {1} 段文本',
       'set.smart.includedImage': '截图 {0} · {1} · {2}',
       'set.smart.includedText': '文本 · {0}',
-      'set.smart.expand': '展开查看',
-      'set.smart.collapse': '收起',
-      'set.smart.result': '识别结果 · 已识别 {0} 项 · {1} 轮',
+      'set.smart.includedShort': '已含 {0} 张截图',
+      'set.smart.includedTextsShort': '{0} 段文本',
+      'set.smart.result': '识别结果 · {0} 项',
+      'set.smart.resultRounds': '识别结果 · {0} 项 · {1} 轮',
+      'set.smart.groupCount': '{0} 项',
+      'set.smart.selectAll': '全选',
+      'set.smart.selectNone': '取消全选',
       'set.smart.warning': '提示：{0}',
-      'set.smart.apply': '应用选中项',
+      'set.smart.apply': '应用',
       'set.smart.clearAll': '清除全部',
       'set.smart.clearAllConfirm': '再点一次清除全部',
       'set.smart.empty': '没有识别到可填入的配置，换一张更清晰的截图或手动填写。',
       'set.smart.current': '当前：{0}',
       'set.smart.form': '表单：{0}',
-      'set.smart.unchanged': '无变化',
-      'set.smart.roundNew': '本轮',
       'set.smart.roundPrev': '第 {0} 轮',
       'set.smart.conflict': '上次/表单：{0}；本次：{1}',
       'set.smart.useThis': '改用本次',
@@ -2001,21 +2013,22 @@ window.__ModuleLoader__.load({
       'set.smart.recognize': 'Recognize',
       'set.smart.recognizing': 'Recognizing…',
       'set.smart.clearInput': 'Clear input',
-      'set.smart.sent': 'Included: {0} images · {1} text blocks',
       'set.smart.includedImage': 'Image {0} · {1} · {2}',
       'set.smart.includedText': 'Text · {0}',
-      'set.smart.expand': 'Show',
-      'set.smart.collapse': 'Hide',
-      'set.smart.result': 'Results · {0} fields · {1} rounds',
+      'set.smart.includedShort': '{0} images included',
+      'set.smart.includedTextsShort': '{0} text blocks',
+      'set.smart.result': 'Results · {0} fields',
+      'set.smart.resultRounds': 'Results · {0} fields · {1} rounds',
+      'set.smart.groupCount': '{0} fields',
+      'set.smart.selectAll': 'Select all',
+      'set.smart.selectNone': 'Clear selection',
       'set.smart.warning': 'Note: {0}',
-      'set.smart.apply': 'Apply selected',
+      'set.smart.apply': 'Apply',
       'set.smart.clearAll': 'Clear all',
       'set.smart.clearAllConfirm': 'Click again to clear all',
       'set.smart.empty': 'No usable configuration found. Try a clearer screenshot or fill it in manually.',
       'set.smart.current': 'Current: {0}',
       'set.smart.form': 'Form: {0}',
-      'set.smart.unchanged': 'No change',
-      'set.smart.roundNew': 'This round',
       'set.smart.roundPrev': 'Round {0}',
       'set.smart.conflict': 'Previous/form: {0}; this round: {1}',
       'set.smart.useThis': 'Use this round',
@@ -2912,8 +2925,11 @@ window.__ModuleLoader__.load({
           '.hrag-smart { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--hrag-surface); }',
           '.hrag-smart-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 -12px -12px; padding: 0 12px 8px; }',
           '.hrag-smart-footlabel { margin-right: 2px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
-          '.hrag-smart-head { margin: -10px -12px 0; padding: 6px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md) var(--dsw-radius-md) 0 0; background: var(--hrag-surface-head); }',
-          '.hrag-smart-title { color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; line-height: 18px; cursor: default; }',
+          '.hrag-smart-head { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; margin: -10px -12px 0; padding: 6px 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md) var(--dsw-radius-md) 0 0; background: var(--hrag-surface-head); }',
+          '.hrag-smart-title { flex: 0 1 auto; min-width: 0; color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; line-height: 18px; cursor: default; }',
+          '.hrag-smart-headmeta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-headmeta .hrag-smart-linkbtn { color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-headmeta .hrag-smart-linkbtn:hover { color: var(--dsw-alias-label-primary); }',
           '.hrag-smart-composer { position: relative; display: flex; flex-direction: column; box-sizing: border-box; width: 100%; border: 0.5px solid var(--dsw-alias-border-l3); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-1); padding-top: 8px; }',
           '.hrag-smart-input { display: block; width: 100%; box-sizing: border-box; min-height: 88px; max-height: 160px; padding: 4px 30px 0 14px; border: none; background: transparent; color: var(--dsw-alias-label-primary); caret-color: var(--dsw-alias-state-business-primary); font-family: inherit; font-size: 12px; line-height: 20px; resize: none; overflow-y: auto; outline: none; }',
           '.hrag-smart-input::placeholder { color: var(--dsw-alias-label-caption); }',
@@ -2945,21 +2961,22 @@ window.__ModuleLoader__.load({
           '.hrag-smart-linkbtn:disabled { opacity: 0.5; cursor: default; text-decoration: none; }',
           '.hrag-smart-countline { color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
           '.hrag-smart-error { color: var(--dsw-alias-state-error-primary); font-size: 12px; line-height: 18px; }',
-          '.hrag-smart-included { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
-          '.hrag-smart-includedhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
-          '.hrag-smart-includedlist { display: flex; flex-direction: column; gap: 2px; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }',
           '.hrag-smart-results { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; border-top: 0.5px solid var(--dsw-alias-border-l2); }',
-          '.hrag-smart-resultshead { color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
-          '.hrag-smart-groupname { margin-top: 2px; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
-          '.hrag-smart-row { display: flex; align-items: flex-start; gap: 4px 8px; flex-wrap: wrap; font-size: 12px; line-height: 18px; }',
-          '.hrag-smart-rowlabel { flex: 0 1 120px; min-width: 96px; color: var(--dsw-alias-label-secondary); }',
-          '.hrag-smart-rowvalue { flex: 1 1 160px; min-width: 0; color: var(--dsw-alias-label-primary); overflow-wrap: anywhere; }',
+          '.hrag-smart-resultshead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
+          '.hrag-smart-resulttitle { flex: 1 1 auto; }',
+          '.hrag-smart-commands { display: flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }',
+          '.hrag-smart-group { display: flex; flex-direction: column; gap: 2px; }',
+          '.hrag-smart-groupname { display: flex; align-items: baseline; gap: 4px; margin-top: 6px; padding-top: 6px; border-top: 0.5px solid var(--dsw-alias-border-l3); color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; line-height: 18px; }',
+          '.hrag-smart-groupcount { color: var(--dsw-alias-label-tertiary); font-size: 11px; font-weight: 400; }',
+          '.hrag-smart-row { display: flex; align-items: flex-start; gap: 4px 8px; flex-wrap: wrap; padding: 2px 0; font-size: 12px; line-height: 18px; }',
+          '.hrag-smart-rowlabel { flex: 0 0 96px; min-width: 0; color: var(--dsw-alias-label-secondary); }',
+          '.hrag-smart-cell { flex: 1 1 0; min-width: 120px; display: flex; flex-direction: column; gap: 2px; }',
+          '.hrag-smart-rowvalue { min-width: 0; color: var(--dsw-alias-label-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }',
           '.hrag-smart-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }',
-          '.hrag-smart-rowmeta { flex: 1 1 100%; min-width: 0; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; overflow-wrap: anywhere; }',
+          '.hrag-smart-rowmeta { min-width: 0; color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; overflow-wrap: anywhere; }',
           '.hrag-smart-rowactions { display: flex; align-items: center; gap: 8px; flex: none; margin-left: auto; }',
           '.hrag-smart-round { color: var(--dsw-alias-label-tertiary); font-size: 11px; white-space: nowrap; }',
-          '.hrag-smart-check { width: 14px; height: 14px; margin: 2px 0 0; accent-color: var(--dsw-alias-state-business-primary); }',
-          '.hrag-smart-applyline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }',
+          '.hrag-smart-check { flex: none; width: 14px; height: 14px; margin: 2px 0 0; accent-color: var(--dsw-alias-state-business-primary); }',
           '.hrag-smart-status { color: var(--dsw-alias-label-tertiary); font-size: 11px; line-height: 16px; }',
           '.hrag-smart-drag { outline: 1px dashed var(--dsw-alias-state-business-primary); outline-offset: -4px; }',
           // 模型＋思考档位单框（照 DSH 模型选择）：触发器显示模型与档位，菜单根层两格下钻。
@@ -18591,7 +18608,6 @@ window.__ModuleLoader__.load({
       const [pending, setPending] = React.useState([])
       const [includedImages, setIncludedImages] = React.useState([])
       const [includedTexts, setIncludedTexts] = React.useState(0)
-      const [includeOpen, setIncludeOpen] = React.useState(false)
       const [rows, setRows] = React.useState([])
       const [rounds, setRounds] = React.useState(0)
       const [warnings, setWarnings] = React.useState([])
@@ -18717,7 +18733,6 @@ window.__ModuleLoader__.load({
         setPending([])
         setIncludedImages([])
         setIncludedTexts(0)
-        setIncludeOpen(false)
         setRows([])
         setRounds(0)
         setWarnings([])
@@ -18743,9 +18758,13 @@ window.__ModuleLoader__.load({
         add('embedding.model', embedding.model)
         add('embedding.base_url', embedding.base_url)
         if (embedding.dimension !== null && embedding.dimension !== undefined && embedding.dimension !== '') {
-          const provider = String(embedding.provider || (values && values.embedding_provider) || '')
-          const applies = dimensionVerdict && dimensionVerdict.status !== 'unreachable' && provider === (values && values.embedding_provider)
-          if (applies && dimensionVerdict.type === 'fixed' && dimensionVerdict.native != null) {
+          const dimensionDecision = ragSmartDimensionDecision(
+            embedding.dimension,
+            embedding.provider,
+            values && values.embedding_provider,
+            dimensionVerdict,
+          )
+          if (dimensionDecision === 'fixed') {
             nextWarnings.push({
               code: 'fixed_dimension',
               field: 'embedding.dimension',
@@ -18753,7 +18772,7 @@ window.__ModuleLoader__.load({
             })
           } else {
             add('embedding.dimension', embedding.dimension)
-            if (!applies) {
+            if (dimensionDecision === 'unverified') {
               nextWarnings.push({
                 code: 'dimension_unverified',
                 field: 'embedding.dimension',
@@ -18910,6 +18929,14 @@ window.__ModuleLoader__.load({
       }
 
       const checkedRows = rows.filter((row) => row.checked && !row.sameAsForm)
+      const selectableRows = rows.filter((row) => !row.sameAsForm)
+      const allSelected = selectableRows.length > 0 && selectableRows.every((row) => row.checked)
+      const toggleAll = () => {
+        const next = !allSelected
+        setRows((prev) =>
+          prev.map((row) => (row.sameAsForm ? row : Object.assign({}, row, { checked: next }))),
+        )
+      }
       const applySelected = () => {
         if (checkedRows.length === 0 || busy) return
         const sorted = checkedRows.slice().sort((a, b) => (b.provider ? 1 : 0) - (a.provider ? 1 : 0))
@@ -19004,6 +19031,47 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'hrag-smart-head' },
           h('div', { className: 'hrag-smart-title', title: t('set.smart.subtitle') }, t('set.smart.title')),
+          includedImages.length > 0 || includedTexts > 0 || rows.length > 0
+            ? h(
+                'div',
+                { className: 'hrag-smart-headmeta' },
+                includedImages.length > 0 || includedTexts > 0
+                  ? h(
+                      'span',
+                      {
+                        title: includedImages
+                          .map((item, index) =>
+                            t('set.smart.includedImage', {
+                              0: String(index + 1),
+                              1: String(item.type).replace('image/', '').toUpperCase(),
+                              2: ragSmartFormatBytes(item.bytes),
+                            }),
+                          )
+                          .concat(
+                            includedTexts > 0
+                              ? [t('set.smart.includedText', { 0: String(includedTexts) })]
+                              : [],
+                          )
+                          .join('\n'),
+                      },
+                      t('set.smart.includedShort', { 0: String(includedImages.length) }) +
+                        (includedTexts > 0
+                          ? ' · ' + t('set.smart.includedTextsShort', { 0: String(includedTexts) })
+                          : ''),
+                    )
+                  : null,
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'hrag-smart-linkbtn',
+                    disabled: busy,
+                    onClick: clearAll,
+                  },
+                  clearConfirm ? t('set.smart.clearAllConfirm') : t('set.smart.clearAll'),
+                ),
+              )
+            : null,
         ),
         h(
           'div',
@@ -19133,54 +19201,6 @@ window.__ModuleLoader__.load({
         ),
         model ? null : h('div', { className: 'hrag-smart-privacy' }, t('set.smart.noVision')),
         error ? h('div', { className: 'hrag-smart-error' }, error) : null,
-        includedImages.length > 0 || includedTexts > 0
-          ? h(
-              'div',
-              { className: 'hrag-smart-included' },
-              h(
-                'div',
-                { className: 'hrag-smart-includedhead' },
-                h('span', null, t('set.smart.sent', { 0: includedImages.length, 1: includedTexts })),
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'hrag-smart-linkbtn',
-                    onClick: () => setIncludeOpen((prev) => !prev),
-                  },
-                  includeOpen ? t('set.smart.collapse') : t('set.smart.expand'),
-                ),
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'hrag-smart-linkbtn',
-                    disabled: busy,
-                    onClick: clearAll,
-                  },
-                  clearConfirm ? t('set.smart.clearAllConfirm') : t('set.smart.clearAll'),
-                ),
-              ),
-              includeOpen
-                ? h(
-                    'div',
-                    { className: 'hrag-smart-includedlist' },
-                    includedImages.map((item, index) =>
-                      h(
-                        'span',
-                        { key: 'img-' + index },
-                        t('set.smart.includedImage', {
-                          0: String(index + 1),
-                          1: String(item.type).replace('image/', '').toUpperCase(),
-                          2: ragSmartFormatBytes(item.bytes),
-                        }),
-                      ),
-                    ),
-                    includedTexts > 0 ? h('span', null, t('set.smart.includedText', { 0: includedTexts })) : null,
-                  )
-                : null,
-            )
-          : null,
         rows.length > 0
           ? h(
               'div',
@@ -19188,15 +19208,49 @@ window.__ModuleLoader__.load({
               h(
                 'div',
                 { className: 'hrag-smart-resultshead' },
-                t('set.smart.result', { 0: rows.length, 1: rounds }),
+                h(
+                  'span',
+                  { className: 'hrag-smart-resulttitle' },
+                  rounds > 1
+                    ? t('set.smart.resultRounds', { 0: String(rows.length), 1: String(rounds) })
+                    : t('set.smart.result', { 0: String(rows.length) }),
+                ),
+                h(
+                  'span',
+                  { className: 'hrag-smart-commands' },
+                  selectableRows.length > 0
+                    ? h(
+                        'button',
+                        { type: 'button', className: 'hrag-smart-linkbtn', onClick: toggleAll },
+                        allSelected ? t('set.smart.selectNone') : t('set.smart.selectAll'),
+                      )
+                    : null,
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'hrag-btn hrag-btn-primary hrag-btn-sm',
+                      disabled: checkedRows.length === 0 || busy,
+                      onClick: applySelected,
+                    },
+                    t('set.smart.apply'),
+                  ),
+                ),
               ),
+              appliedNotice ? h('div', { className: 'hrag-smart-status' }, appliedNotice) : null,
               SMART_GROUP_ORDER.map((group) => {
                 const list = rows.filter((row) => row.group === group)
+                const total = rows.filter((row) => row.group === group).length
                 if (list.length === 0) return null
                 return h(
                   'div',
                   { className: 'hrag-smart-group', key: group },
-                  h('div', { className: 'hrag-smart-groupname' }, t('set.smart.group.' + group)),
+                  h(
+                    'div',
+                    { className: 'hrag-smart-groupname' },
+                    t('set.smart.group.' + group),
+                    h('span', { className: 'hrag-smart-groupcount' }, t('set.smart.groupCount', { 0: String(total) })),
+                  ),
                   list.map((row) =>
                     h(
                       'div',
@@ -19217,57 +19271,39 @@ window.__ModuleLoader__.load({
                           }),
                       h('span', { className: 'hrag-smart-rowlabel' }, t(row.labelKey)),
                       h(
-                        'span',
-                        { className: 'hrag-smart-rowvalue' + (row.mono ? ' hrag-smart-mono' : ''), title: rowValueText(row) },
-                        rowValueText(row),
-                      ),
-                      h(
-                        'span',
-                        { className: 'hrag-smart-rowactions' },
-                        row.provider ? ragConsoleButton(row.value, t) : null,
+                        'div',
+                        { className: 'hrag-smart-cell' },
                         h(
                           'span',
-                          { className: 'hrag-smart-round' },
-                          row.round === rounds ? t('set.smart.roundNew') : t('set.smart.roundPrev', { 0: row.round }),
+                          { className: 'hrag-smart-rowvalue' + (row.mono ? ' hrag-smart-mono' : ''), title: rowValueText(row) },
+                          rowValueText(row),
                         ),
+                        row.altValue !== null && row.altValue !== undefined
+                          ? h(
+                              'div',
+                              { className: 'hrag-smart-rowmeta' },
+                              t('set.smart.conflict', { 0: rowValueText(row), 1: row.altValue }) + ' ',
+                              h(
+                                'button',
+                                { type: 'button', className: 'hrag-smart-linkbtn', onClick: () => useThis(row) },
+                                t('set.smart.useThis'),
+                              ),
+                            )
+                          : !row.sameAsForm && ragSmartFormValue(values, row.field).trim() !== ''
+                            ? h('div', { className: 'hrag-smart-rowmeta' }, t('set.smart.form', { 0: formText(row) }))
+                            : null,
                       ),
-                      row.altValue !== null && row.altValue !== undefined
+                      row.round !== rounds
                         ? h(
                             'div',
-                            { className: 'hrag-smart-rowmeta' },
-                            t('set.smart.conflict', { 0: rowValueText(row), 1: row.altValue }) + ' ',
-                            h(
-                              'button',
-                              { type: 'button', className: 'hrag-smart-linkbtn', onClick: () => useThis(row) },
-                              t('set.smart.useThis'),
-                            ),
+                            { className: 'hrag-smart-rowactions' },
+                            h('span', { className: 'hrag-smart-round' }, t('set.smart.roundPrev', { 0: row.round })),
                           )
-                        : row.unchanged
-                          ? h('div', { className: 'hrag-smart-rowmeta' }, t('set.smart.unchanged'))
-                          : row.sameAsForm
-                            ? h('div', { className: 'hrag-smart-rowmeta' }, t('set.smart.unchanged'))
-                            : ragSmartFormValue(values, row.field).trim() !== ''
-                              ? h('div', { className: 'hrag-smart-rowmeta' }, t('set.smart.form', { 0: formText(row) }))
-                              : null,
+                        : null,
                     ),
                   ),
                 )
               }),
-              h(
-                'div',
-                { className: 'hrag-smart-applyline' },
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'hrag-btn hrag-btn-primary hrag-btn-sm',
-                    disabled: checkedRows.length === 0 || busy,
-                    onClick: applySelected,
-                  },
-                  t('set.smart.apply'),
-                ),
-                appliedNotice ? h('span', { className: 'hrag-smart-status' }, appliedNotice) : null,
-              ),
               warnings.map((warning, index) =>
                 h(
                   'div',
@@ -23456,8 +23492,8 @@ window.__ModuleLoader__.load({
                 { id: 'rename', label: t('menu.renameKb'), icon: dshEditIcon() },
                 { id: 'delete', label: t('menu.deleteKb'), danger: true, icon: dshTrashIcon() },
                 { type: 'separator', id: 'sep-3' },
-                { id: 'settings', label: t('menu.modelSettings'), icon: dshSettingsIcon() },
                 { id: 'repository', label: t('menu.repository'), icon: dshRightUpIcon() },
+                { id: 'settings', label: t('menu.modelSettings'), icon: dshSettingsIcon() },
               ],
               onSelect: (id) => {
                 if (id === 'upload') {
