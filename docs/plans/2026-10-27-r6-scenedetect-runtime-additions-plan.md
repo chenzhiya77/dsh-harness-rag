@@ -41,7 +41,7 @@
 - Zip：`E:\hrag-r5\dist\harness-rag-runtime-win32-x64-0.1.0-4.zip`，493,631,491 B（470.8 MiB zipped），sha256 `867056230ccee40330f8582b93780e6899449b402192eb484a06ff29724a8ed5`，解包 1220.0 MiB、21,215 条目。
 - 包内关键条目：`site-packages/scenedetect` 925K、`site-packages/cv2` 113M、`site-packages/platformdirs` 121K（+dist-info）、`ffmpeg/` 258M、`tiktoken-cache/` 1.7M、`langfuse 4.5.1`/`backoff 2.2.1`；manifest `runtimeVersion 0.1.0-4`、`engineCommit a4942966b`、python 3.12.13、qdrant 1.20.0、ffmpeg `n9.0-lgpl`、configVersion 44。
 - 冒烟：`scenedetect 0.7.1, opencv 5.0.0, platformdirs 4.10.0`；notices 增 `PySceneDetect / OpenCV (BSD-3-Clause / Apache-2.0)` 段（含 platformdirs MIT）。
-- 构建偏差：BtbN rolling 资产已更新，首跑因 size/sha 不匹配失败；重新钉 `FFMPEG_SIZE=172_592_617`、`FFMPEG_SHA256=bac7c98811b44cbf3536f2fd8438851446f42b56e379125648212c9e98e3dc07` 后重建通过。
+- 构建偏差：BtbN rolling 资产已更新，首跑因 size/sha 不匹配失败；重新钉 `FFMPEG_SIZE=172_592_617`、`FFMPEG_SHA256=bac7c98811b44cbf3536f2fd8438851446f42b56e379125648212c9e98e3dc07` 后重建通过。10-28 重建时该 rolling 资产再次更新，重钉 `FFMPEG_SIZE=172_591_700`、`FFMPEG_SHA256=d551c682fb0ba39512a58fd0c2f9d40eae1e7d04a9eb3120605a50e4f826c221`。
 - 构建日志：`E:\hrag-r5\evidence\build-0.1.0-4-r6.log`
 
 ## Task 3 — 多镜头隔离验收
