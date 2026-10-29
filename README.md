@@ -113,15 +113,15 @@
 ### 文档与解析
 
 上传后逐路径解析状态（向量 / 图谱 / wiki 三条腿；视频文档另有「语音 / 分镜 / 配文」三条预处理腿），失败可就地重试；点开文档即进入切片抽屉。
-<img src="docs/assets/screens/docs-overview.jpg" width="1000" alt="文档 tab：逐路径解析状态与文档全貌">
+<img src="docs/assets/screens/docs-ingest.jpg" width="1000" alt="文档 tab：文档入库">
 
 <details>
-<summary>展开截图：文档入库 / 初始状态 / 逐路径状态 / 视频文档 / 文档切片 / PDF 解析 / 文档页设置（7 张）</summary>
-<img src="docs/assets/screens/docs-ingest.jpg" width="1000" alt="文档入库">
+<summary>展开截图：初始状态 / 逐路径状态 / 视频文档 / 文档切片 / 文档全貌 / PDF 解析 / 文档页设置（7 张）</summary>
 <img src="docs/assets/screens/docs-initial.jpg" width="1000" alt="初始状态">
 <img src="docs/assets/screens/docs-status.jpg" width="1000" alt="逐路径状态">
 <img src="docs/assets/screens/docs-video.jpg" width="1000" alt="视频文档">
 <img src="docs/assets/screens/docs-document.jpg" width="1000" alt="文档切片">
+<img src="docs/assets/screens/docs-overview.jpg" width="1000" alt="文档全貌">
 <img src="docs/assets/screens/docs-pdf.jpg" width="1000" alt="PDF 解析">
 <img src="docs/assets/screens/docs-settings.jpg" width="1000" alt="文档页设置">
 </details>
