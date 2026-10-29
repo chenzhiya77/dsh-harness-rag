@@ -198,14 +198,14 @@ AI 按实体资格自动沉淀「生成条目」；用户自建的「我的条�
 
 ## 🚀 快速开始
 
-GitHub 安装可用（钉 tag `v0.1.2`，不要跟 main）；npm 包尚未发布：
+GitHub 安装可用（钉 tag `v0.1.4`，不要跟 main）；npm 包尚未发布：
 
 ```sh
 # 本地目录（开发安装，改码即被读取）
 dsh plugin --profile <name> add link:<本仓绝对路径>
 
 # GitHub（钉 tag；运行时包从同仓 Release 下载）
-dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.2
+dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.4
 
 # npm（发布后可用）
 dsh plugin --profile <name> add dsh-harness-rag
@@ -244,7 +244,7 @@ dsh plugin --profile <name> add dsh-harness-rag
 | 功能模型设置（智能识别 / 厂商入口 / 重建索引） | 已实装 |
 | 摄取后台任务 | 已实装 |
 | 运行时准备 / 就绪 / 重试 / 版本化升级 / 回滚 / 嵌入模型引导 | 已实装 |
-| GitHub 安装入口 | 已发布（v0.1.2） |
+| GitHub 安装入口 | 已发布（v0.1.4） |
 | npm 安装入口 | 待发布 |
 
 ---

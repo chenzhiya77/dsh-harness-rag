@@ -2,18 +2,18 @@
 
 > 原根 README，现作为安装、运行与契约的操作手册保留；产品介绍见根 [README](../README.md)。
 
-现状：工具面（三检索＋文档两件＋wiki 清单）、右栏管理面板（含功能模型设置、智能识别配置与项目仓库入口）、摄取后台任务、子槽声明契约、单一下载分发（运行时准备/就绪/重试/嵌入模型引导）与版本化升级/回滚/旧版清理均已实装；`backendUrl` 为空即内置本地服务，非空仍走外部服务。GitHub 安装入口已发布（v0.1.2，见「安装」）；npm 待发布。
+现状：工具面（三检索＋文档两件＋wiki 清单）、右栏管理面板（含功能模型设置、智能识别配置与项目仓库入口）、摄取后台任务、子槽声明契约、单一下载分发（运行时准备/就绪/重试/嵌入模型引导）与版本化升级/回滚/旧版清理均已实装；`backendUrl` 为空即内置本地服务，非空仍走外部服务。GitHub 安装入口已发布（v0.1.4，见「安装」）；npm 待发布。
 
 ## 安装
 
-GitHub 安装可用（钉 tag `v0.1.2`，不要跟 main）；npm 包尚未发布：
+GitHub 安装可用（钉 tag `v0.1.4`，不要跟 main）；npm 包尚未发布：
 
 ```sh
 # 本地目录（开发安装，改码即被读取）
 dsh plugin --profile <name> add link:<本仓绝对路径>
 
 # GitHub（钉 tag；运行时包从同仓 Release 下载）
-dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.2
+dsh plugin --profile <name> add git+https://github.com/chenzhiya77/dsh-harness-rag.git#v0.1.4
 
 # npm（发布后可用）
 dsh plugin --profile <name> add dsh-harness-rag
@@ -51,7 +51,7 @@ dsh plugin --profile <name> add dsh-harness-rag
 
 ## 升级与回滚
 
-运行时的目标版本来自插件包的 `runtime.json`，当前运行版本记在 `<root>/state/current.json`。新运行时只随对应插件版本发布：已装用户先升级插件到 `v0.1.2`，其 `runtime.json` 才会把 `0.1.0-3` 暴露给既有升级链；只换运行时包不会自动生效。两者不同时：
+运行时的目标版本来自插件包的 `runtime.json`，当前运行版本记在 `<root>/state/current.json`。新运行时只随对应插件版本发布：已装用户先升级插件到 `v0.1.4`，其 `runtime.json` 才会把 `0.1.0-4` 暴露给既有升级链；只换运行时包不会自动生效。两者不同时：
 
 1. **准备**：旧服务仍健康时，插件只在后台下载、校验、解压新版本，面板提示「新版本已就绪，重启 DSH 后启用」；本次不切换，也不改数据。
 2. **切换**：下一次 DSH 启动（旧服务已退出、租约空闲）时启动新版。新版 Qdrant 与 knowledge 共享 90 秒健康门，成功后才把 `current.json` 指向新版并记下 `previousVersion`。
@@ -74,7 +74,7 @@ dsh plugin --profile <name> add dsh-harness-rag
 - `service.json` 的 `pid` 为 null、知识服务端口仍应答、且租约不存在或已陈旧时，插件判定为「旧实例残留」：服务仍可继续用，但升级会停在 `blocked` 并显示「旧实例残留」。插件不会猜 pid、也不强杀；请确认端口（默认 8020/6333/6334）上的进程属于本运行根后手工停止，再重启 DSH 或点重试。
 - `state/provision.lock` 的持有者已退出但锁仍在（例如 pid 无法判定）：确认没有其他宿主正在准备后删除该文件，再重试。
 
-**开发态本地包**：仅开发/验收用 `DSH_HARNESS_RAG_PACK=<本地 zip 绝对路径>` 覆盖下载，发布版不启用；本地包同样做空间检查与 manifest 的 `runtimeVersion`/`configVersion` 校验。`runtime.json` 已回填 GitHub Release 下载地址（v0.1.1 的 `0.1.0-3`）与 `size`/`sha256`；本地包只用于开发/验收覆盖。
+**开发态本地包**：仅开发/验收用 `DSH_HARNESS_RAG_PACK=<本地 zip 绝对路径>` 覆盖下载，发布版不启用；本地包同样做空间检查与 manifest 的 `runtimeVersion`/`configVersion` 校验。`runtime.json` 已回填 GitHub Release 下载地址（v0.1.4 的 `0.1.0-4`）与 `size`/`sha256`；本地包只用于开发/验收覆盖。
 
 ## 外部模式（自带 Harness RAG 服务）
 
