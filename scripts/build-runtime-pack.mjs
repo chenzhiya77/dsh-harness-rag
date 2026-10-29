@@ -39,8 +39,8 @@ const QDRANT_ASSET = 'qdrant-x86_64-pc-windows-msvc.zip'
 const QDRANT_SIZE = 30_801_664
 const FFMPEG_VERSION = 'n9.0-lgpl'
 const FFMPEG_ASSET = 'ffmpeg-n9.0-latest-win64-lgpl-9.0.zip'
-const FFMPEG_SIZE = 171_481_203
-const FFMPEG_SHA256 = 'c1044833f3e9b30de2e3d80faef815998624d568fee0493eb49ecb13e5ef0980'
+const FFMPEG_SIZE = 172_592_617
+const FFMPEG_SHA256 = 'bac7c98811b44cbf3536f2fd8438851446f42b56e379125648212c9e98e3dc07'
 const FFMPEG_LICENSE_URL = 'https://github.com/BtbN/FFmpeg-Builds'
 const PYTHON_VERSION = '3.12.13'
 const UV_VERSION = '0.11.2'
@@ -449,6 +449,34 @@ if (tracing.status !== 0) {
 console.log(`[build]   ${(tracing.stdout ?? '').trim()}`)
 done()
 
+step('smoke-test scenedetect + opencv')
+const sceneScript = `import importlib.metadata as m
+
+import cv2
+from scenedetect import ContentDetector, SceneManager
+
+assert m.version("scenedetect") == "0.7.1", m.version("scenedetect")
+assert m.version("opencv-python") == "5.0.0.93", m.version("opencv-python")
+assert m.version("platformdirs") == "4.10.0", m.version("platformdirs")
+print(f"scenedetect {m.version('scenedetect')}, opencv {cv2.__version__}, platformdirs {m.version('platformdirs')}")`
+const scene = spawnSync(pythonExe, ['-c', sceneScript], {
+  cwd: workDir,
+  encoding: 'utf8',
+  env: {
+    ...process.env,
+    PYTHONPATH: join(packDir, 'site-packages'),
+    PYTHONNOUSERSITE: '1',
+    PYTHONUTF8: '1',
+    PYTHONIOENCODING: 'utf-8',
+  },
+})
+if (scene.status !== 0) {
+  const detail = (scene.stderr || scene.stdout || scene.error?.message || '').trim()
+  fail(`scenedetect smoke test failed (exit ${scene.status}): ${detail}`)
+}
+console.log(`[build]   ${(scene.stdout ?? '').trim()}`)
+done()
+
 // ── 3. engine source ─────────────────────────────────────────────────────────
 step('copy the engine source')
 const engineOut = join(packDir, 'engine')
@@ -707,6 +735,15 @@ wheels for optional evaluation tracing. Sources:
 https://github.com/langfuse/langfuse-python and
 https://github.com/litl/backoff (both MIT). They activate only when
 \`LANGFUSE_TRACING\` and the Langfuse credentials are set.
+
+## PySceneDetect / OpenCV (BSD-3-Clause / Apache-2.0)
+
+\`site-packages/scenedetect\` and \`site-packages/cv2\` are installed as extra
+wheels so video ingestion can detect shot boundaries instead of falling back to
+equal-width windows. Sources: https://github.com/Breakthrough/PySceneDetect
+(BSD-3-Clause) and https://github.com/opencv/opencv-python (Apache-2.0).
+\`site-packages/platformdirs\` (MIT, https://github.com/platformdirs/platformdirs)
+is their shared dependency. No model weights or network access are involved.
 
 ## Python wheels (site-packages)
 

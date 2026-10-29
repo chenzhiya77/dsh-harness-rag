@@ -2,6 +2,12 @@
 # These packages are NOT in engine/backend/uv.lock; keep one exact pin per line.
 # python-calamine backs .xlsx/.xls parsing (the engine imports it lazily).
 python-calamine==0.8.2
+# R6: scene detection. scenedetect is the engine's lazy import; opencv-python
+# backs its frame reader and platformdirs is its last unlocked dependency.
+# All three ship so video segmentation does not silently fall back to windows.
+platformdirs==4.10.0
+scenedetect==0.7.1
+opencv-python==5.0.0.93
 # R5: Langfuse tracing (the engine imports it lazily when LANGFUSE_TRACING is on).
 # The engine lock has these only as optional/unused graph nodes, so the export
 # does not carry them; pin the exact Langfuse closure from the main-tree lock.

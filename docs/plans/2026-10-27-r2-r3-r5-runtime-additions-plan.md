@@ -74,6 +74,7 @@
 - **R3**：停宿主、改名包内 BPE 缓存后重启（死代理）→ `.md` 首次切分 failed，栈落在 `tiktoken.load.read_file` → `openaipublic.blob.core.windows.net` → 代理拒绝；恢复缓存并重启 → 同一路径 ready（`token_count=16`），缓存 mtime 保持安装时的 `00:12:46` 未变。证据 `r3-neg-docs.json`、`r3-pos-docs.json`、`chunks-r3-pos.json`、`engine-log-excerpts.txt`。
 - **R5**：pack Python 探针（`r5-probe.py`）输出 `providers=["langfuse"]`、`callbacks=["langfuse.langchain.CallbackHandler.LangchainCallbackHandler"]`、`flushed`；抓取端累计收到 10 次 `/api/public/otel/v1/traces`（引擎摄入与探针 flush 合计，均带 auth，含重启前后）。边界：无真实 Langfuse 服务，trace URL/页面跳转未验。证据 `r5-probe.log`、`langfuse-capture.log`。
 - **回归与门禁**：面板无 MinerU token 上传 PDF → 上传前拦截（toast「PDF / Office / 图片解析需要 MinerU 令牌，先去配置」、0 次 `uploadDocument` 请求、文档行数不变），截图 `shot-01-pdf-blocked.png`、`ui-gate.txt`；本地 `.md` 到 ready、`.csv`/`.xlsx` 到 ready（表格门控开着，xlsx 1 chunk）；`engine/` 零 diff；`tsc` exit 0、`node --check`（client/构建脚本/`lib/runtime/engine_env.js`/`lib/runtime/supervisor.js`）全过、`node --test tests/*.test.ts` 314/314（含既有未提交升级修复的 1 条用例）。证据 `task4-tsc.txt`、`task4-tests.txt`、`docs-final.json`、`runtime-status-final.json`。
+- **后续（R6，2026-10-27）**：`0.1.0-4` 已按 [R6 plan](./2026-10-27-r6-scenedetect-runtime-additions-plan.md) 重建，加入 `scenedetect`/`opencv-python`/`platformdirs`；当前候选 493,631,491 B / sha256 `86705623…24a8ed5`，分镜正控 `segment=done`，K1 关闭。本条以上的构建数字与 R2 的 `segment=degraded` 均为 R6 前的历史记录。
 
 
 ## Task 5 — 发布（候令）

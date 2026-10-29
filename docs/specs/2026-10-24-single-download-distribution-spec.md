@@ -1,6 +1,6 @@
 # 单一下载分发（插件自带本地运行环境） —— spec
 
-**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 公开仓、`v0.1.0` Release 与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；§5.10 同时启动与 §5.17 `.env` 代理/引擎出网已于 2026-10-26 补测（证据 `D:\hrag-t6\acceptance-2026-10-26-lease-proxy`）；npm 发布与索引上线待外部条件）。**2026-10-26 RAG 面复审追加 §9：R1 已按甲实施并随 `v0.1.1` 发布（运行时 `0.1.0-3`；`runtime.json` 与安装文档已指向该版本），R4 已按甲实施并随 `v0.1.2` 发布（插件面；运行时仍 `0.1.0-3`），R2/R3/R5 已按乙/甲/乙实施、运行时 `0.1.0-4` 与插件 `0.1.3` 待发布（2026-10-27，发布候令），K1 已知降级。**
+**Status:** 已拍·实施完成（2026-10-25；Task 0–8 全落；GitHub 公开仓、`v0.1.0` Release 与 `git+https` 安装已于 2026-10-26 闭环，`runtime.json.urls` 已回填；§5.10 同时启动与 §5.17 `.env` 代理/引擎出网已于 2026-10-26 补测（证据 `D:\hrag-t6\acceptance-2026-10-26-lease-proxy`）；npm 发布与索引上线待外部条件）。**2026-10-26 RAG 面复审追加 §9：R1 已按甲实施并随 `v0.1.1` 发布（运行时 `0.1.0-3`；`runtime.json` 与安装文档已指向该版本），R4 已按甲实施并随 `v0.1.2` 发布（插件面；运行时仍 `0.1.0-3`），R2/R3/R5/R6 已按乙/甲/乙/乙实施、运行时 `0.1.0-4` 与插件 `0.1.3` 待发布（2026-10-27，发布候令），K1 已由 R6 关闭。**
 **Date:** 2026-10-24
 **来源:** 10-24 他问「当前的插件有两个文件夹……用户下载插件肯定是只下载一个插件，后端不能放在插件文件夹中吗」；随后明确目标是「用户只需要点击下载插件就能下载完全部的东西，可以直接使用」，并问 DSH 插件发布在哪、是否有官方市场；确认方向后令起 spec/plan。
 **承接:** 现行部署两件式（[README.md](../../README.md) §安装/§后端最小形态，`README.md:40-69`）；配置默认值 `src/settings.ts:15-19`；后端地址的唯一消费面 `src/http.ts:29-48` 与 `src/kb_proxy.ts:395/450/543`；引擎路径环境变量 `engine/backend/packages/harness/deerflow/config/runtime_paths.py`（并入单仓后的位置）。
@@ -358,11 +358,11 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 后续（非本对）：本地嵌入 spec（让新装用户不填 key 也能摄入）；mac/Linux 运行时包与 CI 矩阵；精简运行时 profile；运行时包增量更新；官方/社区索引收录。
 
-§9 的 R1 已按甲实施并随 `v0.1.1` 发布；R4 已按甲实施并随 `v0.1.2` 发布；R2/R3/R5 已按乙/甲/乙裁决并实施（运行时 `0.1.0-4`、插件 `0.1.3` 待发布），执行记录见 [R2/R3/R5 plan](../plans/2026-10-27-r2-r3-r5-runtime-additions-plan.md)。
+§9 的 R1 已按甲实施并随 `v0.1.1` 发布；R4 已按甲实施并随 `v0.1.2` 发布；R2/R3/R5/R6 已按乙/甲/乙/乙裁决并实施（运行时 `0.1.0-4`、插件 `0.1.3` 待发布），执行记录见 [R2/R3/R5 plan](../plans/2026-10-27-r2-r3-r5-runtime-additions-plan.md) 与 [R6 plan](../plans/2026-10-27-r6-scenedetect-runtime-additions-plan.md)。
 
 ## 9. 2026-10-26 RAG 面复审登记
 
-> 本节记录复审发现与实施状态。R1 已按甲实施并随 `v0.1.1` 发布（运行时 `0.1.0-3`），R4 已按甲实施并随 `v0.1.2` 发布（插件面；运行时仍 `0.1.0-3`），R2/R3/R5 已按乙/甲/乙实施（运行时 `0.1.0-4`、插件 `0.1.3` 待发布），K1 为已知降级。
+> 本节记录复审发现与实施状态。R1 已按甲实施并随 `v0.1.1` 发布（运行时 `0.1.0-3`），R4 已按甲实施并随 `v0.1.2` 发布（插件面；运行时仍 `0.1.0-3`），R2/R3/R5/R6 已按乙/甲/乙/乙实施（运行时 `0.1.0-4`、插件 `0.1.3` 待发布），K1 已由 R6 关闭。
 
 ### 9.1 基线与结论
 
@@ -379,7 +379,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 
 ### 9.2 登记与裁决
 
-> **R1 已按甲实施并随 `v0.1.1` 发布（2026-10-26）；R4 已按甲·完整实施并随 `v0.1.2` 发布（2026-10-27，插件面）；R2/R3/R5 已按乙/甲/乙实施，运行时 `0.1.0-4` 与插件 `0.1.3` 待发布（2026-10-27，发布候令）。** 执行记录见 [R1 plan](../plans/2026-10-26-excel-runtime-pack-plan.md)、[R4 plan](../plans/2026-10-26-r4-mineru-token-guidance-plan.md) 与 [R2/R3/R5 plan](../plans/2026-10-27-r2-r3-r5-runtime-additions-plan.md)。
+> **R1 已按甲实施并随 `v0.1.1` 发布（2026-10-26）；R4 已按甲·完整实施并随 `v0.1.2` 发布（2026-10-27，插件面）；R2/R3/R5/R6 已按乙/甲/乙/乙实施，运行时 `0.1.0-4` 与插件 `0.1.3` 待发布（2026-10-27，发布候令）。** 执行记录见 [R1 plan](../plans/2026-10-26-excel-runtime-pack-plan.md)、[R4 plan](../plans/2026-10-26-r4-mineru-token-guidance-plan.md)、[R2/R3/R5 plan](../plans/2026-10-27-r2-r3-r5-runtime-additions-plan.md) 与 [R6 plan](../plans/2026-10-27-r6-scenedetect-runtime-additions-plan.md)。
 
 | 编号 | 事实 | 触发与影响 | 选项 | 验收 |
 |---|---|---|---|---|
@@ -388,13 +388,18 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 | R3（已定甲·已实施未发布） | **tiktoken 成传递依赖 + BPE 未随包**：`chunker.py:28` 顶层 `import tiktoken`，`count_tokens` 用 `cl100k_base`（`chunker.py:45`）；`tiktoken` 已不在 `engine/backend/packages/harness/pyproject.toml` 的直接依赖，当前由 ragas/langchain-openai 传递带入（`engine/backend/uv.lock`）；0.1.0-2 的 `site-packages` 有 tiktoken 0.12.0，但没有 BPE 缓存。首次 `get_encoding` 会从 tiktoken 的固定地址取约 1.6 MB，默认缓存在 `%TEMP%/data-gym-cache` 或 `TIKTOKEN_CACHE_DIR`。 | 当前可用；锁变化可能断。干净 VM / 离线首次摄入多一个网络点，失败时不像模型端点那样有面板引导。 | 甲：`tiktoken` 加回直接依赖，构建时把 BPE 缓存放入 pack 并设 `TIKTOKEN_CACHE_DIR`（推荐）。乙：只加直接依赖，文档写明首次需联网。丙：维持现状（不建议，属于隐性依赖）。 | 甲：断网/干净 VM 首次切分成功。乙：首次联网按文档可预期完成。 |
 | R4（已定甲·已发布） | **MinerU 未配置的落点不对**：默认 `parse_provider=mineru-cloud`（`app_config.py:233`）；无 token 时 `parser.py:600-603` 抛 `MineruAuthError`；面板把含 `mineru_api_token` 的错误归为 `serviceUnconfigured`（`client.js:3403`），文案是“文档解析服务未配置，请联系管理员”（`client.js:301`）；面板设置里其实有 MinerU token 字段（`client.js:19236`）；手册首启只引导嵌入模型（`plugin-manual.md:26`），没提 MinerU token。 | 单用户桌面第一次上传 PDF/Office/图片即失败；“请联系管理员”没有可操作路径（实际应在「功能模型设置」填 token）。 | 甲（已定）：上传前只拦 MinerU 格式 + 失败卡「去配置」+ 可操作文案。乙：只改文案。丙：不动。 | 未配置时上传 PDF 得到可操作的指向；配置后解析成功。 |
 | R5（已定乙·已实施未发布） | **Langfuse 裁剪后的残留**：`langfuse` 已从 `harness/pyproject.toml` 直接依赖移除；评测引擎缺包时 `push_scores_to_langfuse` 明确跳过（`ragas_eval.py:656-691`）；面板仍保留“查看 Trace”按钮逻辑，只在 `layer2.langfuse_trace_url` 存在时显示（`client.js:12413`），实际不会出现；README/手册没有提 trace。 | 当前无死链、无报错；但这是一项相对 deer-flow 的真实能力损失（有 Langfuse 环境时也无法推送/跳转）。 | 甲：确认不支持，保留惰性代码并在评测文档写一句“无 trace”（最小改动）。乙：补 `langfuse` 依赖与配置入口。丙：删掉残留按钮代码（如果确定永不支持）。 | 甲：文档与界面一致，不出现“应该有但没有”的预期。乙：配置后 trace URL 可出现。丙：代码无死入口。 |
-| K1 | **scenedetect 未随包**：视频分镜惰性导入 `scenedetect`（`worker.py:145`），缺失时回落 `fallback_window_seconds` 等距窗口（`app_config.py:154`）。 | 只降分镜精度，不阻塞；不影响 ffmpeg/ASR 的硬前置。 | 不处理（已知降级）。 | 视频仍能出分镜卡；日志可见降级。 |
+| R6（已定乙·已实施未发布） | **分镜依赖未随包**：视频分镜惰性导入 `scenedetect`（`worker.py:145`），缺包回落 `fallback_window_seconds` 等距窗口；`0.1.0-3` 与 `0.1.0-4` 旧候选的 `site-packages` 均无 `scenedetect`/`opencv-python`/`platformdirs`。ASR 可换服务档，分镜没有替代来源。 | 开视频门控后多镜头视频的镜头卡边界丢失（`segment=degraded`），每个视频静默降级。 | 甲：只文档写明另装。乙（已定）：把 `scenedetect==0.7.1` + `opencv-python==5.0.0.93` + `platformdirs==4.10.0` 打进 `0.1.0-4`；`funasr/torch/torchaudio` 继续不打包（ASR 走服务档或外部安装）。丙：不做。 | 乙：干净托管运行时多镜头视频 `segment=done`、`shot_count=3`；负控移除 `scenedetect` 后 `segment=degraded`、`shot_count=1`。 |
+| K1 | **分镜依赖曾未随包（K1）**：视频分镜惰性导入 `scenedetect`（`worker.py:145`），缺失时回落 `fallback_window_seconds` 等距窗口（`app_config.py:154`）。 | 只降分镜精度，不阻塞；不影响 ffmpeg/ASR 的硬前置。 | 已由 R6 关闭（`0.1.0-4` 随包 `scenedetect`/`opencv-python`/`platformdirs`）。 | 视频仍能出分镜卡；日志可见降级。 |
 
-> **R2 实施结果（2026-10-27，未发布）**：按乙落地——构建脚本从 BtbN `ffmpeg-n9.0-latest-win64-lgpl-9.0.zip`（171,481,203 B，sha256 `c1044833…ef0980`）解出 `ffmpeg.exe`/`ffprobe.exe` 与 `LICENSE.txt`，校验 size/sha 并在包内跑 `ffprobe -version`；宿主把 `<runtime>/ffmpeg` 前置进引擎 `PATH`。`0.1.0-4` 包内 `ffmpeg/` 三项齐全，manifest 增 `ffmpegVersion`，notices 声明 LGPL 与源码链接。隔离沙箱（系统 ffmpeg 已从宿主 PATH 剔除）上传 2 秒 MP4 到 ready（`duration_ms=2000`、`shot_count=1`、切片带 `frame_url`），ASR/分镜按既定降级（`asr=failed`、`segment=degraded`）；负控删掉包内 `ffprobe.exe` 后同一上传以「未找到 ffprobe」失败，恢复后再次 ready。证据 `E:\hrag-r5\evidence`（`r2-neg-docs.json`、`r2-pos-docs.json`、`chunks-video.json`）。
+> **R2 实施结果（2026-10-27，未发布）**：按乙落地——构建脚本从 BtbN `ffmpeg-n9.0-latest-win64-lgpl-9.0.zip`（171,481,203 B，sha256 `c1044833…ef0980`；R6 重建时该 rolling 资产已更新，改钉 172,592,617 B / sha256 `bac7c988…dc07`）解出 `ffmpeg.exe`/`ffprobe.exe` 与 `LICENSE.txt`，校验 size/sha 并在包内跑 `ffprobe -version`；宿主把 `<runtime>/ffmpeg` 前置进引擎 `PATH`。`0.1.0-4` 包内 `ffmpeg/` 三项齐全，manifest 增 `ffmpegVersion`，notices 声明 LGPL 与源码链接。隔离沙箱（系统 ffmpeg 已从宿主 PATH 剔除）上传 2 秒 MP4 到 ready（`duration_ms=2000`、`shot_count=1`、切片带 `frame_url`），ASR/分镜按既定降级（`asr=failed`、`segment=degraded`；分镜已由 R6 随包）；负控删掉包内 `ffprobe.exe` 后同一上传以「未找到 ffprobe」失败，恢复后再次 ready。证据 `E:\hrag-r5\evidence`（`r2-neg-docs.json`、`r2-pos-docs.json`、`chunks-video.json`）。
 
 > **R3 实施结果（2026-10-27，未发布）**：按甲落地，并在 `engine/` 零 diff 的边界内把「直接依赖」落成构建期钉版本——不改引擎 `pyproject.toml`/`uv.lock`，`tiktoken` 仍由锁内传递版本 0.12.0 提供，构建期断言版本并把 `cl100k_base`（1,681,126 B，文件名 SHA1 `9b5ad71b…2fc6a4`）写入 `tiktoken-cache/`；宿主注入 `TIKTOKEN_CACHE_DIR=<runtime>/tiktoken-cache`。隔离沙箱（死代理）下普通 `.md` 到 ready；负控改名包内缓存后同一路径首次切分即尝试访问 `openaipublic.blob.core.windows.net` 并被代理拒绝（文档 failed），恢复缓存后再次 ready 且缓存 mtime 未变。证据 `E:\hrag-r5\evidence`（`r3-neg-docs.json`、`r3-pos-docs.json`、`chunks-r3-pos.json`）。
 
 > **R5 实施结果（2026-10-27，未发布）**：按乙落地——`langfuse==4.5.1`、`backoff==2.2.1` 及 11 个 opentelemetry/wrapt 等闭包 pin 进 `scripts/runtime-extra-requirements.txt`，构建期冒烟 `langfuse`/`backoff` 版本与 `Langfuse`/`CallbackHandler` 导入；宿主仅在设置时透传 `LANGFUSE_TRACING/PUBLIC_KEY/SECRET_KEY/BASE_URL`。隔离沙箱用假 keys + 本地抓取端：pack Python 探针得到 `providers=['langfuse']` 并构造 handler；抓取端累计收到 10 次 `/api/public/otel/v1/traces`（引擎摄入与探针 flush 合计，均带 auth，含重启前后）。边界：未接真实 Langfuse 服务，trace URL/页面跳转未验。证据 `E:\hrag-r5\evidence`（`r5-probe.log`、`langfuse-capture.log`）。
+
+> **R6 实施结果（2026-10-27，未发布）**：按乙落地——`scenedetect==0.7.1`、`opencv-python==5.0.0.93`、`platformdirs==4.10.0` pin 进 `scripts/runtime-extra-requirements.txt`，构建期冒烟 `scenedetect`/`cv2`/`platformdirs` 版本及 `ContentDetector`/`SceneManager` 导入；`0.1.0-4` 重建为 493,631,491 B / sha256 `86705623…24a8ed5`，21,215 条目、解包 1220.0 MiB，notices 增 BSD-3-Clause/Apache-2.0 段。隔离沙箱解包 zip：6 秒 30fps 三色夹具 → `shot_count=3`、`segment=done`、切片窗 `0–2000/2000–4000/4000–6000` ms；负控改名 `site-packages/scenedetect` 后 → `shot_count=1`、`segment=degraded`、单窗 `0–6000` ms，日志 `No module named 'scenedetect'; falling back to uniform windows`。`engine/` 零 diff。证据 `E:\hrag-r5\evidence\r6-scenedetect-acceptance.md`；plan [../plans/2026-10-27-r6-scenedetect-runtime-additions-plan.md](../plans/2026-10-27-r6-scenedetect-runtime-additions-plan.md)。
+>
+> **R6 补记（2026-10-28）**：R6 自身仍零 diff；服务档 ASR 缺陷修复与嵌入拆批自愈按用户裁定改动了 `engine/backend/packages/harness/deerflow/knowledge/video/asr.py` 与 `knowledge/embedder.py` 及其测试（见 `engine/docs/superpowers/specs/2026-09-28-rag-asr-service-tier-design.md` §10、`2026-09-26-rag-embedding-probe-design.md` §7），因此两笔修复已提交（`af83a87`、`f20bcf2`），`0.1.0-4` 候选 zip 需重建（构建会把引擎源码复制进包）；桌面运行时已手工同步同一批文件并完成真机验收。
 
 > **R1 实施结果（2026-10-26）**：按甲落地——`scripts/runtime-extra-requirements.txt` 固定 `python-calamine==0.8.2`，构建脚本并入 `uv pip sync` 并在构建期冒烟；运行时 `0.1.0-3`（331,053,658 B，sha256 `90421f0f…aca745`）随 `v0.1.1` 发布，`runtime.json` 已指向该资产。干净托管运行时开表门控后 `.xlsx`/`.tsv`/`.csv` 均到 ready，关闸时 `.xlsx`/`.tsv` 仍被拒绝；`engine/` 零 diff。证据：`D:\hrag-r1\evidence\zip`（验收）、`D:\hrag-r1\evidence\release`（发布/安装复验）；plan [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
 
@@ -413,9 +418,9 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 ### 9.4 发布影响
 
 - **R1（已定甲·已实施）**：托管运行时 pack 已重建为 `0.1.0-3`，随 `v0.1.1` Release 发布并回填 `runtime.json`；GitHub 安装钉 `v0.1.1`，已装用户先升级插件后由既有升级链看到新 pack。`v0.1.0` 既有资产未覆盖；执行细节与证据见 [../plans/2026-10-26-excel-runtime-pack-plan.md](../plans/2026-10-26-excel-runtime-pack-plan.md)。
-- **R2/R3/R5（已定乙/甲/乙·已实施未发布）**：三项同进运行时 `0.1.0-4`（`ffmpeg/`、`tiktoken-cache/`、`site-packages/langfuse+backoff+opentelemetry`）与插件 `0.1.3`（引擎 env 注入）。发布需上传已构建的 pack（447,481,687 B / sha256 `feec4ffb…f64814`）并回填 `runtime.json`；未发布前 `runtime.json` 仍指 `0.1.0-3`。R2 的 LGPL 声明、R3 的 BPE 缓存与 R5 的 `LANGFUSE_*` 说明随 pack notices/README 落地。
+- **R2/R3/R5/R6（已定乙/甲/乙/乙·已实施未发布）**：四项同进运行时 `0.1.0-4`（`ffmpeg/`、`tiktoken-cache/`、`site-packages/langfuse+backoff+opentelemetry`、`site-packages/scenedetect+opencv-python+platformdirs`）；R2 的引擎 env 注入（`PATH`/`TIKTOKEN_CACHE_DIR`/`LANGFUSE_*`）随插件 `0.1.3`。发布需上传已构建的 pack（493,631,491 B / sha256 `86705623…24a8ed5`）并回填 `runtime.json`；未发布前 `runtime.json` 仍指 `0.1.0-3`。R2 的 LGPL 声明、R3 的 BPE 缓存、R5 的 `LANGFUSE_*` 与 R6 的 BSD-3-Clause/Apache-2.0 声明随 pack notices/README 落地。
 - **R4（已定甲·已发布）**：只改插件 host/client，未重建运行时包（保持 `0.1.0-3`）；已走插件 patch `v0.1.2` 发布（2026-10-27，tag `b877623`，无新运行时资产，未覆盖 `v0.1.1` 的运行时资产）；执行细节与证据见 [R4 plan](../plans/2026-10-26-r4-mineru-token-guidance-plan.md)。
-- `runtime.json` 现为 `0.1.0-3`，指向 `v0.1.1` 资产（`0.1.0-4` 候选已构建、未发布）；`v0.1.0` Release 与其 `0.1.0-2` 资产保留未动。
+- `runtime.json` 现为 `0.1.0-3`，指向 `v0.1.1` 资产（`0.1.0-4` 候选已含 R2/R3/R5/R6 并重建、未发布）；`v0.1.0` Release 与其 `0.1.0-2` 资产保留未动。
 - 外部模式不在 R1 的 pack 修复范围内：`make gateway` 环境仍需自行安装 `python-calamine`，README/手册已把托管与外部两种模式分开写。
 
 ### 9.5 验收补充（裁决后并入 §5）
@@ -425,6 +430,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 - **5.22 干净 VM 首次切分（R3，已验 2026-10-27）**：死代理下空缓存首次切分失败在 `openaipublic.blob.core.windows.net`（证明 `TIKTOKEN_CACHE_DIR` 已指向包内缓存）；恢复包内 BPE 后同一路径到 ready，缓存 mtime 未变。证据 `E:\hrag-r5\evidence`。
 - **5.23 MinerU 未配置（R4，已验 2026-10-26）**：无 token 上传 PDF 被上传前拦截、toast 可直接去「功能模型设置 → 高级设置 → 解析提供方」；`.md/.csv` 到 ready，混合批次中的本地件照常；保存 token 后预检放行并由引擎发起 MinerU 调用（假 token 401 为覆盖边界）；API 绕过预检时失败卡同样给「去配置」。证据 `E:\hrag-r4\evidence\r4-task3.md`。
 - **5.24 评测 trace（R5，已验 2026-10-27）**：pack Python 探针 `providers=['langfuse']`、handler 构造成功，引擎摄入期间向 `LANGFUSE_BASE_URL` 发出 OTLP traces（带 auth）；真实 Langfuse 服务与 trace URL 跳转为未覆盖边界。证据 `E:\hrag-r5\evidence`。
+- **5.25 分镜随包（R6，已验 2026-10-27）**：解包 `0.1.0-4` 后 6 秒 30fps 三色视频 → `shot_count=3`、`segment=done`、切片窗 `0–2000/2000–4000/4000–6000` ms；负控改名包内 `scenedetect` → `shot_count=1`、`segment=degraded`、单窗 `0–6000` ms，日志给出 `No module named 'scenedetect'`。夹具初版为 10fps/1 秒场景，因 PySceneDetect `min_scene_len=15` 帧检出 0 场景，已改为 30fps/2 秒。证据 `E:\hrag-r5\evidence\r6-scenedetect-acceptance.md`。
 
 ### 9.6 本轮状态
 
@@ -433,6 +439,7 @@ DSH 自带的 Python 运行时（`~/.dsh/dsh-runtimes/dsh-primary-runtime/depend
 - 发布面：`v0.1.1` tag `dde3d49`，资产 331,053,658 B / sha256 `90421f0f…aca745`；`v0.1.0` 未动；`market/index.json` 仍为 npm 源 `0.1.0`（索引未上线，未同步）。
 - R4 已按甲·完整实施并随 `v0.1.2` 发布（tag `b877623`，无运行时资产；运行时保持 `0.1.0-3`）：上传前只拦 MinerU 格式 + 失败卡「去配置」+ 可操作文案；证据 `E:\hrag-r4\evidence\r4-task3.md`、发布复验 `E:\hrag-r4\evidence\release-v0.1.2.md`。
 - R4 门禁：`node --check client.js`、`tsc -p tsconfig.json` exit 0，`node --test tests/*.test.ts` 310/310；`engine/` 零 diff；证据 `E:\hrag-r4\evidence\task4-tests.txt`。
-- R2/R3/R5 已按乙/甲/乙实施（未发布）：`0.1.0-4` 候选 447,481,687 B / sha256 `feec4ffb…f64814`，含 `ffmpeg/`（BtbN n9.0-lgpl）、`tiktoken-cache/`（`cl100k_base`）与 `site-packages/langfuse 4.5.1 + backoff 2.2.1 + opentelemetry 闭包`；宿主注入 `PATH`/`TIKTOKEN_CACHE_DIR`/`LANGFUSE_*`，`engine/` 零 diff。证据 `E:\hrag-r5\evidence`；plan [../plans/2026-10-27-r2-r3-r5-runtime-additions-plan.md](../plans/2026-10-27-r2-r3-r5-runtime-additions-plan.md)。
-- R2/R3/R5 门禁：`node --check`（client、构建脚本、`lib/runtime/engine_env.js`、`lib/runtime/supervisor.js`）与 `tsc -p tsconfig.json` exit 0，`node --test tests/*.test.ts` 314/314（含既有未提交升级修复的 1 条用例）；隔离沙箱负控/正控见 §9.5。`runtime.json` 仍为 `0.1.0-3`，发布候令。
-- K1 已知降级（scenedetect 未随包，分镜回落到等距窗口）。
+- R2/R3/R5/R6 已按乙/甲/乙/乙实施（未发布）：`0.1.0-4` 候选 493,631,491 B / sha256 `86705623…24a8ed5`，含 `ffmpeg/`（BtbN n9.0-lgpl）、`tiktoken-cache/`（`cl100k_base`）、`site-packages/langfuse 4.5.1 + backoff 2.2.1 + opentelemetry 闭包` 与 `site-packages/scenedetect 0.7.1 + opencv-python 5.0.0.93 + platformdirs 4.10.0`；宿主注入 `PATH`/`TIKTOKEN_CACHE_DIR`/`LANGFUSE_*`，`engine/` 零 diff。证据 `E:\hrag-r5\evidence`；plans [R2/R3/R5](../plans/2026-10-27-r2-r3-r5-runtime-additions-plan.md)、[R6](../plans/2026-10-27-r6-scenedetect-runtime-additions-plan.md)。
+- R2/R3/R5/R6 门禁：`node --check`（client、构建脚本、`lib/runtime/engine_env.js`、`lib/runtime/supervisor.js`）与 `tsc -p tsconfig.json` exit 0，`node --test tests/*.test.ts` 349/349；隔离沙箱负控/正控见 §9.5。`runtime.json` 仍为 `0.1.0-3`，发布候令。
+- R6 已按乙实施（未发布）：`0.1.0-4` 重建含分镜三包并在隔离沙箱完成正控/负控（§9.5）；`engine/` 零 diff；证据 `E:\hrag-r5\evidence\r6-scenedetect-acceptance.md`。**2026-10-28 补记**：服务档 ASR 修复另改了 `engine/`（见 §9.4 R6 补记），修复已提交，候选 zip 待重建。
+- K1 已由 R6 关闭（`scenedetect`/`opencv-python`/`platformdirs` 随 `0.1.0-4`；负控见 §9.5）。
