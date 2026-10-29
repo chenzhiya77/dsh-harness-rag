@@ -180,3 +180,18 @@
 1. ~~先拍 D1–D5~~ —— **全部已裁**（2026-09-26/27，含 D5-6 / D5-7）；
 2. **plan 已成对**（[2026-09-26-rag-embedding-probe.md](../plans/2026-09-26-rag-embedding-probe.md)，Task 0–5，其中原 Task 4 已按 Task 0 结论拆成 4a / 4b）—— **进行中**：Task 0–3 已提交，4a 已实现（未提交），4b 未开工；
 3. **提交时机听他发话**。证据物：§3.1 + `pr-build/rag-embedding-probe-2026-09-27/`（脚本 + 原始输出 + 复跑命令）。
+
+## 7. 修订（2026-10-28）：厂商腿（DashScope 原生）也吃"批量自愈"
+
+D3 的阶梯原本只属于**通用腿**（`embedder_openai.py`），厂商腿按 §5「入库请求零改动」只做**同 payload 重试**。真机暴露了缺口：
+
+- `qwen3.7-text-embedding-flash` 走原生 `/api/v1/services/embeddings/...`：10 条批次在内容较密时回 **500 `InternalError: Receive batching backend response failed!`**（实测：8 条 / 10.9k 字 200；9 条 / 12.1k 字 500；同内容单条 200）。索引器只重试同一批 3 次，随后把整批切片标失败 ⇒ 文档收尾「向量索引不完整：N/M 切片未入库」。
+- 触发条件不是行数（9 < 10 的平台上限），也不是并发（索引器顺序发批）；同一模型 10 条**稀疏/短**文本仍可 200。
+
+修订（`embedder.py` 的 `DashScopeEmbedder`）：
+
+1. 5xx（重试耗尽后）或批量类 400 ⇒ **对半拆批递归重试**，直到单条；成功结果按原顺序拼接。401/403 与"响应缺 embedding"不拆。
+2. 批量类 400（`batch size is invalid`）额外**降档并记住**该 `(base_url, model)` 的有效上限（进程内 `_BATCH_CAPS`），后续构造与后续批次直接用落点；5xx 只拆当前批、不改记忆。
+3. 表驱动上限不变（flash 仍从 10 起步）；通用腿的 20→10→5→2→1 阶梯不变。
+
+真机证据（桌面 `0.1.0-4`，真 key）：10 条密集文本 ⇒ 响应序列 `[500, 500, 500, 200, 200]`、请求行数 `[10, 10, 10, 5, 5]`、10 条结果完整返回。测试：`tests/knowledge/test_embedder_providers.py` 新增 5 条（500 拆批/单条不拆/批量 400 记档/401 不拆），`test_indexer.py` 12 条；`ruff` 净。

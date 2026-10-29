@@ -38,16 +38,19 @@ SPARSE_BASE = "http://127.0.0.1:8081"
 def _clear_probe_cache():
     """Per-process memories must not leak between tests: the width probe, the learned batch cap,
     and "this endpoint refuses the dimensions parameter" (spec 2026-09-26 D3/D2 甲a)."""
+    from deerflow.knowledge import embedder as embedder_mod
     from deerflow.knowledge import embedder_factory as factory_mod
     from deerflow.knowledge import embedder_openai as openai_mod
 
     factory_mod._PROBED_DIMENSIONS.clear()
     openai_mod._BATCH_CAPS.clear()
     openai_mod._NO_DIMENSION_PARAM.clear()
+    embedder_mod._BATCH_CAPS.clear()
     yield
     factory_mod._PROBED_DIMENSIONS.clear()
     openai_mod._BATCH_CAPS.clear()
     openai_mod._NO_DIMENSION_PARAM.clear()
+    embedder_mod._BATCH_CAPS.clear()
 
 
 def _stub_config(monkeypatch, **rag_updates):
@@ -422,6 +425,85 @@ async def test_the_embedder_sends_batches_the_model_can_take(monkeypatch):
     rows_per_request = [len(json.loads(request.content.decode())["input"]["texts"]) for request in recorded]
     assert rows_per_request == [10, 10, 5]
     assert len(results) == 25, "拆批不影响结果条数与顺序"
+
+
+# ── DashScope 原生：批量后端挂掉时拆批自愈（2026-10-28）──────────────────
+# 真机：同一模型 8 条 / 10.9k 字 → 200；9 条 / 12.1k 字 → 500
+# `Receive batching backend response failed!`。服务端不报“批次超限”，只回 5xx。
+
+
+def _dashscope_healing_transport(recorded: list[httpx.Request], *, ok_above: int, status: int = 500, body: dict | None = None) -> httpx.MockTransport:
+    """`len(texts) > ok_above` 的批次失败，其余成功；dense[0] 回填全局文本序号以验顺序。"""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        recorded.append(request)
+        texts = json.loads(request.content.decode())["input"]["texts"]
+        if len(texts) > ok_above:
+            return httpx.Response(status, json=body or {"code": "InternalError", "message": "Receive batching backend response failed!"})
+        items = [{"text_index": i, "embedding": [float(text[1:])], "sparse_embedding": [{"index": 7, "value": 0.5}]} for i, text in enumerate(texts)]
+        return httpx.Response(200, json={"output": {"embeddings": items}})
+
+    return httpx.MockTransport(handler)
+
+
+def _dashscope_client(transport: httpx.MockTransport) -> httpx.AsyncClient:
+    return httpx.AsyncClient(transport=transport)
+
+
+@pytest.mark.asyncio
+async def test_a_dashscope_5xx_batch_is_halved_and_healed():
+    recorded: list[httpx.Request] = []
+    async with _dashscope_client(_dashscope_healing_transport(recorded, ok_above=5)) as client:
+        provider = DashScopeEmbedder(model="qwen3.7-text-embedding-flash", api_key="sk-test", client=client, max_retries=1, retry_backoff_seconds=0)
+        results = await provider.embed([f"t{i}" for i in range(10)])
+
+    assert [len(json.loads(request.content.decode())["input"]["texts"]) for request in recorded] == [10, 5, 5]
+    assert [result.dense[0] for result in results] == [float(i) for i in range(10)], "拆批后顺序不变"
+
+
+@pytest.mark.asyncio
+async def test_a_single_text_5xx_is_not_split():
+    recorded: list[httpx.Request] = []
+    async with _dashscope_client(_dashscope_healing_transport(recorded, ok_above=0)) as client:
+        provider = DashScopeEmbedder(model="qwen3.7-text-embedding-flash", api_key="sk-test", client=client, max_retries=1, retry_backoff_seconds=0)
+        with pytest.raises(EmbedderError):
+            await provider.embed(["t0"])
+
+    assert len(recorded) == 1, "单条没有“再拆”的余地"
+
+
+@pytest.mark.asyncio
+async def test_a_batch_size_400_steps_down_and_the_cap_is_remembered(monkeypatch):
+    from deerflow.knowledge import embedder as embedder_mod
+
+    monkeypatch.setattr(embedder_mod, "_BATCH_CAPS", {})
+    rejection = {"code": "InvalidParameter", "message": "batch size is invalid, it should not be larger than 6"}
+    recorded: list[httpx.Request] = []
+    transport = _dashscope_healing_transport(recorded, ok_above=6, status=400, body=rejection)
+
+    async with _dashscope_client(transport) as client:
+        provider = DashScopeEmbedder(model="cap-probe-model", api_key="sk-test", client=client, max_retries=1, retry_backoff_seconds=0)
+        results = await provider.embed([f"t{i}" for i in range(10)])
+        assert provider.batch_size == 5, "被拒后记住能过的半批"
+
+    assert [result.dense[0] for result in results] == [float(i) for i in range(10)]
+
+    async with _dashscope_client(_dashscope_healing_transport([], ok_above=6)) as client:
+        fresh = DashScopeEmbedder(model="cap-probe-model", api_key="sk-test", client=client)
+        assert fresh.batch_size == 5, "同一端点的下一次构造直接从落点开始"
+
+
+@pytest.mark.asyncio
+async def test_a_dashscope_401_is_not_split():
+    recorded: list[httpx.Request] = []
+    transport = _dashscope_healing_transport(recorded, ok_above=-1, status=401, body={"code": "InvalidApiKey", "message": "blocked"})
+
+    async with _dashscope_client(transport) as client:
+        provider = DashScopeEmbedder(model="qwen3.7-text-embedding-flash", api_key="sk-test", client=client, max_retries=1, retry_backoff_seconds=0)
+        with pytest.raises(EmbedderAuthError):
+            await provider.embed(["t0", "t1"])
+
+    assert len(recorded) == 1, "鉴权失败拆批没有意义"
 
 
 @pytest.mark.asyncio

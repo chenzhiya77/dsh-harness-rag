@@ -59,6 +59,22 @@ def dashscope_batch_size(model: str | None) -> int:
     return DASHSCOPE_BATCH_SIZES.get(str(model or ""), DASHSCOPE_SAFE_BATCH_SIZE)
 
 
+#: What this process learned about an endpoint whose batch-size 400 named a lower cap, keyed by
+#: ``(base_url, model)``. Process-local for the same reason as the compatible-endpoint ladder.
+_BATCH_CAPS: dict[tuple[str, str], int] = {}
+
+
+def _is_batch_size_rejection(exc: Exception) -> bool:
+    """A batch-size 400 is a *cap* signal; every other failure is a per-request one."""
+    message = str(exc).lower()
+    return "batch size" in message and ("invalid" in message or "larger than" in message)
+
+
+def _splittable(exc: Exception) -> bool:
+    """Malformed 200s (missing results) never heal by asking again for fewer rows."""
+    return "missing embedding for text_index" not in str(exc)
+
+
 class EmbedderError(Exception):
     """Any DashScope embedding failure after retries are exhausted."""
 
@@ -170,8 +186,10 @@ class DashScopeEmbedder:
         self._base_url = base_url.rstrip("/")
         self._dimension = dimension
         # Rows per call follow the *model*: an explicit value wins (tests, custom transports), and
-        # otherwise the model's own cap decides — see `dashscope_batch_size`.
-        self.batch_size = batch_size if batch_size is not None else dashscope_batch_size(model)
+        # otherwise the model's own cap decides — see `dashscope_batch_size`. A cap learned from a
+        # batch-size 400 wins over the table for this endpoint.
+        self._batch_key = (self._base_url, str(model or ""))
+        self.batch_size = max(1, batch_size) if batch_size is not None else _BATCH_CAPS.get(self._batch_key, dashscope_batch_size(model))
         self._max_retries = max(1, max_retries)
         self._retry_backoff = retry_backoff_seconds
         self._client = client
@@ -184,14 +202,37 @@ class DashScopeEmbedder:
         return key
 
     async def embed(self, texts: Sequence[str], *, text_type: str = "document") -> list[EmbeddingResult]:
-        """Embed texts in input order; batches over the limit are split sequentially."""
+        """Embed texts in input order; batches over the limit are split sequentially.
+
+        The platform's batching backend can answer a large request with HTTP 500 instead of a
+        batch-size 400 (2026-10-28: 9 rows / 12.1k chars failed, 8 rows / 10.9k passed), so each
+        batch heals by halving rather than failing the whole document.
+        """
         if not texts:
             return []
         results: list[EmbeddingResult] = []
-        for start in range(0, len(texts), self.batch_size):
+        start = 0
+        while start < len(texts):
             batch = list(texts[start : start + self.batch_size])
-            results.extend(await self._embed_batch(batch, text_type=text_type))
+            results.extend(await self._embed_batch_adaptive(batch, text_type=text_type))
+            start += len(batch)
         return results
+
+    async def _embed_batch_adaptive(self, texts: list[str], *, text_type: str) -> list[EmbeddingResult]:
+        try:
+            return await self._embed_batch(texts, text_type=text_type)
+        except EmbedderAuthError:
+            raise
+        except EmbedderError as exc:
+            if len(texts) <= 1 or not _splittable(exc):
+                raise
+            mid = len(texts) // 2
+            left = await self._embed_batch_adaptive(texts[:mid], text_type=text_type)
+            right = await self._embed_batch_adaptive(texts[mid:], text_type=text_type)
+            if _is_batch_size_rejection(exc):
+                self.batch_size = mid
+                _BATCH_CAPS[self._batch_key] = mid
+            return left + right
 
     async def _embed_batch(self, texts: list[str], *, text_type: str) -> list[EmbeddingResult]:
         payload = {
