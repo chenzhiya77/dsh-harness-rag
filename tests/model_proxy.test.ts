@@ -516,6 +516,7 @@ function makeProxy(
   handler: (req: unknown, res: unknown) => Promise<void>
   ready: Promise<unknown>
   streamOptions: () => Record<string, unknown> | undefined
+  token: () => string
 } {
   let handler: ((req: unknown, res: unknown) => Promise<void>) | undefined
   let streamOptions: Record<string, unknown> | undefined
@@ -559,12 +560,22 @@ function makeProxy(
   return {
     ready: proxy.whenReady,
     streamOptions: () => streamOptions,
+    token: () => proxy.token,
     handler: (req, res) => {
       if (handler === undefined) throw new Error('proxy route was not registered')
       return handler(req, res)
     },
   }
 }
+
+test('the proxy token follows the live config instead of the activation snapshot', async () => {
+  const config = { apiToken: TOKEN }
+  const proxy = makeProxy(config)
+  await proxy.ready
+  assert.equal(proxy.token(), TOKEN)
+  config.apiToken = 'rotated-token'
+  assert.equal(proxy.token(), 'rotated-token')
+})
 
 test('registerModelProxy serves the model list and one chat completion', async () => {
   const proxy = makeProxy()

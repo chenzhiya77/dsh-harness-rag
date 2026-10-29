@@ -761,7 +761,7 @@ export interface ModelProxyRuntime {
 }
 
 export interface ModelProxyHandle {
-  token: string
+  readonly token: string
   whenReady: Promise<ModelProxyRuntime>
 }
 
@@ -990,5 +990,13 @@ export function registerModelProxy(
     }
   })
 
-  return { token: config.apiToken, whenReady }
+  // The service token rotates when the managed runtime restarts. Read it at
+  // sync time, not once at activation: the ready listener republishes the
+  // model aliases after `state/service.json` has been rewritten.
+  return {
+    get token() {
+      return config.apiToken
+    },
+    whenReady,
+  }
 }

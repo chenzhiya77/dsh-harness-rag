@@ -361,6 +361,7 @@ export function registerModelSync(
   let last: SyncResult | undefined
   let readyError: string | undefined
   let syncing: Promise<DshModelStatus> | undefined
+  let pendingForce = false
   let timer: ReturnType<typeof setTimeout> | undefined
   let emptyRetryTimer: ReturnType<typeof setTimeout> | undefined
   let emptyRetries = 0
@@ -386,7 +387,13 @@ export function registerModelSync(
   }
 
   const syncNow = (options?: { force?: boolean }): Promise<DshModelStatus> => {
-    if (syncing !== undefined) return syncing
+    if (syncing !== undefined) {
+      // The ready callback can land while the activation sync is still in
+      // flight; that first pass may have read the previous service token, so a
+      // forced request has to run again after it settles.
+      if (options?.force === true) pendingForce = true
+      return syncing
+    }
     syncing = (async () => {
       try {
         runtime = runtime ?? (await proxy.whenReady)
@@ -441,6 +448,10 @@ export function registerModelSync(
       return status()
     })().finally(() => {
       syncing = undefined
+      if (pendingForce) {
+        pendingForce = false
+        void syncNow({ force: true })
+      }
     })
     return syncing
   }
