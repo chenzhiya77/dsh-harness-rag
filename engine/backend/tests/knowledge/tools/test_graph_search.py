@@ -72,6 +72,59 @@ async def test_malformed_json_degrades_to_no_names():
     assert names == []
 
 
+class _SequenceLLM:
+    """Returns one queued reply per call and counts how many were consumed."""
+
+    def __init__(self, contents: list[str]) -> None:
+        self._contents = list(contents)
+        self.calls = 0
+
+    async def ainvoke(self, messages, **_kwargs):
+        self.calls += 1
+        return SimpleNamespace(content=self._contents.pop(0))
+
+
+@pytest.mark.asyncio
+async def test_extract_query_entities_unwraps_json_embedded_in_prose():
+    """抽取器偶发把 JSON 包在解释文字里；嵌入提取比整条图路降级便宜。"""
+    from deerflow.tools.builtins.graph_search_tool import _extract_query_entities
+
+    names = await _extract_query_entities(
+        "DNS 与 TCP 的关系",
+        _RawContentLLM('好的，实体如下：{"entities": ["DNS", " TCP "]} 以上。'),
+    )
+    assert names == ["DNS", "TCP"]
+
+
+@pytest.mark.asyncio
+async def test_extract_query_entities_accepts_a_bare_list():
+    """模型偶尔直接回 JSON 数组而不是 {"entities": [...]}。"""
+    from deerflow.tools.builtins.graph_search_tool import _extract_query_entities
+
+    names = await _extract_query_entities("DNS", _RawContentLLM('["DNS", "TCP"]'))
+    assert names == ["DNS", "TCP"]
+
+
+@pytest.mark.asyncio
+async def test_extract_query_entities_retries_once_before_degrading():
+    from deerflow.tools.builtins.graph_search_tool import _extract_query_entities
+
+    llm = _SequenceLLM(["这次不是 JSON", '{"entities": ["x"]}'])
+    names = await _extract_query_entities("Gateway", llm)
+    assert names == ["x"]
+    assert llm.calls == 2
+
+
+@pytest.mark.asyncio
+async def test_extract_query_entities_gives_up_after_one_retry():
+    from deerflow.tools.builtins.graph_search_tool import _extract_query_entities
+
+    llm = _SequenceLLM(["坏输出", "还是坏输出"])
+    names = await _extract_query_entities("Gateway", llm)
+    assert names == []
+    assert llm.calls == 2, "only one retry — never an unbounded loop"
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "content",

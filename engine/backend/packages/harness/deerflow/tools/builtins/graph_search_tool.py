@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Annotated, Any
 
 from langchain.tools import tool
@@ -102,23 +103,62 @@ def _empty(message: str) -> dict:
     }
 
 
+_EMBEDDED_OBJECT_RE = re.compile(r"\{[^{}]*\}", re.DOTALL)
+_EMBEDDED_ARRAY_RE = re.compile(r"\[[^\[\]]*\]", re.DOTALL)
+
+
+def _first_match(pattern: re.Pattern[str], text: str) -> str | None:
+    match = pattern.search(text)
+    return match.group(0) if match else None
+
+
+def _load_entity_payload(text: str) -> Any:
+    """Parse the extractor reply: strict JSON first, then one object/array that the
+    model wrapped in prose. Raises ``ValueError`` when no JSON value can be parsed."""
+
+    candidate = _strip_fence(text)
+    for payload in (
+        candidate,
+        _first_match(_EMBEDDED_OBJECT_RE, candidate),
+        _first_match(_EMBEDDED_ARRAY_RE, candidate),
+    ):
+        if payload is None:
+            continue
+        try:
+            return json.loads(payload)
+        except json.JSONDecodeError:
+            continue
+    raise ValueError("no JSON value in the extractor reply")
+
+
 async def _extract_query_entities(query: str, llm: Any) -> list[str]:
     from langgraph.constants import TAG_NOSTREAM
 
-    response = await llm.ainvoke(
-        [
-            {"role": "system", "content": _QUERY_ENTITY_SYSTEM_PROMPT},
-            {"role": "user", "content": query},
-        ],
-        # Internal helper call: keep its raw JSON tokens off the run's
-        # messages stream, otherwise they render as assistant messages.
-        config={"tags": [TAG_NOSTREAM]},
-    )
+    async def call() -> str:
+        response = await llm.ainvoke(
+            [
+                {"role": "system", "content": _QUERY_ENTITY_SYSTEM_PROMPT},
+                {"role": "user", "content": query},
+            ],
+            # Internal helper call: keep its raw JSON tokens off the run's
+            # messages stream, otherwise they render as assistant messages.
+            config={"tags": [TAG_NOSTREAM]},
+        )
+        return str(response.content)
+
+    text = await call()
     try:
-        data = json.loads(_strip_fence(str(response.content)))
-    except json.JSONDecodeError:
-        logger.warning("graph_search: query entity extraction returned malformed JSON")
-        return []
+        data = _load_entity_payload(text)
+    except ValueError:
+        # 抽取器偶发不守严格 JSON（长问句下实测出现过）；一次重试比丢掉整条图路便宜。
+        text = await call()
+        try:
+            data = _load_entity_payload(text)
+        except ValueError:
+            logger.warning("graph_search: query entity extraction returned malformed JSON (len=%d)", len(text))
+            return []
+    if isinstance(data, list):
+        return [str(name).strip() for name in data if str(name).strip()]
     if not isinstance(data, dict):
         return []
     names = data.get("entities")
