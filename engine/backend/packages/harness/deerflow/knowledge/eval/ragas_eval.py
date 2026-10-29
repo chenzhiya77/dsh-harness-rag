@@ -256,6 +256,24 @@ def extract_seed_entities(messages: Sequence[Any]) -> tuple[str, ...]:
     return tuple(seen)
 
 
+def graph_trace_seeds(chunk: Any) -> list[str]:
+    """Hop-0 seeds from one live ``graph_retrieval_trace`` custom event.
+
+    The trace event is the contract for consumers that outlive the tool
+    message: an oversized graph_search result is externalized to a synopsis
+    preview, so the history copy no longer carries ``trace`` (the workbench
+    overlay listens to the same event for the same reason).
+    """
+
+    from deerflow.tools.builtins.graph_search_tool import GRAPH_RETRIEVAL_TRACE_EVENT_TYPE
+
+    if not isinstance(chunk, Mapping) or chunk.get("type") != GRAPH_RETRIEVAL_TRACE_EVENT_TYPE:
+        return []
+    trace = chunk.get("trace")
+    seeds = trace.get("seed_entities") if isinstance(trace, Mapping) else None
+    return [name for name in seeds or [] if isinstance(name, str) and name]
+
+
 def extract_cited_numbers(answer: str) -> list[int]:
     """Distinct ``[n]`` citation marks in first-appearance order."""
 
@@ -360,11 +378,12 @@ _ANSWER_TIMEOUT_S = 180
 #: 4 题一波、端点上最多 4 路长调用，给共用同一 LLM 端点的聊天邻居留余量。
 _ANSWER_CONCURRENCY = 4
 
-#: ragas 每次 LLM 调用的重试/超时上限（D3 兜底）：重试 2、超时 180s（他拍乙=
-#: ragas 上游默认——比 120s 宽是因「慢 judge 太紧」是当年实证过的病；仍比旧的
-#: 600s×10 收紧 3.3×/5×）。
+#: ragas 每个指标 job 的重试/墙钟上限：重试 2；job 超时 600s（D3 兜底改档）。
+#: 2026-10-28 真机证据：faithfulness 是唯一「拆句 + 逐句判支持」的多裁判调用 job，
+#: judge 经插件代理到 provider 单次 2–29s，整题在 180s 上限内跑不完 → NaN → 面板
+#: 显示 "-"。600s 回到旧档，仍远低于更早的 600s×10 组合；其余三 job 不受影响。
 _RAGAS_MAX_RETRIES = 2
-_RAGAS_TIMEOUT_S = 180
+_RAGAS_TIMEOUT_S = 600
 
 
 def _ragas_run_config() -> Any:
@@ -963,18 +982,33 @@ def build_lead_agent_runner(
         # does (the gateway path works because langgraph-runtime maps
         # ``config["context"]`` onto it). kb_id/user_id are read by the
         # retrieval tools from ``runtime.context``, so they MUST go here.
-        result = await graph.ainvoke(
+        #
+        # Streaming (values + custom) replaces ainvoke: graph_search publishes
+        # its hop-0 seed trace as a custom event, and an oversized tool result
+        # is externalized to a synopsis preview, so the history copy alone can
+        # lose that trace (the workbench overlay consumes the same event). The
+        # last ``values`` chunk is the final state ainvoke would have returned.
+        seed_entities: list[str] = []
+        final: Mapping[str, Any] | None = None
+        async for mode, chunk in graph.astream(
             {"messages": [{"role": "user", "content": question.query}]},
             config,
             context={"kb_id": kb_id, "user_id": user_id, "deep_research": deep_research},
-        )
-        messages = result.get("messages", []) if isinstance(result, Mapping) else []
+            stream_mode=["values", "custom"],
+        ):
+            if mode == "values" and isinstance(chunk, Mapping):
+                final = chunk
+            elif mode == "custom":
+                for name in graph_trace_seeds(chunk):
+                    if name not in seed_entities:
+                        seed_entities.append(name)
+        messages = final.get("messages", []) if final is not None else []
         return TraceOutcome(
             question_id=question.id,
             answer=extract_answer(messages),
             retrieval_tools=extract_retrieval_tools(messages),
             citation_map=extract_citation_map(messages),
-            seed_entities=extract_seed_entities(messages),
+            seed_entities=tuple(seed_entities) or extract_seed_entities(messages),
             thread_id=thread_id,
             trace_id=_langfuse_trace_id_from_callbacks(config),
         )

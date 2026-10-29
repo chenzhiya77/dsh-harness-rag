@@ -375,9 +375,9 @@ class TestAnswerPhaseBudget:
         captured: dict = {}
 
         class _FakeGraph:
-            async def ainvoke(self, payload, config, context=None):
+            async def astream(self, payload, config, context=None, stream_mode=None):
                 captured.update(config)
-                return {"messages": [AIMessage(content="答案")]}
+                yield "values", {"messages": [AIMessage(content="答案")]}
 
         monkeypatch.setattr(lead_agent_mod, "make_lead_agent", lambda config: (captured.update(config), _FakeGraph())[1])
 
@@ -393,10 +393,10 @@ class TestAnswerPhaseBudget:
         captured: dict = {}
 
         class _FakeGraph:
-            async def ainvoke(self, payload, config, context=None):
+            async def astream(self, payload, config, context=None, stream_mode=None):
                 captured["config"] = config
                 captured["context"] = context
-                return {"messages": [AIMessage(content="答案")]}
+                yield "values", {"messages": [AIMessage(content="答案")]}
 
         monkeypatch.setattr(lead_agent_mod, "make_lead_agent", lambda config: _FakeGraph())
 
@@ -415,10 +415,10 @@ class TestAnswerPhaseBudget:
         captured: dict = {}
 
         class _FakeGraph:
-            async def ainvoke(self, payload, config, context=None):
+            async def astream(self, payload, config, context=None, stream_mode=None):
                 captured["config"] = config
                 captured["context"] = context
-                return {"messages": [AIMessage(content="答案")]}
+                yield "values", {"messages": [AIMessage(content="答案")]}
 
         monkeypatch.setattr(lead_agent_mod, "make_lead_agent", lambda config: _FakeGraph())
 
@@ -427,6 +427,31 @@ class TestAnswerPhaseBudget:
 
         assert captured["config"]["context"]["deep_research"] is False
         assert captured["context"]["deep_research"] is False
+
+    async def test_runner_collects_graph_seed_trace_from_custom_events(self, monkeypatch):
+        """外置的大输出会把 trace 从工具消息里抹掉；hop-0 种子必须从实时事件收，
+        与工作台浮层同一个契约（其余 custom 事件不得混入）。"""
+        import deerflow.agents.lead_agent.agent as lead_agent_mod
+
+        captured: dict = {}
+
+        class _FakeGraph:
+            async def astream(self, payload, config, context=None, stream_mode=None):
+                captured["modes"] = stream_mode
+                yield "custom", {
+                    "type": "graph_retrieval_trace",
+                    "trace": {"seed_entities": ["HashMap", "Hashtable", "HashMap"]},
+                }
+                yield "custom", {"type": "other_event", "trace": {"seed_entities": ["nope"]}}
+                yield "values", {"messages": [AIMessage(content="答案")]}
+
+        monkeypatch.setattr(lead_agent_mod, "make_lead_agent", lambda config: _FakeGraph())
+
+        runner = build_lead_agent_runner(kb_id="kb-1", user_id="u-1", run_id="run-1")
+        outcome = await runner(_question("q1"))
+
+        assert outcome.seed_entities == ("HashMap", "Hashtable")
+        assert captured["modes"] == ["values", "custom"]
 
     async def test_slow_question_times_out_and_batch_continues(self, monkeypatch):
         import deerflow.knowledge.eval.ragas_eval as mod
@@ -525,7 +550,7 @@ class TestRunConfigAndTiming:
         assert factory is not None, "ragas RunConfig factory missing"
         cfg = factory()
         assert cfg.max_retries == 2
-        assert cfg.timeout == 180
+        assert cfg.timeout == 600
 
     async def test_runner_mounts_timing_handler(self, monkeypatch):
         import deerflow.agents.lead_agent.agent as lead_agent_mod
@@ -536,9 +561,9 @@ class TestRunConfigAndTiming:
         captured: dict = {}
 
         class _FakeGraph:
-            async def ainvoke(self, payload, config, context=None):
+            async def astream(self, payload, config, context=None, stream_mode=None):
                 captured.update(config)
-                return {"messages": [AIMessage(content="答案")]}
+                yield "values", {"messages": [AIMessage(content="答案")]}
 
         monkeypatch.setattr(lead_agent_mod, "make_lead_agent", lambda config: (captured.update(config), _FakeGraph())[1])
         runner = build_lead_agent_runner(kb_id="kb-1", user_id="u-1", run_id="run-1")
