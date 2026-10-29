@@ -20,7 +20,11 @@ from __future__ import annotations
 import base64
 import logging
 import os
-from collections.abc import Iterable, Sequence
+import subprocess
+import tempfile
+import time
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Protocol
@@ -167,6 +171,44 @@ _DASHSCOPE_ASR_PATH = "/api/v1/services/aigc/multimodal-generation/generation"
 _OPENAI_AUDIO_PATH = "/v1/audio/transcriptions"
 #: 转写是长请求，但必须有界：超时收敛为 AsrError（D8）。
 _SERVICE_TIMEOUT_SECONDS = 120.0
+#: 传输层故障（连接重置/超时）重试两次；4xx 是确定性拒绝，不重试。
+_RETRY_BACKOFF_SECONDS: tuple[float, ...] = (0.5, 1.5)
+
+#: 服务档只吃音频；视频容器整段 base64 会撞网关的 28MB 字符串上限
+#: （2026-10-27 真机：27.7MB MP4 → 36.9MB 字符串 → InvalidParameter/连接重置）。
+_AUDIO_INPUT_SUFFIXES = frozenset({"wav", "mp3", "m4a", "aac", "flac", "ogg", "opus", "wma"})
+_AUDIO_EXTRACT_SUFFIX = "mp3"
+_AUDIO_EXTRACT_TIMEOUT_SECONDS = 120.0
+_NO_WORDS_MARKER = "ASR_RESPONSE_HAVE_NO_WORDS"
+
+
+def audio_extract_command(video_path: str, out: str) -> list[str]:
+    """单声道 16k/32k mp3：5 分钟上限内 ≤1.2MB，远低于网关的 28MB 字符串上限。"""
+    return ["ffmpeg", "-y", "-loglevel", "error", "-i", video_path, "-vn", "-ac", "1", "-ar", "16000", "-b:a", "32k", out]
+
+
+def run_audio_extract(video_path: str, out: str, *, runner: Callable[..., Any] = subprocess.run) -> None:
+    try:
+        runner(audio_extract_command(video_path, out), check=True, timeout=_AUDIO_EXTRACT_TIMEOUT_SECONDS, capture_output=True)
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or b"").decode("utf-8", "replace").strip()[:300]
+        raise AsrError(f"视频音轨抽取失败：ffmpeg 退出码 {exc.returncode}（{detail or '无输出'}）") from exc
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise AsrError(f"视频音轨抽取失败：{exc}") from exc
+    if not Path(out).is_file() or Path(out).stat().st_size == 0:
+        raise AsrError("视频音轨抽取失败：ffmpeg 未产出音频")
+
+
+@contextmanager
+def _service_audio(path: str) -> Iterator[str]:
+    """服务档调用前把视频容器换成音轨；已是音频的输入原样透传。"""
+    if Path(path).suffix.lstrip(".").lower() in _AUDIO_INPUT_SUFFIXES:
+        yield path
+        return
+    with tempfile.TemporaryDirectory(prefix="hrag-asr-") as tmp:
+        out = str(Path(tmp) / f"audio.{_AUDIO_EXTRACT_SUFFIX}")
+        run_audio_extract(path, out)
+        yield out
 
 
 def resolve_leg_provider(provider_name: str, *, duration_ms: int | None) -> str:
@@ -219,8 +261,36 @@ class _ServiceAsrProvider:
             self._client = httpx.Client(timeout=self._timeout)
         return self._client
 
+    def _post_with_retry(self, request: Callable[[], httpx.Response]) -> httpx.Response:
+        attempts = len(_RETRY_BACKOFF_SECONDS) + 1
+        for attempt in range(1, attempts + 1):
+            try:
+                return request()
+            except httpx.TransportError as exc:
+                if attempt == attempts:
+                    raise
+                delay = _RETRY_BACKOFF_SECONDS[attempt - 1]
+                logger.warning("%s ASR transport failed (attempt %d/%d): %s; retrying in %.1fs", self.name, attempt, attempts, exc, delay)
+                time.sleep(delay)
+        raise AssertionError("unreachable")
+
     def transcribe(self, path: str) -> list[tuple[float, float, str]]:  # pragma: no cover - 协议占位
         raise NotImplementedError
+
+
+def _is_no_words_response(response: httpx.Response) -> bool:
+    """无声视频：DashScope 用 400 + ``ASR_RESPONSE_HAVE_NO_WORDS`` 表示“没有词”。
+
+    这不是腿故障——视频可以只有音乐/音效；返回空转写让 worker 置 asr=done。
+    其它 400（参数、鉴权）仍按失败处理。
+    """
+    if response.status_code != 400:
+        return False
+    try:
+        body = response.json()
+    except ValueError:
+        return False
+    return _NO_WORDS_MARKER in str((body or {}).get("message") or "")
 
 
 class DashScopeAsrProvider(_ServiceAsrProvider):
@@ -243,11 +313,16 @@ class DashScopeAsrProvider(_ServiceAsrProvider):
             "input": {"messages": [{"role": "user", "content": [{"audio": f"data:audio/{suffix};base64,{encoded}"}]}]},
             "parameters": {"format": suffix, "speaker_diarization_enabled": True},
         }
-        response = self._http_client().post(
-            f"{self._base_url}{_DASHSCOPE_ASR_PATH}",
-            headers={"Authorization": f"Bearer {self._read_api_key()}"},
-            json=payload,
+        response = self._post_with_retry(
+            lambda: self._http_client().post(
+                f"{self._base_url}{_DASHSCOPE_ASR_PATH}",
+                headers={"Authorization": f"Bearer {self._read_api_key()}"},
+                json=payload,
+            )
         )
+        if _is_no_words_response(response):
+            logger.warning("DashScope ASR found no speech (%s); treating the audio as speechless", _NO_WORDS_MARKER)
+            return []
         response.raise_for_status()
         return _rows_from_dashscope(response.json())
 
@@ -264,11 +339,13 @@ class OpenAiAudioProvider(_ServiceAsrProvider):
 
     def transcribe(self, path: str) -> list[tuple[float, float, str]]:
         source = Path(path)
-        response = self._http_client().post(
-            join_endpoint(self._base_url, _OPENAI_AUDIO_PATH),
-            headers={"Authorization": f"Bearer {self._read_api_key()}"},
-            data={"model": self._model, "response_format": "verbose_json"},
-            files={"file": (source.name, source.read_bytes(), "application/octet-stream")},
+        response = self._post_with_retry(
+            lambda: self._http_client().post(
+                join_endpoint(self._base_url, _OPENAI_AUDIO_PATH),
+                headers={"Authorization": f"Bearer {self._read_api_key()}"},
+                data={"model": self._model, "response_format": "verbose_json"},
+                files={"file": (source.name, source.read_bytes(), "application/octet-stream")},
+            )
         )
         response.raise_for_status()
         return _rows_from_openai_audio(response.json())
@@ -417,8 +494,15 @@ async def transcribe_video(
     ``resolve_leg_provider`` 先决定用哪支）。
     """
     prov = provider or resolve_provider(provider_name, model=model, base_url=base_url, api_key=api_key)
+
+    def _transcribe(target: str) -> list[tuple[float, float, str]]:
+        if isinstance(prov, _ServiceAsrProvider):
+            with _service_audio(target) as audio_path:
+                return prov.transcribe(audio_path)
+        return prov.transcribe(target)
+
     try:
-        raw = await run_file_io(prov.transcribe, path)
+        raw = await run_file_io(_transcribe, path)
     except AsrError:
         raise
     except Exception as exc:

@@ -136,3 +136,21 @@
 - **先后**：**串行门已清**（本地档 `d337f168` 收尾）⇒ 本件**已立项、开工**（2026-09-29）；Task 0 取证已完成，下一步 Task 1（配置面）。
 - **家族**：本件独立成 spec（与 [2026-09-28-video-asr-output-shape-design.md](2026-09-28-video-asr-output-shape-design.md) 是"两条来源面"），不与 video-ingest 合并。
 
+
+## 10. 修订（2026-10-27，真机缺陷）
+
+真机复现：**27.7 MB / 10.56 s 的 MP4**（H.264 20.9 Mbps）在 DashScope 档 `asr=failed`，引擎日志 `[Errno 10054]`。逐层取证（同一 key / 同一 URL，直接 POST）：
+
+| 发送内容 | base64 长度 | 服务端结果 |
+| --- | --- | --- |
+| 整段 MP4 | 36,894,200 | `InvalidParameter`：字符串 28,049,408 > 上限 28,000,000（网关重置连接 ⇒ 引擎见 10054） |
+| 抽出的音轨（mp3/wav/m4a） | 5.7 万–45 万 | 正常受理；该片无人声 ⇒ `ASR_RESPONSE_HAVE_NO_WORDS` |
+| 6 s 带语音夹具（81 KB） | ≈11 万 | 200，正常转写 |
+
+三条修订（`asr.py`）：
+
+1. **服务档先抽音轨再发**（原实现把整个视频容器 base64）：`audio_extract_command` / `run_audio_extract` / `_service_audio`——视频输入用 ffmpeg 转 **单声道 16k / 32k mp3**（5 分钟上限内 ≤1.2 MB），音频输入原样透传；临时文件随请求清理。`openai-audio` 档同享（multipart 也受 25 MB 上限）。
+2. **无声视频不是失败**：DashScope 的 400 + `ASR_RESPONSE_HAVE_NO_WORDS` 映射为**空转写**（`asr=done`，镜头卡无口述段）；其它 400 仍按失败降级。
+3. **修订 D8 的「不重试」**：传输层故障（`httpx.TransportError`，含连接重置与超时）**重试 2 次**（0.5 s / 1.5 s 退避）；4xx 属于确定性拒绝，不重试。429/5xx 仍是失败面（本期不重试）。
+
+验收（2026-10-28 真机回填）：`tests/knowledge/video` 177 条全绿（其中 `test_asr.py` 59 条：新增抽音轨 2 条 / 音频透传 1 条 / 无词 1 条 / 重试成功 1 条）；`ruff check` 净。真机（桌面 `0.1.0-4`，DashScope 档）：重传 **27.7 MB / 10.56 s** 视频（音乐无人声）⇒ `ready`、`asr=done`、`segment=done`、3 镜头；6 s 中文语音夹具 ⇒ `asr=done`，三张镜头卡的「口述」分别为「第一段画面是红色」「第二段画面是绿色」「第三段。」。⚠️ 全量后端套件在本机 69% 处被一个无关的异步用例挂住（py-spy 栈为 `asyncio select`、24h 定时器，无 ASR 帧），已终止；其中已跑部分与 HEAD 已知的 164 条基线失败同分布（见 2026-09-28 plan 收官门禁），视频域与 provider 配置域以定向套件为准。

@@ -14,11 +14,13 @@ TranscriptSegment 序列——单位换算、取整、去空白、丢弃无效�
 
 from __future__ import annotations
 
+import base64
 import inspect
 import json
 import logging
 import sys
 import types
+from pathlib import Path
 
 import httpx
 import pytest
@@ -35,6 +37,7 @@ from deerflow.knowledge.video.asr import (
     _rows_from_funasr,
     _rows_from_openai_audio,
     _rows_from_whisper,
+    audio_extract_command,
     normalize_transcript,
     resolve_leg_provider,
     resolve_provider,
@@ -456,15 +459,18 @@ def test_rows_from_openai_audio_keeps_a_multi_segment_transcript():
 
 
 @pytest.mark.parametrize("failure", ["connect", "timeout", "401"])
-async def test_a_service_failure_degrades_to_asrerror(tmp_path, failure):
-    clip = tmp_path / "clip.mp4"
+async def test_a_service_failure_degrades_to_asrerror(tmp_path, monkeypatch, failure):
+    monkeypatch.setattr("deerflow.knowledge.video.asr._RETRY_BACKOFF_SECONDS", (0, 0))
+    clip = tmp_path / "clip.wav"
     clip.write_bytes(b"\x00\x01\x02")
+    recorded: list[httpx.Request] = []
 
     if failure == "401":
-        client = _sync_client([], json_body={"code": "InvalidApiKey", "message": "blocked"}, status=401)
+        client = _sync_client(recorded, json_body={"code": "InvalidApiKey", "message": "blocked"}, status=401)
     else:
 
         def handler(request: httpx.Request) -> httpx.Response:
+            recorded.append(request)
             raise httpx.ConnectTimeout("timed out", request=request) if failure == "timeout" else httpx.ConnectError("no route", request=request)
 
         client = httpx.Client(transport=httpx.MockTransport(handler))
@@ -472,6 +478,8 @@ async def test_a_service_failure_degrades_to_asrerror(tmp_path, failure):
     provider = DashScopeAsrProvider(model="m", base_url="https://dashscope.aliyuncs.com", api_key="sk", client=client)
     with pytest.raises(AsrError):
         await transcribe_video(str(clip), provider=provider, model="paraformer-zh")
+    # 传输层故障重试到上限（3 次）；HTTP 4xx 是确定性拒绝，不重试。
+    assert len(recorded) == (1 if failure == "401" else 3)
 
 
 # ── 服务档：签名把地址与钥匙送到 provider（worker 侧的同一条路）──────────
@@ -479,7 +487,7 @@ async def test_a_service_failure_degrades_to_asrerror(tmp_path, failure):
 
 async def test_transcribe_video_carries_the_address_and_key(tmp_path, monkeypatch):
     recorded: list[httpx.Request] = []
-    clip = tmp_path / "clip.mp4"
+    clip = tmp_path / "clip.wav"
     clip.write_bytes(b"\x00\x01\x02")
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -499,4 +507,107 @@ async def test_transcribe_video_carries_the_address_and_key(tmp_path, monkeypatc
 
     assert str(recorded[0].url) == _DASHSCOPE_ASR_URL
     assert recorded[0].headers["authorization"] == "Bearer sk-asr"
+    assert segments == [TranscriptSegment(0, 1200, "甲"), TranscriptSegment(1200, 2400, "乙")]
+
+
+# ── 服务档：先抽音轨再发（2026-10-27：整段视频 base64 撞 28MB 网关上限）─────
+
+
+def test_audio_extract_command_downmixes_to_mono_16k():
+    cmd = audio_extract_command("in.mp4", "out.mp3")
+
+    assert cmd[0] == "ffmpeg"
+    assert "-vn" in cmd
+    assert cmd[cmd.index("-ac") + 1] == "1"
+    assert cmd[cmd.index("-ar") + 1] == "16000"
+    assert cmd[cmd.index("-b:a") + 1] == "32k"
+    assert cmd[-1] == "out.mp3"
+
+
+async def test_transcribe_video_extracts_audio_before_a_service_call(tmp_path, monkeypatch):
+    recorded: list[httpx.Request] = []
+    extracted: dict[str, str] = {}
+
+    def fake_extract(video_path: str, out: str, **kwargs) -> None:  # noqa: ARG001 - 桩不读 runner
+        extracted["out"] = out
+        Path(out).write_bytes(b"audio-bytes")
+
+    monkeypatch.setattr("deerflow.knowledge.video.asr.run_audio_extract", fake_extract)
+    clip = tmp_path / "clip.mp4"
+    clip.write_bytes(b"video-bytes")
+
+    provider = DashScopeAsrProvider(
+        model="qwen-audio-3.1-asr-flash",
+        base_url="https://dashscope.aliyuncs.com",
+        api_key="sk-asr",
+        client=_sync_client(recorded, json_body=_TWO_SENTENCES),
+    )
+    segments = await transcribe_video(str(clip), provider=provider, model="qwen-audio-3.1-asr-flash")
+
+    body = json.loads(recorded[0].content)
+    assert body["parameters"]["format"] == "mp3"
+    audio = body["input"]["messages"][0]["content"][0]["audio"]
+    assert base64.b64decode(audio.split(",", 1)[1]) == b"audio-bytes"
+    assert not Path(extracted["out"]).exists()  # 临时音频随请求清理
+    assert segments == [TranscriptSegment(0, 1200, "甲"), TranscriptSegment(1200, 2400, "乙")]
+
+
+async def test_a_service_tier_sends_audio_inputs_without_reextracting(tmp_path, monkeypatch):
+    recorded: list[httpx.Request] = []
+
+    def fail_extract(*args, **kwargs):  # noqa: ARG001
+        raise AssertionError("audio inputs must not be re-extracted")
+
+    monkeypatch.setattr("deerflow.knowledge.video.asr.run_audio_extract", fail_extract)
+    clip = tmp_path / "clip.mp3"
+    clip.write_bytes(b"audio-bytes")
+
+    provider = DashScopeAsrProvider(
+        model="m",
+        base_url="https://dashscope.aliyuncs.com",
+        api_key="sk",
+        client=_sync_client(recorded, json_body=_TWO_SENTENCES),
+    )
+    await transcribe_video(str(clip), provider=provider, model="m")
+
+    body = json.loads(recorded[0].content)
+    assert body["parameters"]["format"] == "mp3"
+    audio = body["input"]["messages"][0]["content"][0]["audio"]
+    assert base64.b64decode(audio.split(",", 1)[1]) == b"audio-bytes"
+
+
+# ── 服务档：无声视频不是失败（DashScope ASR_RESPONSE_HAVE_NO_WORDS）────────
+
+
+async def test_dashscope_no_words_is_an_empty_transcript(tmp_path):
+    clip = tmp_path / "clip.mp3"
+    clip.write_bytes(b"\x00\x01\x02")
+    client = _sync_client([], json_body={"code": "CLIENT_ERROR", "message": "ASR_RESPONSE_HAVE_NO_WORDS"}, status=400)
+
+    provider = DashScopeAsrProvider(model="m", base_url="https://dashscope.aliyuncs.com", api_key="sk", client=client)
+
+    assert await transcribe_video(str(clip), provider=provider, model="m") == []
+
+
+async def test_a_transport_error_is_retried_before_succeeding(tmp_path, monkeypatch):
+    monkeypatch.setattr("deerflow.knowledge.video.asr._RETRY_BACKOFF_SECONDS", (0, 0))
+    clip = tmp_path / "clip.mp3"
+    clip.write_bytes(b"\x00\x01\x02")
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        if len(seen) == 1:
+            raise httpx.ConnectError("connection reset", request=request)
+        return httpx.Response(200, json=_TWO_SENTENCES)
+
+    provider = DashScopeAsrProvider(
+        model="m",
+        base_url="https://dashscope.aliyuncs.com",
+        api_key="sk",
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+    segments = await transcribe_video(str(clip), provider=provider, model="m")
+
+    assert len(seen) == 2
     assert segments == [TranscriptSegment(0, 1200, "甲"), TranscriptSegment(1200, 2400, "乙")]
