@@ -218,9 +218,19 @@ test('buildGenerateOptions rejects unsupported request shapes', async () => {
     'stream_unsupported',
   )
   await expectAsyncError(
+    () => buildGenerateOptions({ ...base, functions: [{ name: 'f' }] }, target, { efforts: [] }, admitEcho),
+    400,
+    'functions_unsupported',
+  )
+  await expectAsyncError(
     () => buildGenerateOptions({ ...base, tools: [{ type: 'function' }] }, target, { efforts: [] }, admitEcho),
     400,
-    'tools_unsupported',
+    'invalid_tools',
+  )
+  await expectAsyncError(
+    () => buildGenerateOptions({ ...base, tool_choice: 'required' }, target, { efforts: [] }, admitEcho),
+    400,
+    'tool_choice_unsupported',
   )
   await expectAsyncError(
     () => buildGenerateOptions({ ...base, n: 2 }, target, { efforts: [] }, admitEcho),
@@ -235,7 +245,87 @@ test('buildGenerateOptions rejects unsupported request shapes', async () => {
   await expectAsyncError(
     () => buildGenerateOptions({ messages: [{ role: 'tool', content: 'x' }] }, target, { efforts: [] }, admitEcho),
     400,
+    'invalid_tool_message',
+  )
+  await expectAsyncError(
+    () => buildGenerateOptions({ messages: [{ role: 'narrator', content: 'x' }] }, target, { efforts: [] }, admitEcho),
+    400,
     'unsupported_role',
+  )
+})
+
+test('buildGenerateOptions forwards tools and maps tool calls with their results', async () => {
+  const parameters = {
+    type: 'object',
+    properties: { query: { type: 'string' } },
+    required: ['query'],
+  }
+  const options = await buildGenerateOptions(
+    {
+      messages: [
+        { role: 'user', content: '星野摄影怎么曝光' },
+        {
+          role: 'assistant',
+          content: null,
+          tool_calls: [
+            {
+              id: 'call_1',
+              type: 'function',
+              function: { name: 'hrag_hybrid_search', arguments: '{"query":"星野 曝光"}' },
+            },
+          ],
+        },
+        { role: 'tool', tool_call_id: 'call_1', content: '命中 3 条切片' },
+      ],
+      tools: [{ type: 'function', function: { name: 'hrag_hybrid_search', description: '混合检索', parameters } }],
+      tool_choice: 'auto',
+    },
+    target,
+    { efforts: [] },
+    admitEcho,
+  )
+
+  assert.deepEqual(options.tools, [{ name: 'hrag_hybrid_search', description: '混合检索', parameters }])
+  const assistant = options.messages[1] as { content?: unknown; id?: string }
+  assert.equal(typeof assistant.id, 'string')
+  assert.deepEqual(assistant.content, [
+    { type: 'tool-call', id: 'call_1', name: 'hrag_hybrid_search', arguments: '{"query":"星野 曝光"}' },
+  ])
+  const tool = options.messages[2] as { role?: string; id?: string; toolCallId?: string; content?: unknown; source?: unknown }
+  assert.equal(tool.role, 'tool')
+  assert.equal(typeof tool.id, 'string')
+  assert.equal(tool.toolCallId, 'call_1')
+  assert.deepEqual(tool.content, [{ type: 'text', text: '命中 3 条切片' }])
+  assert.deepEqual(tool.source, { kind: 'tool', callId: 'call_1' })
+})
+
+test('buildGenerateOptions defaults missing tool parameters and refuses malformed calls', async () => {
+  const options = await buildGenerateOptions(
+    {
+      messages: [{ role: 'user', content: 'hi' }],
+      tools: [{ type: 'function', function: { name: 'hrag_wiki_search' } }],
+    },
+    target,
+    { efforts: [] },
+    admitEcho,
+  )
+  assert.deepEqual(options.tools, [
+    { name: 'hrag_wiki_search', description: '', parameters: { type: 'object', properties: {} } },
+  ])
+  await expectAsyncError(
+    () =>
+      buildGenerateOptions(
+        {
+          messages: [
+            { role: 'assistant', content: 'x', tool_calls: [{ type: 'function', function: { name: 'f' } }] },
+          ],
+        },
+        target,
+        { efforts: [] },
+        admitEcho,
+      ),
+    400,
+    'invalid_tool_calls',
   )
 })
 
@@ -332,6 +422,57 @@ test('collectCompletion surfaces a terminal failure without a finish marker as s
   assert.equal(truncated.finish, 'stop')
 })
 
+test('collectCompletion assembles tool calls from deltas and prefers the assembled block', async () => {
+  const streamed = await collectCompletion((async function* () {
+    yield { type: 'tool-call-delta', index: 0, id: 'call_1', name: 'hrag_hybrid_search', argumentsDelta: '{"query":' } as StreamChunkLike
+    yield { type: 'tool-call-delta', index: 0, id: 'call_1', argumentsDelta: '"x"}' } as StreamChunkLike
+    yield { type: 'finish', reason: { kind: 'tool-calls' } } as StreamChunkLike
+  })())
+  assert.equal(streamed.finish, 'tool-calls')
+  assert.deepEqual(streamed.toolCalls, [
+    { id: 'call_1', name: 'hrag_hybrid_search', arguments: '{"query":"x"}' },
+  ])
+
+  const closed = await collectCompletion((async function* () {
+    yield { type: 'tool-call-delta', index: 0, id: 'call_1', name: 'hrag_hybrid_search', argumentsDelta: '{"que' } as StreamChunkLike
+    yield {
+      type: 'block-end',
+      index: 0,
+      block: { type: 'tool-call', id: 'call_1', name: 'hrag_hybrid_search', arguments: '{"query":"x"}' },
+    } as StreamChunkLike
+    yield { type: 'finish', reason: { kind: 'tool-calls' } } as StreamChunkLike
+  })())
+  assert.deepEqual(closed.toolCalls, [
+    { id: 'call_1', name: 'hrag_hybrid_search', arguments: '{"query":"x"}' },
+  ])
+
+  const truncated = await collectCompletion((async function* () {
+    yield { type: 'tool-call-delta', index: 0, id: 'call_1', name: 'hrag_hybrid_search', argumentsDelta: '{"que' } as StreamChunkLike
+    yield { type: 'finish', reason: { kind: 'max-tokens' } } as StreamChunkLike
+  })())
+  assert.deepEqual(truncated.toolCalls, [], 'truncated tool calls are dropped, as on the host')
+})
+
+test('toChatCompletion emits tool calls and the tool_calls finish', () => {
+  const body = toChatCompletion({
+    model: 'dsh:p/m',
+    text: '',
+    reasoning: '',
+    toolCalls: [{ id: 'call_1', name: 'hrag_hybrid_search', arguments: '{"query":"x"}' }],
+    finish: 'tool-calls',
+  }) as {
+    choices: Array<{
+      message: { content: string; tool_calls?: Array<Record<string, unknown>> }
+      finish_reason: string
+    }>
+  }
+  assert.equal(body.choices[0].message.content, '')
+  assert.deepEqual(body.choices[0].message.tool_calls, [
+    { id: 'call_1', type: 'function', function: { name: 'hrag_hybrid_search', arguments: '{"query":"x"}' } },
+  ])
+  assert.equal(body.choices[0].finish_reason, 'tool_calls')
+})
+
 function fakeResponse(): {
   state: { status: number; body: string }
   writeHead(status: number, _headers: Record<string, unknown>): void
@@ -362,7 +503,16 @@ function fakeRequest(method: string, url: string, body?: unknown, authorization?
   }
 }
 
-function makeProxy(): {
+const DEFAULT_CHUNKS: StreamChunkLike[] = [
+  { type: 'text-delta', index: 0, text: 'hello' },
+  { type: 'usage', usage: { inputTokens: 3, outputTokens: 1, totalTokens: 4 } },
+  { type: 'finish', reason: { kind: 'stop' } },
+]
+
+function makeProxy(
+  config: { apiToken: string } = { apiToken: TOKEN },
+  chunks: StreamChunkLike[] = DEFAULT_CHUNKS,
+): {
   handler: (req: unknown, res: unknown) => Promise<void>
   ready: Promise<unknown>
   streamOptions: () => Record<string, unknown> | undefined
@@ -379,9 +529,7 @@ function makeProxy(): {
     },
     async *stream(options: unknown) {
       streamOptions = options as Record<string, unknown>
-      yield { type: 'text-delta', index: 0, text: 'hello' }
-      yield { type: 'usage', usage: { inputTokens: 3, outputTokens: 1, totalTokens: 4 } }
-      yield { type: 'finish', reason: { kind: 'stop' } }
+      yield* chunks
     },
   }
   const ctx = {
@@ -407,7 +555,7 @@ function makeProxy(): {
       return callback()
     },
   }
-  const proxy = registerModelProxy(ctx as unknown as ProxyHostContextLike, { apiToken: TOKEN })
+  const proxy = registerModelProxy(ctx as unknown as ProxyHostContextLike, config)
   return {
     ready: proxy.whenReady,
     streamOptions: () => streamOptions,
@@ -452,6 +600,53 @@ test('registerModelProxy serves the model list and one chat completion', async (
   const denied = fakeResponse()
   await proxy.handler(fakeRequest('GET', `${LLM_PROXY_ROUTE}/models`), denied)
   assert.equal(denied.state.status, 401)
+})
+
+test('registerModelProxy forwards tools and answers a tool call', async () => {
+  const proxy = makeProxy({ apiToken: TOKEN }, [
+    {
+      type: 'tool-call-delta',
+      index: 0,
+      id: 'call_1',
+      name: 'hrag_hybrid_search',
+      argumentsDelta: '{"query":"x"}',
+    },
+    { type: 'usage', usage: { inputTokens: 5, outputTokens: 2, totalTokens: 7 } },
+    { type: 'finish', reason: { kind: 'tool-calls' } },
+  ])
+  await proxy.ready
+
+  const completion = fakeResponse()
+  await proxy.handler(
+    fakeRequest(
+      'POST',
+      `${LLM_PROXY_ROUTE}/chat/completions`,
+      {
+        model: 'dsh:p/m',
+        messages: [{ role: 'user', content: 'hi' }],
+        tools: [
+          {
+            type: 'function',
+            function: { name: 'hrag_hybrid_search', description: '混合检索', parameters: { type: 'object' } },
+          },
+        ],
+      },
+      `Bearer ${TOKEN}`,
+    ),
+    completion,
+  )
+  assert.equal(completion.state.status, 200)
+  const parsed = JSON.parse(completion.state.body) as {
+    choices: Array<{ message: { tool_calls?: Array<{ id: string }> }; finish_reason: string }>
+  }
+  assert.equal(parsed.choices[0].finish_reason, 'tool_calls')
+  assert.deepEqual(
+    parsed.choices[0].message.tool_calls?.map((call) => call.id),
+    ['call_1'],
+  )
+  assert.deepEqual(proxy.streamOptions()?.tools, [
+    { name: 'hrag_hybrid_search', description: '混合检索', parameters: { type: 'object' } },
+  ])
 })
 
 test('mapFailure maps known codes and never echoes provider detail', () => {

@@ -125,11 +125,19 @@ export interface CatalogModelLike {
   efforts: string[]
 }
 
+export interface ToolSchemaLike {
+  name: string
+  description: string
+  parameters: Record<string, unknown>
+}
+
 export interface GenerateOptionsLike {
   provider: string
   model: string
   messages: Array<Record<string, unknown>>
   system?: string
+  /** Function schemas; the host adapters map them to the provider's `tools`. */
+  tools?: ToolSchemaLike[]
   reasoningEffort?: string
   temperature?: number
   maxTokens?: number
@@ -151,13 +159,24 @@ export interface StreamChunkLike {
   index?: number
   text?: string
   blockType?: string
+  id?: string
+  name?: string
+  argumentsDelta?: string
+  block?: { type?: string; id?: string; name?: string; arguments?: string }
   usage?: TokenUsageLike
   reason?: { kind?: string; failure?: { code?: string; message?: string } }
+}
+
+export interface ToolCallResult {
+  id: string
+  name: string
+  arguments: string
 }
 
 export interface CompletionResult {
   text: string
   reasoning: string
+  toolCalls: ToolCallResult[]
   usage?: TokenUsageLike
   finish: string
   failure?: { code?: string; message?: string }
@@ -169,11 +188,26 @@ export async function collectCompletion(chunks: AsyncIterable<StreamChunkLike>):
   let usage: TokenUsageLike | undefined
   let finish: string | undefined
   let failure: { code?: string; message?: string } | undefined
+  const pendingCalls = new Map<number, { id?: string; name?: string; arguments: string }>()
   for await (const chunk of chunks) {
     if (chunk.type === 'text-delta') {
       text += chunk.text ?? ''
     } else if (chunk.type === 'reasoning-delta') {
       reasoning += chunk.text ?? ''
+    } else if (chunk.type === 'tool-call-delta') {
+      const index = typeof chunk.index === 'number' ? chunk.index : 0
+      const call = pendingCalls.get(index) ?? { arguments: '' }
+      if (typeof chunk.id === 'string' && chunk.id) call.id = chunk.id
+      if (typeof chunk.name === 'string' && chunk.name) call.name = chunk.name
+      call.arguments += chunk.argumentsDelta ?? ''
+      pendingCalls.set(index, call)
+    } else if (chunk.type === 'block-end' && chunk.block?.type === 'tool-call') {
+      // The assembled block wins over deltas, mirroring the host BlockAssembler.
+      pendingCalls.set(typeof chunk.index === 'number' ? chunk.index : 0, {
+        ...(typeof chunk.block.id === 'string' ? { id: chunk.block.id } : {}),
+        ...(typeof chunk.block.name === 'string' ? { name: chunk.block.name } : {}),
+        arguments: typeof chunk.block.arguments === 'string' ? chunk.block.arguments : '',
+      })
     } else if (chunk.type === 'usage') {
       usage = chunk.usage
     } else if (chunk.type === 'finish') {
@@ -181,7 +215,23 @@ export async function collectCompletion(chunks: AsyncIterable<StreamChunkLike>):
       failure = chunk.reason?.failure
     }
   }
-  return { text, reasoning, finish: finish ?? 'stop', ...(usage ? { usage } : {}), ...(failure ? { failure } : {}) }
+  const toolCalls: ToolCallResult[] = []
+  // Truncated responses drop tool calls that cannot run, as the host assembler does.
+  if (finish !== 'max-tokens') {
+    for (const index of [...pendingCalls.keys()].sort((left, right) => left - right)) {
+      const call = pendingCalls.get(index)
+      if (!call?.name) continue
+      toolCalls.push({ id: call.id ?? `call-${index}`, name: call.name, arguments: call.arguments })
+    }
+  }
+  return {
+    text,
+    reasoning,
+    toolCalls,
+    finish: finish ?? 'stop',
+    ...(usage ? { usage } : {}),
+    ...(failure ? { failure } : {}),
+  }
 }
 
 export function aliasFor(provider: string, model: string): string {
@@ -396,6 +446,60 @@ function optionalNumber(value: unknown, code: string): number | undefined {
   return value
 }
 
+function parseToolSchemas(value: unknown): ToolSchemaLike[] | undefined {
+  if (value === undefined || value === null) return undefined
+  if (!Array.isArray(value)) {
+    throw new ProxyHttpError(400, 'invalid_tools', 'The tools field must be an array.')
+  }
+  const tools: ToolSchemaLike[] = []
+  for (const entry of value) {
+    const tool = asRecord(entry)
+    const fn = asRecord(tool?.function)
+    if (tool?.type !== 'function' || fn === undefined || typeof fn.name !== 'string' || !fn.name.trim()) {
+      throw new ProxyHttpError(400, 'invalid_tools', 'The request contains an unsupported tool definition.')
+    }
+    let parameters: Record<string, unknown> = { type: 'object', properties: {} }
+    if (fn.parameters !== undefined && fn.parameters !== null) {
+      const parsed = asRecord(fn.parameters)
+      if (parsed === undefined) {
+        throw new ProxyHttpError(400, 'invalid_tools', 'The request contains an unsupported tool definition.')
+      }
+      parameters = parsed
+    }
+    tools.push({
+      name: fn.name,
+      description: typeof fn.description === 'string' ? fn.description : '',
+      parameters,
+    })
+  }
+  return tools.length > 0 ? tools : undefined
+}
+
+function parseAssistantToolCalls(value: unknown): Array<Record<string, unknown>> {
+  if (value === undefined || value === null) return []
+  if (!Array.isArray(value)) {
+    throw new ProxyHttpError(400, 'invalid_tool_calls', 'The request contains an invalid assistant tool call.')
+  }
+  const blocks: Array<Record<string, unknown>> = []
+  for (const entry of value) {
+    const call = asRecord(entry)
+    const fn = asRecord(call?.function)
+    const id = typeof call?.id === 'string' ? call.id : ''
+    const name = typeof fn?.name === 'string' ? fn.name : ''
+    if (!id || !name) {
+      throw new ProxyHttpError(400, 'invalid_tool_calls', 'The request contains an invalid assistant tool call.')
+    }
+    const args =
+      typeof fn?.arguments === 'string'
+        ? fn.arguments
+        : fn?.arguments === undefined || fn?.arguments === null
+          ? '{}'
+          : JSON.stringify(fn.arguments)
+    blocks.push({ type: 'tool-call', id, name, arguments: args })
+  }
+  return blocks
+}
+
 export async function buildGenerateOptions(
   body: Record<string, unknown>,
   target: RequestTarget,
@@ -405,13 +509,13 @@ export async function buildGenerateOptions(
   if (body.stream === true) {
     throw new ProxyHttpError(400, 'stream_unsupported', 'Streaming is not supported by this proxy.')
   }
-  if (
-    (Array.isArray(body.tools) && body.tools.length > 0) ||
-    (Array.isArray(body.functions) && body.functions.length > 0) ||
-    body.tool_choice !== undefined
-  ) {
-    throw new ProxyHttpError(400, 'tools_unsupported', 'Tool calling is not supported by this proxy.')
+  if (Array.isArray(body.functions) && body.functions.length > 0) {
+    throw new ProxyHttpError(400, 'functions_unsupported', 'Legacy function calling is not supported by this proxy.')
   }
+  if (body.tool_choice !== undefined && body.tool_choice !== null && body.tool_choice !== 'auto') {
+    throw new ProxyHttpError(400, 'tool_choice_unsupported', 'Only the automatic tool choice is supported by this proxy.')
+  }
+  const tools = parseToolSchemas(body.tools)
   if (body.n !== undefined && body.n !== 1) {
     throw new ProxyHttpError(400, 'n_unsupported', 'Only one completion can be requested.')
   }
@@ -453,16 +557,34 @@ export async function buildGenerateOptions(
       continue
     }
     if (role === 'assistant') {
-      const toolCalls = message.tool_calls
-      if (Array.isArray(toolCalls) && toolCalls.length > 0) {
-        throw new ProxyHttpError(400, 'tools_unsupported', 'Tool calling is not supported by this proxy.')
-      }
       const texts = textBlocks(message.content, role)
+      const toolCallBlocks = parseAssistantToolCalls(message.tool_calls)
       messages.push({
         role: 'assistant',
         id: typeof message.id === 'string' && message.id ? message.id : randomUUID(),
-        content: texts.map((text) => ({ type: 'text', text })),
+        content: [
+          ...texts.map((text) => ({ type: 'text', text })),
+          ...toolCallBlocks,
+        ],
         source: { kind: 'model', provider: target.provider, model: target.model },
+      })
+      continue
+    }
+    if (role === 'tool') {
+      const callId = typeof message.tool_call_id === 'string' ? message.tool_call_id : ''
+      if (!callId) {
+        throw new ProxyHttpError(400, 'invalid_tool_message', 'A tool message must carry tool_call_id.')
+      }
+      const texts = textBlocks(message.content, role)
+      // The host's pi-ai adapter reads tool results as a tool-role message with
+      // the call id at the top level; a user-role tool-result block is rejected
+      // as UNSUPPORTED_CONTENT (verified against the desktop runtime).
+      messages.push({
+        role: 'tool',
+        id: randomUUID(),
+        toolCallId: callId,
+        content: texts.map((text) => ({ type: 'text', text })),
+        source: { kind: 'tool', callId },
       })
       continue
     }
@@ -491,6 +613,7 @@ export async function buildGenerateOptions(
     provider: target.provider,
     model: target.model,
     messages,
+    ...(tools ? { tools } : {}),
     ...(joinedSystem ? { system: joinedSystem } : {}),
     ...(reasoningEffort ? { reasoningEffort } : {}),
     ...(temperature !== undefined ? { temperature } : {}),
@@ -510,6 +633,7 @@ export function toChatCompletion(input: {
   model: string
   text: string
   reasoning: string
+  toolCalls?: ToolCallResult[]
   usage?: {
     inputTokens: number
     outputTokens: number
@@ -532,6 +656,15 @@ export function toChatCompletion(input: {
           role: 'assistant',
           content: input.text,
           ...(input.reasoning ? { reasoning_content: input.reasoning } : {}),
+          ...(input.toolCalls && input.toolCalls.length > 0
+            ? {
+                tool_calls: input.toolCalls.map((call) => ({
+                  id: call.id,
+                  type: 'function',
+                  function: { name: call.name, arguments: call.arguments },
+                })),
+              }
+            : {}),
         },
         finish_reason: FINISH_REASONS[input.finish ?? 'stop'] ?? 'stop',
       },
@@ -823,7 +956,7 @@ export function registerModelProxy(
               const mapped = mapFailure(result.failure)
               throw new ProxyHttpError(mapped.status, mapped.code, mapped.message)
             }
-            if (!result.text && !result.reasoning) {
+            if (!result.text && !result.reasoning && result.toolCalls.length === 0) {
               throw new ProxyHttpError(502, 'empty_response', 'The model returned no content.')
             }
             sendJson(
@@ -833,6 +966,7 @@ export function registerModelProxy(
                 model: alias,
                 text: result.text,
                 reasoning: result.reasoning,
+                toolCalls: result.toolCalls,
                 ...(result.usage ? { usage: result.usage } : {}),
                 finish: result.finish,
               }),
