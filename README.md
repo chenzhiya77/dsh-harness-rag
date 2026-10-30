@@ -126,6 +126,18 @@
 <img src="docs/assets/screens/docs-settings.jpg" width="1000" alt="文档页设置">
 </details>
 
+### 知识图谱
+
+实体关系力导向图，社区层可上卷看全局；检索路径按种子 / 扩展 / 证据三层染色，叠加不重排布局。
+<img src="docs/assets/screens/graph-thumb-1.jpg" width="1000" alt="知识图谱与检索路径染色">
+
+<details>
+<summary>展开截图：图谱缩略 2 / 图谱缩略 3 / 实体详情（3 张）</summary>
+<img src="docs/assets/screens/graph-thumb-2.jpg" width="1000" alt="图谱缩略 2">
+<img src="docs/assets/screens/graph-thumb-3.jpg" width="1000" alt="图谱缩略 3">
+<img src="docs/assets/screens/graph-entity.jpg" width="1000" alt="实体详情">
+</details>
+
 ### Wiki：生成条目 / 我的条目
 
 AI 按实体资格自动沉淀「生成条目」；用户自建的「我的条目」与 AI 完全隔离、永不自动更新，可一键「混入搜索」参与检索；条目编辑内容还会作为后续重生成的「生成方向」。
@@ -156,18 +168,6 @@ AI 按实体资格自动沉淀「生成条目」；用户自建的「我的条�
 <details>
 <summary>展开截图：3D 投影（1 张）</summary>
 <img src="docs/assets/screens/vector-3d.jpg" width="1000" alt="向量空间 3D 投影">
-</details>
-
-### 知识图谱
-
-实体关系力导向图，社区层可上卷看全局；检索路径按种子 / 扩展 / 证据三层染色，叠加不重排布局。
-<img src="docs/assets/screens/graph-thumb-1.jpg" width="1000" alt="知识图谱与检索路径染色">
-
-<details>
-<summary>展开截图：图谱缩略 2 / 图谱缩略 3 / 实体详情（3 张）</summary>
-<img src="docs/assets/screens/graph-thumb-2.jpg" width="1000" alt="图谱缩略 2">
-<img src="docs/assets/screens/graph-thumb-3.jpg" width="1000" alt="图谱缩略 3">
-<img src="docs/assets/screens/graph-entity.jpg" width="1000" alt="实体详情">
 </details>
 
 ### 评测
