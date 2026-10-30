@@ -6,6 +6,8 @@
 >
 > **为什么是三路**：向量负责内容匹配、图谱负责信息关系、wiki 负责条目级线索；库里的文档与 wiki 条目可以直接枚举，不拿检索硬凑。命中切片随工具结果返回；绑定知识库的会话还会收到检索纪律（向量保底 / 图谱路 / 读取上限 / 拒答），人格与呈现仍归宿主。
 
+https://github.com/user-attachments/assets/df813a97-2071-4c37-abc1-9d1423c2db37
+
 <img src="docs/assets/rag/overview.png" width="1000" alt="Harness RAG 全链路概览：摄取 → 加工 → 三路检索">
 
 ## 📋 目录
