@@ -247,6 +247,10 @@ dsh plugin --profile <name> add dsh-harness-rag
 | GitHub 安装入口 | 已发布（v0.1.4） |
 | npm 安装入口 | 已发布（0.1.4） |
 
+<p align="center">
+  <img src="docs/assets/pet/parrot-strip.gif" width="996" alt="">
+</p>
+
 ---
 
 ## ⚖️ 归属与许可
